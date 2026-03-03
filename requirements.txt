@@ -1,0 +1,3 @@
+aiodocker
+fastapi[standard]
+python-dotenv

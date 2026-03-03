@@ -1,0 +1,78 @@
+import os
+import shlex
+from pathlib import Path
+
+from aiodocker import DockerError
+
+from services.resource_manager import resource_manager
+from utils.log import logger
+
+
+async def build(code: str, name: str = "output.js") -> str:
+    docker = resource_manager.docker
+    if docker is None:
+        raise RuntimeError("Docker client not initialized")
+
+    output_dir = Path(os.getcwd()) / "output"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    cmd = (
+        f"printf '%s' {shlex.quote(code)} > /tmp/source.cpp && "
+        f"timeout 30s emcc /tmp/source.cpp -o /out/{shlex.quote(name)} "
+        "-ftemplate-depth=50 "
+        "-sMODULARIZE=1 "
+        '-sEXPORT_NAME="createMyModule" '
+        '-sENVIRONMENT="worker" '
+        "-sEXIT_RUNTIME=1 "
+        "-sFILESYSTEM=0 "
+        # '-sINCOMING_MODULE_JS_API=\'["print","printErr","stdin"]\' '
+        "-fconstexpr-depth=50 "
+        "-fmacro-backtrace-limit=10"
+    )
+
+    config = {
+        "Image": "ghcr.io/dong-chen-1031/safe-cpp2wasm:latest",
+        "Cmd": ["sh", "-c", cmd],
+        "AttachStdout": True,
+        "AttachStderr": True,
+        "Tty": False,
+        "HostConfig": {
+            "NetworkMode": "none",  # --network none
+            "NanoCpus": 1_000_000_000,  # --cpus="1.0"
+            "Memory": 1_073_741_824,  # --memory="1g"
+            "PidsLimit": 50,  # --pids-limit 50
+            "Ulimits": [
+                {"Name": "fsize", "Soft": 50_000_000, "Hard": 50_000_000}
+            ],  # --ulimit fsize=50000000:50000000
+            "CapDrop": ["ALL"],  # --cap-drop ALL
+            "SecurityOpt": ["no-new-privileges:true"],
+            "Binds": [f"{output_dir}:/out:rw"],
+        },
+    }
+
+    container = await docker.containers.create(config=config)
+
+    try:
+        await container.start()
+
+        result = await container.wait()
+        exit_code = result["StatusCode"]
+
+        logs = await container.log(stdout=True, stderr=True)
+        output = "".join(logs)
+
+        if exit_code != 0:
+            logger.error(f"Build failed (exit {exit_code}):\n{output}")
+            raise RuntimeError(f"Build failed (exit {exit_code})")
+
+        return output
+    except DockerError as e:
+        if e.status == 404:
+            logger.error("Docker image not found. Auto-pulling image.")
+            await docker.images.pull("ghcr.io/dong-chen-1031/safe-cpp2wasm:latest")
+        raise
+    finally:
+        try:
+            await container.delete(force=True)
+        except Exception:
+            pass

@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test cpp to WebAssembly</title>
+  </head>
+  <body>
+    <textarea id="cppCode" rows="10" cols="50">
+#include <iostream> 
+int main() {
+    std::cout << "Hello, WebAssembly!" << std::endl;
+    return 0;
+}</textarea
+    >
+    <button id="buildButton">Build</button>
+    <button id="testButton">test2</button>
+    <script>
+      document
+        .getElementById("buildButton")
+        .addEventListener("click", async () => {
+          const code = document.getElementById("cppCode").value;
+          const response = await fetch("/build", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ code }),
+          });
+          const response_json = await response.json();
+
+          const old = document.getElementById("wasm-frame");
+          if (old) old.remove();
+
+          const iframe = document.createElement("iframe");
+          iframe.id = "wasm-frame";
+          iframe.style.display = "none";
+          document.body.appendChild(iframe);
+
+          const doc = iframe.contentDocument;
+          doc.open();
+          doc.write(`<script src="${response_json.js_url}"><\/script>`);
+          doc.close();
+        });
+    </script>
+    <script>
+      document.getElementById("testButton").addEventListener("click", () => {
+        const worker = new Worker("js/worker.js");
+
+        worker.onmessage = (e) => {
+          const { type, content } = e.data;
+          if (type === "stdout") {
+            console.log("收到輸出:", content);
+          } else if (type === "stderr") {
+            console.error("收到錯誤輸出:", content);
+          } else if (type === "exit") {
+            console.log("程式執行結束");
+            worker.terminate(); // 釋放 Worker 資源
+          }
+        };
+
+        // 傳送任務與靜態輸入資料
+        worker.postMessage({
+          taskId: "123",
+          inputData: "Dong",
+        });
+      });
+    </script>
+  </body>
+</html>
