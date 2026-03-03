@@ -1,0 +1,17 @@
+{
+  "name": "frontend",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "frontend": "cd frontend && astro dev",
+    "backend": "cd backend && python main.py",
+    "dev": "concurrently \"bun run frontend\" \"bun run backend\"",
+    "build": "cd frontend && astro build",
+    "preview": "cd frontend && astro preview",
+    "astro": "cd frontend && astro"
+  },
+  "dependencies": {
+    "astro": "^5.17.1",
+    "concurrently": "^9.2.1"
+  }
+}

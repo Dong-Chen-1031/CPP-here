@@ -6,6 +6,8 @@ __pycache__/
 output/
 logs/
 
+node_modules/
+
 # C extensions
 *.so
 
