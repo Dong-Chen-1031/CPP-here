@@ -2,7 +2,7 @@
 importScripts('output/build.js');
 
 self.onmessage = async (e) => {
-  const { taskId, inputData } = e.data;
+  const { taskId, inputData, module_ } = e.data;
 
   // 1. 將輸入字串轉為 Uint8Array 緩衝區
   // 記得加上 \n，否則 C++ 的 std::cin 或 scanf 可能會一直等待換行
@@ -12,6 +12,17 @@ self.onmessage = async (e) => {
 
   // 2. 定義 Module 配置物件
   const wasmConfig = {
+    // 使用 instantiateWasm 攔截實例化過程，直接使用我們傳入的 module_
+    instantiateWasm: function(imports, successCallback) {
+      WebAssembly.instantiate(module_, imports)
+        .then(instance => {
+          successCallback(instance, module_);
+        })
+        .catch(err => {
+          self.postMessage({ type: 'error', taskId, content: err.message });
+        });
+      return {}; // 回傳空物件，告訴 Emscripten 我們會非同步地呼叫 successCallback
+    },
     // 攔截 stdout (printf / std::cout)
     print: function(text) {
       self.postMessage({ type: 'stdout', taskId, content: text });
@@ -34,6 +45,7 @@ self.onmessage = async (e) => {
     onRuntimeInitialized: function() {
       self.postMessage({ type: 'status', taskId, content: 'Running' });
     }
+
   };
 
   try {

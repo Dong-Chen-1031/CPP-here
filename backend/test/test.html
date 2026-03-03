@@ -44,27 +44,32 @@ int main() {
         });
     </script>
     <script>
-      document.getElementById("testButton").addEventListener("click", () => {
-        const worker = new Worker("js/worker.js");
+      document
+        .getElementById("testButton")
+        .addEventListener("click", async () => {
+          const worker = new Worker("js/worker.js");
 
-        worker.onmessage = (e) => {
-          const { type, content } = e.data;
-          if (type === "stdout") {
-            console.log("收到輸出:", content);
-          } else if (type === "stderr") {
-            console.error("收到錯誤輸出:", content);
-          } else if (type === "exit") {
-            console.log("程式執行結束");
-            worker.terminate(); // 釋放 Worker 資源
-          }
-        };
-
-        // 傳送任務與靜態輸入資料
-        worker.postMessage({
-          taskId: "123",
-          inputData: "Dong",
+          worker.onmessage = (e) => {
+            const { type, content } = e.data;
+            if (type === "stdout") {
+              console.log("收到輸出:", content);
+            } else if (type === "stderr") {
+              console.error("收到錯誤輸出:", content);
+            } else if (type === "exit") {
+              console.log("程式執行結束");
+              worker.terminate(); // 釋放 Worker 資源
+            }
+          };
+          // 主執行緒
+          const wasmResponse = await fetch("js/output/build.wasm");
+          const wasmModule = await WebAssembly.compileStreaming(wasmResponse); // 預編譯
+          // 傳送任務與靜態輸入資料
+          worker.postMessage({
+            taskId: "123",
+            inputData: "Dong",
+            module_: wasmModule,
+          });
         });
-      });
     </script>
   </body>
 </html>
