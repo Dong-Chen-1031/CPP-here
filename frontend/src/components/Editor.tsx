@@ -28,6 +28,8 @@ function CppEditor({
   onChange,
   extensions = [],
   basicSetup,
+  className,
+  style,
   ...rest
 }: CppEditorProps) {
   const [code, setCode] = useState(defaultValue);
@@ -42,7 +44,10 @@ function CppEditor({
 
   return (
     <CodeMirror
+      className={className}
+      style={style}
       value={code}
+      height="100%"
       theme={oneDark}
       extensions={[
         cpp(),

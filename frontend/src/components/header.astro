@@ -1,0 +1,13 @@
+---
+import { Code } from "@lucide/astro";
+import HeaderActions from "@/components/HeaderActions";
+---
+
+<div class="w-full h-15 flex items-center px-6">
+  <Code class="w-6 h-6 mr-2" />
+  <h1 class="text-xl font-bold">C++ Station</h1>
+  <div class="flex-1"></div>
+  <div>
+    <HeaderActions client:only="react" />
+  </div>
+</div>

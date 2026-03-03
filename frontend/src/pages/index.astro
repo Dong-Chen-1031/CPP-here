@@ -1,11 +1,22 @@
 ---
 import Editor from "../components/Editor.tsx";
 import Layout from "../layouts/Layout.astro";
+import Header from "../components/header.astro";
+
+import "@/styles/global.css";
 
 // Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
 // Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
 <Layout>
-  <Editor client:only="react" />
+  <div class="w-full h-screen flex items-center flex-col">
+    <Header />
+    <div
+      class="rounded-md overflow-hidden w-full flex-1 ml-auto mr-auto bg-accent"
+    >
+      <Editor client:only className="w-full h-full" />
+    </div>
+    <div class=""></div>
+  </div>
 </Layout>

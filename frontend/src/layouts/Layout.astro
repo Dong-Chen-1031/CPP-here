@@ -1,12 +1,49 @@
 <!doctype html>
-<html lang="en">
+<html class="neutral bg-background text-foreground">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
     <meta name="generator" content={Astro.generator} />
-    <title>Astro Basics</title>
+    <title>C++ Station - C++ online editor</title>
+
+    <script is:inline>
+      const getThemePreference = () => {
+        if (
+          typeof localStorage !== "undefined" &&
+          localStorage.getItem("theme")
+        ) {
+          return localStorage.getItem("theme");
+        }
+        return window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+      };
+      const isDark = getThemePreference() === "dark";
+      document.documentElement.classList[isDark ? "add" : "remove"]("dark");
+
+      if (typeof localStorage !== "undefined") {
+        const observer = new MutationObserver(() => {
+          const isDark = document.documentElement.classList.contains("dark");
+          localStorage.setItem("theme", isDark ? "dark" : "light");
+        });
+        observer.observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ["class"],
+        });
+      }
+
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", (e) => {
+          if (!localStorage.getItem("theme")) {
+            document.documentElement.classList[e.matches ? "add" : "remove"](
+              "dark",
+            );
+          }
+        });
+    </script>
   </head>
   <body>
     <slot />
