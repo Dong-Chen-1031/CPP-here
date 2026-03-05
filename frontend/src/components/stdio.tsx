@@ -5,6 +5,7 @@ import {
   Keyboard,
   TestTubes,
   Trash,
+  Pencil,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import React, { useRef, useState } from "react";
@@ -135,10 +136,10 @@ export default function StdIO() {
             <div className="flex flex-col gap-2">
               {testCases.map((testCase, index) => (
               <Tip label="Set Input to this Test Case" key={testCase.id} >
-                <div className="text-sm bg-accent p-2 rounded-md cursor-pointer" onClick={()=>setInput(testCase.input)}>
+                <div className="text-sm bg-accent/75 p-2 rounded-md cursor-pointer hover:bg-accent flex items-center justify-between" onClick={()=>setInput(testCase.input)}>
                   <p>{testCase.name}</p>
-                  
-                  </div>
+                  <Pencil className="w-4 h-4"/>
+                </div>
               </Tip>
               ))}
             </div>
