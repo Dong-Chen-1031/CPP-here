@@ -1,3 +1,5 @@
 aiodocker
 fastapi[standard]
 python-dotenv
+aiofiles
+diskcache

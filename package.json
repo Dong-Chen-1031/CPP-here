@@ -5,7 +5,7 @@
   "scripts": {
     "frontend": "cd frontend && astro dev",
     "backend": "cd backend && python main.py",
-    "dev": "concurrently \"bun run frontend\" \"bun run backend\"",
+    "dev": "VITE_RUN_MODE=dev concurrently \"bun run frontend\" \"bun run backend\"",
     "build": "cd frontend && astro build",
     "preview": "cd frontend && astro preview",
     "astro": "cd frontend && astro"
@@ -20,9 +20,11 @@
     "@types/react-dom": "^19.2.3",
     "@uiw/react-codemirror": "^4.25.7",
     "astro": "^5.17.1",
+    "axios": "^1.13.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "concurrently": "^9.2.1",
+    "jotai": "^2.18.0",
     "lucide-react": "^0.576.0",
     "radix-ui": "^1.4.3",
     "react": "^19.2.4",

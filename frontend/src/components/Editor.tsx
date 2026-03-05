@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import CodeMirror, { type ReactCodeMirrorProps } from "@uiw/react-codemirror";
 import { cpp } from "@codemirror/lang-cpp";
 import { oneDark } from "@codemirror/theme-one-dark";
@@ -8,6 +8,8 @@ import {
   type CompletionResult,
 } from "@codemirror/autocomplete";
 import { cppKeywords } from "../config/cppKeywords";
+import { codeStore, editorStore } from "@/store/atom";
+import { useAtom } from "jotai";
 
 type CppEditorProps = Omit<ReactCodeMirrorProps, "value" | "onChange"> & {
   defaultValue?: string;
@@ -32,7 +34,18 @@ function CppEditor({
   style,
   ...rest
 }: CppEditorProps) {
-  const [code, setCode] = useState(defaultValue);
+  const [, setEditorGlobal] = useAtom(editorStore);
+  const [code, setCode] = useAtom(codeStore);
+  const editorRef = useRef<
+    import("@uiw/react-codemirror").ReactCodeMirrorRef | null
+  >(null);
+
+  useEffect(() => {
+    setCode(defaultValue);
+    return () => {
+      setEditorGlobal(null);
+    };
+  }, []);
 
   const handleChange = useCallback(
     (value: string) => {
@@ -49,6 +62,11 @@ function CppEditor({
       value={code}
       height="100%"
       theme={oneDark}
+      ref={editorRef}
+      onCreateEditor={() => {
+        setEditorGlobal(editorRef);
+        console.log("Editor instance set in global state.");
+      }}
       extensions={[
         cpp(),
         autocompletion({ override: [cppCompletions] }),

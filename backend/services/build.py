@@ -7,6 +7,12 @@ from services.resource_manager import resource_manager
 from utils.log import logger
 
 
+class BuildError(Exception):
+    def __init__(self, msg: str, build_logs: str = ""):
+        super().__init__(msg)
+        self.build_logs = build_logs
+
+
 async def build(code: str, name: str = "output.js") -> str:
     docker = resource_manager.docker
     if docker is None:
@@ -59,10 +65,10 @@ async def build(code: str, name: str = "output.js") -> str:
 
         logs = await container.log(stdout=True, stderr=True)
         output = "".join(logs)
-
         if exit_code != 0:
-            logger.error(f"Build failed (exit {exit_code}):\n{output}")
-            raise RuntimeError(f"Build failed (exit {exit_code})")
+            # logger.error(f"Build failed (exit {exit_code}):\n{output}")
+            logger.info(f"Build failed (exit {exit_code})")
+            raise BuildError(f"Build failed (exit {exit_code})", build_logs=output)
 
         return output
     except DockerError as e:
