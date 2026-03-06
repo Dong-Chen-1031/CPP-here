@@ -14,11 +14,7 @@ import { ButtonGroup } from "@/components/ui/button-group";
 //   DropdownMenuSubTrigger,
 //   DropdownMenuTrigger,
 // } from "@/components/ui/dropdown-menu";
-import {
-  Play,
-  UndoIcon,
-  RedoIcon,
-} from "lucide-react";
+import { Play, UndoIcon, RedoIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -30,7 +26,13 @@ import {
 } from "@/components/ui/select";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAtom } from "jotai";
-import { codeStore, cppVersionStore, editorStore } from "@/store/atom";
+import {
+  codeStore,
+  cppVersionStore,
+  editorStore,
+  inputStore,
+  outputStore,
+} from "@/store/atom";
 
 import { undo, redo } from "@codemirror/commands";
 
@@ -38,16 +40,23 @@ import { buildCode, runCode } from "@/api/run";
 
 import Tip from "@/components/ui/tips";
 
-
 export default function HeaderActions() {
   const [editorGlobal] = useAtom(editorStore);
   const [code] = useAtom(codeStore);
-
+  const [input] = useAtom(inputStore);
+  const [, setOutput] = useAtom(outputStore);
   const [cppVersion, setCppVersion] = useAtom(cppVersionStore);
 
   async function handleRun() {
     const response = await buildCode(code, cppVersion);
-    runCode(response.js_code, response.wasm_url, "");
+    runCode(response.js_code, response.wasm_url, input, {
+      onInit: () => {
+        setOutput("");
+      },
+      onStdout: (output) => {
+        setOutput((prev) => prev + output);
+      },
+    });
   }
 
   return (
@@ -134,7 +143,7 @@ export default function HeaderActions() {
           </Tip>
         </ButtonGroup> */}
         <ButtonGroup>
-          <Tip label="Run">
+          <Tip label="Run Code">
             <Button variant="outline" onClick={handleRun}>
               <Play />
               Run

@@ -52,7 +52,7 @@ self.onmessage = async (e) => {
     const instance = await createMyModule(wasmConfig);
 
     // 執行完畢
-    self.postMessage({ type: "exit", taskId });
+    self.postMessage({ type: "status", taskId, content: "exit" });
   } catch (err) {
     self.postMessage({ type: "error", taskId, content: err.message });
   }

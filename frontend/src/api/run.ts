@@ -38,15 +38,72 @@ async function url2BlobUrl(
   return URL.createObjectURL(blob);
 }
 
+interface RunOptions {
+  onStdout?: (output: string) => void;
+  onError?: (error: string) => void;
+  onInit?: () => void;
+  onStderr?: (stderr: string) => void;
+  onEvent?: (event: any) => void;
+  onExit?: () => void;
+}
+
 export async function runCode(
   jsCode: string,
   wasmUrl: string,
   inputData: string,
+  {
+    onStdout = (out) => {
+      console.log("Standard output:", out);
+    },
+    onError = (err) => {
+      console.error("Error:", err);
+    },
+    onInit = () => {
+      console.log("Execution started.");
+    },
+    onStderr = (err) => {
+      console.error("Standard error occurred.", err);
+    },
+    onEvent,
+    onExit = (): void => {
+      console.log("Execution completed.");
+    },
+  }: RunOptions,
 ) {
   const worker = new Worker(await text2BlobUrl(jsCode));
   const wasmResponse = await fetch(wasmUrl);
   const wasmModule = await WebAssembly.compileStreaming(wasmResponse);
   const taskId = crypto.randomUUID();
+  worker.onmessage = (event) => {
+    console.log("Worker message received:", event.data);
+    onEvent && onEvent(event);
+    const { type, content } = event.data;
+    switch (type) {
+      case "stdout":
+        onStdout && onStdout(content);
+        break;
+      case "error":
+        onError && onError(content);
+        break;
+      case "status":
+        switch (content) {
+          case "Running":
+            onInit && onInit();
+            break;
+          case "exit":
+            onExit && onExit();
+            break;
+          default:
+            console.warn("Unknown status from worker:", content);
+        }
+        break;
+      case "stderr":
+        onStderr && onStderr(content);
+        break;
+      default:
+        console.warn("Unknown status from worker:", content);
+    }
+  };
   worker.postMessage({
     taskId: taskId,
     inputData: inputData,

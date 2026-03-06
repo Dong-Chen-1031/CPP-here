@@ -1,3 +1,4 @@
+import base64
 import os
 import shlex
 from pathlib import Path
@@ -5,6 +6,30 @@ from pathlib import Path
 from aiodocker import DockerError
 from services.resource_manager import resource_manager
 from utils.log import logger
+
+# Custom fd_read implementation for -sFILESYSTEM=0:
+# Emscripten stubs out fd_read with an abort() when the filesystem is disabled.
+# This library overrides that stub so Module.stdin callbacks still work.
+_STDIN_LIB_JS = """\
+addToLibrary({
+  fd_read: function(fd, iov, iovcnt, pnum) {
+    if (fd !== 0) return 8; // WASI EBADF
+    var num = 0;
+    for (var i = 0; i < iovcnt; i++) {
+      var ptr = HEAPU32[(iov >> 2) + i * 2];
+      var len = HEAPU32[(iov >> 2) + i * 2 + 1];
+      for (var j = 0; j < len; j++) {
+        var c = Module['stdin'] ? Module['stdin']() : null;
+        if (c === null || c === undefined) { HEAPU32[pnum >> 2] = num; return 0; }
+        HEAPU8[ptr + j] = c;
+        num++;
+      }
+    }
+    HEAPU32[pnum >> 2] = num;
+    return 0;
+  }
+});
+"""
 
 
 class BuildError(Exception):
@@ -21,16 +46,21 @@ async def build(code: str, name: str = "output.js") -> str:
     output_dir = Path(os.getcwd()) / "output"
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    lib_b64 = base64.b64encode(_STDIN_LIB_JS.encode()).decode()
     cmd = (
         f"printf '%s' {shlex.quote(code)} > /tmp/source.cpp && "
+        f"echo {shlex.quote(lib_b64)} | base64 -d > /tmp/stdin_lib.js && "
         f"timeout 30s emcc /tmp/source.cpp -o /out/{shlex.quote(name)} "
         "-ftemplate-depth=50 "
         "-sMODULARIZE=1 "
+        # "-sMINIMAL_RUNTIME=1 "
         '-sEXPORT_NAME="createMyModule" '
         '-sENVIRONMENT="worker" '
         "-sEXIT_RUNTIME=1 "
         "-sFILESYSTEM=0 "
-        # '-sINCOMING_MODULE_JS_API=\'["print","printErr","stdin"]\' '
+        "--js-library /tmp/stdin_lib.js "
+        # '-sINCOMING_MODULE_JS_API=\'["print","printErr","stdin","instantiateWasm","onRuntimeInitialized"]\' '
+        # '-sINCOMING_MODULE_JS_API=\'["wasm", "stdin", "print", "printErr"]\' '
         "-fconstexpr-depth=50 "
         "-fmacro-backtrace-limit=10"
     )

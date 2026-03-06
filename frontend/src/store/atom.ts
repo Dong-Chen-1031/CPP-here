@@ -7,3 +7,5 @@ export const editorStore = atom<RefObject<ReactCodeMirrorRef | null> | null>(
 );
 export const codeStore = atom<string>("");
 export const cppVersionStore = atom<string>("c++17");
+export const inputStore = atom<string>("");
+export const outputStore = atom<string>("");
