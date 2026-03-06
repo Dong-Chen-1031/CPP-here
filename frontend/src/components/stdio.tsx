@@ -136,135 +136,133 @@ export default function StdIO() {
     setTestCases((prev) => [...prev, newTestCase]);
   }
 
-  return (
-    <div className="w-full flex-col flex gap-4">
-      <div className="p-4 border-border border-2 rounded-md mx-4">
-        <div className="flex gap-2 items-center">
-          <Keyboard className="w-4 h-4" />
-          <p>Input</p>
-          <div className="flex-1"></div>
-          <Button
-            variant="outline"
-            onClick={async () => {
-              setInput(await navigator.clipboard.readText());
-            }}
-          >
-            <ClipboardPaste /> Paste
-          </Button>
-          <Button variant="outline" onClick={() => setInput("")}>
-            <Trash /> Clear
-          </Button>
-        </div>
-        <div className="mt-4">
-          <Textarea
-            placeholder="Type your input here."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-          />
-        </div>
+  return [
+    <div className="p-4 border-border border-2 rounded-md mr-4 ml-2 mt-0 mb-2 h-[calc(100%-8px)]">
+      <div className="flex gap-2 items-center">
+        <Keyboard className="w-4 h-4" />
+        <p>Input</p>
+        <div className="flex-1"></div>
+        <Button
+          variant="outline"
+          onClick={async () => {
+            setInput(await navigator.clipboard.readText());
+          }}
+        >
+          <ClipboardPaste /> Paste
+        </Button>
+        <Button variant="outline" onClick={() => setInput("")}>
+          <Trash /> Clear
+        </Button>
       </div>
-      <div className="p-4 border-border border-2 rounded-md mx-4">
-        <div className="flex gap-2 items-center">
-          <TestTubes className="w-4 h-4" />
-          <p>Test Case</p>
-          <div className="flex-1"></div>
-          <TestEditDialog
-            trigger={
-              <Button variant="outline">
-                <CirclePlus /> New
-              </Button>
-            }
-            handleSubmit={handleAddTestCase}
-          />
-        </div>
-        <div className="mt-4">
-          <TooltipProvider delayDuration={300}>
-            {testCases.length === 0 ? (
-              <p className="text-sm text-muted-foreground pl-2">
-                No test cases yet.
-              </p>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {testCases.map((testCase, index) => (
-                  <div
-                    key={testCase.id}
-                    className="text-sm bg-accent/75 p-2 rounded-md cursor-pointer hover:bg-accent flex items-center justify-between gap-2"
-                    onClick={() => setInput(testCase.input)}
-                  >
-                    <Tip label="Set Input to this Test Case">
-                      <p className="flex-1">{testCase.name}</p>
-                    </Tip>
-                    <TestEditDialog
-                      trigger={
-                        <Button variant="outline" size="icon">
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                      }
-                      tips="Edit test case"
-                      title="Edit Test Case"
-                      name={testCase.name}
-                      input={testCase.input}
-                      submitBtnName="Save"
-                      handleSubmit={(name, input) => {
+      <div className="mt-4">
+        <Textarea
+          placeholder="Type your input here."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+        />
+      </div>
+    </div>,
+    <div className="p-4 border-border border-2 rounded-md mr-4 ml-2 my-2 h-[calc(100%-16px)]">
+      <div className="flex gap-2 items-center">
+        <TestTubes className="w-4 h-4" />
+        <p>Test Case</p>
+        <div className="flex-1"></div>
+        <TestEditDialog
+          trigger={
+            <Button variant="outline">
+              <CirclePlus /> New
+            </Button>
+          }
+          handleSubmit={handleAddTestCase}
+        />
+      </div>
+      <div className="mt-4">
+        <TooltipProvider delayDuration={300}>
+          {testCases.length === 0 ? (
+            <p className="text-sm text-muted-foreground pl-2">
+              No test cases yet.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {testCases.map((testCase, index) => (
+                <div
+                  key={testCase.id}
+                  className="text-sm bg-accent/75 p-2 rounded-md cursor-pointer hover:bg-accent flex items-center justify-between gap-2"
+                  onClick={() => setInput(testCase.input)}
+                >
+                  <Tip label="Set Input to this Test Case">
+                    <p className="flex-1">{testCase.name}</p>
+                  </Tip>
+                  <TestEditDialog
+                    trigger={
+                      <Button variant="outline" size="icon">
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    }
+                    tips="Edit test case"
+                    title="Edit Test Case"
+                    name={testCase.name}
+                    input={testCase.input}
+                    submitBtnName="Save"
+                    handleSubmit={(name, input) => {
+                      setTestCases((prev) =>
+                        prev.map((tc) =>
+                          tc.id === testCase.id ? { ...tc, name, input } : tc,
+                        ),
+                      );
+                    }}
+                  />
+                  <Tip label="Delete Test Case">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
                         setTestCases((prev) =>
-                          prev.map((tc) =>
-                            tc.id === testCase.id ? { ...tc, name, input } : tc,
-                          ),
+                          prev.filter((tc) => tc.id !== testCase.id),
                         );
                       }}
-                    />
-                    <Tip label="Delete Test Case">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => {
-                          setTestCases((prev) =>
-                            prev.filter((tc) => tc.id !== testCase.id),
-                          );
-                        }}
-                      >
-                        <Trash className="w-4 h-4" />
-                      </Button>
-                    </Tip>
-                  </div>
-                ))}
-              </div>
-            )}
-          </TooltipProvider>
-        </div>
-      </div>
-      <div className="p-4 border-border border-2 rounded-md mx-4">
-        <div className="flex gap-2 items-center">
-          <SquareTerminal className="w-4 h-4" />
-          <p>Output</p>
-          <div className="flex-1"></div>
-          <Button
-            variant="outline"
-            onClick={() => navigator.clipboard.writeText(output)}
-          >
-            <ClipboardCopy /> Copy
-          </Button>
-          <Button variant="outline" onClick={() => setOutput("")}>
-            <Trash /> Clear
-          </Button>
-        </div>
-        {output.trim() === "" ? (
-          <div className="mt-4">
-            <p className="text-sm text-muted-foreground pl-2">No output yet.</p>
-          </div>
-        ) : (
-          <div className="mt-4">
-            <div
-              className={
-                "text-xs bg-accent/75 p-2 rounded-md whitespace-pre-wrap" +
-                (output.includes("[err]") ? " text-destructive" : "")
-              }
-            >
-              {output.replaceAll("[err]", "")}
+                    >
+                      <Trash className="w-4 h-4" />
+                    </Button>
+                  </Tip>
+                </div>
+              ))}
             </div>
-          </div>
-        )}
+          )}
+        </TooltipProvider>
       </div>
-    </div>
-  );
+    </div>,
+    <div className="p-4 border-border border-2 rounded-md ml-2 mr-4 mt-2 h-[calc(100%-8px)]">
+      <div className="flex gap-2 items-center">
+        <SquareTerminal className="w-4 h-4" />
+        <p>Output</p>
+        <div className="flex-1"></div>
+        <Button
+          variant="outline"
+          onClick={() => navigator.clipboard.writeText(output)}
+        >
+          <ClipboardCopy /> Copy
+        </Button>
+        <Button variant="outline" onClick={() => setOutput("")}>
+          <Trash /> Clear
+        </Button>
+      </div>
+      {output.trim() === "" ? (
+        <div className="mt-4">
+          <p className="text-sm text-muted-foreground pl-2">No output yet.</p>
+        </div>
+      ) : (
+        <div className="mt-4">
+          <div
+            className={
+              "text-xs bg-accent/75 p-2 rounded-md whitespace-pre-wrap" +
+              (output.includes("[err]") ? " text-destructive" : "")
+            }
+          >
+            {output.replaceAll("[err]", "")}
+          </div>
+        </div>
+      )}
+    </div>,
+  ];
 }

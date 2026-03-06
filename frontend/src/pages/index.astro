@@ -4,25 +4,13 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../components/header.astro";
 
 import "@/styles/global.css";
-import StdIO from "@/components/stdio.tsx";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import { ResizableDemo } from "@/layouts/Resize";
 ---
 
 <Layout>
   <div class="w-full h-screen flex items-center flex-col">
     <Header />
 
-    <div class="flex w-full flex-1">
-      <div class="rounded-md overflow-hidden flex-1 ml-4 mb-4 bg-accent">
-        <Editor client:only className="w-full h-full" />
-      </div>
-      <div class="w-[30vw]">
-        <StdIO client:load />
-      </div>
-    </div>
+    <ResizableDemo client:load />
   </div>
 </Layout>
