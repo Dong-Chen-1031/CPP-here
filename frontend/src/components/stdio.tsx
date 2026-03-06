@@ -30,6 +30,12 @@ import { TooltipProvider } from "./ui/tooltip";
 import { useAtom } from "jotai";
 import { inputStore, outputStore } from "@/store/atom";
 
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+
 interface EditDialogOptions {
   title?: string;
   name?: string;
