@@ -15,7 +15,7 @@ export async function buildCode(code: string, cppVersion: string) {
     cpp_version: cppVersion,
   });
   if (!respond.data.ok) {
-    console.error("Build failed with errors:", respond.data.errors[0]);
+    console.log("Build failed with errors:", respond.data.errors[0]);
   }
   return respond.data as BuildResponse;
 }

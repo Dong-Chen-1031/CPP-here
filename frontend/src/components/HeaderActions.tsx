@@ -42,19 +42,26 @@ import Tip from "@/components/ui/tips";
 
 export default function HeaderActions() {
   const [editorGlobal] = useAtom(editorStore);
+  const [cppVersion, setCppVersion] = useAtom(cppVersionStore);
   const [code] = useAtom(codeStore);
   const [input] = useAtom(inputStore);
   const [, setOutput] = useAtom(outputStore);
-  const [cppVersion, setCppVersion] = useAtom(cppVersionStore);
 
   async function handleRun() {
     const response = await buildCode(code, cppVersion);
+    if (!response.ok) {
+      setOutput("[err]Build failed with errors:\n" + response.errors[0]);
+      return;
+    }
     runCode(response.js_code, response.wasm_url, input, {
       onInit: () => {
         setOutput("");
       },
       onStdout: (output) => {
         setOutput((prev) => prev + output);
+      },
+      onError(error) {
+        setOutput((prev) => prev + "[err]" + error);
       },
     });
   }

@@ -248,7 +248,14 @@ export default function StdIO() {
           </div>
         ) : (
           <div className="mt-4">
-            <div className="bg-accent/75 p-2 rounded-md">{output}</div>
+            <div
+              className={
+                "text-xs bg-accent/75 p-2 rounded-md whitespace-pre-wrap" +
+                (output.includes("[err]") ? " text-destructive" : "")
+              }
+            >
+              {output.replaceAll("[err]", "")}
+            </div>
           </div>
         )}
       </div>

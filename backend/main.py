@@ -1,4 +1,5 @@
 import pathlib
+import re
 from hashlib import sha256
 from typing import Literal
 
@@ -94,7 +95,13 @@ async def build_cpp(request: BuildRequest) -> BuildResponse:
             js_url="",
             wasm_url="",
             js_code="",
-            errors=[str(e.build_logs)],
+            errors=[
+                re.sub(
+                    r"emcc: error:[\s\S]*?failed \(returned 1\)\n?",
+                    "",
+                    str(e.build_logs),
+                ).strip()
+            ],
         )
 
     if not WORKER_CODE:
