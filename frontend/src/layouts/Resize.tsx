@@ -1,3 +1,4 @@
+import React from "react";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -27,14 +28,12 @@ export function SplitViewEditor() {
       <ResizablePanel id="output" defaultSize={LAYOUT.output}>
         <ResizablePanelGroup orientation="vertical">
           {stdios.map((stdio, index) => (
-            <>
-              {index > 0 && (
-                <ResizableHandle withHandle key={index + "handle"} />
-              )}
-              <ResizablePanel key={index} defaultSize={100 / stdios.length}>
+            <React.Fragment key={index}>
+              {index > 0 && <ResizableHandle withHandle />}
+              <ResizablePanel defaultSize={100 / stdios.length}>
                 {stdio}
               </ResizablePanel>
-            </>
+            </React.Fragment>
           ))}
 
           {/* <ResizablePanel defaultSize="25%">

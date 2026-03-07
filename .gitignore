@@ -8,8 +8,8 @@ logs/
 
 node_modules/
 
-.ds_store
 .DS_Store
+.vscode/
 
 # C extensions
 *.so
