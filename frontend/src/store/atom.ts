@@ -9,6 +9,13 @@ export interface TestCase {
   input: string;
 }
 
+export interface OutputLine {
+  type?: "stdout" | "err";
+  testCaseId?: string;
+  testCaseName?: string;
+  content: string;
+}
+
 export const editorStore = atom<RefObject<ReactCodeMirrorRef | null> | null>(
   null,
 );
@@ -18,7 +25,7 @@ export const codeStore = atomWithStorage<string>(
 );
 export const cppVersionStore = atomWithStorage<string>("cppVersion", "c++17");
 export const inputStore = atomWithStorage<string>("input", "");
-export const outputStore = atomWithStorage<string[]>("output", []);
+export const outputStore = atomWithStorage<OutputLine[]>("output", []);
 export const runModeStore = atomWithStorage<"single" | "all">(
   "runMode",
   "single",

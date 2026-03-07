@@ -70,10 +70,17 @@ export async function runCode(
     },
   }: RunOptions,
 ) {
-  const worker = new Worker(await text2BlobUrl(jsCode));
+  const blobUrl = await text2BlobUrl(jsCode);
+  const worker = new Worker(blobUrl);
+  URL.revokeObjectURL(blobUrl);
+
   const wasmResponse = await fetch(wasmUrl);
   const wasmModule = await WebAssembly.compileStreaming(wasmResponse);
   const taskId = crypto.randomUUID();
+  worker.onerror = (event) => {
+    worker.terminate();
+    onError && onError(event.message);
+  };
   worker.onmessage = (event) => {
     console.log("Worker message received:", event.data);
     onEvent && onEvent(event);
@@ -83,6 +90,7 @@ export async function runCode(
         onStdout && onStdout(content);
         break;
       case "error":
+        worker.terminate();
         onError && onError(content);
         break;
       case "status":
@@ -91,6 +99,7 @@ export async function runCode(
             onInit && onInit();
             break;
           case "exit":
+            worker.terminate();
             onExit && onExit();
             break;
           default:

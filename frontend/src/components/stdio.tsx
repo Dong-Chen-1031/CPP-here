@@ -135,7 +135,7 @@ export function InputPanel() {
           <Trash /> Clear
         </Button>
       </div>
-      <div className="mt-4 overflow-scroll h-[calc(100%-2rem)]">
+      <div className="mt-4 overflow-y-auto h-[calc(100%-2rem)]">
         <Textarea
           className="text-xs!"
           placeholder="Type your input here."
@@ -172,6 +172,7 @@ export function TestCasePanel() {
               <CirclePlus /> New
             </Button>
           }
+          name={`test Case ${testCases.length + 1}`}
           handleSubmit={handleAddTestCase}
         />
       </div>
@@ -237,6 +238,7 @@ export function TestCasePanel() {
 
 export function OutputPanel() {
   const [output, setOutput] = useAtom(outputStore);
+  const [testCases] = useAtom(testCasesStore);
   return (
     <div className="p-4 border-border border-2 rounded-md ml-2 mr-4 mt-2 h-[calc(100%-8px)]">
       <div className="flex gap-2 items-center">
@@ -245,7 +247,7 @@ export function OutputPanel() {
         <div className="flex-1"></div>
         <Button
           variant="outline"
-          onClick={() => navigator.clipboard.writeText(output[0])}
+          onClick={() => navigator.clipboard.writeText(output[0].content)}
         >
           <ClipboardCopy /> Copy
         </Button>
@@ -258,16 +260,21 @@ export function OutputPanel() {
           <p className="text-sm text-muted-foreground pl-2">No output yet.</p>
         </div>
       ) : (
-        <div className="mt-4 overflow-scroll h-[calc(100%-2rem)]">
+        <div className="mt-4 overflow-y-auto h-[calc(100%-2rem)] w-full">
           {output.map((line, index) => (
             <div
               key={index}
               className={
                 "text-xs bg-accent/75 p-2 rounded-md whitespace-pre-wrap break-all my-2 " +
-                (line.includes("[err]") ? " text-destructive" : "")
+                (line.type === "err" ? " text-destructive" : "")
               }
             >
-              {line.replaceAll("[err]", "")}
+              {line.testCaseId && (
+                <p className="text-[0.6rem] text-accent-foreground/80 mb-1">
+                  {line.testCaseName}
+                </p>
+              )}
+              {line.content}
             </div>
           ))}
         </div>

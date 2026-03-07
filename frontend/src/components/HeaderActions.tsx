@@ -29,6 +29,7 @@ import {
   outputStore,
   runModeStore,
   testCasesStore,
+  type OutputLine,
 } from "@/store/atom";
 
 import { undo, redo } from "@codemirror/commands";
@@ -49,7 +50,12 @@ export default function HeaderActions() {
   async function handleRun() {
     const response = await buildCode(code, cppVersion);
     if (!response.ok) {
-      setOutput(["[err]Build failed with errors:\n" + response.errors[0]]);
+      setOutput([
+        {
+          type: "err",
+          content: "Build failed with errors:\n" + response.errors[0],
+        },
+      ]);
       return;
     }
     runCode(response.js_code, response.wasm_url, input, {
@@ -57,10 +63,12 @@ export default function HeaderActions() {
         setOutput([]);
       },
       onStdout: (output) => {
-        setOutput((prev) => [...prev, output]);
+        setOutput((prev) => [
+          { content: (prev[prev.length - 1]?.content || "") + output + "\n" },
+        ]);
       },
       onError(error) {
-        setOutput((prev) => [...prev, "[err]" + error]);
+        setOutput((prev) => [...prev, { type: "err", content: error }]);
       },
     });
   }
@@ -68,18 +76,68 @@ export default function HeaderActions() {
   async function handleRunAll() {
     const response = await buildCode(code, cppVersion);
     if (!response.ok) {
-      setOutput(["[err]Build failed with errors:\n" + response.errors[0]]);
+      setOutput([
+        {
+          type: "err",
+          content: "Build failed with errors:\n" + response.errors[0],
+        },
+      ]);
       return;
     }
 
     setOutput([]);
+
+    const orderedIds = testCases.map((tc) => tc.id);
+
+    function insertInOrder(prev: OutputLine[], item: OutputLine) {
+      const lastSameIdx = prev.findLastIndex(
+        (o) => o.testCaseId === item.testCaseId && o.type === item.type,
+      );
+      if (lastSameIdx !== -1) {
+        const merged = {
+          ...prev[lastSameIdx],
+          content: prev[lastSameIdx].content + "\n" + item.content,
+        };
+        return [
+          ...prev.slice(0, lastSameIdx),
+          merged,
+          ...prev.slice(lastSameIdx + 1),
+        ];
+      }
+
+      const insertIdx = orderedIds.indexOf(item.testCaseId!);
+      let pos = prev.length;
+      for (let i = prev.length - 1; i >= 0; i--) {
+        const idx = orderedIds.indexOf(prev[i].testCaseId!);
+        if (idx <= insertIdx) {
+          pos = i + 1;
+          break;
+        }
+        pos = i;
+      }
+      return [...prev.slice(0, pos), item, ...prev.slice(pos)];
+    }
+
     for (const testCase of testCases) {
       runCode(response.js_code, response.wasm_url, testCase.input, {
         onStdout: (output) => {
-          setOutput((prev) => [...prev, output]);
+          setOutput((prev) =>
+            insertInOrder(prev, {
+              content: output,
+              testCaseId: testCase.id,
+              testCaseName: testCase.name,
+            }),
+          );
         },
         onError(error) {
-          setOutput((prev) => [...prev, "[err]" + error]);
+          setOutput((prev) =>
+            insertInOrder(prev, {
+              type: "err",
+              content: error,
+              testCaseId: testCase.id,
+              testCaseName: testCase.name,
+            }),
+          );
         },
       });
     }
@@ -92,7 +150,7 @@ export default function HeaderActions() {
           <Tip label="Undo (ctrl+z)">
             <Button
               variant="outline"
-              size="icon"
+              size="icon-sm"
               aria-label="Undo"
               onClick={() => {
                 if (editorGlobal?.current?.view) {
@@ -108,7 +166,7 @@ export default function HeaderActions() {
           <Tip label="Redo (ctrl+shift+z)">
             <Button
               variant="outline"
-              size="icon"
+              size="icon-sm"
               aria-label="Redo"
               onClick={() => {
                 if (editorGlobal?.current?.view) {
@@ -124,7 +182,7 @@ export default function HeaderActions() {
         </ButtonGroup>
         {/* <Tip label="C++ Version"> */}
         <Select value={cppVersion} onValueChange={setCppVersion}>
-          <SelectTrigger className="w-full max-w-48">
+          <SelectTrigger className="w-full max-w-48" size="sm">
             <SelectValue placeholder="C++ Version" />
           </SelectTrigger>
           <SelectContent position="popper">
@@ -193,7 +251,12 @@ export default function HeaderActions() {
             <DropdownMenuContent align="end" className="min-w-fit">
               <DropdownMenuGroup>
                 {runMode === "single" ? (
-                  <DropdownMenuItem onClick={() => setRunMode("all")}>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setRunMode("all");
+                      handleRunAll();
+                    }}
+                  >
                     <TestTubes />
                     <Tip label="Run all test cases">
                       <p className="text-xs">Run All</p>
@@ -201,7 +264,10 @@ export default function HeaderActions() {
                   </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem
-                    onClick={() => setRunMode("single")}
+                    onClick={() => {
+                      setRunMode("single");
+                      handleRun();
+                    }}
                     className="w-27"
                   >
                     <Play />
