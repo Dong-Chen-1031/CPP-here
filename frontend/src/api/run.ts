@@ -34,8 +34,7 @@ async function url2BlobUrl(
 ) {
   const response = await axios.get(url);
   const code = response.data;
-  const blob = new Blob([code], { type: type });
-  return URL.createObjectURL(blob);
+  return text2BlobUrl(code, type);
 }
 
 interface RunOptions {
@@ -45,37 +44,42 @@ interface RunOptions {
   onStderr?: (stderr: string) => void;
   onEvent?: (event: any) => void;
   onExit?: () => void;
+  wasmUrl?: string;
+  wasmModule?: WebAssembly.Module;
+}
+
+export async function url2WasmModule(url: string) {
+  const response = await fetch(url);
+  const wasmModule = await WebAssembly.compileStreaming(response);
+  return wasmModule;
 }
 
 export async function runCode(
   jsCode: string,
-  wasmUrl: string,
   inputData: string,
   {
-    onStdout = (out) => {
-      // console.log("Standard output:", out);
-    },
-    onError = (err) => {
-      // console.error("Error:", err);
-    },
-    onInit = () => {
-      // console.log("Execution started.");
-    },
+    onStdout,
+    onError,
+    onInit,
     onStderr = (err) => {
       console.error("Standard error occurred.", err);
     },
     onEvent,
-    onExit = (): void => {
-      // console.log("Execution completed.");
-    },
+    onExit,
+    wasmUrl,
+    wasmModule,
   }: RunOptions,
 ) {
   const blobUrl = await text2BlobUrl(jsCode);
   const worker = new Worker(blobUrl);
   URL.revokeObjectURL(blobUrl);
-
-  const wasmResponse = await fetch(wasmUrl);
-  const wasmModule = await WebAssembly.compileStreaming(wasmResponse);
+  if (!wasmModule) {
+    if (!wasmUrl) {
+      throw new Error("Either wasmUrl or wasmModule must be provided");
+    }
+    const wasmResponse = await fetch(wasmUrl);
+    wasmModule = await WebAssembly.compileStreaming(wasmResponse);
+  }
   const taskId = crypto.randomUUID();
   worker.onerror = (event) => {
     worker.terminate();

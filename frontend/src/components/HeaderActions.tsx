@@ -36,7 +36,7 @@ import {
 
 import { undo, redo } from "@codemirror/commands";
 
-import { buildCode, runCode } from "@/api/run";
+import { buildCode, runCode, url2WasmModule } from "@/api/run";
 
 import Tip from "@/components/ui/tips";
 import { useResetAllAtoms } from "@/store/atom";
@@ -69,7 +69,8 @@ export default function HeaderActions() {
       setRunStatus("idle");
       return;
     }
-    runCode(response.js_code, response.wasm_url, input, {
+    runCode(response.js_code, input, {
+      wasmUrl: response.wasm_url,
       onInit: () => {
         setOutput([]);
       },
@@ -101,7 +102,7 @@ export default function HeaderActions() {
       setRunStatus("idle");
       return;
     }
-
+    const wasmModule = await url2WasmModule(response.wasm_url);
     setOutput([]);
     exitCountRef.current = 0;
 
@@ -137,7 +138,8 @@ export default function HeaderActions() {
     }
 
     for (const testCase of testCases) {
-      runCode(response.js_code, response.wasm_url, testCase.input, {
+      runCode(response.js_code, testCase.input, {
+        wasmModule: wasmModule,
         onStdout(output) {
           setOutput((prev) =>
             insertInOrder(prev, {
@@ -257,12 +259,12 @@ export default function HeaderActions() {
         <ButtonGroup>
           {runStatus === "building" ? (
             <Button variant="outline" disabled>
-              <Spinner />
+              <Spinner className="size-3" />
               <span className="text-xs">Building</span>
             </Button>
           ) : runStatus === "running" ? (
             <Button variant="outline" disabled>
-              <Spinner />
+              <Spinner className="size-3" />
               <span className="text-xs">Running</span>
             </Button>
           ) : runMode === "single" ? (
