@@ -4,13 +4,13 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../components/header.astro";
 
 import "@/styles/global.css";
-import { ResizableDemo } from "@/layouts/Resize";
+import { SplitViewEditor } from "@/layouts/Resize";
 ---
 
 <Layout>
   <div class="w-full h-screen flex items-center flex-col">
     <Header />
 
-    <ResizableDemo client:load />
+    <SplitViewEditor client:load />
   </div>
 </Layout>

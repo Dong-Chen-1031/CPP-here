@@ -26,7 +26,6 @@ function cppCompletions(context: CompletionContext): CompletionResult | null {
 }
 
 function CppEditor({
-  defaultValue = '#include <iostream>\n\nint main() {\n  std::cout << "Hello World";\n  return 0;\n}',
   onChange,
   extensions = [],
   basicSetup,
@@ -41,7 +40,6 @@ function CppEditor({
   >(null);
 
   useEffect(() => {
-    setCode(defaultValue);
     return () => {
       setEditorGlobal(null);
     };

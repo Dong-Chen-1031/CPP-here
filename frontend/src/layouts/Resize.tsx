@@ -10,7 +10,7 @@ import Editor from "@/components/Editor";
 
 const LAYOUT = { editor: 70, output: 30 };
 
-export function ResizableDemo() {
+export function SplitViewEditor() {
   const stdios = StdIO();
   return (
     <ResizablePanelGroup
@@ -28,7 +28,9 @@ export function ResizableDemo() {
         <ResizablePanelGroup orientation="vertical">
           {stdios.map((stdio, index) => (
             <>
-              {index > 0 && <ResizableHandle withHandle />}
+              {index > 0 && (
+                <ResizableHandle withHandle key={index + "handle"} />
+              )}
               <ResizablePanel key={index} defaultSize={100 / stdios.length}>
                 {stdio}
               </ResizablePanel>
