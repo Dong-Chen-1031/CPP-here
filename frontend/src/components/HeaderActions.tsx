@@ -6,25 +6,9 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertTriangleIcon,
-  CheckIcon,
-  ChevronDownIcon,
-  CopyIcon,
-  ShareIcon,
-  TestTubes,
-  TrashIcon,
-  UserRoundXIcon,
-  VolumeOffIcon,
-} from "lucide-react";
+import { ChevronDownIcon, TestTubes } from "lucide-react";
 import { Play, UndoIcon, RedoIcon } from "lucide-react";
 import {
   Select,
@@ -43,6 +27,7 @@ import {
   editorStore,
   inputStore,
   outputStore,
+  testCasesStore,
 } from "@/store/atom";
 
 import { undo, redo } from "@codemirror/commands";
@@ -57,6 +42,8 @@ export default function HeaderActions() {
   const [code] = useAtom(codeStore);
   const [input] = useAtom(inputStore);
   const [, setOutput] = useAtom(outputStore);
+  const [testCases] = useAtom(testCasesStore);
+  const [runMode, setRunMode] = React.useState<"single" | "all">("single");
 
   async function handleRun() {
     const response = await buildCode(code, cppVersion);
@@ -75,6 +62,26 @@ export default function HeaderActions() {
         setOutput((prev) => prev + "[err]" + error);
       },
     });
+  }
+
+  async function handleRunAll() {
+    const response = await buildCode(code, cppVersion);
+    if (!response.ok) {
+      setOutput("[err]Build failed with errors:\n" + response.errors[0]);
+      return;
+    }
+
+    setOutput("");
+    for (const testCase of testCases) {
+      runCode(response.js_code, response.wasm_url, testCase.input, {
+        onStdout: (output) => {
+          setOutput((prev) => prev + output);
+        },
+        onError(error) {
+          setOutput((prev) => prev + "[err]" + error);
+        },
+      });
+    }
   }
 
   return (
@@ -161,24 +168,47 @@ export default function HeaderActions() {
           </Tip>
         </ButtonGroup> */}
         <ButtonGroup>
-          <Tip label="Run Code">
-            <Button variant="outline" onClick={handleRun}>
-              <Play />
-              Run
-            </Button>
-          </Tip>
+          {runMode === "single" ? (
+            <Tip label="Run code">
+              <Button variant="outline" onClick={handleRun}>
+                <Play />
+                Run
+              </Button>
+            </Tip>
+          ) : (
+            <Tip label="Run all test cases">
+              <Button variant="outline" onClick={handleRunAll}>
+                <TestTubes />
+                Run All
+              </Button>
+            </Tip>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="p-1">
                 <ChevronDownIcon />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuContent align="end" className="min-w-fit">
               <DropdownMenuGroup>
-                <DropdownMenuItem>
-                  <TestTubes />
-                  <p className="text-xs">Run All Test Cases</p>
-                </DropdownMenuItem>
+                {runMode === "single" ? (
+                  <DropdownMenuItem onClick={() => setRunMode("all")}>
+                    <TestTubes />
+                    <Tip label="Run all test cases">
+                      <p className="text-xs">Run All</p>
+                    </Tip>
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() => setRunMode("single")}
+                    className="w-27"
+                  >
+                    <Play />
+                    <Tip label="Run current input">
+                      <p className="text-xs flex-1">Run</p>
+                    </Tip>
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>

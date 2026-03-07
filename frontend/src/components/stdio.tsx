@@ -10,7 +10,7 @@ import {
   ClipboardCopy,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 
 import {
   Dialog,
@@ -28,14 +28,12 @@ import { Label } from "@/components/ui/label";
 import Tip from "./ui/tips";
 import { TooltipProvider } from "./ui/tooltip";
 import { useAtom } from "jotai";
-import { inputStore, outputStore } from "@/store/atom";
-
 import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
-
+  inputStore,
+  outputStore,
+  testCasesStore,
+  type TestCase,
+} from "@/store/atom";
 interface EditDialogOptions {
   title?: string;
   name?: string;
@@ -48,7 +46,7 @@ interface EditDialogOptions {
 export function TestEditDialog({
   trigger,
   title = "New Test Case",
-  name = "Test Case1",
+  name = "Test Case 1",
   input = "",
   tips = "",
   submitBtnName = "Create",
@@ -117,30 +115,13 @@ export function TestEditDialog({
   );
 }
 
-export default function StdIO() {
-  interface TestCase {
-    id: string;
-    name: string;
-    input: string;
-  }
+export function InputPanel() {
   const [input, setInput] = useAtom(inputStore);
-  const [output, setOutput] = useAtom(outputStore);
-  const [testCases, setTestCases] = useState<TestCase[]>([]);
-
-  function handleAddTestCase(name: string, input: string) {
-    const newTestCase: TestCase = {
-      id: crypto.randomUUID(),
-      name,
-      input,
-    };
-    setTestCases((prev) => [...prev, newTestCase]);
-  }
-
-  return [
+  return (
     <div className="p-4 border-border border-2 rounded-md mr-4 ml-2 mt-0 mb-2 h-[calc(100%-8px)]">
       <div className="flex gap-2 items-center">
-        <Keyboard className="w-4 h-4" />
-        <p>Input</p>
+        <Keyboard className="w-3 h-3" />
+        <p className="text-sm">Input</p>
         <div className="flex-1"></div>
         <Button
           variant="outline"
@@ -161,11 +142,28 @@ export default function StdIO() {
           onChange={(e) => setInput(e.target.value)}
         />
       </div>
-    </div>,
+    </div>
+  );
+}
+
+export function TestCasePanel() {
+  const [, setInput] = useAtom(inputStore);
+  const [testCases, setTestCases] = useAtom(testCasesStore);
+
+  function handleAddTestCase(name: string, input: string) {
+    const newTestCase: TestCase = {
+      id: crypto.randomUUID(),
+      name,
+      input,
+    };
+    setTestCases((prev) => [...prev, newTestCase]);
+  }
+
+  return (
     <div className="p-4 border-border border-2 rounded-md mr-4 ml-2 my-2 h-[calc(100%-16px)]">
       <div className="flex gap-2 items-center">
-        <TestTubes className="w-4 h-4" />
-        <p>Test Case</p>
+        <TestTubes className="w-3 h-3" />
+        <p className="text-sm">Test Case</p>
         <div className="flex-1"></div>
         <TestEditDialog
           trigger={
@@ -176,7 +174,7 @@ export default function StdIO() {
           handleSubmit={handleAddTestCase}
         />
       </div>
-      <div className="mt-4">
+      <div className="mt-4 overflow-y-auto max-h-[calc(100%-2rem)]">
         <TooltipProvider delayDuration={300}>
           {testCases.length === 0 ? (
             <p className="text-sm text-muted-foreground pl-2">
@@ -184,7 +182,7 @@ export default function StdIO() {
             </p>
           ) : (
             <div className="flex flex-col gap-2">
-              {testCases.map((testCase, index) => (
+              {testCases.map((testCase) => (
                 <div
                   key={testCase.id}
                   className="text-sm bg-accent/75 p-2 rounded-md cursor-pointer hover:bg-accent flex items-center justify-between gap-2"
@@ -216,7 +214,8 @@ export default function StdIO() {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setTestCases((prev) =>
                           prev.filter((tc) => tc.id !== testCase.id),
                         );
@@ -231,11 +230,17 @@ export default function StdIO() {
           )}
         </TooltipProvider>
       </div>
-    </div>,
+    </div>
+  );
+}
+
+export function OutputPanel() {
+  const [output, setOutput] = useAtom(outputStore);
+  return (
     <div className="p-4 border-border border-2 rounded-md ml-2 mr-4 mt-2 h-[calc(100%-8px)]">
       <div className="flex gap-2 items-center">
-        <SquareTerminal className="w-4 h-4" />
-        <p>Output</p>
+        <SquareTerminal className="w-3 h-3" />
+        <p className="text-sm">Output</p>
         <div className="flex-1"></div>
         <Button
           variant="outline"
@@ -252,10 +257,10 @@ export default function StdIO() {
           <p className="text-sm text-muted-foreground pl-2">No output yet.</p>
         </div>
       ) : (
-        <div className="mt-4">
+        <div className="mt-4 overflow-y-auto h-[calc(100%-2rem)]">
           <div
             className={
-              "text-xs bg-accent/75 p-2 rounded-md whitespace-pre-wrap" +
+              "text-xs bg-accent/75 p-2 rounded-md whitespace-pre-wrap break-all " +
               (output.includes("[err]") ? " text-destructive" : "")
             }
           >
@@ -263,6 +268,6 @@ export default function StdIO() {
           </div>
         </div>
       )}
-    </div>,
-  ];
+    </div>
+  );
 }

@@ -89,7 +89,6 @@ async def build_cpp(request: BuildRequest) -> BuildResponse:
         await build(request.code, name=js_name)
         logger.info("Build succeeded")
     except BuildError as e:
-        logger.error(f"Build failed: {e}")
         return BuildResponse(
             ok=False,
             js_url="",
