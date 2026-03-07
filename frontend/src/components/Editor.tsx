@@ -1,7 +1,9 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import CodeMirror, { type ReactCodeMirrorProps } from "@uiw/react-codemirror";
 import { cpp } from "@codemirror/lang-cpp";
-import { oneDark } from "@codemirror/theme-one-dark";
+// import { oneDark } from "@codemirror/theme-one-dark";
+import { vscodeDark, vscodeDarkInit } from "@uiw/codemirror-theme-vscode";
+
 import {
   autocompletion,
   CompletionContext,
@@ -59,7 +61,13 @@ function CppEditor({
       style={style}
       value={code}
       height="100%"
-      theme={oneDark}
+      theme={vscodeDarkInit({
+        settings: {
+          fontSize: "13px",
+          background: "#151515",
+          gutterBackground: "#151515",
+        },
+      })}
       ref={editorRef}
       onCreateEditor={() => {
         setEditorGlobal(editorRef);
