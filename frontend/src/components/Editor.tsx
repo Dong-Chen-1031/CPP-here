@@ -64,8 +64,8 @@ function CppEditor({
       theme={vscodeDarkInit({
         settings: {
           fontSize: "13px",
-          background: "#151515",
-          gutterBackground: "#151515",
+          background: "#1F1F1F",
+          gutterBackground: "#1F1F1F",
         },
       })}
       ref={editorRef}

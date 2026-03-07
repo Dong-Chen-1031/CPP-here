@@ -59,6 +59,7 @@ export default function HeaderActions() {
   async function handleRun() {
     setRunStatus("building");
     const response = await buildCode(code, cppVersion);
+
     if (!response.ok) {
       setOutput([
         {
