@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDownIcon, TestTubes } from "lucide-react";
 import { Play, UndoIcon, RedoIcon } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+
 import {
   Select,
   SelectContent,
@@ -46,8 +48,13 @@ export default function HeaderActions() {
   const [, setOutput] = useAtom(outputStore);
   const [testCases] = useAtom(testCasesStore);
   const [runMode, setRunMode] = useAtom(runModeStore);
+  const [runStatus, setRunStatus] = React.useState<
+    "idle" | "building" | "running"
+  >("idle");
+  const exitCountRef = React.useRef(0);
 
   async function handleRun() {
+    setRunStatus("building");
     const response = await buildCode(code, cppVersion);
     if (!response.ok) {
       setOutput([
@@ -70,10 +77,15 @@ export default function HeaderActions() {
       onError(error) {
         setOutput((prev) => [...prev, { type: "err", content: error }]);
       },
+      onExit() {
+        setRunStatus("idle");
+      },
     });
+    setRunStatus("running");
   }
 
   async function handleRunAll() {
+    setRunStatus("building");
     const response = await buildCode(code, cppVersion);
     if (!response.ok) {
       setOutput([
@@ -86,6 +98,7 @@ export default function HeaderActions() {
     }
 
     setOutput([]);
+    exitCountRef.current = 0;
 
     const orderedIds = testCases.map((tc) => tc.id);
 
@@ -120,7 +133,7 @@ export default function HeaderActions() {
 
     for (const testCase of testCases) {
       runCode(response.js_code, response.wasm_url, testCase.input, {
-        onStdout: (output) => {
+        onStdout(output) {
           setOutput((prev) =>
             insertInOrder(prev, {
               content: output,
@@ -139,8 +152,18 @@ export default function HeaderActions() {
             }),
           );
         },
+        onExit() {
+          exitCountRef.current += 1;
+          console.log(
+            `Test case ${testCase.name} completed. (${exitCountRef.current}/${testCases.length})`,
+          );
+          if (exitCountRef.current === testCases.length) {
+            setRunStatus("idle");
+          }
+        },
       });
     }
+    setRunStatus("running");
   }
 
   return (
@@ -227,7 +250,17 @@ export default function HeaderActions() {
           </Tip>
         </ButtonGroup> */}
         <ButtonGroup>
-          {runMode === "single" ? (
+          {runStatus === "building" ? (
+            <Button variant="outline" disabled>
+              <Spinner />
+              <span className="text-xs">Building...</span>
+            </Button>
+          ) : runStatus === "running" ? (
+            <Button variant="outline" disabled>
+              <Spinner />
+              <span className="text-xs">Running...</span>
+            </Button>
+          ) : runMode === "single" ? (
             <Tip label="Run code">
               <Button variant="outline" onClick={handleRun}>
                 <Play />
@@ -244,7 +277,11 @@ export default function HeaderActions() {
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="p-1">
+              <Button
+                variant="outline"
+                className="p-1"
+                disabled={runStatus !== "idle"}
+              >
                 <ChevronDownIcon />
               </Button>
             </DropdownMenuTrigger>

@@ -53,20 +53,20 @@ export async function runCode(
   inputData: string,
   {
     onStdout = (out) => {
-      console.log("Standard output:", out);
+      // console.log("Standard output:", out);
     },
     onError = (err) => {
-      console.error("Error:", err);
+      // console.error("Error:", err);
     },
     onInit = () => {
-      console.log("Execution started.");
+      // console.log("Execution started.");
     },
     onStderr = (err) => {
       console.error("Standard error occurred.", err);
     },
     onEvent,
     onExit = (): void => {
-      console.log("Execution completed.");
+      // console.log("Execution completed.");
     },
   }: RunOptions,
 ) {
@@ -92,6 +92,8 @@ export async function runCode(
       case "error":
         worker.terminate();
         onError && onError(content);
+        onExit && onExit();
+
         break;
       case "status":
         switch (content) {
@@ -108,6 +110,7 @@ export async function runCode(
         break;
       case "stderr":
         onStderr && onStderr(content);
+        onExit && onExit();
         break;
       default:
         console.warn("Unknown status from worker:", content);

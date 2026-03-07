@@ -22,13 +22,13 @@ self.onmessage = async (e) => {
     },
     // 攔截 stdout (printf / std::cout)
     print: function (text) {
-      console.log(text);
+      // console.log(text);
       self.postMessage({ type: "stdout", taskId, content: text });
     },
 
     // 攔截 stderr (fprintf(stderr, ...) / std::cerr)
     printErr: function (text) {
-      console.error(text);
+      // console.error(text);
       self.postMessage({ type: "stderr", taskId, content: text });
     },
 
