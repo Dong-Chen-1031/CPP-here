@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDownIcon, TestTubes } from "lucide-react";
+import { ChevronDownIcon, RotateCcw, TestTubes } from "lucide-react";
 import { Play, UndoIcon, RedoIcon } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -39,6 +39,8 @@ import { undo, redo } from "@codemirror/commands";
 import { buildCode, runCode } from "@/api/run";
 
 import Tip from "@/components/ui/tips";
+import { useResetAllAtoms } from "@/store/atom";
+import { set } from "astro:schema";
 
 export default function HeaderActions() {
   const [editorGlobal] = useAtom(editorStore);
@@ -52,6 +54,7 @@ export default function HeaderActions() {
     "idle" | "building" | "running"
   >("idle");
   const exitCountRef = React.useRef(0);
+  const resetAll = useResetAllAtoms();
 
   async function handleRun() {
     setRunStatus("building");
@@ -63,6 +66,7 @@ export default function HeaderActions() {
           content: "Build failed with errors:\n" + response.errors[0],
         },
       ]);
+      setRunStatus("idle");
       return;
     }
     runCode(response.js_code, response.wasm_url, input, {
@@ -94,6 +98,7 @@ export default function HeaderActions() {
           content: "Build failed with errors:\n" + response.errors[0],
         },
       ]);
+      setRunStatus("idle");
       return;
     }
 
@@ -203,6 +208,14 @@ export default function HeaderActions() {
             </Button>
           </Tip>
         </ButtonGroup>
+        <ButtonGroup>
+          <Tip label="Reset Everything">
+            <Button variant="outline" onClick={resetAll}>
+              <RotateCcw />
+              Reset
+            </Button>
+          </Tip>
+        </ButtonGroup>
         {/* <Tip label="C++ Version"> */}
         <Select value={cppVersion} onValueChange={setCppVersion}>
           <SelectTrigger className="w-full max-w-48" size="sm">
@@ -221,14 +234,6 @@ export default function HeaderActions() {
         </Select>
         {/* </Tip> */}
 
-        {/* <ButtonGroup>
-          <Tip label="Format code">
-            <Button variant="outline">
-              <Form />
-              Format
-            </Button>
-          </Tip>
-        </ButtonGroup> */}
         {/* <ButtonGroup>
         <Button variant="outline">
           <Download />
@@ -253,12 +258,12 @@ export default function HeaderActions() {
           {runStatus === "building" ? (
             <Button variant="outline" disabled>
               <Spinner />
-              <span className="text-xs">Building...</span>
+              <span className="text-xs">Building</span>
             </Button>
           ) : runStatus === "running" ? (
             <Button variant="outline" disabled>
               <Spinner />
-              <span className="text-xs">Running...</span>
+              <span className="text-xs">Running</span>
             </Button>
           ) : runMode === "single" ? (
             <Tip label="Run code">

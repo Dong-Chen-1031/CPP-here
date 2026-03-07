@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
+import { atomWithStorage, useResetAtom } from "jotai/utils";
 import { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import type { RefObject } from "react";
 
@@ -13,6 +13,7 @@ export interface OutputLine {
   type?: "stdout" | "err";
   testCaseId?: string;
   testCaseName?: string;
+  expectedOutput?: string;
   content: string;
 }
 
@@ -21,7 +22,7 @@ export const editorStore = atom<RefObject<ReactCodeMirrorRef | null> | null>(
 );
 export const codeStore = atomWithStorage<string>(
   "code",
-  `#include <iostream>\n\nint main() {\n  std::cout << "Hello World";\n  return 0;\n}`,
+  `#include <iostream>\nusing namespace std;\n\nint main() {\n  cout << "Hello C++ Online Editor";\n  return 0;\n}`,
 );
 export const cppVersionStore = atomWithStorage<string>("cppVersion", "c++17");
 export const inputStore = atomWithStorage<string>("input", "");
@@ -35,3 +36,21 @@ export const testCasesStore = atomWithStorage<TestCase[]>("testCases", [
   { id: "example-2", name: "Test Case 2", input: "Example input 2" },
   { id: "example-3", name: "Test Case 3", input: "Example input 3" },
 ]);
+
+export function useResetAllAtoms() {
+  const resetCode = useResetAtom(codeStore);
+  const resetCppVersion = useResetAtom(cppVersionStore);
+  const resetInput = useResetAtom(inputStore);
+  const resetOutput = useResetAtom(outputStore);
+  const resetRunMode = useResetAtom(runModeStore);
+  const resetTestCases = useResetAtom(testCasesStore);
+
+  return () => {
+    resetCode();
+    resetCppVersion();
+    resetInput();
+    resetOutput();
+    resetRunMode();
+    resetTestCases();
+  };
+}
