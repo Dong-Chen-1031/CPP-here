@@ -49,18 +49,18 @@ export default function HeaderActions() {
   async function handleRun() {
     const response = await buildCode(code, cppVersion);
     if (!response.ok) {
-      setOutput("[err]Build failed with errors:\n" + response.errors[0]);
+      setOutput(["[err]Build failed with errors:\n" + response.errors[0]]);
       return;
     }
     runCode(response.js_code, response.wasm_url, input, {
       onInit: () => {
-        setOutput("");
+        setOutput([]);
       },
       onStdout: (output) => {
-        setOutput((prev) => prev + output);
+        setOutput((prev) => [...prev, output]);
       },
       onError(error) {
-        setOutput((prev) => prev + "[err]" + error);
+        setOutput((prev) => [...prev, "[err]" + error]);
       },
     });
   }
@@ -68,18 +68,18 @@ export default function HeaderActions() {
   async function handleRunAll() {
     const response = await buildCode(code, cppVersion);
     if (!response.ok) {
-      setOutput("[err]Build failed with errors:\n" + response.errors[0]);
+      setOutput(["[err]Build failed with errors:\n" + response.errors[0]]);
       return;
     }
 
-    setOutput("");
+    setOutput([]);
     for (const testCase of testCases) {
       runCode(response.js_code, response.wasm_url, testCase.input, {
         onStdout: (output) => {
-          setOutput((prev) => prev + output);
+          setOutput((prev) => [...prev, output]);
         },
         onError(error) {
-          setOutput((prev) => prev + "[err]" + error);
+          setOutput((prev) => [...prev, "[err]" + error]);
         },
       });
     }

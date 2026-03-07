@@ -135,8 +135,9 @@ export function InputPanel() {
           <Trash /> Clear
         </Button>
       </div>
-      <div className="mt-4">
+      <div className="mt-4 overflow-scroll h-[calc(100%-2rem)]">
         <Textarea
+          className="text-xs!"
           placeholder="Type your input here."
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -244,28 +245,31 @@ export function OutputPanel() {
         <div className="flex-1"></div>
         <Button
           variant="outline"
-          onClick={() => navigator.clipboard.writeText(output)}
+          onClick={() => navigator.clipboard.writeText(output[0])}
         >
           <ClipboardCopy /> Copy
         </Button>
-        <Button variant="outline" onClick={() => setOutput("")}>
+        <Button variant="outline" onClick={() => setOutput([])}>
           <Trash /> Clear
         </Button>
       </div>
-      {output.trim() === "" ? (
+      {output.length === 0 ? (
         <div className="mt-4">
           <p className="text-sm text-muted-foreground pl-2">No output yet.</p>
         </div>
       ) : (
-        <div className="mt-4 overflow-y-auto h-[calc(100%-2rem)]">
-          <div
-            className={
-              "text-xs bg-accent/75 p-2 rounded-md whitespace-pre-wrap break-all " +
-              (output.includes("[err]") ? " text-destructive" : "")
-            }
-          >
-            {output.replaceAll("[err]", "")}
-          </div>
+        <div className="mt-4 overflow-scroll h-[calc(100%-2rem)]">
+          {output.map((line, index) => (
+            <div
+              key={index}
+              className={
+                "text-xs bg-accent/75 p-2 rounded-md whitespace-pre-wrap break-all my-2 " +
+                (line.includes("[err]") ? " text-destructive" : "")
+              }
+            >
+              {line.replaceAll("[err]", "")}
+            </div>
+          ))}
         </div>
       )}
     </div>
