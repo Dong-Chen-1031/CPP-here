@@ -19,6 +19,10 @@ export const codeStore = atomWithStorage<string>(
 export const cppVersionStore = atomWithStorage<string>("cppVersion", "c++17");
 export const inputStore = atomWithStorage<string>("input", "");
 export const outputStore = atomWithStorage<string>("output", "");
+export const runModeStore = atomWithStorage<"single" | "all">(
+  "runMode",
+  "single",
+);
 export const testCasesStore = atomWithStorage<TestCase[]>("testCases", [
   { id: "example-1", name: "Test Case 1", input: "Example input 1" },
   { id: "example-2", name: "Test Case 2", input: "Example input 2" },

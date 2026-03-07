@@ -27,6 +27,7 @@ import {
   editorStore,
   inputStore,
   outputStore,
+  runModeStore,
   testCasesStore,
 } from "@/store/atom";
 
@@ -43,7 +44,7 @@ export default function HeaderActions() {
   const [input] = useAtom(inputStore);
   const [, setOutput] = useAtom(outputStore);
   const [testCases] = useAtom(testCasesStore);
-  const [runMode, setRunMode] = React.useState<"single" | "all">("single");
+  const [runMode, setRunMode] = useAtom(runModeStore);
 
   async function handleRun() {
     const response = await buildCode(code, cppVersion);
