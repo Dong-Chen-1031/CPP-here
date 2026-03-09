@@ -31,7 +31,7 @@ import {
   outputStore,
   runModeStore,
   testCasesStore,
-  type OutputLine,
+  type OutputCase,
 } from "@/store/atom";
 
 import { undo, redo } from "@codemirror/commands";
@@ -90,6 +90,37 @@ export default function HeaderActions() {
     setRunStatus("running");
   }
 
+  const orderedIds = testCases.map((tc) => tc.id);
+
+  function insertInOrder(prev: OutputCase[], item: OutputCase) {
+    const lastSameIdx = prev.findLastIndex(
+      (o) => o.testCaseId === item.testCaseId && o.type === item.type,
+    );
+    if (lastSameIdx !== -1) {
+      const merged = {
+        ...prev[lastSameIdx],
+        content: prev[lastSameIdx].content + "\n" + item.content,
+      };
+      return [
+        ...prev.slice(0, lastSameIdx),
+        merged,
+        ...prev.slice(lastSameIdx + 1),
+      ];
+    }
+
+    const insertIdx = orderedIds.indexOf(item.testCaseId!);
+    let pos = prev.length;
+    for (let i = prev.length - 1; i >= 0; i--) {
+      const idx = orderedIds.indexOf(prev[i].testCaseId!);
+      if (idx <= insertIdx) {
+        pos = i + 1;
+        break;
+      }
+      pos = i;
+    }
+    return [...prev.slice(0, pos), item, ...prev.slice(pos)];
+  }
+
   async function handleRunAll() {
     setRunStatus("building");
     const response = await buildCode(code, cppVersion);
@@ -106,37 +137,6 @@ export default function HeaderActions() {
     const wasmModule = await url2WasmModule(response.wasm_url);
     setOutput([]);
     exitCountRef.current = 0;
-
-    const orderedIds = testCases.map((tc) => tc.id);
-
-    function insertInOrder(prev: OutputLine[], item: OutputLine) {
-      const lastSameIdx = prev.findLastIndex(
-        (o) => o.testCaseId === item.testCaseId && o.type === item.type,
-      );
-      if (lastSameIdx !== -1) {
-        const merged = {
-          ...prev[lastSameIdx],
-          content: prev[lastSameIdx].content + "\n" + item.content,
-        };
-        return [
-          ...prev.slice(0, lastSameIdx),
-          merged,
-          ...prev.slice(lastSameIdx + 1),
-        ];
-      }
-
-      const insertIdx = orderedIds.indexOf(item.testCaseId!);
-      let pos = prev.length;
-      for (let i = prev.length - 1; i >= 0; i--) {
-        const idx = orderedIds.indexOf(prev[i].testCaseId!);
-        if (idx <= insertIdx) {
-          pos = i + 1;
-          break;
-        }
-        pos = i;
-      }
-      return [...prev.slice(0, pos), item, ...prev.slice(pos)];
-    }
 
     for (const testCase of testCases) {
       runCode(response.js_code, testCase.input, {
