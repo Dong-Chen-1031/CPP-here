@@ -3,3 +3,5 @@ fastapi[standard]
 python-dotenv
 aiofiles
 diskcache
+pyturnstile
+SQLAlchemy

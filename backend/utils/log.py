@@ -1,6 +1,6 @@
-import datetime
 import logging
 import os
+from logging.handlers import TimedRotatingFileHandler
 
 from rich.console import Console
 from rich.logging import RichHandler
@@ -13,8 +13,8 @@ log_dir = "logs"
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
-current_time = datetime.datetime.now().strftime("%Y-%m-%d")
-log_file = f"{log_dir}/{current_time}.log"
+# current_time = datetime.datetime.now().strftime("%Y-%m-%d")
+# log_file = f"{log_dir}/{current_time}.log"
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -24,7 +24,13 @@ rich_handler = RichHandler(
 )
 rich_handler.setLevel(logging.INFO)
 
-file_handler = logging.FileHandler(filename=log_file, encoding="utf-8", mode="a")
+file_handler = TimedRotatingFileHandler(
+    filename=f"{log_dir}/backend.log",
+    encoding="utf-8",
+    when="midnight",
+    interval=1,
+    backupCount=7,
+)
 file_handler.setLevel(logging.DEBUG)
 file_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 file_handler.setFormatter(file_format)
