@@ -40,7 +40,6 @@ import { buildCode, runCode, url2WasmModule } from "@/api/run";
 
 import Tip from "@/components/ui/tips";
 import { useResetAllAtoms } from "@/store/atom";
-import { set } from "astro:schema";
 
 export default function HeaderActions() {
   const [editorGlobal] = useAtom(editorStore);
@@ -220,7 +219,7 @@ export default function HeaderActions() {
           </Tip>
         </ButtonGroup>
         {/* <Tip label="C++ Version"> */}
-        <Select value={cppVersion} onValueChange={setCppVersion}>
+        <Select value={cppVersion || "c++17"} onValueChange={setCppVersion}>
           <SelectTrigger className="w-full max-w-48" size="sm">
             <SelectValue placeholder="C++ Version" />
           </SelectTrigger>

@@ -12,6 +12,7 @@ import {
 import { cppKeywords } from "../config/cppKeywords";
 import { codeStore, editorStore } from "@/store/atom";
 import { useAtom } from "jotai";
+import { Spinner } from "./ui/spinner";
 
 type CppEditorProps = Omit<ReactCodeMirrorProps, "value" | "onChange"> & {
   defaultValue?: string;
@@ -41,6 +42,8 @@ function CppEditor({
     import("@uiw/react-codemirror").ReactCodeMirrorRef | null
   >(null);
 
+  const [isEditorReady, setIsEditorReady] = useState(false);
+
   useEffect(() => {
     return () => {
       setEditorGlobal(null);
@@ -56,37 +59,48 @@ function CppEditor({
   );
 
   return (
-    <CodeMirror
-      className={className}
-      style={style}
-      value={code}
-      height="100%"
-      theme={vscodeDarkInit({
-        settings: {
-          fontSize: "13px",
-          background: "#1F1F1F",
-          gutterBackground: "#1F1F1F",
-        },
-      })}
-      ref={editorRef}
-      onCreateEditor={() => {
-        setEditorGlobal(editorRef);
-        console.log("Editor instance set in global state.");
-      }}
-      extensions={[
-        cpp(),
-        autocompletion({ override: [cppCompletions] }),
-        ...extensions,
-      ]}
-      onChange={handleChange}
-      basicSetup={{
-        lineNumbers: true,
-        foldGutter: true,
-        highlightActiveLine: true,
-        ...(typeof basicSetup === "object" ? basicSetup : {}),
-      }}
-      {...rest}
-    />
+    <>
+      <div
+        className={
+          "w-full h-full flex flex-col gap-4 items-center justify-center top-0 left-0 pointer-events-none" +
+          (isEditorReady ? " hidden" : "")
+        }
+      >
+        <p>Loading Editor</p>
+        <Spinner className="size-9" />
+      </div>
+      <CodeMirror
+        className={className}
+        style={style}
+        value={code}
+        height="100%"
+        theme={vscodeDarkInit({
+          settings: {
+            fontSize: "13px",
+            background: "#1F1F1F",
+            gutterBackground: "#1F1F1F",
+          },
+        })}
+        ref={editorRef}
+        onCreateEditor={() => {
+          setEditorGlobal(editorRef);
+          setIsEditorReady(true);
+        }}
+        extensions={[
+          cpp(),
+          autocompletion({ override: [cppCompletions] }),
+          ...extensions,
+        ]}
+        onChange={handleChange}
+        basicSetup={{
+          lineNumbers: true,
+          foldGutter: true,
+          highlightActiveLine: true,
+          ...(typeof basicSetup === "object" ? basicSetup : {}),
+        }}
+        {...rest}
+      />
+    </>
   );
 }
 

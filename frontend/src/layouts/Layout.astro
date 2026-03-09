@@ -1,3 +1,16 @@
+---
+import * as ls from "@/store/atom";
+
+const lsVersion = {
+  code: "1",
+  cppVersion: "1",
+  input: "1",
+  output: "1",
+  runMode: "1",
+  testCases: "1",
+};
+---
+
 <!doctype html>
 <html class="neutral dark bg-background text-foreground">
   <head>
@@ -8,6 +21,20 @@
     <meta name="generator" content={Astro.generator} />
 
     <title>C++ Here</title>
+
+    <script is:inline define:vars={{ lsVersion }}>
+      const lsKeys = "lsVersion";
+      const cls = JSON.parse(localStorage.getItem(lsKeys));
+      for (const key in lsVersion) {
+        if (!cls || cls[key] !== lsVersion[key]) {
+          localStorage.removeItem(key);
+          console.log(
+            `Cleared localStorage key: ${key} due to version mismatch.`,
+          );
+        }
+      }
+      localStorage.setItem(lsKeys, JSON.stringify(lsVersion));
+    </script>
 
     <!-- <script is:inline>
       const getThemePreference = () => {

@@ -10,6 +10,7 @@ import { InputPanel, TestCasePanel, OutputPanel } from "@/components/stdio";
 import Editor from "@/components/Editor";
 
 const LAYOUT = { editor: 70, output: 30 };
+const LAYOUT2 = { InputPanel: 22, TestCasePanel: 36, OutputPanel: 42 };
 
 export function SplitViewEditor() {
   return (
@@ -25,16 +26,19 @@ export function SplitViewEditor() {
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel id="output" defaultSize={LAYOUT.output}>
-        <ResizablePanelGroup orientation="vertical">
-          <ResizablePanel defaultSize={22}>
+        <ResizablePanelGroup orientation="vertical" defaultLayout={LAYOUT2}>
+          <ResizablePanel id="InputPanel" defaultSize={LAYOUT2.InputPanel}>
             <InputPanel />
           </ResizablePanel>
           <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={36}>
+          <ResizablePanel
+            id="TestCasePanel"
+            defaultSize={LAYOUT2.TestCasePanel}
+          >
             <TestCasePanel />
           </ResizablePanel>
           <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={42}>
+          <ResizablePanel id="OutputPanel" defaultSize={LAYOUT2.OutputPanel}>
             <OutputPanel />
           </ResizablePanel>
         </ResizablePanelGroup>
