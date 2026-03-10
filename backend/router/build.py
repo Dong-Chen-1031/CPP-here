@@ -8,7 +8,8 @@ from aiofiles import open
 from fastapi import APIRouter
 from pydantic import BaseModel
 from services.build import BuildError, build
-from settings import BACKEND_URL, BUILD_VERSION
+from settings import BACKEND_URL, BUILD_VERSION, CATCH_PATH
+from utils import catch
 from utils.log import logger
 
 router = APIRouter()
@@ -42,21 +43,22 @@ async def read_file(path: str) -> str:
 async def build_cpp(request: BuildRequest) -> BuildResponse:
     global WORKER_CODE
     case_id = request.hash()
-    if (
-        pathlib.Path(f"output/build_{case_id}.wasm").exists()
-        and pathlib.Path(f"output/build_{case_id}.js").exists()
-    ):
+    catch_entry = await catch.get_catch(case_id)
+    if catch_entry:
         logger.info(f"Cache hit for code {case_id}")
         return BuildResponse(
             ok=True,
-            js_url=f"{BACKEND_URL}/output/build_{case_id}.js",
-            wasm_url=f"{BACKEND_URL}/output/build_{case_id}.wasm",
-            js_code=(await read_file(f"output/build_{case_id}.js")),
+            js_url=f"{BACKEND_URL}/{catch_entry.file_path}",
+            wasm_url=f"{BACKEND_URL}/{catch_entry.file_path_glue}",
+            js_code=(await read_file(f"{catch_entry.file_path}")),
         )
     logger.info(f"Received build request {case_id}")
-    js_name = f"build_{case_id}.js"
+    js_name = "build.js"
+    wasm_name = "build.wasm"
+    output_path = pathlib.Path(CATCH_PATH) / case_id
+
     try:
-        await build(request.code, name=js_name)
+        await build(request.code, name=js_name, output_dir=output_path)
         logger.info("Build succeeded")
     except BuildError as e:
         return BuildResponse(
@@ -77,16 +79,19 @@ async def build_cpp(request: BuildRequest) -> BuildResponse:
         async with aiofiles.open("assets/worker.js", mode="r") as f:
             WORKER_CODE = await f.read()
 
-    async with aiofiles.open(f"output/{js_name}", mode="r+") as f:
+    async with aiofiles.open(f"{output_path}/{js_name}", mode="r+") as f:
         js_code = await f.read()
         worker_code = f"\n\n// Worker code\n{WORKER_CODE}"
         await f.write(worker_code)
 
         js_code += worker_code
 
+    await catch.add_catch(
+        case_id, str(output_path / js_name), str(output_path / wasm_name)
+    )
     return BuildResponse(
         ok=True,
-        js_url=f"{BACKEND_URL}/output/{js_name}",
-        wasm_url=f"{BACKEND_URL}/output/build_{case_id}.wasm",
+        js_url=f"{BACKEND_URL}/{output_path}/{js_name}",
+        wasm_url=f"{BACKEND_URL}/{output_path}/{wasm_name}",
         js_code=js_code,
     )

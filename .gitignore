@@ -11,6 +11,8 @@ node_modules/
 .DS_Store
 .vscode/
 
+catch/
+
 # C extensions
 *.so
 

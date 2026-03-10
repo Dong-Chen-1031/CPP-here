@@ -21,7 +21,11 @@ app = FastAPI(
 )
 
 
-app.mount("/output", StaticFiles(directory="output"), name="output")
+app.mount(
+    f"/{settings.CATCH_PATH}",
+    StaticFiles(directory=settings.CATCH_PATH),
+    name=settings.CATCH_PATH,
+)
 
 app.add_middleware(
     CORSMiddleware,
