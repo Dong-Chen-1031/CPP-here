@@ -48,9 +48,9 @@ async def build_cpp(request: BuildRequest) -> BuildResponse:
         logger.info(f"Cache hit for code {case_id}")
         return BuildResponse(
             ok=True,
-            js_url=f"{BACKEND_URL}/{catch_entry.file_path}",
-            wasm_url=f"{BACKEND_URL}/{catch_entry.file_path_glue}",
-            js_code=(await read_file(f"{catch_entry.file_path}")),
+            js_url=f"{BACKEND_URL}/{CATCH_PATH}/{case_id}/build.js",
+            wasm_url=f"{BACKEND_URL}/{CATCH_PATH}/{case_id}/build.wasm",
+            js_code=(await read_file(f"{CATCH_PATH}/{case_id}/build.js")),
         )
     logger.info(f"Received build request {case_id}")
     js_name = "build.js"
@@ -86,9 +86,7 @@ async def build_cpp(request: BuildRequest) -> BuildResponse:
 
         js_code += worker_code
 
-    await catch.add_catch(
-        case_id, str(output_path / js_name), str(output_path / wasm_name)
-    )
+    await catch.add_catch(case_id)
     return BuildResponse(
         ok=True,
         js_url=f"{BACKEND_URL}/{output_path}/{js_name}",

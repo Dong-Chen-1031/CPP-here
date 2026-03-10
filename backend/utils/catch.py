@@ -1,6 +1,8 @@
+import asyncio
+import shutil
 import time
 
-from settings import CATCH_EXPIRY, CATCH_LIMIT, CATCH_SQLITE_PATH
+from settings import CATCH_EXPIRY, CATCH_LIMIT, CATCH_PATH, CATCH_SQLITE_PATH
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlmodel import Field, SQLModel, col, select
@@ -10,8 +12,6 @@ from utils.scheduler import scheduler
 
 class Catch(SQLModel, table=True):
     hash_id: str = Field(default=None, primary_key=True)
-    file_path: str = Field(default=None)
-    file_path_glue: str = Field(default=None)
     version: str = Field(default="0.1.0")
     timestamp: int = Field(default_factory=lambda: int(time.time()))
     delete_at: int = Field(
@@ -30,11 +30,9 @@ async def init_db():
         await conn.run_sync(SQLModel.metadata.create_all)
 
 
-async def add_catch(hash_id: str, file_path: str, file_path_glue: str):
+async def add_catch(hash_id: str):
     async with async_session() as session:
-        catch = Catch(
-            hash_id=hash_id, file_path=file_path, file_path_glue=file_path_glue
-        )
+        catch = Catch(hash_id=hash_id)
         session.add(catch)
         await session.commit()
 
@@ -67,6 +65,9 @@ async def del_oldest_catch(num: int):
             oldest_catches = result.scalars().all()
 
             for catch in oldest_catches:
+                await asyncio.to_thread(
+                    shutil.rmtree, f"{CATCH_PATH}/{catch.hash_id}", ignore_errors=True
+                )
                 await session.delete(catch)
             await session.commit()
         except Exception as e:
@@ -82,7 +83,11 @@ async def delete_expired_catches():
             expired_catches = result.scalars().all()
 
             for catch in expired_catches:
+                await asyncio.to_thread(
+                    shutil.rmtree, f"{CATCH_PATH}/{catch.hash_id}", ignore_errors=True
+                )
                 await session.delete(catch)
+
             await session.commit()
         except Exception as e:
             logger.error(f"Error deleting expired catches: {e}")
