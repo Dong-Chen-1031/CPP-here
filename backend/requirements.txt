@@ -5,6 +5,7 @@ aiofiles
 diskcache
 pyturnstile
 SQLAlchemy
+pyjwt
 sqlmodel
 sqlalchemy[asyncio]
 asyncpg
