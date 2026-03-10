@@ -20,6 +20,7 @@ export default function TurnstileWidget() {
         setJwt(res.data.token);
         setTimeout(
           () => {
+            setJwt(null);
             turnstileRef.current?.reset();
           },
           res.data.expires_in * 1000 - 10000,
