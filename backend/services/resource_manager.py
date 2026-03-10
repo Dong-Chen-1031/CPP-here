@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.concurrency import asynccontextmanager
 from utils.catch import init_db
 from utils.log import logger
+from utils.scheduler import scheduler
 
 
 class AsyncResourceManager:
@@ -34,5 +35,7 @@ track = resource_manager.track
 async def lifespan(app: FastAPI):
     resource_manager.docker = await track(aiodocker.Docker())
     await init_db()
+    scheduler.start()
+
     yield
     await resource_manager.close_all()

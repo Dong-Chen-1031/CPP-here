@@ -21,4 +21,4 @@ CATCH_EXPIRY = 24 * 3600 * 7
 CATCH_PATH = "catch"
 
 CATCH_SQLITE_PATH = f"sqlite+aiosqlite:///{CATCH_PATH}/catch.db"
-print(f"CATCH_SQLITE_PATH: {CATCH_SQLITE_PATH}")
+# print(f"CATCH_SQLITE_PATH: {CATCH_SQLITE_PATH}")

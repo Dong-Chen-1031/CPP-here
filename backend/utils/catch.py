@@ -1,9 +1,11 @@
 import time
 
-from settings import CATCH_EXPIRY, CATCH_SQLITE_PATH
+from settings import CATCH_EXPIRY, CATCH_LIMIT, CATCH_SQLITE_PATH
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlmodel import Field, SQLModel, col, select
 from utils.log import logger
+from utils.scheduler import scheduler
 
 
 class Catch(SQLModel, table=True):
@@ -84,3 +86,18 @@ async def delete_expired_catches():
             await session.commit()
         except Exception as e:
             logger.error(f"Error deleting expired catches: {e}")
+
+
+async def cleanup_catches():
+    async with async_session() as session:
+        try:
+            count = (
+                await session.execute(select(func.count()).select_from(Catch))
+            ).scalar() or 0
+            if count > CATCH_LIMIT:
+                await del_oldest_catch(count - CATCH_LIMIT)
+        except Exception as e:
+            logger.error(f"Error cleaning up catches: {e}")
+
+
+scheduler.add_job(delete_expired_catches, "interval", days=1)
