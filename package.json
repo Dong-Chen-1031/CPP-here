@@ -3,9 +3,9 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "frontend": "cd frontend && astro dev",
+    "frontend": "cd frontend && astro dev --host 127.0.0.1",
     "backend": "cd backend && python main.py",
-    "dev": "VITE_RUN_MODE=dev concurrently \"bun run frontend\" \"bun run backend\"",
+    "dev": "PUBLIC_RUN_MODE=dev concurrently \"bun run frontend\" \"bun run backend\"",
     "build": "cd frontend && astro build",
     "preview": "cd frontend && astro preview",
     "astro": "cd frontend && astro"
@@ -16,6 +16,7 @@
     "@codemirror/lang-cpp": "^6.0.3",
     "@codemirror/theme-one-dark": "^6.1.3",
     "@lucide/astro": "^0.576.0",
+    "@marsidev/react-turnstile": "^1.4.2",
     "@tailwindcss/vite": "^4.2.1",
     "@types/react-dom": "^19.2.3",
     "@uiw/codemirror-theme-vscode": "^4.25.7",

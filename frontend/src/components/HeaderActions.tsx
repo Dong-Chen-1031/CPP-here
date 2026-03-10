@@ -31,6 +31,7 @@ import {
   outputStore,
   runModeStore,
   testCasesStore,
+  verifyJwtStore,
   type OutputCase,
 } from "@/store/atom";
 
@@ -49,6 +50,7 @@ export default function HeaderActions() {
   const [, setOutput] = useAtom(outputStore);
   const [testCases] = useAtom(testCasesStore);
   const [runMode, setRunMode] = useAtom(runModeStore);
+  const [jwt] = useAtom(verifyJwtStore);
   const [runStatus, setRunStatus] = React.useState<
     "idle" | "building" | "running"
   >("idle");
@@ -57,9 +59,10 @@ export default function HeaderActions() {
 
   async function handleRun() {
     setRunStatus("building");
+
     const response = await buildCode(code, cppVersion);
 
-    if (!response.ok) {
+    if (!response.ok || !response.js_code) {
       setOutput([
         {
           type: "err",
@@ -69,6 +72,7 @@ export default function HeaderActions() {
       setRunStatus("idle");
       return;
     }
+
     runCode(response.js_code, input, {
       wasmUrl: response.wasm_url,
       onInit: () => {
@@ -123,7 +127,7 @@ export default function HeaderActions() {
   async function handleRunAll() {
     setRunStatus("building");
     const response = await buildCode(code, cppVersion);
-    if (!response.ok) {
+    if (!response.ok || !response.js_code || !response.wasm_url) {
       setOutput([
         {
           type: "err",
@@ -257,7 +261,12 @@ export default function HeaderActions() {
           </Tip>
         </ButtonGroup> */}
         <ButtonGroup>
-          {runStatus === "building" ? (
+          {!jwt ? (
+            <Button variant="outline" disabled>
+              <Spinner className="size-3" />
+              <span className="text-xs">Verifying</span>
+            </Button>
+          ) : runStatus === "building" ? (
             <Button variant="outline" disabled>
               <Spinner className="size-3" />
               <span className="text-xs">Building</span>
@@ -287,7 +296,7 @@ export default function HeaderActions() {
               <Button
                 variant="outline"
                 className="p-1"
-                disabled={runStatus !== "idle"}
+                disabled={runStatus !== "idle" || !jwt}
               >
                 <ChevronDownIcon />
               </Button>

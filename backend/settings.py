@@ -1,4 +1,5 @@
 import os
+import secrets
 
 from dotenv import load_dotenv
 
@@ -21,4 +22,9 @@ CATCH_EXPIRY = 24 * 3600 * 7
 CATCH_PATH = "catch"
 
 CATCH_SQLITE_PATH = f"sqlite+aiosqlite:///{CATCH_PATH}/catch.db"
-# print(f"CATCH_SQLITE_PATH: {CATCH_SQLITE_PATH}")
+
+TURNSTILE_SECRET = os.getenv("TURNSTILE_SECRET", "")
+
+JWT_SECRET = os.getenv("JWT_SECRET", "") or secrets.token_urlsafe(32)
+
+JWT_EXPIRY_SECONDS = 3600

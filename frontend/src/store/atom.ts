@@ -2,7 +2,6 @@ import { atom } from "jotai";
 import { atomWithStorage, useResetAtom } from "jotai/utils";
 import { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import type { RefObject } from "react";
-
 export interface TestCase {
   id: string;
   name: string;
@@ -36,6 +35,8 @@ export const testCasesStore = atomWithStorage<TestCase[]>("testCases", [
   { id: "example-2", name: "Test Case 2", input: "Example input 2" },
   { id: "example-3", name: "Test Case 3", input: "Example input 3" },
 ]);
+
+export const verifyJwtStore = atom<string | null>(null);
 
 export function useResetAllAtoms() {
   const resetCode = useResetAtom(codeStore);

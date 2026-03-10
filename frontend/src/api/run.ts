@@ -1,23 +1,39 @@
 import config from "@/config/constants";
+import { verifyJwtStore } from "@/store/atom";
 import axios from "axios";
+import { getDefaultStore } from "jotai";
 
 interface BuildResponse {
   ok: boolean;
-  js_url: string;
-  wasm_url: string;
+  js_url?: string;
+  wasm_url?: string;
   errors: string[];
-  js_code: string;
+  js_code?: string;
 }
 
+const defaultStore = getDefaultStore();
 export async function buildCode(code: string, cppVersion: string) {
-  const respond = await axios.post(`${config.api_endpoints}/build`, {
-    code: code,
-    cpp_version: cppVersion,
-  });
-  if (!respond.data.ok) {
-    console.log("Build failed with errors:", respond.data.errors[0]);
+  try {
+    const jwt = defaultStore.get(verifyJwtStore) || "";
+    // console.log("JWT for build request:", jwt);
+
+    const respond = await axios.post(
+      `${config.api_endpoints}/build`,
+      {
+        code: code,
+        cpp_version: cppVersion,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      },
+    );
+    return respond.data as BuildResponse;
+  } catch (error) {
+    console.error("Error during build request:", error);
+    return { ok: false, errors: [String(error)] } as BuildResponse;
   }
-  return respond.data as BuildResponse;
 }
 
 async function text2BlobUrl(

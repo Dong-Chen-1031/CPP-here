@@ -5,8 +5,9 @@ from typing import Literal
 
 import aiofiles
 from aiofiles import open
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+from router.verify import need_token
 from services.build import BuildError, build
 from settings import BACKEND_URL, BUILD_VERSION, CATCH_PATH
 from utils import catch
@@ -40,7 +41,9 @@ async def read_file(path: str) -> str:
 
 
 @router.post("/build")
-async def build_cpp(request: BuildRequest) -> BuildResponse:
+async def build_cpp(
+    request: BuildRequest, token: dict = Depends(need_token)
+) -> BuildResponse:
     global WORKER_CODE
     case_id = request.hash()
     catch_entry = await catch.get_catch(case_id)

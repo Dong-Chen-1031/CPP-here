@@ -1,5 +1,6 @@
 import router
 import router.build
+import router.verify
 import settings
 import uvicorn
 from fastapi import FastAPI
@@ -40,6 +41,7 @@ app.add_middleware(
 
 
 app.include_router(router.build.router)
+app.include_router(router.verify.router)
 
 
 @app.get("/")
