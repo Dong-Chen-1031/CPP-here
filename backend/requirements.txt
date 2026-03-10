@@ -8,4 +8,5 @@ SQLAlchemy
 pyjwt
 sqlmodel
 sqlalchemy[asyncio]
+apscheduler
 asyncpg
