@@ -10,3 +10,4 @@ sqlmodel
 sqlalchemy[asyncio]
 apscheduler
 asyncpg
+aiosqlite
