@@ -23,6 +23,7 @@ async def build(
     if output_dir is None:
         output_dir = Path(os.getcwd()) / "output"
     output_dir.mkdir(parents=True, exist_ok=True)
+    os.chmod(output_dir, 0o777)
 
     cmd = (
         f"printf '%s' {shlex.quote(code)} > /tmp/source.cpp && "
