@@ -2,11 +2,11 @@ import React, { useState, useCallback, useRef, useEffect } from "react";
 import CodeMirror, { type ReactCodeMirrorProps } from "@uiw/react-codemirror";
 import { cpp } from "@codemirror/lang-cpp";
 // import { oneDark } from "@codemirror/theme-one-dark";
-import { vscodeDark, vscodeDarkInit } from "@uiw/codemirror-theme-vscode";
+import { vscodeDarkInit } from "@uiw/codemirror-theme-vscode";
 
 import {
   autocompletion,
-  CompletionContext,
+  type CompletionContext,
   type CompletionResult,
 } from "@codemirror/autocomplete";
 import { cppKeywords } from "../config/cppKeywords";
