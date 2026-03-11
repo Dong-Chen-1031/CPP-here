@@ -4,7 +4,7 @@ import router.verify
 import settings
 import uvicorn
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from services.resource_manager import lifespan
@@ -16,9 +16,10 @@ if DEV_MODE:
 
 app = FastAPI(
     lifespan=lifespan,
-    openapi_prefix="/api" if not DEV_MODE else "",
+    root_path="/api/v1" if not DEV_MODE else "",
     docs_url="/docs" if DEV_MODE else None,
     redoc_url="/redoc" if DEV_MODE else None,
+    openapi_url="/openapi.json" if DEV_MODE else None,
 )
 
 

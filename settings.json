@@ -6,7 +6,7 @@
   },
 
   "production": {
-    "api_url": "",
-    "frontend_url": ""
+    "api_url": "https://cpp-api.doong.me",
+    "frontend_url": "https://cpp.doong.me"
   }
 }
