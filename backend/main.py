@@ -16,7 +16,7 @@ if DEV_MODE:
 
 app = FastAPI(
     lifespan=lifespan,
-    root_path="/api/v1" if not DEV_MODE else "",
+    # root_path="/api/v1" if not DEV_MODE else "",
     docs_url="/docs" if DEV_MODE else None,
     redoc_url="/redoc" if DEV_MODE else None,
     openapi_url="/openapi.json" if DEV_MODE else None,
