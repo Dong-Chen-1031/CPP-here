@@ -86,59 +86,65 @@ export async function runCode(
     wasmModule,
   }: RunOptions,
 ) {
-  const blobUrl = await text2BlobUrl(jsCode);
-  const worker = new Worker(blobUrl);
-  URL.revokeObjectURL(blobUrl);
-  if (!wasmModule) {
-    if (!wasmUrl) {
-      throw new Error("Either wasmUrl or wasmModule must be provided");
+  try {
+    const blobUrl = await text2BlobUrl(jsCode);
+    const worker = new Worker(blobUrl);
+    URL.revokeObjectURL(blobUrl);
+    if (!wasmModule) {
+      if (!wasmUrl) {
+        throw new Error("Either wasmUrl or wasmModule must be provided");
+      }
+      const wasmResponse = await fetch(wasmUrl);
+      wasmModule = await WebAssembly.compileStreaming(wasmResponse);
     }
-    const wasmResponse = await fetch(wasmUrl);
-    wasmModule = await WebAssembly.compileStreaming(wasmResponse);
-  }
-  const taskId = crypto.randomUUID();
-  worker.onerror = (event) => {
-    worker.terminate();
-    onError && onError(event.message);
-  };
-  worker.onmessage = (event) => {
-    console.log("Worker message received:", event.data);
-    onEvent && onEvent(event);
-    const { type, content } = event.data;
-    switch (type) {
-      case "stdout":
-        onStdout && onStdout(content);
-        break;
-      case "error":
-        worker.terminate();
-        onError && onError(content);
-        onExit && onExit();
+    const taskId = crypto.randomUUID();
+    worker.onerror = (event) => {
+      worker.terminate();
+      onError && onError(event.message);
+    };
+    worker.onmessage = (event) => {
+      console.log("Worker message received:", event.data);
+      onEvent && onEvent(event);
+      const { type, content } = event.data;
+      switch (type) {
+        case "stdout":
+          onStdout && onStdout(content);
+          break;
+        case "error":
+          worker.terminate();
+          onError && onError(content);
+          onExit && onExit();
 
-        break;
-      case "status":
-        switch (content) {
-          case "Running":
-            onInit && onInit();
-            break;
-          case "exit":
-            worker.terminate();
-            onExit && onExit();
-            break;
-          default:
-            console.warn("Unknown status from worker:", content);
-        }
-        break;
-      case "stderr":
-        onStderr && onStderr(content);
-        onExit && onExit();
-        break;
-      default:
-        console.warn("Unknown status from worker:", content);
-    }
-  };
-  worker.postMessage({
-    taskId: taskId,
-    inputData: inputData,
-    module_: wasmModule,
-  });
+          break;
+        case "status":
+          switch (content) {
+            case "Running":
+              onInit && onInit();
+              break;
+            case "exit":
+              worker.terminate();
+              onExit && onExit();
+              break;
+            default:
+              console.warn("Unknown status from worker:", content);
+          }
+          break;
+        case "stderr":
+          onStderr && onStderr(content);
+          onExit && onExit();
+          break;
+        default:
+          console.warn("Unknown status from worker:", content);
+      }
+    };
+    worker.postMessage({
+      taskId: taskId,
+      inputData: inputData,
+      module_: wasmModule,
+    });
+  } catch (error) {
+    console.error("Error during code execution:", error);
+    onError && onError(String(error));
+    onExit && onExit();
+  }
 }

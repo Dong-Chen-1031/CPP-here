@@ -16,6 +16,17 @@ export interface OutputCase {
   content: string;
 }
 
+export const alertStore = atom<
+  {
+    title: string;
+    description: string;
+    variant?: "default" | "destructive";
+    className?: string;
+    id: string;
+    icon?: React.ReactNode;
+  }[]
+>([]);
+
 export const editorStore = atom<RefObject<ReactCodeMirrorRef | null> | null>(
   null,
 );
@@ -30,6 +41,7 @@ export const runModeStore = atomWithStorage<"single" | "all">(
   "runMode",
   "single",
 );
+export const runStatusStore = atom<"idle" | "building" | "running">("idle");
 export const testCasesStore = atomWithStorage<TestCase[]>("testCases", [
   { id: "example-1", name: "Test Case 1", input: "Example input 1" },
   { id: "example-2", name: "Test Case 2", input: "Example input 2" },

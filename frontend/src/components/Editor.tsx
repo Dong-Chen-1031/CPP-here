@@ -3,6 +3,7 @@ import CodeMirror, { type ReactCodeMirrorProps } from "@uiw/react-codemirror";
 import { cpp } from "@codemirror/lang-cpp";
 // import { oneDark } from "@codemirror/theme-one-dark";
 import { vscodeDarkInit } from "@uiw/codemirror-theme-vscode";
+import { EditorView } from "@codemirror/view";
 
 import {
   autocompletion,
@@ -89,6 +90,7 @@ function CppEditor({
         extensions={[
           cpp(),
           autocompletion({ override: [cppCompletions] }),
+          EditorView.lineWrapping,
           ...extensions,
         ]}
         onChange={handleChange}

@@ -24,12 +24,14 @@ import {
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAtom } from "jotai";
 import {
+  alertStore,
   codeStore,
   cppVersionStore,
   editorStore,
   inputStore,
   outputStore,
   runModeStore,
+  runStatusStore,
   testCasesStore,
   verifyJwtStore,
   type OutputCase,
@@ -41,22 +43,73 @@ import { buildCode, runCode, url2WasmModule } from "@/api/run";
 
 import Tip from "@/components/ui/tips";
 import { useResetAllAtoms } from "@/store/atom";
+import { cn } from "@/lib/utils";
+import { set } from "astro:schema";
 
-export default function HeaderActions() {
+export function UndoRedo({ menu = false }: { menu?: boolean }) {
   const [editorGlobal] = useAtom(editorStore);
-  const [cppVersion, setCppVersion] = useAtom(cppVersionStore);
+
+  return (
+    <TooltipProvider delayDuration={300}>
+      <ButtonGroup>
+        <Tip label="Undo (ctrl+z)" show={!menu}>
+          <Button
+            variant="outline"
+            size={menu ? "sm" : "icon-sm"}
+            aria-label="Undo"
+            onClick={() => {
+              if (editorGlobal?.current?.view) {
+                undo(editorGlobal.current.view);
+              } else {
+                console.warn("Editor view is not available for undo.");
+              }
+            }}
+          >
+            <UndoIcon />
+            {/* {menu && <span>Undo</span>} */}
+          </Button>
+        </Tip>
+        <Tip label="Redo (ctrl+shift+z)" show={!menu}>
+          <Button
+            variant="outline"
+            size={menu ? "sm" : "icon-sm"}
+            aria-label="Redo"
+            onClick={() => {
+              if (editorGlobal?.current?.view) {
+                redo(editorGlobal.current.view);
+              } else {
+                console.warn("Editor view is not available for redo.");
+              }
+            }}
+          >
+            <RedoIcon />
+            {/* {menu && <span>Redo</span>} */}
+          </Button>
+        </Tip>
+      </ButtonGroup>
+    </TooltipProvider>
+  );
+}
+
+export function RunButton({
+  className = "",
+  onClick = () => {},
+}: {
+  className?: string;
+  onClick?: (e: React.MouseEvent) => void;
+}) {
+  const [runMode, setRunMode] = useAtom(runModeStore);
+  const [jwt] = useAtom(verifyJwtStore);
   const [code] = useAtom(codeStore);
   const [input] = useAtom(inputStore);
   const [, setOutput] = useAtom(outputStore);
-  const [testCases] = useAtom(testCasesStore);
-  const [runMode, setRunMode] = useAtom(runModeStore);
-  const [jwt] = useAtom(verifyJwtStore);
-  const [runStatus, setRunStatus] = React.useState<
-    "idle" | "building" | "running"
-  >("idle");
-  const exitCountRef = React.useRef(0);
-  const resetAll = useResetAllAtoms();
+  const [cppVersion] = useAtom(cppVersionStore);
 
+  const [testCases] = useAtom(testCasesStore);
+
+  const [runStatus, setRunStatus] = useAtom(runStatusStore);
+  const [, setAlert] = useAtom(alertStore);
+  const exitCountRef = React.useRef(0);
   async function handleRun() {
     setRunStatus("building");
 
@@ -69,6 +122,17 @@ export default function HeaderActions() {
           content: "Build failed with errors:\n" + response.errors[0],
         },
       ]);
+      setAlert((p) => [
+        ...p,
+        {
+          title: "Build Failed",
+          description:
+            "Failed to build the code. Please check output for details.",
+          variant: "destructive",
+          id: crypto.randomUUID(),
+        },
+      ]);
+
       setRunStatus("idle");
       return;
     }
@@ -85,6 +149,16 @@ export default function HeaderActions() {
       },
       onError(error) {
         setOutput((prev) => [...prev, { type: "err", content: error }]);
+        setAlert((p) => [
+          ...p,
+          {
+            title: "Runtime Error",
+            description:
+              "An error occurred during code execution. Please check output for details.",
+            variant: "destructive",
+            id: crypto.randomUUID(),
+          },
+        ]);
       },
       onExit() {
         setRunStatus("idle");
@@ -123,8 +197,20 @@ export default function HeaderActions() {
     }
     return [...prev.slice(0, pos), item, ...prev.slice(pos)];
   }
-
   async function handleRunAll() {
+    if (testCases.length === 0) {
+      setAlert((p) => [
+        ...p,
+        {
+          title: "No Test Cases",
+          description:
+            "There are no test cases to run. Please add some test cases first.",
+          variant: "destructive",
+          id: crypto.randomUUID(),
+        },
+      ]);
+      return;
+    }
     setRunStatus("building");
     const response = await buildCode(code, cppVersion);
     if (!response.ok || !response.js_code || !response.wasm_url) {
@@ -132,6 +218,16 @@ export default function HeaderActions() {
         {
           type: "err",
           content: "Build failed with errors:\n" + response.errors[0],
+        },
+      ]);
+      setAlert((p) => [
+        ...p,
+        {
+          title: "Build Failed",
+          description:
+            "Failed to build the code. Please check output for details.",
+          variant: "destructive",
+          id: crypto.randomUUID(),
         },
       ]);
       setRunStatus("idle");
@@ -162,6 +258,16 @@ export default function HeaderActions() {
               testCaseName: testCase.name,
             }),
           );
+          setAlert((p) => [
+            ...p,
+            {
+              title: `Runtime Error in ${testCase.name}`,
+              description:
+                "An error occurred during code execution. Please check output for details.",
+              variant: "destructive",
+              id: crypto.randomUUID(),
+            },
+          ]);
         },
         onExit() {
           exitCountRef.current += 1;
@@ -176,44 +282,109 @@ export default function HeaderActions() {
     }
     setRunStatus("running");
   }
+  return (
+    <TooltipProvider delayDuration={300}>
+      <ButtonGroup className={className}>
+        {!jwt ? (
+          <Button variant="outline" disabled>
+            <Spinner className="size-3" />
+            <span className="text-xs">Verifying</span>
+          </Button>
+        ) : runStatus === "building" ? (
+          <Button variant="outline" disabled>
+            <Spinner className="size-3" />
+            <span className="text-xs">Building</span>
+          </Button>
+        ) : runStatus === "running" ? (
+          <Button variant="outline" disabled>
+            <Spinner className="size-3" />
+            <span className="text-xs">Running</span>
+          </Button>
+        ) : runMode === "single" ? (
+          <Tip label="Run code">
+            <Button
+              variant="outline"
+              onClick={(e) => {
+                handleRun();
+                onClick(e);
+              }}
+            >
+              <Play />
+              Run
+            </Button>
+          </Tip>
+        ) : (
+          <Tip label="Run all test cases">
+            <Button
+              variant="outline"
+              onClick={(e) => {
+                handleRunAll();
+                onClick(e);
+              }}
+            >
+              <TestTubes />
+              Run All
+            </Button>
+          </Tip>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="p-1"
+              disabled={runStatus !== "idle" || !jwt}
+            >
+              <ChevronDownIcon />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-fit">
+            <DropdownMenuGroup>
+              {runMode === "single" ? (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    setRunMode("all");
+                    handleRunAll();
+                    onClick(e);
+                  }}
+                >
+                  <TestTubes />
+                  <Tip label="Run all test cases">
+                    <p className="text-xs">Run All</p>
+                  </Tip>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    setRunMode("single");
+                    handleRun();
+                    onClick(e);
+                  }}
+                  className="w-27"
+                >
+                  <Play />
+                  <Tip label="Run current input">
+                    <p className="text-xs flex-1">Run</p>
+                  </Tip>
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {/* <Button variant="outline">Run in interactive</Button> */}
+      </ButtonGroup>
+    </TooltipProvider>
+  );
+}
+
+export default function HeaderActions() {
+  const [cppVersion, setCppVersion] = useAtom(cppVersionStore);
+
+  const resetAll = useResetAllAtoms();
 
   return (
     <TooltipProvider delayDuration={300}>
       <div className="flex items-center space-x-2">
-        <ButtonGroup className="hidden sm:flex">
-          <Tip label="Undo (ctrl+z)">
-            <Button
-              variant="outline"
-              size="icon-sm"
-              aria-label="Undo"
-              onClick={() => {
-                if (editorGlobal?.current?.view) {
-                  undo(editorGlobal.current.view);
-                } else {
-                  console.warn("Editor view is not available for undo.");
-                }
-              }}
-            >
-              <UndoIcon />
-            </Button>
-          </Tip>
-          <Tip label="Redo (ctrl+shift+z)">
-            <Button
-              variant="outline"
-              size="icon-sm"
-              aria-label="Redo"
-              onClick={() => {
-                if (editorGlobal?.current?.view) {
-                  redo(editorGlobal.current.view);
-                } else {
-                  console.warn("Editor view is not available for redo.");
-                }
-              }}
-            >
-              <RedoIcon />
-            </Button>
-          </Tip>
-        </ButtonGroup>
+        <UndoRedo />
         <ButtonGroup>
           <Tip label="Reset Everything">
             <Button variant="outline" onClick={resetAll}>
@@ -238,6 +409,7 @@ export default function HeaderActions() {
             </SelectGroup>
           </SelectContent>
         </Select>
+        <RunButton />
         {/* </Tip> */}
 
         {/* <ButtonGroup>
@@ -260,80 +432,6 @@ export default function HeaderActions() {
             </Button>
           </Tip>
         </ButtonGroup> */}
-        <ButtonGroup>
-          {!jwt ? (
-            <Button variant="outline" disabled>
-              <Spinner className="size-3" />
-              <span className="text-xs">Verifying</span>
-            </Button>
-          ) : runStatus === "building" ? (
-            <Button variant="outline" disabled>
-              <Spinner className="size-3" />
-              <span className="text-xs">Building</span>
-            </Button>
-          ) : runStatus === "running" ? (
-            <Button variant="outline" disabled>
-              <Spinner className="size-3" />
-              <span className="text-xs">Running</span>
-            </Button>
-          ) : runMode === "single" ? (
-            <Tip label="Run code">
-              <Button variant="outline" onClick={handleRun}>
-                <Play />
-                Run
-              </Button>
-            </Tip>
-          ) : (
-            <Tip label="Run all test cases">
-              <Button variant="outline" onClick={handleRunAll}>
-                <TestTubes />
-                Run All
-              </Button>
-            </Tip>
-          )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="p-1"
-                disabled={runStatus !== "idle" || !jwt}
-              >
-                <ChevronDownIcon />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-fit">
-              <DropdownMenuGroup>
-                {runMode === "single" ? (
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setRunMode("all");
-                      handleRunAll();
-                    }}
-                  >
-                    <TestTubes />
-                    <Tip label="Run all test cases">
-                      <p className="text-xs">Run All</p>
-                    </Tip>
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setRunMode("single");
-                      handleRun();
-                    }}
-                    className="w-27"
-                  >
-                    <Play />
-                    <Tip label="Run current input">
-                      <p className="text-xs flex-1">Run</p>
-                    </Tip>
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          {/* <Button variant="outline">Run in interactive</Button> */}
-        </ButtonGroup>
       </div>
     </TooltipProvider>
   );

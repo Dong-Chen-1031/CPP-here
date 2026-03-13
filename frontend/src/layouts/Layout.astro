@@ -1,5 +1,7 @@
 ---
+import { Alerts } from "@/components/Alert";
 import TurnstileWidget from "@/components/turnstile";
+import "@/styles/global.css";
 
 const lsVersion = {
   code: "1",
@@ -89,6 +91,7 @@ const lsVersion = {
   <body>
     <slot />
     <TurnstileWidget client:only="react" />
+    <Alerts client:only="react" />
   </body>
 </html>
 

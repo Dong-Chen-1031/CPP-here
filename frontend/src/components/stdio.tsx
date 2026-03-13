@@ -34,6 +34,7 @@ import {
   testCasesStore,
   type TestCase,
 } from "@/store/atom";
+import { cn } from "@/lib/utils";
 interface EditDialogOptions {
   title?: string;
   name?: string;
@@ -115,25 +116,43 @@ export function TestEditDialog({
   );
 }
 
-export function InputPanel() {
+export function InputPanel({ drawer = false }: { drawer?: boolean }) {
   const [input, setInput] = useAtom(inputStore);
   return (
-    <div className="p-4 border-border border-2 rounded-md mr-4 ml-2 mt-0 mb-2 h-[calc(100%-8px)]">
+    <div
+      className={cn(
+        "p-4 border-border border-2 rounded-md mr-4 ml-2 mt-0 mb-2 h-[calc(100%-8px)] @container",
+        drawer && "mr-2",
+      )}
+    >
       <div className="flex gap-2 items-center">
         <Keyboard className="w-3 h-3" />
         <p className="text-sm">Input</p>
         <div className="flex-1"></div>
-        <Button
-          variant="outline"
-          onClick={async () => {
-            setInput(await navigator.clipboard.readText());
-          }}
-        >
-          <ClipboardPaste /> Paste
-        </Button>
-        <Button variant="outline" onClick={() => setInput("")}>
-          <Trash /> Clear
-        </Button>
+        <TooltipProvider delayDuration={300}>
+          <Tip label="Paste from clipboard">
+            <Button
+              variant="outline"
+              onClick={async () => {
+                setInput(await navigator.clipboard.readText());
+              }}
+              className="px-2"
+            >
+              <ClipboardPaste className="w-4 h-4" />
+              <span className="hidden @[250px]:inline">Paste</span>
+            </Button>
+          </Tip>
+          <Tip label="Clear input">
+            <Button
+              variant="outline"
+              onClick={() => setInput("")}
+              className="px-2"
+            >
+              <Trash className="w-4 h-4" />
+              <span className="hidden @[250px]:inline">Clear</span>
+            </Button>
+          </Tip>
+        </TooltipProvider>
       </div>
       <div className="mt-4 overflow-y-auto h-[calc(100%-2rem)]">
         <Textarea
@@ -147,7 +166,7 @@ export function InputPanel() {
   );
 }
 
-export function TestCasePanel() {
+export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
   const [, setInput] = useAtom(inputStore);
   const [testCases, setTestCases] = useAtom(testCasesStore);
 
@@ -161,15 +180,22 @@ export function TestCasePanel() {
   }
 
   return (
-    <div className="p-4 border-border border-2 rounded-md mr-4 ml-2 my-2 h-[calc(100%-16px)]">
+    <div
+      className={cn(
+        "p-4 border-border border-2 rounded-md mr-4 ml-2 my-2 h-[calc(100%-16px)] @container",
+        drawer && "mr-2",
+      )}
+    >
       <div className="flex gap-2 items-center">
         <TestTubes className="w-3 h-3" />
         <p className="text-sm">Test Case</p>
         <div className="flex-1"></div>
         <TestEditDialog
+          tips="Add new test case"
           trigger={
-            <Button variant="outline">
-              <CirclePlus /> New
+            <Button variant="outline" className="px-2">
+              <CirclePlus className="w-4 h-4" />
+              <span className="hidden @[250px]:inline">New</span>
             </Button>
           }
           name={`test Case ${testCases.length + 1}`}
@@ -236,24 +262,42 @@ export function TestCasePanel() {
   );
 }
 
-export function OutputPanel() {
+export function OutputPanel({ drawer = false }: { drawer?: boolean }) {
   const [output, setOutput] = useAtom(outputStore);
   const [testCases] = useAtom(testCasesStore);
   return (
-    <div className="p-4 border-border border-2 rounded-md ml-2 mr-4 mt-2 h-[calc(100%-8px)]">
+    <div
+      className={cn(
+        "p-4 border-border border-2 rounded-md ml-2 mr-4 mt-2 h-[calc(100%-8px)] @container",
+        drawer && "mr-2",
+      )}
+    >
       <div className="flex gap-2 items-center">
-        <SquareTerminal className="w-3 h-3" />
-        <p className="text-sm">Output</p>
-        <div className="flex-1"></div>
-        <Button
-          variant="outline"
-          onClick={() => navigator.clipboard.writeText(output[0].content)}
-        >
-          <ClipboardCopy /> Copy
-        </Button>
-        <Button variant="outline" onClick={() => setOutput([])}>
-          <Trash /> Clear
-        </Button>
+        <TooltipProvider delayDuration={300}>
+          <SquareTerminal className="w-3 h-3" />
+          <p className="text-sm">Output</p>
+          <div className="flex-1"></div>
+          <Tip label="Copy first output">
+            <Button
+              variant="outline"
+              onClick={() => navigator.clipboard.writeText(output[0].content)}
+              className="px-2"
+            >
+              <ClipboardCopy className="w-4 h-4" />
+              <span className="hidden @[250px]:inline ml-2">Copy</span>
+            </Button>
+          </Tip>
+          <Tip label="Clear output">
+            <Button
+              variant="outline"
+              onClick={() => setOutput([])}
+              className="px-2"
+            >
+              <Trash className="w-4 h-4" />
+              <span className="hidden @[250px]:inline">Clear</span>
+            </Button>
+          </Tip>
+        </TooltipProvider>
       </div>
       {output.length === 0 ? (
         <div className="mt-4">
