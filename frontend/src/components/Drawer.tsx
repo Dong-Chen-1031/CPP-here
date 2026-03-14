@@ -78,15 +78,22 @@ const panelDrawerContent: Record<
 
 export function GlobalPanelDrawer() {
   const [panel, setPanel] = useAtom(panelDrawerStore);
+  const [activePanel, setActivePanel] =
+    React.useState<PanelDrawerView>("input");
 
-  if (!panel) {
-    return null;
-  }
+  React.useEffect(() => {
+    if (panel) {
+      setActivePanel(panel);
+    }
+  }, [panel]);
 
-  const content = panelDrawerContent[panel];
+  const content = panelDrawerContent[activePanel];
 
   return (
-    <Drawer open={true} onOpenChange={(open) => !open && setPanel(null)}>
+    <Drawer
+      open={Boolean(panel)}
+      onOpenChange={(open) => !open && setPanel(null)}
+    >
       <DrawerContent>
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader>
