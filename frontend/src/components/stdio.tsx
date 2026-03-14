@@ -16,7 +16,6 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -73,13 +72,9 @@ export function TestEditDialog({
       ) : (
         <DialogTrigger asChild>{trigger}</DialogTrigger>
       )}
-      <DialogContent className="max-w-125" showCloseButton={false}>
+      <DialogContent className="md:max-w-125" showCloseButton={false}>
         <DialogHeader className="p-2">
           <DialogTitle>{title}</DialogTitle>
-          {/* <DialogDescription>
-              Make changes to your profile here. Click save when you&apos;re
-              done.
-            </DialogDescription> */}
         </DialogHeader>
         <FieldGroup className="p-2">
           <Field>
@@ -89,6 +84,9 @@ export function TestEditDialog({
               name="name"
               defaultValue={name}
               ref={caseNameRef}
+              onFocus={(e) => {
+                window.innerWidth > 768 && e.target.select();
+              }}
             />
           </Field>
           <Field>
@@ -98,6 +96,10 @@ export function TestEditDialog({
               name="input"
               placeholder="Type your input here."
               defaultValue={input}
+              autoFocus
+              onFocus={(e) => {
+                window.innerWidth > 768 && e.target.select();
+              }}
               ref={inputRef}
             />
           </Field>
@@ -159,7 +161,10 @@ export function InputPanel({ drawer = false }: { drawer?: boolean }) {
           className="text-xs!"
           placeholder="Type your input here."
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => {
+            setInput(e.target.value);
+          }}
+          onFocus={(e) => window.innerWidth > 768 && e.target.select()}
         />
       </div>
     </div>

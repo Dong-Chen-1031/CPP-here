@@ -16,6 +16,8 @@ export interface OutputCase {
   content: string;
 }
 
+export type PanelDrawerView = "input" | "testCases" | "output";
+
 export const alertStore = atom<
   {
     title: string;
@@ -49,6 +51,7 @@ export const testCasesStore = atomWithStorage<TestCase[]>("testCases", [
 ]);
 
 export const verifyJwtStore = atom<string | null>(null);
+export const panelDrawerStore = atom<PanelDrawerView | null>(null);
 
 export function useResetAllAtoms() {
   const resetCode = useResetAtom(codeStore);

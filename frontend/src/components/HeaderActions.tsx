@@ -30,6 +30,7 @@ import {
   editorStore,
   inputStore,
   outputStore,
+  panelDrawerStore,
   runModeStore,
   runStatusStore,
   testCasesStore,
@@ -43,8 +44,7 @@ import { buildCode, runCode, url2WasmModule } from "@/api/run";
 
 import Tip from "@/components/ui/tips";
 import { useResetAllAtoms } from "@/store/atom";
-import { cn } from "@/lib/utils";
-import { set } from "astro:schema";
+import { cn, useIsMobile } from "@/lib/utils";
 
 export function UndoRedo({ menu = false }: { menu?: boolean }) {
   const [editorGlobal] = useAtom(editorStore);
@@ -109,6 +109,8 @@ export function RunButton({
 
   const [runStatus, setRunStatus] = useAtom(runStatusStore);
   const [, setAlert] = useAtom(alertStore);
+  const [, openPanel] = useAtom(panelDrawerStore);
+  const isMobile = useIsMobile();
   const exitCountRef = React.useRef(0);
   async function handleRun() {
     setRunStatus("building");
@@ -282,6 +284,7 @@ export function RunButton({
     }
     setRunStatus("running");
   }
+
   return (
     <TooltipProvider delayDuration={300}>
       <ButtonGroup className={className}>
@@ -307,6 +310,7 @@ export function RunButton({
               onClick={(e) => {
                 handleRun();
                 onClick(e);
+                isMobile && openPanel("output");
               }}
             >
               <Play />
@@ -320,6 +324,7 @@ export function RunButton({
               onClick={(e) => {
                 handleRunAll();
                 onClick(e);
+                isMobile && openPanel("output");
               }}
             >
               <TestTubes />
@@ -345,6 +350,7 @@ export function RunButton({
                     setRunMode("all");
                     handleRunAll();
                     onClick(e);
+                    isMobile && openPanel("output");
                   }}
                 >
                   <TestTubes />
@@ -358,6 +364,7 @@ export function RunButton({
                     setRunMode("single");
                     handleRun();
                     onClick(e);
+                    isMobile && openPanel("output");
                   }}
                   className="w-27"
                 >
@@ -376,41 +383,76 @@ export function RunButton({
   );
 }
 
-export default function HeaderActions() {
-  const [cppVersion, setCppVersion] = useAtom(cppVersionStore);
-
+export function ResetButton({
+  className = "",
+  onClick = () => {},
+}: {
+  className?: string;
+  onClick?: (e: React.MouseEvent) => void;
+}) {
   const resetAll = useResetAllAtoms();
 
+  return (
+    <ButtonGroup>
+      <Tip label="Reset Everything">
+        <Button
+          variant="outline"
+          className={className}
+          onClick={(e) => {
+            resetAll();
+            onClick(e);
+          }}
+        >
+          <RotateCcw />
+          Reset
+        </Button>
+      </Tip>
+    </ButtonGroup>
+  );
+}
+
+export function CppVersionSelect({
+  onSelect,
+  className = "",
+}: {
+  onSelect?: (version: string) => void;
+  className?: string;
+}) {
+  const [cppVersion, setCppVersion] = useAtom(cppVersionStore);
+
+  return (
+    <Select
+      value={cppVersion || "c++17"}
+      onValueChange={(version) => {
+        setCppVersion(version);
+        onSelect?.(version);
+      }}
+    >
+      <SelectTrigger className={cn("w-full max-w-48", className)} size="sm">
+        <SelectValue placeholder="C++ Version" />
+      </SelectTrigger>
+      <SelectContent position="popper">
+        <SelectGroup>
+          <SelectLabel>C++ Version</SelectLabel>
+          <SelectItem value="c++98">C++ 98</SelectItem>
+          <SelectItem value="c++14">C++ 14</SelectItem>
+          <SelectItem value="c++17">C++ 17</SelectItem>
+          <SelectItem value="c++20">C++ 20</SelectItem>
+          <SelectItem value="c++23">C++ 23</SelectItem>
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  );
+}
+
+export default function HeaderActions() {
   return (
     <TooltipProvider delayDuration={300}>
       <div className="flex items-center space-x-2">
         <UndoRedo />
-        <ButtonGroup>
-          <Tip label="Reset Everything">
-            <Button variant="outline" onClick={resetAll}>
-              <RotateCcw />
-              Reset
-            </Button>
-          </Tip>
-        </ButtonGroup>
-        {/* <Tip label="C++ Version"> */}
-        <Select value={cppVersion || "c++17"} onValueChange={setCppVersion}>
-          <SelectTrigger className="w-full max-w-48" size="sm">
-            <SelectValue placeholder="C++ Version" />
-          </SelectTrigger>
-          <SelectContent position="popper">
-            <SelectGroup>
-              <SelectLabel>C++ Version</SelectLabel>
-              <SelectItem value="c++98">C++ 98</SelectItem>
-              <SelectItem value="c++14">C++ 14</SelectItem>
-              <SelectItem value="c++17">C++ 17</SelectItem>
-              <SelectItem value="c++20">C++ 20</SelectItem>
-              <SelectItem value="c++23">C++ 23</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+        <ResetButton />
+        <CppVersionSelect />
         <RunButton />
-        {/* </Tip> */}
 
         {/* <ButtonGroup>
         <Button variant="outline">

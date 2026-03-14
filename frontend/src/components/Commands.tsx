@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useSetAtom } from "jotai";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -11,12 +12,22 @@ import {
 } from "@/components/ui/command";
 import { KeyboardIcon, SquareTerminalIcon, TestTubes } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { RunButton, UndoRedo } from "./HeaderActions";
-import { DrawerDemo } from "./Drawer";
-import { InputPanel, OutputPanel, TestCasePanel } from "./stdio";
+import {
+  CppVersionSelect,
+  ResetButton,
+  RunButton,
+  UndoRedo,
+} from "./HeaderActions";
+import { panelDrawerStore, type PanelDrawerView } from "@/store/atom";
 
 export function Commands({ className = "" }: { className?: string }) {
   const [open, setOpen] = React.useState(false);
+  const openPanelDrawer = useSetAtom(panelDrawerStore);
+
+  function handleOpenPanel(panel: PanelDrawerView) {
+    setOpen(false);
+    openPanelDrawer(panel);
+  }
 
   return (
     <div className={cn("flex flex-col gap-4", className)}>
@@ -31,54 +42,33 @@ export function Commands({ className = "" }: { className?: string }) {
             <CommandGroup heading="Actions">
               <CommandItem>
                 <UndoRedo menu />
+                <ResetButton onClick={() => setOpen(false)} />
               </CommandItem>
               <CommandItem>
-                <RunButton onClick={() => setOpen(false)} />
+                <CppVersionSelect
+                  className="w-25"
+                  // onSelect={() => setOpen(false)}
+                />
+                <RunButton
+                  onClick={() => {
+                    setOpen(false);
+                  }}
+                />
               </CommandItem>
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup heading="Panels">
-              <CommandItem>
-                <DrawerDemo
-                  title="Input Panel"
-                  subTitle="Type your custom input here."
-                  trigger={
-                    <div className="flex items-center w-full">
-                      <KeyboardIcon className="mr-2 h-4 w-4" />
-                      <span>Input</span>
-                    </div>
-                  }
-                >
-                  <InputPanel drawer />
-                </DrawerDemo>
+              <CommandItem onSelect={() => handleOpenPanel("input")}>
+                <KeyboardIcon className="mr-2 h-4 w-4" />
+                <span>Input</span>
               </CommandItem>
-              <CommandItem>
-                <DrawerDemo
-                  title="Test Cases"
-                  subTitle="Click to set the test case to the input."
-                  trigger={
-                    <div className="flex items-center w-full">
-                      <TestTubes />
-                      <span className="ml-2">Test Case</span>
-                    </div>
-                  }
-                >
-                  <TestCasePanel drawer />
-                </DrawerDemo>
+              <CommandItem onSelect={() => handleOpenPanel("testCases")}>
+                <TestTubes />
+                <span className="ml-2">Test Case</span>
               </CommandItem>
-              <CommandItem>
-                <DrawerDemo
-                  title="Output"
-                  subTitle="View the output of your code here."
-                  trigger={
-                    <div className="flex items-center w-full">
-                      <SquareTerminalIcon className="mr-2" />
-                      <span>Output</span>
-                    </div>
-                  }
-                >
-                  <OutputPanel drawer />
-                </DrawerDemo>
+              <CommandItem onSelect={() => handleOpenPanel("output")}>
+                <SquareTerminalIcon className="mr-2" />
+                <span>Output</span>
 
                 {/* <CommandShortcut>⌘S</CommandShortcut> */}
               </CommandItem>
