@@ -11,10 +11,18 @@ import {
   type CompletionResult,
 } from "@codemirror/autocomplete";
 import { cppKeywords } from "../config/cppKeywords";
-import { codeStore, editorStore, runModeStore } from "@/store/atom";
+import {
+  codeStore,
+  editorFontSizeStore,
+  editorStore,
+  runModeStore,
+} from "@/store/atom";
 import { getDefaultStore, useAtom } from "jotai";
 import { Spinner } from "./ui/spinner";
 import { handleRun, handleRunAll } from "@/api/run";
+import { ButtonGroup } from "./ui/button-group";
+import { Button } from "./ui/button";
+import { MinusIcon, PlusIcon } from "lucide-react";
 
 type CppEditorProps = Omit<ReactCodeMirrorProps, "value" | "onChange"> & {
   defaultValue?: string;
@@ -40,6 +48,7 @@ function CppEditor({
 }: CppEditorProps) {
   const [, setEditorGlobal] = useAtom(editorStore);
   const [code, setCode] = useAtom(codeStore);
+  const [fontSize, setFontSize] = useAtom(editorFontSizeStore);
   const editorRef = useRef<
     import("@uiw/react-codemirror").ReactCodeMirrorRef | null
   >(null);
@@ -91,7 +100,38 @@ function CppEditor({
   );
 
   return (
-    <>
+    <div className="relative h-full">
+      <div className="absolute bottom-5 right-5 z-1">
+        <ButtonGroup
+          orientation="horizontal"
+          aria-label="Media controls"
+          className="h-fit"
+        >
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setFontSize((p) => Math.max(p - 1, 5))}
+            disabled={fontSize <= 5}
+          >
+            <MinusIcon />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="bg-input/30! cursor-default"
+          >
+            {fontSize}
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setFontSize((p) => Math.min(p + 1, 50))}
+            disabled={fontSize >= 50}
+          >
+            <PlusIcon />
+          </Button>
+        </ButtonGroup>
+      </div>
       <div
         className={
           "w-full h-full flex flex-col gap-4 items-center justify-center top-0 left-0 pointer-events-none" +
@@ -101,6 +141,7 @@ function CppEditor({
         <p>Loading Editor</p>
         <Spinner className="size-9" />
       </div>
+
       <CodeMirror
         className={className}
         style={style}
@@ -108,7 +149,7 @@ function CppEditor({
         height="100%"
         theme={vscodeDarkInit({
           settings: {
-            fontSize: "13px",
+            fontSize: `${fontSize}px`,
             background: "#1F1F1F",
             gutterBackground: "#1F1F1F",
           },
@@ -133,7 +174,7 @@ function CppEditor({
         }}
         {...rest}
       />
-    </>
+    </div>
   );
 }
 

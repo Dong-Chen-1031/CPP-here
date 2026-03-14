@@ -32,6 +32,8 @@ export const alertStore = atom<
 export const editorStore = atom<RefObject<ReactCodeMirrorRef | null> | null>(
   null,
 );
+export const editorFontSizeStore = atomWithStorage<number>("fontSize", 13);
+
 export const codeStore = atomWithStorage<string>(
   "code",
   `#include <iostream>\nusing namespace std;\n\nint main() {\n  cout << "Hello C++ Here";\n  return 0;\n}`,
