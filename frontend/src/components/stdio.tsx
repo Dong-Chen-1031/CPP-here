@@ -72,6 +72,7 @@ export function TestEditDialog({
   function handleDialogKeyDown(e: React.KeyboardEvent) {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
       e.preventDefault();
+      e.stopPropagation();
       handleSubmitWrapper();
     }
   }

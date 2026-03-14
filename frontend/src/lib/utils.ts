@@ -24,3 +24,5 @@ export function useIsMobile() {
 
   return isMobile;
 }
+
+export const commandKey = navigator.platform.includes("Mac") ? "⌘" : "Ctrl";

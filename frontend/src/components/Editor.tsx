@@ -11,9 +11,10 @@ import {
   type CompletionResult,
 } from "@codemirror/autocomplete";
 import { cppKeywords } from "../config/cppKeywords";
-import { codeStore, editorStore } from "@/store/atom";
-import { useAtom } from "jotai";
+import { codeStore, editorStore, runModeStore } from "@/store/atom";
+import { getDefaultStore, useAtom } from "jotai";
 import { Spinner } from "./ui/spinner";
+import { handleRun, handleRunAll } from "@/api/run";
 
 type CppEditorProps = Omit<ReactCodeMirrorProps, "value" | "onChange"> & {
   defaultValue?: string;
@@ -48,6 +49,36 @@ function CppEditor({
   useEffect(() => {
     return () => {
       setEditorGlobal(null);
+    };
+  }, []);
+
+  const defaultStore = getDefaultStore();
+  useEffect(() => {
+    const handleKeyDownCapture = (event: KeyboardEvent) => {
+      if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const runMode = defaultStore.get(runModeStore);
+      if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+        if (runMode === "single") {
+          handleRun();
+        } else if (runMode === "all") {
+          handleRunAll();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDownCapture, { capture: true });
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDownCapture, {
+        capture: true,
+      });
+      window.removeEventListener("keydown", handleKeyDown, {});
     };
   }, []);
 

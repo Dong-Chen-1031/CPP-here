@@ -38,7 +38,7 @@ import { handleRun, handleRunAll } from "@/api/run";
 
 import Tip from "@/components/ui/tips";
 import { useResetAllAtoms } from "@/store/atom";
-import { cn, useIsMobile } from "@/lib/utils";
+import { cn, commandKey, useIsMobile } from "@/lib/utils";
 import { Kbd } from "./ui/kbd";
 
 export function UndoRedo({ menu = false }: { menu?: boolean }) {
@@ -50,13 +50,7 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
         <Tip
           content={
             <>
-              Undo{" "}
-              {navigator.platform.includes("Mac") ? (
-                <Kbd>⌘</Kbd>
-              ) : (
-                <Kbd>Ctrl</Kbd>
-              )}
-              {"+"}
+              Undo <Kbd>{commandKey}</Kbd>
               <Kbd>Z</Kbd>
             </>
           }
@@ -81,15 +75,8 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
         <Tip
           content={
             <>
-              Redo{" "}
-              {navigator.platform.includes("Mac") ? (
-                <Kbd>⌘</Kbd>
-              ) : (
-                <Kbd>Ctrl</Kbd>
-              )}
-              {"+"}
+              Redo <Kbd>{commandKey}</Kbd>
               <Kbd>⇧</Kbd>
-              {"+"}
               <Kbd>Z</Kbd>
             </>
           }
@@ -149,7 +136,14 @@ export function RunButton({
             <span className="text-xs">Running</span>
           </Button>
         ) : runMode === "single" ? (
-          <Tip label="Run code">
+          <Tip
+            content={
+              <>
+                Run Code <Kbd>{commandKey}</Kbd>
+                <Kbd>⏎</Kbd>
+              </>
+            }
+          >
             <Button
               variant="outline"
               onClick={(e) => {
@@ -163,7 +157,14 @@ export function RunButton({
             </Button>
           </Tip>
         ) : (
-          <Tip label="Run all test cases">
+          <Tip
+            content={
+              <>
+                Run all test cases <Kbd>{commandKey}</Kbd>
+                <Kbd>⏎</Kbd>
+              </>
+            }
+          >
             <Button
               variant="outline"
               onClick={(e) => {
