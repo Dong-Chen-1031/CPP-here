@@ -149,7 +149,6 @@ export function RunButton({
               onClick={(e) => {
                 handleRun();
                 onClick(e);
-                isMobile && openPanel("output");
               }}
             >
               <Play />
@@ -170,7 +169,6 @@ export function RunButton({
               onClick={(e) => {
                 handleRunAll();
                 onClick(e);
-                isMobile && openPanel("output");
               }}
             >
               <TestTubes />
@@ -196,7 +194,6 @@ export function RunButton({
                     setRunMode("all");
                     handleRunAll();
                     onClick(e);
-                    isMobile && openPanel("output");
                   }}
                 >
                   <TestTubes />
@@ -210,7 +207,6 @@ export function RunButton({
                     setRunMode("single");
                     handleRun();
                     onClick(e);
-                    isMobile && openPanel("output");
                   }}
                   className="w-27"
                 >

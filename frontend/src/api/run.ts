@@ -5,6 +5,7 @@ import {
   cppVersionStore,
   inputStore,
   outputStore,
+  panelDrawerStore,
   runStatusStore,
   testCasesStore,
   verifyJwtStore,
@@ -170,6 +171,7 @@ export async function handleRun({
   const cppVersion = store.get(cppVersionStore);
 
   store.set(runStatusStore, "building");
+  window.screen.width < 768 && store.set(panelDrawerStore, "output");
 
   const response = await buildCode(code, cppVersion);
 
@@ -281,6 +283,8 @@ export async function handleRunAll() {
     return;
   }
   store.set(runStatusStore, "building");
+  window.screen.width < 768 && store.set(panelDrawerStore, "output");
+
   const response = await buildCode(code, cppVersion);
   if (!response.ok || !response.js_code || !response.wasm_url) {
     store.set(outputStore, [
@@ -304,6 +308,7 @@ export async function handleRunAll() {
   }
   const wasmModule = await url2WasmModule(response.wasm_url);
   store.set(outputStore, []);
+
   exitCount = 0;
 
   for (const testCase of testCases) {
