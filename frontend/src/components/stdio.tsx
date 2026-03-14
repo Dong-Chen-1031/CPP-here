@@ -8,9 +8,11 @@ import {
   Pencil,
   SquareTerminal,
   ClipboardCopy,
+  Play,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import React, { useRef } from "react";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 
 import {
   Dialog,
@@ -30,10 +32,12 @@ import { useAtom } from "jotai";
 import {
   inputStore,
   outputStore,
+  panelDrawerStore,
   testCasesStore,
   type TestCase,
 } from "@/store/atom";
-import { cn } from "@/lib/utils";
+import { cn, useIsMobile } from "@/lib/utils";
+import { handleRun } from "@/api/run";
 interface EditDialogOptions {
   title?: string;
   name?: string;
@@ -54,15 +58,26 @@ export function TestEditDialog({
     console.log(n, i);
   },
 }: EditDialogOptions & { trigger: React.ReactNode }) {
+  const [open, setOpen] = React.useState(false);
   const caseNameRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
   function handleSubmitWrapper() {
     const name = caseNameRef.current?.value || "";
     const input = inputRef.current?.value || "";
     handleSubmit(name, input);
+    setOpen(false);
   }
+
+  function handleDialogKeyDown(e: React.KeyboardEvent) {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      handleSubmitWrapper();
+    }
+  }
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       {tips ? (
         <TooltipProvider delayDuration={300}>
           <Tip label={tips}>
@@ -72,7 +87,11 @@ export function TestEditDialog({
       ) : (
         <DialogTrigger asChild>{trigger}</DialogTrigger>
       )}
-      <DialogContent className="md:max-w-125" showCloseButton={false}>
+      <DialogContent
+        className="md:max-w-125"
+        showCloseButton={false}
+        onKeyDown={handleDialogKeyDown}
+      >
         <DialogHeader className="p-2">
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
@@ -106,12 +125,36 @@ export function TestEditDialog({
         </FieldGroup>
 
         <DialogFooter className="border-t-border p-4">
-          <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DialogClose>
-          <DialogClose asChild>
-            <Button onClick={handleSubmitWrapper}>{submitBtnName}</Button>
-          </DialogClose>
+          <TooltipProvider delayDuration={300}>
+            <Tip
+              content={
+                <>
+                  Cancel <Kbd>Esc</Kbd>
+                </>
+              }
+            >
+              <DialogClose asChild>
+                <Button variant="outline">Cancel</Button>
+              </DialogClose>
+            </Tip>
+
+            <Tip
+              content={
+                <>
+                  Submit{" "}
+                  {navigator.platform.includes("Mac") ? (
+                    <Kbd>⌘</Kbd>
+                  ) : (
+                    <Kbd>Ctrl</Kbd>
+                  )}
+                  {""}
+                  <Kbd>⏎</Kbd>
+                </>
+              }
+            >
+              <Button onClick={handleSubmitWrapper}>{submitBtnName}</Button>
+            </Tip>
+          </TooltipProvider>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -174,6 +217,8 @@ export function InputPanel({ drawer = false }: { drawer?: boolean }) {
 export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
   const [, setInput] = useAtom(inputStore);
   const [testCases, setTestCases] = useAtom(testCasesStore);
+  const [, setPanel] = useAtom(panelDrawerStore);
+  const isMobile = useIsMobile();
 
   function handleAddTestCase(name: string, input: string) {
     const newTestCase: TestCase = {
@@ -219,10 +264,25 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
                 <div
                   key={testCase.id}
                   className="text-sm bg-accent/75 p-2 rounded-md cursor-pointer hover:bg-accent flex items-center justify-between gap-2"
-                  onClick={() => setInput(testCase.input)}
+                  onClick={() => {
+                    setInput(testCase.input);
+                    isMobile && setPanel("input");
+                  }}
                 >
                   <Tip label="Set Input to this Test Case">
                     <p className="flex-1">{testCase.name}</p>
+                  </Tip>
+                  <Tip label="Run this Test Case">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRun({ input: testCase.input });
+                      }}
+                    >
+                      <Play className="w-4 h-4" />
+                    </Button>
                   </Tip>
                   <TestEditDialog
                     trigger={

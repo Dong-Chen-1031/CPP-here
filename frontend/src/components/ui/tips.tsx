@@ -5,9 +5,11 @@ export default function Tip({
   label,
   children,
   className,
+  content,
   show = null,
 }: {
-  label: string;
+  label?: string;
+  content?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
   show?: boolean | null;
@@ -18,7 +20,7 @@ export default function Tip({
       <TooltipTrigger asChild className={className}>
         {children}
       </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
+      <TooltipContent>{content ?? label}</TooltipContent>
     </Tooltip>
   ) : (
     <>{children}</>

@@ -24,27 +24,22 @@ import {
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAtom } from "jotai";
 import {
-  alertStore,
-  codeStore,
   cppVersionStore,
   editorStore,
-  inputStore,
-  outputStore,
   panelDrawerStore,
   runModeStore,
   runStatusStore,
-  testCasesStore,
   verifyJwtStore,
-  type OutputCase,
 } from "@/store/atom";
 
 import { undo, redo } from "@codemirror/commands";
 
-import { buildCode, runCode, url2WasmModule } from "@/api/run";
+import { handleRun, handleRunAll } from "@/api/run";
 
 import Tip from "@/components/ui/tips";
 import { useResetAllAtoms } from "@/store/atom";
 import { cn, useIsMobile } from "@/lib/utils";
+import { Kbd } from "./ui/kbd";
 
 export function UndoRedo({ menu = false }: { menu?: boolean }) {
   const [editorGlobal] = useAtom(editorStore);
@@ -52,7 +47,21 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
   return (
     <TooltipProvider delayDuration={300}>
       <ButtonGroup>
-        <Tip label="Undo (ctrl+z)" show={!menu}>
+        <Tip
+          content={
+            <>
+              Undo{" "}
+              {navigator.platform.includes("Mac") ? (
+                <Kbd>⌘</Kbd>
+              ) : (
+                <Kbd>Ctrl</Kbd>
+              )}
+              {"+"}
+              <Kbd>Z</Kbd>
+            </>
+          }
+          show={!menu}
+        >
           <Button
             variant="outline"
             size={menu ? "sm" : "icon-sm"}
@@ -69,7 +78,23 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
             {/* {menu && <span>Undo</span>} */}
           </Button>
         </Tip>
-        <Tip label="Redo (ctrl+shift+z)" show={!menu}>
+        <Tip
+          content={
+            <>
+              Redo{" "}
+              {navigator.platform.includes("Mac") ? (
+                <Kbd>⌘</Kbd>
+              ) : (
+                <Kbd>Ctrl</Kbd>
+              )}
+              {"+"}
+              <Kbd>⇧</Kbd>
+              {"+"}
+              <Kbd>Z</Kbd>
+            </>
+          }
+          show={!menu}
+        >
           <Button
             variant="outline"
             size={menu ? "sm" : "icon-sm"}
@@ -100,190 +125,10 @@ export function RunButton({
 }) {
   const [runMode, setRunMode] = useAtom(runModeStore);
   const [jwt] = useAtom(verifyJwtStore);
-  const [code] = useAtom(codeStore);
-  const [input] = useAtom(inputStore);
-  const [, setOutput] = useAtom(outputStore);
-  const [cppVersion] = useAtom(cppVersionStore);
 
-  const [testCases] = useAtom(testCasesStore);
-
-  const [runStatus, setRunStatus] = useAtom(runStatusStore);
-  const [, setAlert] = useAtom(alertStore);
+  const [runStatus] = useAtom(runStatusStore);
   const [, openPanel] = useAtom(panelDrawerStore);
   const isMobile = useIsMobile();
-  const exitCountRef = React.useRef(0);
-  async function handleRun() {
-    setRunStatus("building");
-
-    const response = await buildCode(code, cppVersion);
-
-    if (!response.ok || !response.js_code) {
-      setOutput([
-        {
-          type: "err",
-          content: "Build failed with errors:\n" + response.errors[0],
-        },
-      ]);
-      setAlert((p) => [
-        ...p,
-        {
-          title: "Build Failed",
-          description:
-            "Failed to build the code. Please check output for details.",
-          variant: "destructive",
-          id: crypto.randomUUID(),
-        },
-      ]);
-
-      setRunStatus("idle");
-      return;
-    }
-
-    runCode(response.js_code, input, {
-      wasmUrl: response.wasm_url,
-      onInit: () => {
-        setOutput([]);
-      },
-      onStdout: (output) => {
-        setOutput((prev) => [
-          { content: (prev[prev.length - 1]?.content || "") + output + "\n" },
-        ]);
-      },
-      onError(error) {
-        setOutput((prev) => [...prev, { type: "err", content: error }]);
-        setAlert((p) => [
-          ...p,
-          {
-            title: "Runtime Error",
-            description:
-              "An error occurred during code execution. Please check output for details.",
-            variant: "destructive",
-            id: crypto.randomUUID(),
-          },
-        ]);
-      },
-      onExit() {
-        setRunStatus("idle");
-      },
-    });
-    setRunStatus("running");
-  }
-
-  const orderedIds = testCases.map((tc) => tc.id);
-
-  function insertInOrder(prev: OutputCase[], item: OutputCase) {
-    const lastSameIdx = prev.findLastIndex(
-      (o) => o.testCaseId === item.testCaseId && o.type === item.type,
-    );
-    if (lastSameIdx !== -1) {
-      const merged = {
-        ...prev[lastSameIdx],
-        content: prev[lastSameIdx].content + "\n" + item.content,
-      };
-      return [
-        ...prev.slice(0, lastSameIdx),
-        merged,
-        ...prev.slice(lastSameIdx + 1),
-      ];
-    }
-
-    const insertIdx = orderedIds.indexOf(item.testCaseId!);
-    let pos = prev.length;
-    for (let i = prev.length - 1; i >= 0; i--) {
-      const idx = orderedIds.indexOf(prev[i].testCaseId!);
-      if (idx <= insertIdx) {
-        pos = i + 1;
-        break;
-      }
-      pos = i;
-    }
-    return [...prev.slice(0, pos), item, ...prev.slice(pos)];
-  }
-  async function handleRunAll() {
-    if (testCases.length === 0) {
-      setAlert((p) => [
-        ...p,
-        {
-          title: "No Test Cases",
-          description:
-            "There are no test cases to run. Please add some test cases first.",
-          variant: "destructive",
-          id: crypto.randomUUID(),
-        },
-      ]);
-      return;
-    }
-    setRunStatus("building");
-    const response = await buildCode(code, cppVersion);
-    if (!response.ok || !response.js_code || !response.wasm_url) {
-      setOutput([
-        {
-          type: "err",
-          content: "Build failed with errors:\n" + response.errors[0],
-        },
-      ]);
-      setAlert((p) => [
-        ...p,
-        {
-          title: "Build Failed",
-          description:
-            "Failed to build the code. Please check output for details.",
-          variant: "destructive",
-          id: crypto.randomUUID(),
-        },
-      ]);
-      setRunStatus("idle");
-      return;
-    }
-    const wasmModule = await url2WasmModule(response.wasm_url);
-    setOutput([]);
-    exitCountRef.current = 0;
-
-    for (const testCase of testCases) {
-      runCode(response.js_code, testCase.input, {
-        wasmModule: wasmModule,
-        onStdout(output) {
-          setOutput((prev) =>
-            insertInOrder(prev, {
-              content: output,
-              testCaseId: testCase.id,
-              testCaseName: testCase.name,
-            }),
-          );
-        },
-        onError(error) {
-          setOutput((prev) =>
-            insertInOrder(prev, {
-              type: "err",
-              content: error,
-              testCaseId: testCase.id,
-              testCaseName: testCase.name,
-            }),
-          );
-          setAlert((p) => [
-            ...p,
-            {
-              title: `Runtime Error in ${testCase.name}`,
-              description:
-                "An error occurred during code execution. Please check output for details.",
-              variant: "destructive",
-              id: crypto.randomUUID(),
-            },
-          ]);
-        },
-        onExit() {
-          exitCountRef.current += 1;
-          console.log(
-            `Test case ${testCase.name} completed. (${exitCountRef.current}/${testCases.length})`,
-          );
-          if (exitCountRef.current === testCases.length) {
-            setRunStatus("idle");
-          }
-        },
-      });
-    }
-    setRunStatus("running");
-  }
 
   return (
     <TooltipProvider delayDuration={300}>

@@ -1,5 +1,15 @@
 import config from "@/config/constants";
-import { verifyJwtStore } from "@/store/atom";
+import {
+  alertStore,
+  codeStore,
+  cppVersionStore,
+  inputStore,
+  outputStore,
+  runStatusStore,
+  testCasesStore,
+  verifyJwtStore,
+  type OutputCase,
+} from "@/store/atom";
 import axios from "axios";
 import { getDefaultStore } from "jotai";
 
@@ -147,4 +157,197 @@ export async function runCode(
     onError && onError(String(error));
     onExit && onExit();
   }
+}
+
+const store = getDefaultStore();
+
+export async function handleRun({
+  code,
+  input,
+}: { code?: string; input?: string } = {}) {
+  code = code ?? store.get(codeStore);
+  input = input ?? store.get(inputStore);
+  const cppVersion = store.get(cppVersionStore);
+
+  store.set(runStatusStore, "building");
+
+  const response = await buildCode(code, cppVersion);
+
+  if (!response.ok || !response.js_code) {
+    store.set(outputStore, [
+      {
+        type: "err",
+        content: "Build failed with errors:\n" + response.errors[0],
+      },
+    ]);
+    store.set(alertStore, (p) => [
+      ...p,
+      {
+        title: "Build Failed",
+        description:
+          "Failed to build the code. Please check output for details.",
+        variant: "destructive",
+        id: crypto.randomUUID(),
+      },
+    ]);
+
+    store.set(runStatusStore, "idle");
+    return;
+  }
+
+  runCode(response.js_code, input, {
+    wasmUrl: response.wasm_url,
+    onInit: () => {
+      store.set(outputStore, []);
+    },
+    onStdout: (output) => {
+      store.set(outputStore, (prev) => [
+        { content: (prev[prev.length - 1]?.content || "") + output + "\n" },
+      ]);
+    },
+    onError(error) {
+      store.set(outputStore, (prev) => [
+        ...prev,
+        { type: "err", content: error },
+      ]);
+      store.set(alertStore, (p) => [
+        ...p,
+        {
+          title: "Runtime Error",
+          description:
+            "An error occurred during code execution. Please check output for details.",
+          variant: "destructive",
+          id: crypto.randomUUID(),
+        },
+      ]);
+    },
+    onExit() {
+      store.set(runStatusStore, "idle");
+    },
+  });
+  store.set(runStatusStore, "running");
+}
+
+function insertInOrder(prev: OutputCase[], item: OutputCase) {
+  const testCases = store.get(testCasesStore);
+
+  const lastSameIdx = prev.findLastIndex(
+    (o) => o.testCaseId === item.testCaseId && o.type === item.type,
+  );
+  if (lastSameIdx !== -1) {
+    const merged = {
+      ...prev[lastSameIdx],
+      content: prev[lastSameIdx].content + "\n" + item.content,
+    };
+    return [
+      ...prev.slice(0, lastSameIdx),
+      merged,
+      ...prev.slice(lastSameIdx + 1),
+    ];
+  }
+
+  const orderedIds = testCases.map((tc) => tc.id);
+
+  const insertIdx = orderedIds.indexOf(item.testCaseId!);
+  let pos = prev.length;
+  for (let i = prev.length - 1; i >= 0; i--) {
+    const idx = orderedIds.indexOf(prev[i].testCaseId!);
+    if (idx <= insertIdx) {
+      pos = i + 1;
+      break;
+    }
+    pos = i;
+  }
+  return [...prev.slice(0, pos), item, ...prev.slice(pos)];
+}
+
+export async function handleRunAll() {
+  const testCases = store.get(testCasesStore);
+  const code = store.get(codeStore);
+  const cppVersion = store.get(cppVersionStore);
+  let exitCount = 0;
+
+  if (testCases.length === 0) {
+    store.set(alertStore, (p) => [
+      ...p,
+      {
+        title: "No Test Cases",
+        description:
+          "There are no test cases to run. Please add some test cases first.",
+        variant: "destructive",
+        id: crypto.randomUUID(),
+      },
+    ]);
+    return;
+  }
+  store.set(runStatusStore, "building");
+  const response = await buildCode(code, cppVersion);
+  if (!response.ok || !response.js_code || !response.wasm_url) {
+    store.set(outputStore, [
+      {
+        type: "err",
+        content: "Build failed with errors:\n" + response.errors[0],
+      },
+    ]);
+    store.set(alertStore, (p) => [
+      ...p,
+      {
+        title: "Build Failed",
+        description:
+          "Failed to build the code. Please check output for details.",
+        variant: "destructive",
+        id: crypto.randomUUID(),
+      },
+    ]);
+    store.set(runStatusStore, "idle");
+    return;
+  }
+  const wasmModule = await url2WasmModule(response.wasm_url);
+  store.set(outputStore, []);
+  exitCount = 0;
+
+  for (const testCase of testCases) {
+    runCode(response.js_code, testCase.input, {
+      wasmModule: wasmModule,
+      onStdout(output) {
+        store.set(outputStore, (prev) =>
+          insertInOrder(prev, {
+            content: output,
+            testCaseId: testCase.id,
+            testCaseName: testCase.name,
+          }),
+        );
+      },
+      onError(error) {
+        store.set(outputStore, (prev) =>
+          insertInOrder(prev, {
+            type: "err",
+            content: error,
+            testCaseId: testCase.id,
+            testCaseName: testCase.name,
+          }),
+        );
+        store.set(alertStore, (p) => [
+          ...p,
+          {
+            title: `Runtime Error in ${testCase.name}`,
+            description:
+              "An error occurred during code execution. Please check output for details.",
+            variant: "destructive",
+            id: crypto.randomUUID(),
+          },
+        ]);
+      },
+      onExit() {
+        exitCount += 1;
+        console.log(
+          `Test case ${testCase.name} completed. (${exitCount}/${testCases.length})`,
+        );
+        if (exitCount === testCases.length) {
+          store.set(runStatusStore, "idle");
+        }
+      },
+    });
+  }
+  store.set(runStatusStore, "running");
 }
