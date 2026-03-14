@@ -52,7 +52,7 @@ export function SplitViewEditor() {
           </ResizablePanelGroup>
         </ResizablePanel>
       </ResizablePanelGroup>
-      <div className="max-w-full w-full h-full rounded-lg mb-4 md:hidden">
+      <div className="max-w-full w-full h-full rounded-lg mb-2 md:hidden">
         <div className="rounded-md overflow-hidden h-full ml-2 mr-2 bg-accent">
           <Editor className="w-full h-full" />
         </div>

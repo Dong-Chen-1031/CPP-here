@@ -54,7 +54,6 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
               <Kbd>Z</Kbd>
             </>
           }
-          show={!menu}
         >
           <Button
             variant="outline"
@@ -80,7 +79,6 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
               <Kbd>Z</Kbd>
             </>
           }
-          show={!menu}
         >
           <Button
             variant="outline"

@@ -271,7 +271,7 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
                   }}
                 >
                   <Tip label="Set Input to this Test Case">
-                    <p className="flex-1">{testCase.name}</p>
+                    <p className="flex-1 overflow-clip">{testCase.name}</p>
                   </Tip>
                   <Tip label="Run this Test Case">
                     <Button
