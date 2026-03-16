@@ -40,6 +40,46 @@ html {
   background: transparent;
 }
 
+.cm-error-highlight-error {
+  --cm-error-accent-bg: oklch(0.704 0.191 22.216 / 0.15);
+}
+
+.cm-error-highlight-warning {
+  --cm-error-accent-bg: oklch(0.74 0.16 82 / 0.15);
+}
+
+.cm-error-highlight-info {
+  --cm-error-accent-bg: oklch(0.68 0.15 244 / 0.15);
+}
+
+.cm-error-highlight-error,
+.cm-error-highlight-warning,
+.cm-error-highlight-info {
+  background-color: transparent;
+
+  border-radius: 2px;
+  padding: 0 1px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+
+  animation: cm-error-highlight-fadein 0.2s ease-out forwards;
+}
+
+@keyframes cm-error-highlight-fadein {
+  from {
+    background-color: transparent;
+  }
+  to {
+    background-color: var(--cm-error-accent-bg);
+  }
+}
+
+.cm-editor .cm-error-highlight-error.cm-selectionMatch,
+.cm-editor .cm-error-highlight-warning.cm-selectionMatch,
+.cm-editor .cm-error-highlight-info.cm-selectionMatch {
+  background-color: var(--cm-error-accent-bg);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -56,6 +96,7 @@ html {
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
@@ -99,6 +140,8 @@ html {
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
+  --warning: oklch(74.316% 0.16003 67.61);
+
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);

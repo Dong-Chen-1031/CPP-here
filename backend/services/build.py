@@ -28,18 +28,21 @@ async def build(
     cmd = (
         f"printf '%s' {shlex.quote(code)} > /tmp/source.cpp && "
         f"timeout 30s emcc /tmp/source.cpp -o /out/{shlex.quote(name)} "
-        "-ftemplate-depth=50 "
-        "-sMODULARIZE=1 "
-        # "-sMINIMAL_RUNTIME=1 "
-        '-sEXPORT_NAME="createMyModule" '
-        '-sENVIRONMENT="worker" '
-        "-sEXIT_RUNTIME=1 "
-        "-sFILESYSTEM=0 "
-        "--js-library /tmp/stdin_lib.js "
-        # '-sINCOMING_MODULE_JS_API=\'["print","printErr","stdin","instantiateWasm","onRuntimeInitialized"]\' '
-        # '-sINCOMING_MODULE_JS_API=\'["wasm", "stdin", "print", "printErr"]\' '
-        "-fconstexpr-depth=50 "
-        "-fmacro-backtrace-limit=10"
+    ) + " ".join(
+        [
+            "-ftemplate-depth=50 ",
+            "-sMODULARIZE=1 ",
+            # "-sMINIMAL_RUNTIME=1 "
+            '-sEXPORT_NAME="createMyModule" ',
+            '-sENVIRONMENT="worker" ',
+            "-sEXIT_RUNTIME=1 ",
+            "-sFILESYSTEM=0 ",
+            "--js-library /tmp/stdin_lib.js ",
+            # '-sINCOMING_MODULE_JS_API=\'["print","printErr","stdin","instantiateWasm","onRuntimeInitialized"]\' '
+            # '-sINCOMING_MODULE_JS_API=\'["wasm", "stdin", "print", "printErr"]\' '
+            "-fconstexpr-depth=50 ",
+            "-fmacro-backtrace-limit=10 ",
+        ]
     )
 
     config = {

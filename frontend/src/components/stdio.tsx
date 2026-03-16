@@ -172,8 +172,8 @@ export function InputPanel({ drawer = false }: { drawer?: boolean }) {
       )}
     >
       <div className="flex gap-2 items-center">
-        <Keyboard className="w-3 h-3" />
-        <p className="text-sm">Input</p>
+        <Keyboard className="w-3 h-3 shrink-0" />
+        <p className="text-sm truncate">Input</p>
         <div className="flex-1"></div>
         <TooltipProvider delayDuration={300}>
           <Tip label="Paste from clipboard">
@@ -238,8 +238,8 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
       )}
     >
       <div className="flex gap-2 items-center">
-        <TestTubes className="w-3 h-3" />
-        <p className="text-sm">Test Case</p>
+        <TestTubes className="w-3 h-3 shrink-0" />
+        <p className="text-sm truncate">Test Case</p>
         <div className="flex-1"></div>
         <TestEditDialog
           tips="Add new test case"
@@ -340,8 +340,8 @@ export function OutputPanel({ drawer = false }: { drawer?: boolean }) {
     >
       <div className="flex gap-2 items-center">
         <TooltipProvider delayDuration={300}>
-          <SquareTerminal className="w-3 h-3" />
-          <p className="text-sm">Output</p>
+          <SquareTerminal className="w-3 h-3 shrink-0" />
+          <p className="text-sm truncate">Output</p>
           <div className="flex-1"></div>
           <Tip label="Copy first output">
             <Button

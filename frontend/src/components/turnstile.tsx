@@ -1,14 +1,19 @@
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import axios from "axios";
 import config from "@/config/constants";
 import { useAtom } from "jotai";
-import { alertStore, verifyJwtStore } from "@/store/atom";
+import { alertStore, turnstileRefStore, verifyJwtStore } from "@/store/atom";
 
 export default function TurnstileWidget() {
   const turnstileRef = useRef<TurnstileInstance | null>(null);
   const [jwt, setJwt] = useAtom(verifyJwtStore);
   const [alerts, setAlert] = useAtom(alertStore);
+  const [, setTurnstileRefGlobal] = useAtom(turnstileRefStore);
+  useEffect(() => {
+    setTurnstileRefGlobal(turnstileRef);
+  }, []);
+
   return (
     <Turnstile
       siteKey={config.turnstileSiteKey}

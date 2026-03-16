@@ -2,6 +2,7 @@ import { atom } from "jotai";
 import { atomWithStorage, useResetAtom } from "jotai/utils";
 import { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import type { RefObject } from "react";
+import type { TurnstileInstance } from "@marsidev/react-turnstile";
 export interface TestCase {
   id: string;
   name: string;
@@ -29,10 +30,20 @@ export const alertStore = atom<
   }[]
 >([]);
 
-export const editorStore = atom<RefObject<ReactCodeMirrorRef | null> | null>(
+export const turnstileRefStore =
+  atom<RefObject<TurnstileInstance | null> | null>(null);
+
+export const editorRefStore = atom<RefObject<ReactCodeMirrorRef | null> | null>(
   null,
 );
 export const editorFontSizeStore = atomWithStorage<number>("fontSize", 13);
+export const editorErrorStore = atomWithStorage<
+  {
+    line: number;
+    msg: string;
+    severity?: "error" | "warning" | "info";
+  }[]
+>("editorErrors", []);
 
 export const codeStore = atomWithStorage<string>(
   "code",

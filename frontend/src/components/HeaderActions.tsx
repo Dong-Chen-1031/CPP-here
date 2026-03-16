@@ -25,7 +25,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAtom } from "jotai";
 import {
   cppVersionStore,
-  editorStore,
+  editorRefStore,
   panelDrawerStore,
   runModeStore,
   runStatusStore,
@@ -42,7 +42,7 @@ import { cn, commandKey, useIsMobile } from "@/lib/utils";
 import { Kbd } from "./ui/kbd";
 
 export function UndoRedo({ menu = false }: { menu?: boolean }) {
-  const [editorGlobal] = useAtom(editorStore);
+  const [editorGlobal] = useAtom(editorRefStore);
 
   return (
     <TooltipProvider delayDuration={300}>

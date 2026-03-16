@@ -14,15 +14,17 @@ import { cppKeywords } from "../config/cppKeywords";
 import {
   codeStore,
   editorFontSizeStore,
-  editorStore,
+  editorRefStore,
   runModeStore,
+  editorErrorStore,
 } from "@/store/atom";
-import { getDefaultStore, useAtom } from "jotai";
+import { getDefaultStore, useAtom, useAtomValue } from "jotai";
 import { Spinner } from "./ui/spinner";
 import { handleRun, handleRunAll } from "@/api/run";
 import { ButtonGroup } from "./ui/button-group";
 import { Button } from "./ui/button";
 import { MinusIcon, PlusIcon } from "lucide-react";
+import { addErrorEffect, clearErrorsEffect, errorField } from "./Error";
 
 type CppEditorProps = Omit<ReactCodeMirrorProps, "value" | "onChange"> & {
   defaultValue?: string;
@@ -46,14 +48,49 @@ function CppEditor({
   style,
   ...rest
 }: CppEditorProps) {
-  const [, setEditorGlobal] = useAtom(editorStore);
+  const [EditorGlobal, setEditorGlobal] = useAtom(editorRefStore);
   const [code, setCode] = useAtom(codeStore);
   const [fontSize, setFontSize] = useAtom(editorFontSizeStore);
+  const editorError = useAtomValue(editorErrorStore);
   const editorRef = useRef<
     import("@uiw/react-codemirror").ReactCodeMirrorRef | null
   >(null);
 
   const [isEditorReady, setIsEditorReady] = useState(false);
+
+  useEffect(() => {
+    if (!editorRef.current?.view) return;
+    const view = editorRef.current.view;
+    if (!editorError || editorError.length === 0) {
+      view.dispatch({ effects: [clearErrorsEffect.of()] });
+      return;
+    }
+
+    try {
+      const doc = view.state.doc;
+      const effects: import("@codemirror/state").StateEffect<any>[] = [
+        clearErrorsEffect.of(),
+      ];
+
+      for (const err of editorError) {
+        // Safely access line to avoid out-of-bounds error
+        const safeLine = Math.max(1, Math.min(err.line, doc.lines));
+        const lineInfo = doc.line(safeLine);
+
+        effects.push(
+          addErrorEffect.of({
+            pos: lineInfo.to,
+            message: err.msg,
+            severity: err.severity || "error",
+          }),
+        );
+      }
+
+      view.dispatch({ effects });
+    } catch (err) {
+      console.error("CodeMirror error dispatch failed:", err);
+    }
+  }, [editorError, isEditorReady]);
 
   useEffect(() => {
     return () => {
@@ -163,6 +200,7 @@ function CppEditor({
           cpp(),
           autocompletion({ override: [cppCompletions] }),
           EditorView.lineWrapping,
+          errorField,
           ...extensions,
         ]}
         onChange={handleChange}

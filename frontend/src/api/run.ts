@@ -3,11 +3,13 @@ import {
   alertStore,
   codeStore,
   cppVersionStore,
+  editorErrorStore,
   inputStore,
   outputStore,
   panelDrawerStore,
   runStatusStore,
   testCasesStore,
+  turnstileRefStore,
   verifyJwtStore,
   type OutputCase,
 } from "@/store/atom";
@@ -43,6 +45,29 @@ export async function buildCode(code: string, cppVersion: string) {
     return respond.data as BuildResponse;
   } catch (error) {
     console.error("Error during build request:", error);
+    if (axios.isAxiosError(error) && error.status === 401) {
+      defaultStore.set(verifyJwtStore, null);
+      defaultStore.set(alertStore, (p) => [
+        ...p,
+        {
+          title: "Unauthorized",
+          description:
+            "Your verification has expired and will be automatically renewed. Please try running your code again.",
+          variant: "destructive",
+          id: crypto.randomUUID(),
+        },
+      ]);
+      const turnstileRef = defaultStore.get(turnstileRefStore);
+      turnstileRef?.current?.reset();
+
+      await new Promise((resolve, reject) =>
+        defaultStore.sub(verifyJwtStore, () => {
+          resolve(null);
+        }),
+      );
+
+      return await buildCode(code, cppVersion);
+    }
     return { ok: false, errors: [String(error)] } as BuildResponse;
   }
 }
@@ -162,6 +187,68 @@ export async function runCode(
 
 const store = getDefaultStore();
 
+interface ShowErrorOptions {
+  title?: string;
+  description?: string;
+  testCaseId?: string;
+  testCaseName?: string;
+  replaceOutput?: boolean;
+}
+
+export function showError(err: string, options?: ShowErrorOptions) {
+  const regex = /:(\d+):(?:\d+:)?\s*(error|warning|fatal error):\s*(.*)/gi;
+  const matches = [...err.matchAll(regex)];
+
+  if (matches.length > 0) {
+    const newErrors = matches.map((match) => {
+      const line = parseInt(match[1], 10);
+      const type = match[2].toLowerCase();
+      const severity: "warning" | "error" = type.includes("warning")
+        ? "warning"
+        : "error";
+      const msg = match[3];
+      return { line, msg, severity };
+    });
+
+    store.set(editorErrorStore, (prev) => [...(prev || []), ...newErrors]);
+  }
+
+  const title =
+    options?.title ||
+    (options?.testCaseName
+      ? `Runtime Error in ${options.testCaseName}`
+      : "Error");
+  const description =
+    options?.description ||
+    "An error occurred. Please check output for details.";
+
+  store.set(alertStore, (p) => [
+    ...p,
+    {
+      title,
+      description,
+      variant: "destructive",
+      id: crypto.randomUUID(),
+    },
+  ]);
+
+  const outputItem: OutputCase = {
+    type: "err",
+    content: err,
+    testCaseId: options?.testCaseId,
+    testCaseName: options?.testCaseName,
+  };
+
+  store.set(outputStore, (prev) => {
+    if (options?.replaceOutput) return [outputItem];
+    if (options?.testCaseId) {
+      return insertInOrder(prev, outputItem);
+    } else {
+      return [...prev, outputItem];
+    }
+  });
+}
+
 export async function handleRun({
   code,
   input,
@@ -171,28 +258,17 @@ export async function handleRun({
   const cppVersion = store.get(cppVersionStore);
 
   store.set(runStatusStore, "building");
+  store.set(editorErrorStore, []);
   window.screen.width < 768 && store.set(panelDrawerStore, "output");
 
   const response = await buildCode(code, cppVersion);
 
   if (!response.ok || !response.js_code) {
-    store.set(outputStore, [
-      {
-        type: "err",
-        content: "Build failed with errors:\n" + response.errors[0],
-      },
-    ]);
-    store.set(alertStore, (p) => [
-      ...p,
-      {
-        title: "Build Failed",
-        description:
-          "Failed to build the code. Please check output for details.",
-        variant: "destructive",
-        id: crypto.randomUUID(),
-      },
-    ]);
-
+    showError("Build failed with errors:\n" + response.errors[0], {
+      title: "Build Failed",
+      description: "Failed to build the code. Please check output for details.",
+      replaceOutput: true,
+    });
     store.set(runStatusStore, "idle");
     return;
   }
@@ -208,20 +284,11 @@ export async function handleRun({
       ]);
     },
     onError(error) {
-      store.set(outputStore, (prev) => [
-        ...prev,
-        { type: "err", content: error },
-      ]);
-      store.set(alertStore, (p) => [
-        ...p,
-        {
-          title: "Runtime Error",
-          description:
-            "An error occurred during code execution. Please check output for details.",
-          variant: "destructive",
-          id: crypto.randomUUID(),
-        },
-      ]);
+      showError(error, {
+        title: "Runtime Error",
+        description:
+          "An error occurred during code execution. Please check output for details.",
+      });
     },
     onExit() {
       store.set(runStatusStore, "idle");
@@ -283,26 +350,16 @@ export async function handleRunAll() {
     return;
   }
   store.set(runStatusStore, "building");
+  store.set(editorErrorStore, []);
   window.screen.width < 768 && store.set(panelDrawerStore, "output");
 
   const response = await buildCode(code, cppVersion);
   if (!response.ok || !response.js_code || !response.wasm_url) {
-    store.set(outputStore, [
-      {
-        type: "err",
-        content: "Build failed with errors:\n" + response.errors[0],
-      },
-    ]);
-    store.set(alertStore, (p) => [
-      ...p,
-      {
-        title: "Build Failed",
-        description:
-          "Failed to build the code. Please check output for details.",
-        variant: "destructive",
-        id: crypto.randomUUID(),
-      },
-    ]);
+    showError("Build failed with errors:\n" + response.errors[0], {
+      title: "Build Failed",
+      description: "Failed to build the code. Please check output for details.",
+      replaceOutput: true,
+    });
     store.set(runStatusStore, "idle");
     return;
   }
@@ -324,24 +381,10 @@ export async function handleRunAll() {
         );
       },
       onError(error) {
-        store.set(outputStore, (prev) =>
-          insertInOrder(prev, {
-            type: "err",
-            content: error,
-            testCaseId: testCase.id,
-            testCaseName: testCase.name,
-          }),
-        );
-        store.set(alertStore, (p) => [
-          ...p,
-          {
-            title: `Runtime Error in ${testCase.name}`,
-            description:
-              "An error occurred during code execution. Please check output for details.",
-            variant: "destructive",
-            id: crypto.randomUUID(),
-          },
-        ]);
+        showError(error, {
+          testCaseId: testCase.id,
+          testCaseName: testCase.name,
+        });
       },
       onExit() {
         exitCount += 1;
