@@ -1,5 +1,10 @@
 import { useIsMobile } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./tooltip";
 
 export default function Tip({
   label,
@@ -16,12 +21,14 @@ export default function Tip({
 }) {
   const isMobile = useIsMobile();
   return (show ?? !isMobile) ? (
-    <Tooltip>
-      <TooltipTrigger asChild className={className}>
-        {children}
-      </TooltipTrigger>
-      <TooltipContent>{content ?? label}</TooltipContent>
-    </Tooltip>
+    <TooltipProvider delayDuration={700}>
+      <Tooltip>
+        <TooltipTrigger asChild className={className}>
+          {children}
+        </TooltipTrigger>
+        <TooltipContent>{content ?? label}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   ) : (
     <>{children}</>
   );

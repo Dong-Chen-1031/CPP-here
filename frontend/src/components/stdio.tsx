@@ -9,6 +9,7 @@ import {
   SquareTerminal,
   ClipboardCopy,
   Play,
+  CircleCheckBig,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import React, { useRef } from "react";
@@ -38,6 +39,8 @@ import {
 } from "@/store/atom";
 import { cn, useIsMobile } from "@/lib/utils";
 import { handleRun } from "@/api/run";
+import { AnimatePresence, motion } from "motion/react";
+import IconMotion from "./IconMotion";
 interface EditDialogOptions {
   title?: string;
   name?: string;
@@ -80,11 +83,9 @@ export function TestEditDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {tips ? (
-        <TooltipProvider delayDuration={300}>
-          <Tip label={tips}>
-            <DialogTrigger asChild>{trigger}</DialogTrigger>
-          </Tip>
-        </TooltipProvider>
+        <Tip label={tips}>
+          <DialogTrigger asChild>{trigger}</DialogTrigger>
+        </Tip>
       ) : (
         <DialogTrigger asChild>{trigger}</DialogTrigger>
       )}
@@ -126,36 +127,34 @@ export function TestEditDialog({
         </FieldGroup>
 
         <DialogFooter className="border-t-border p-4">
-          <TooltipProvider delayDuration={300}>
-            <Tip
-              content={
-                <>
-                  Cancel <Kbd>Esc</Kbd>
-                </>
-              }
-            >
-              <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DialogClose>
-            </Tip>
+          <Tip
+            content={
+              <>
+                Cancel <Kbd>Esc</Kbd>
+              </>
+            }
+          >
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+          </Tip>
 
-            <Tip
-              content={
-                <>
-                  Submit{" "}
-                  {navigator.platform.includes("Mac") ? (
-                    <Kbd>⌘</Kbd>
-                  ) : (
-                    <Kbd>Ctrl</Kbd>
-                  )}
-                  {""}
-                  <Kbd>⏎</Kbd>
-                </>
-              }
-            >
-              <Button onClick={handleSubmitWrapper}>{submitBtnName}</Button>
-            </Tip>
-          </TooltipProvider>
+          <Tip
+            content={
+              <>
+                Submit{" "}
+                {navigator.platform.includes("Mac") ? (
+                  <Kbd>⌘</Kbd>
+                ) : (
+                  <Kbd>Ctrl</Kbd>
+                )}
+                {""}
+                <Kbd>⏎</Kbd>
+              </>
+            }
+          >
+            <Button onClick={handleSubmitWrapper}>{submitBtnName}</Button>
+          </Tip>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -164,6 +163,8 @@ export function TestEditDialog({
 
 export function InputPanel({ drawer = false }: { drawer?: boolean }) {
   const [input, setInput] = useAtom(inputStore);
+  const [pasted, setPasted] = React.useState(false);
+  const [cleared, setCleared] = React.useState(false);
   return (
     <div
       className={cn(
@@ -175,30 +176,36 @@ export function InputPanel({ drawer = false }: { drawer?: boolean }) {
         <Keyboard className="w-3 h-3 shrink-0" />
         <p className="text-sm truncate">Input</p>
         <div className="flex-1"></div>
-        <TooltipProvider delayDuration={300}>
-          <Tip label="Paste from clipboard">
-            <Button
-              variant="outline"
-              onClick={async () => {
-                setInput(await navigator.clipboard.readText());
-              }}
-              className="px-2"
-            >
-              <ClipboardPaste className="w-4 h-4" />
-              <span className="hidden @[250px]:inline">Paste</span>
-            </Button>
-          </Tip>
-          <Tip label="Clear input">
-            <Button
-              variant="outline"
-              onClick={() => setInput("")}
-              className="px-2"
-            >
-              <Trash className="w-4 h-4" />
-              <span className="hidden @[250px]:inline">Clear</span>
-            </Button>
-          </Tip>
-        </TooltipProvider>
+
+        <Tip label="Paste from clipboard">
+          <Button
+            variant="outline"
+            onClick={async () => {
+              setInput(await navigator.clipboard.readText());
+              setPasted(true);
+              setTimeout(() => setPasted(false), 1500);
+            }}
+            className="px-2"
+          >
+            <IconMotion show={pasted} HideIcon={ClipboardPaste} />
+            <span className="hidden @[250px]:inline">Paste</span>
+          </Button>
+        </Tip>
+        <Tip label="Clear input">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setInput("");
+              setCleared(true);
+              setTimeout(() => setCleared(false), 1500);
+            }}
+            disabled={input.length === 0}
+            className="px-2"
+          >
+            <IconMotion show={cleared} HideIcon={Trash} />
+            <span className="hidden @[250px]:inline">Clear</span>
+          </Button>
+        </Tip>
       </div>
       <div className="mt-4 overflow-y-auto h-[calc(100%-2rem)]">
         <Textarea
@@ -254,75 +261,73 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
         />
       </div>
       <div className="mt-4 overflow-y-auto max-h-[calc(100%-2rem)]">
-        <TooltipProvider delayDuration={300}>
-          {testCases.length === 0 ? (
-            <p className="text-sm text-muted-foreground pl-2">
-              No test cases yet.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {testCases.map((testCase) => (
-                <div
-                  key={testCase.id}
-                  className="text-sm bg-accent/75 p-2 rounded-md cursor-pointer hover:bg-accent flex items-center justify-between gap-2"
-                  onClick={() => {
-                    setInput(testCase.input);
-                    isMobile && setPanel("input");
-                  }}
-                >
-                  <Tip label="Set Input to this Test Case">
-                    <p className="flex-1 truncate">{testCase.name}</p>
-                  </Tip>
-                  <Tip label="Run this Test Case">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRun({ input: testCase.input });
-                      }}
-                    >
-                      <Play className="w-4 h-4" />
+        {testCases.length === 0 ? (
+          <p className="text-sm text-muted-foreground pl-2">
+            No test cases yet.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {testCases.map((testCase) => (
+              <div
+                key={testCase.id}
+                className="text-sm bg-accent/75 p-2 rounded-md cursor-pointer hover:bg-accent flex items-center justify-between gap-2"
+                onClick={() => {
+                  setInput(testCase.input);
+                  isMobile && setPanel("input");
+                }}
+              >
+                <Tip label="Set Input to this Test Case">
+                  <p className="flex-1 truncate">{testCase.name}</p>
+                </Tip>
+                <Tip label="Run this Test Case">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRun({ input: testCase.input });
+                    }}
+                  >
+                    <Play className="w-4 h-4" />
+                  </Button>
+                </Tip>
+                <TestEditDialog
+                  trigger={
+                    <Button variant="outline" size="icon">
+                      <Pencil className="w-4 h-4" />
                     </Button>
-                  </Tip>
-                  <TestEditDialog
-                    trigger={
-                      <Button variant="outline" size="icon">
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                    }
-                    tips="Edit test case"
-                    title="Edit Test Case"
-                    name={testCase.name}
-                    input={testCase.input}
-                    submitBtnName="Save"
-                    handleSubmit={(name, input) => {
+                  }
+                  tips="Edit test case"
+                  title="Edit Test Case"
+                  name={testCase.name}
+                  input={testCase.input}
+                  submitBtnName="Save"
+                  handleSubmit={(name, input) => {
+                    setTestCases((prev) =>
+                      prev.map((tc) =>
+                        tc.id === testCase.id ? { ...tc, name, input } : tc,
+                      ),
+                    );
+                  }}
+                />
+                <Tip label="Delete Test Case">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setTestCases((prev) =>
-                        prev.map((tc) =>
-                          tc.id === testCase.id ? { ...tc, name, input } : tc,
-                        ),
+                        prev.filter((tc) => tc.id !== testCase.id),
                       );
                     }}
-                  />
-                  <Tip label="Delete Test Case">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTestCases((prev) =>
-                          prev.filter((tc) => tc.id !== testCase.id),
-                        );
-                      }}
-                    >
-                      <Trash className="w-4 h-4" />
-                    </Button>
-                  </Tip>
-                </div>
-              ))}
-            </div>
-          )}
-        </TooltipProvider>
+                  >
+                    <Trash className="w-4 h-4" />
+                  </Button>
+                </Tip>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -330,7 +335,8 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
 
 export function OutputPanel({ drawer = false }: { drawer?: boolean }) {
   const [output, setOutput] = useAtom(outputStore);
-  const [testCases] = useAtom(testCasesStore);
+  const [copied, setCopied] = React.useState(false);
+  const [cleared, setCleared] = React.useState(false);
   return (
     <div
       className={cn(
@@ -339,31 +345,39 @@ export function OutputPanel({ drawer = false }: { drawer?: boolean }) {
       )}
     >
       <div className="flex gap-2 items-center">
-        <TooltipProvider delayDuration={300}>
-          <SquareTerminal className="w-3 h-3 shrink-0" />
-          <p className="text-sm truncate">Output</p>
-          <div className="flex-1"></div>
-          <Tip label="Copy first output">
-            <Button
-              variant="outline"
-              onClick={() => navigator.clipboard.writeText(output[0].content)}
-              className="px-2"
-            >
-              <ClipboardCopy className="w-4 h-4" />
-              <span className="hidden @[250px]:inline ml-2">Copy</span>
-            </Button>
-          </Tip>
-          <Tip label="Clear output">
-            <Button
-              variant="outline"
-              onClick={() => setOutput([])}
-              className="px-2"
-            >
-              <Trash className="w-4 h-4" />
-              <span className="hidden @[250px]:inline">Clear</span>
-            </Button>
-          </Tip>
-        </TooltipProvider>
+        <SquareTerminal className="w-3 h-3 shrink-0" />
+        <p className="text-sm truncate">Output</p>
+        <div className="flex-1"></div>
+        <Tip label="Copy first output">
+          <Button
+            variant="outline"
+            onClick={() => {
+              navigator.clipboard.writeText(output[0].content);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1500);
+            }}
+            className="px-2"
+            disabled={output.length === 0}
+          >
+            <IconMotion show={copied} HideIcon={ClipboardCopy} />{" "}
+            <span className="hidden @[250px]:inline ml-2">Copy</span>
+          </Button>
+        </Tip>
+        <Tip label="Clear output">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setOutput([]);
+              setCleared(true);
+              setTimeout(() => setCleared(false), 1500);
+            }}
+            className="px-2"
+            disabled={output.length === 0}
+          >
+            <IconMotion show={cleared} HideIcon={Trash} />
+            <span className="hidden @[250px]:inline">Clear</span>
+          </Button>
+        </Tip>
       </div>
       {output.length === 0 ? (
         <div className="mt-4">
