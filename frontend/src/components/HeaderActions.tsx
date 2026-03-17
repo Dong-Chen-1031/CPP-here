@@ -40,7 +40,7 @@ import Tip from "@/components/ui/tips";
 import { useResetAllAtoms } from "@/store/atom";
 import { cn, commandKey, useIsMobile } from "@/lib/utils";
 import { Kbd } from "./ui/kbd";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 
 export function UndoRedo({ menu = false }: { menu?: boolean }) {
   const [editorGlobal] = useAtom(editorRefStore);
@@ -125,65 +125,66 @@ export function RunButton({
   const [runStatus] = useAtom(runStatusStore);
   const [, openPanel] = useAtom(panelDrawerStore);
   const isMobile = useIsMobile();
-
+  const cantPress = !jwt || runStatus !== "idle";
   return (
     <ButtonGroup className={className}>
-      {!jwt ? (
-        <Button variant="outline" disabled>
-          <Spinner className="size-3" />
-          <span className="text-xs">Verifying</span>
-        </Button>
-      ) : runStatus === "building" ? (
-        <Button variant="outline" disabled>
-          <Spinner className="size-3" />
-          <span className="text-xs">Building</span>
-        </Button>
-      ) : runStatus === "running" ? (
-        <Button variant="outline" disabled>
-          <Spinner className="size-3" />
-          <span className="text-xs">Running</span>
-        </Button>
-      ) : runMode === "single" ? (
-        <Tip
-          content={
+      <Tip
+        show={cantPress}
+        content={
+          runMode === "single" ? (
             <>
               Run Code <Kbd>{commandKey}</Kbd>
               <Kbd>⏎</Kbd>
             </>
-          }
-        >
-          <Button
-            variant="outline"
-            onClick={(e) => {
-              handleRun();
-              onClick(e);
-            }}
-          >
-            <Play />
-            Run
-          </Button>
-        </Tip>
-      ) : (
-        <Tip
-          content={
+          ) : (
             <>
               Run all test cases <Kbd>{commandKey}</Kbd>
               <Kbd>⏎</Kbd>
             </>
-          }
-        >
-          <Button
-            variant="outline"
-            onClick={(e) => {
+          )
+        }
+      >
+        <Button
+          variant="outline"
+          disabled={cantPress}
+          onClick={(e) => {
+            if (cantPress) return;
+            if (runMode === "single") {
+              handleRun();
+            } else {
               handleRunAll();
-              onClick(e);
-            }}
-          >
-            <TestTubes />
-            Run All
-          </Button>
-        </Tip>
-      )}
+            }
+            onClick(e);
+          }}
+        >
+          {!jwt ? (
+            <>
+              <Spinner className="size-3" />
+              <span className="text-xs">Verifying</span>
+            </>
+          ) : runStatus === "building" ? (
+            <>
+              <Spinner className="size-3" />
+              <span className="text-xs">Building</span>
+            </>
+          ) : runStatus === "running" ? (
+            <>
+              <Spinner className="size-3" />
+              <span className="text-xs">Running</span>
+            </>
+          ) : runMode === "single" ? (
+            <>
+              <Play />
+              Run
+            </>
+          ) : (
+            <>
+              <TestTubes />
+              Run All
+            </>
+          )}
+        </Button>
+      </Tip>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
