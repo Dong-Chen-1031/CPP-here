@@ -112,6 +112,43 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
   );
 }
 
+let lastW = 0;
+
+function MotionButtonLabel({
+  children,
+  key,
+}: {
+  children: React.ReactNode;
+  key: string;
+}) {
+  // console.log("text length:", lastW);
+  const a = (
+    <motion.div
+      key={key}
+      initial={{
+        width: `calc(${lastW}ch + 1.125rem)`,
+        opacity: 0,
+      }}
+      animate={{ width: "auto", opacity: 1 }}
+      exit={{ width: `calc(${lastW}ch + 1.125rem)`, opacity: 0 }}
+      style={{ overflow: "hidden", whiteSpace: "nowrap" }}
+      transition={{
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+      }}
+      className="w-full h-full flex items-center justify-center gap-1"
+    >
+      {children}
+    </motion.div>
+  );
+
+  typeof window !== "undefined" &&
+    (lastW = document.getElementById("runBtnText")?.innerText.length ?? 0);
+  console.log("text length2:", lastW);
+  return a;
+}
+
 export function RunButton({
   className = "",
   onClick = () => {},
@@ -123,9 +160,10 @@ export function RunButton({
   const [jwt] = useAtom(verifyJwtStore);
 
   const [runStatus] = useAtom(runStatusStore);
-  const [, openPanel] = useAtom(panelDrawerStore);
   const isMobile = useIsMobile();
+  const btnTextRef = React.useRef<HTMLSpanElement>(null);
   const cantPress = !jwt || runStatus !== "idle";
+
   return (
     <ButtonGroup className={className}>
       <Tip
@@ -146,6 +184,8 @@ export function RunButton({
       >
         <Button
           variant="outline"
+          className="overflow-hidden"
+          // style={{ maxWidth: `${buttonMaxWidth}rem` }}
           disabled={cantPress}
           onClick={(e) => {
             if (cantPress) return;
@@ -157,32 +197,44 @@ export function RunButton({
             onClick(e);
           }}
         >
-          {!jwt ? (
-            <>
-              <Spinner className="size-3" />
-              <span className="text-xs">Verifying</span>
-            </>
-          ) : runStatus === "building" ? (
-            <>
-              <Spinner className="size-3" />
-              <span className="text-xs">Building</span>
-            </>
-          ) : runStatus === "running" ? (
-            <>
-              <Spinner className="size-3" />
-              <span className="text-xs">Running</span>
-            </>
-          ) : runMode === "single" ? (
-            <>
-              <Play />
-              Run
-            </>
-          ) : (
-            <>
-              <TestTubes />
-              Run All
-            </>
-          )}
+          <AnimatePresence mode="popLayout">
+            {!jwt ? (
+              <MotionButtonLabel key="verify">
+                <Spinner className="size-3" />
+                <span className="text-xs" id="runBtnText" ref={btnTextRef}>
+                  Verifying
+                </span>
+              </MotionButtonLabel>
+            ) : runStatus === "building" ? (
+              <MotionButtonLabel key="building">
+                <Spinner className="size-3" />
+                <span className="text-xs" id="runBtnText" ref={btnTextRef}>
+                  Building
+                </span>
+              </MotionButtonLabel>
+            ) : runStatus === "running" ? (
+              <MotionButtonLabel key="running">
+                <Spinner className="size-3" />
+                <span className="text-xs" id="runBtnText" ref={btnTextRef}>
+                  Running
+                </span>
+              </MotionButtonLabel>
+            ) : runMode === "single" ? (
+              <MotionButtonLabel key="run">
+                <Play />
+                <span id="runBtnText" ref={btnTextRef}>
+                  Run
+                </span>
+              </MotionButtonLabel>
+            ) : (
+              <MotionButtonLabel key="run-all">
+                <TestTubes />
+                <span id="runBtnText" ref={btnTextRef}>
+                  Run All
+                </span>
+              </MotionButtonLabel>
+            )}
+          </AnimatePresence>
         </Button>
       </Tip>
       <DropdownMenu>
