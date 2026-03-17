@@ -112,41 +112,43 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
   );
 }
 
-let lastW = 0;
-
 function MotionButtonLabel({
   children,
-  key,
+  lastWidthRef,
 }: {
   children: React.ReactNode;
-  key: string;
+  lastWidthRef: React.MutableRefObject<number>;
 }) {
-  // console.log("text length:", lastW);
-  const a = (
+  const initialW = lastWidthRef.current;
+  const [currentW, setCurrentW] = React.useState(initialW);
+
+  React.useLayoutEffect(() => {
+    const el = document.getElementById("runBtnText");
+    if (el) {
+      const len = el.innerText.length;
+      setCurrentW(len);
+      lastWidthRef.current = len;
+    }
+  }, [lastWidthRef]);
+
+  return (
     <motion.div
-      key={key}
       initial={{
-        width: `calc(${lastW}ch + 1.125rem)`,
+        width: `calc(${initialW}ch + 1.125rem)`,
         opacity: 0,
       }}
       animate={{ width: "auto", opacity: 1 }}
-      exit={{ width: `calc(${lastW}ch + 1.125rem)`, opacity: 0 }}
-      style={{ overflow: "hidden", whiteSpace: "nowrap" }}
+      exit={{ width: `calc(${initialW}ch + 1.125rem)`, opacity: 0 }}
       transition={{
         type: "spring",
         stiffness: 300,
         damping: 30,
       }}
-      className="w-full h-full flex items-center justify-center gap-1"
+      className="w-full h-full flex items-center justify-center gap-1 overflow-hidden whitespace-nowrap"
     >
       {children}
     </motion.div>
   );
-
-  typeof window !== "undefined" &&
-    (lastW = document.getElementById("runBtnText")?.innerText.length ?? 0);
-  console.log("text length2:", lastW);
-  return a;
 }
 
 export function RunButton({
@@ -160,6 +162,7 @@ export function RunButton({
   const [jwt] = useAtom(verifyJwtStore);
 
   const [runStatus] = useAtom(runStatusStore);
+  const lastWidthRef = React.useRef(8.2);
   const isMobile = useIsMobile();
   const btnTextRef = React.useRef<HTMLSpanElement>(null);
   const cantPress = !jwt || runStatus !== "idle";
@@ -199,35 +202,35 @@ export function RunButton({
         >
           <AnimatePresence mode="popLayout">
             {!jwt ? (
-              <MotionButtonLabel key="verify">
+              <MotionButtonLabel key="verify" lastWidthRef={lastWidthRef}>
                 <Spinner className="size-3" />
                 <span className="text-xs" id="runBtnText" ref={btnTextRef}>
                   Verifying
                 </span>
               </MotionButtonLabel>
             ) : runStatus === "building" ? (
-              <MotionButtonLabel key="building">
+              <MotionButtonLabel key="building" lastWidthRef={lastWidthRef}>
                 <Spinner className="size-3" />
                 <span className="text-xs" id="runBtnText" ref={btnTextRef}>
                   Building
                 </span>
               </MotionButtonLabel>
             ) : runStatus === "running" ? (
-              <MotionButtonLabel key="running">
+              <MotionButtonLabel key="running" lastWidthRef={lastWidthRef}>
                 <Spinner className="size-3" />
                 <span className="text-xs" id="runBtnText" ref={btnTextRef}>
                   Running
                 </span>
               </MotionButtonLabel>
             ) : runMode === "single" ? (
-              <MotionButtonLabel key="run">
+              <MotionButtonLabel key="run" lastWidthRef={lastWidthRef}>
                 <Play />
                 <span id="runBtnText" ref={btnTextRef}>
                   Run
                 </span>
               </MotionButtonLabel>
             ) : (
-              <MotionButtonLabel key="run-all">
+              <MotionButtonLabel key="run-all" lastWidthRef={lastWidthRef}>
                 <TestTubes />
                 <span id="runBtnText" ref={btnTextRef}>
                   Run All

@@ -169,15 +169,6 @@ function CppEditor({
           </Button>
         </ButtonGroup>
       </div>
-      <div
-        className={
-          "w-full h-full flex flex-col gap-4 items-center justify-center top-0 left-0 pointer-events-none" +
-          (isEditorReady ? " hidden" : "")
-        }
-      >
-        <p>Loading Editor</p>
-        <Spinner className="size-9" />
-      </div>
 
       <CodeMirror
         className={className}

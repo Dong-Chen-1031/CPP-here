@@ -8,15 +8,13 @@ export function cn(...inputs: ClassValue[]) {
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
-  useState(() => {
-    if (typeof window !== "undefined") {
-      setIsMobile(window.innerWidth <= 768);
-    }
-  });
 
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 768px)");
     const handler = (e: { matches: boolean }) => setIsMobile(e.matches);
+
+    // Set initial value inside useEffect
+    setIsMobile(mql.matches);
 
     mql.addEventListener("change", handler);
     return () => mql.removeEventListener("change", handler);
@@ -25,4 +23,7 @@ export function useIsMobile() {
   return isMobile;
 }
 
-export const commandKey = navigator.platform.includes("Mac") ? "⌘" : "Ctrl";
+export const commandKey =
+  typeof navigator !== "undefined" && navigator.platform?.includes("Mac")
+    ? "⌘"
+    : "Ctrl";
