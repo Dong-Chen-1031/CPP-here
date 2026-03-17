@@ -14,10 +14,10 @@ export function Alerts() {
   }
   useEffect(() => {
     if (alerts.length === 0) return;
+    const uuid = alerts[alerts.length - 1].id;
     const timer = setTimeout(() => {
-      setAlerts((prev) => prev.slice(1));
+      setAlerts((prev) => prev.filter((a) => a.id !== uuid));
     }, 5000);
-    return () => clearTimeout(timer);
   }, [alerts]);
 
   return (

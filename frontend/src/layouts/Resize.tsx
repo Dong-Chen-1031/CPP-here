@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -9,13 +9,30 @@ import { InputPanel, TestCasePanel, OutputPanel } from "@/components/stdio";
 
 import Editor from "@/components/Editor";
 import { useIsMobile } from "@/lib/utils";
+import { useAtom } from "jotai";
+import { alertStore } from "@/store/atom";
 
 const LAYOUT = { editor: 70, output: 30 };
 const LAYOUT2 = { InputPanel: 22, TestCasePanel: 36, OutputPanel: 42 };
 
 export function SplitViewEditor() {
   const isMobile = useIsMobile();
+  const [alerts, setAlert] = useAtom(alertStore);
 
+  useEffect(() => {
+    if (document.location.origin === "https://cpp-here.pages.dev") {
+      setAlert((p) => [
+        ...p,
+        {
+          title: "This url has been deprecated",
+          description:
+            "cpp-here.pages.dev is no longer supported. Please use the new url cpp.doong.me",
+          variant: "destructive",
+          id: crypto.randomUUID(),
+        },
+      ]);
+    }
+  }, []);
   return (
     <>
       <ResizablePanelGroup
