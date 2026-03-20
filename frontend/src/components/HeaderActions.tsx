@@ -112,48 +112,63 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
   );
 }
 
-function MotionButtonLabel({
-  children,
-  lastWidthRef,
-  initial = true,
-}: {
-  children: React.ReactNode;
-  lastWidthRef: React.RefObject<number>;
-  initial?: boolean;
-}) {
-  const initialW = lastWidthRef.current;
-  const [currentW, setCurrentW] = React.useState(initialW);
+const MotionButtonLabel = React.forwardRef(function MotionButtonLabel(
+  {
+    children,
+    lastWidthRef,
+    initial = true,
+  }: {
+    children: React.ReactNode;
+    lastWidthRef: React.RefObject<number[]>;
+    initial?: boolean;
+  },
+  ref: React.Ref<HTMLDivElement>,
+) {
+  const el =
+    typeof window !== "undefined"
+      ? window.document.getElementById("runBtnText")
+      : null;
 
-  React.useLayoutEffect(() => {
-    const el = document.getElementById("runBtnText");
-    if (el) {
-      const len = el.innerText.length;
-      setCurrentW(len);
-      lastWidthRef.current = len;
+  if (el) {
+    const len = el.offsetWidth;
+    if (len != lastWidthRef.current[lastWidthRef.current.length - 1]) {
+      lastWidthRef.current.push(len);
+      lastWidthRef.current = lastWidthRef.current.slice(-2);
+      // console.log("Measured width:", lastWidthRef.current);
     }
-  }, [lastWidthRef]);
+  }
 
+  // console.log(
+  //   "Rendering MotionButtonLabel with children:",
+  //   lastWidthRef.current[0],
+  // );
   return (
     <motion.div
+      ref={ref}
       initial={
         initial && {
-          width: `calc(${initialW}ch + 1.125rem)`,
+          width: `calc(${lastWidthRef.current[1]}px + 1.125rem)`,
           opacity: 0,
         }
       }
+      layout
       animate={{ width: "auto", opacity: 1 }}
-      // exit={{ opacity: 0 }}
+      exit={{ width: "auto", opacity: 0 }}
       transition={{
         type: "spring",
         stiffness: 300,
         damping: 30,
+        // mass: 1,
       }}
+      // transition={{
+      //   duration: 3,
+      // }}
       className="w-full h-full flex items-center justify-center gap-1 overflow-hidden whitespace-nowrap opacity-0"
     >
       {children}
     </motion.div>
   );
-}
+});
 
 export function RunButton({
   className = "",
@@ -166,7 +181,7 @@ export function RunButton({
   const [jwt] = useAtom(verifyJwtStore);
 
   const [runStatus] = useAtom(runStatusStore);
-  const lastWidthRef = React.useRef(8.2);
+  const lastWidthRef = React.useRef([8.2]);
   const isMobile = useIsMobile();
   const btnTextRef = React.useRef<HTMLSpanElement>(null);
   const cantPress = !jwt || runStatus !== "idle";
