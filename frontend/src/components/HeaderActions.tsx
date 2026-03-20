@@ -115,9 +115,11 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
 function MotionButtonLabel({
   children,
   lastWidthRef,
+  initial = true,
 }: {
   children: React.ReactNode;
-  lastWidthRef: React.MutableRefObject<number>;
+  lastWidthRef: React.RefObject<number>;
+  initial?: boolean;
 }) {
   const initialW = lastWidthRef.current;
   const [currentW, setCurrentW] = React.useState(initialW);
@@ -133,12 +135,14 @@ function MotionButtonLabel({
 
   return (
     <motion.div
-      initial={{
-        width: `calc(${initialW}ch + 1.125rem)`,
-        opacity: 0,
-      }}
+      initial={
+        initial && {
+          width: `calc(${initialW}ch + 1.125rem)`,
+          opacity: 0,
+        }
+      }
       animate={{ width: "auto", opacity: 1 }}
-      exit={{ width: `calc(${initialW}ch + 1.125rem)`, opacity: 0 }}
+      // exit={{ opacity: 0 }}
       transition={{
         type: "spring",
         stiffness: 300,
@@ -170,7 +174,7 @@ export function RunButton({
   return (
     <ButtonGroup className={className}>
       <Tip
-        show={cantPress}
+        show={!cantPress}
         content={
           runMode === "single" ? (
             <>
@@ -202,7 +206,11 @@ export function RunButton({
         >
           <AnimatePresence mode="popLayout">
             {!jwt ? (
-              <MotionButtonLabel key="verify" lastWidthRef={lastWidthRef}>
+              <MotionButtonLabel
+                key="verify"
+                lastWidthRef={lastWidthRef}
+                initial={false}
+              >
                 <Spinner className="size-3" />
                 <span className="text-xs" id="runBtnText" ref={btnTextRef}>
                   Verifying
