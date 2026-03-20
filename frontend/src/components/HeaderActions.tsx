@@ -148,7 +148,7 @@ function MotionButtonLabel({
         stiffness: 300,
         damping: 30,
       }}
-      className="w-full h-full flex items-center justify-center gap-1 overflow-hidden whitespace-nowrap"
+      className="w-full h-full flex items-center justify-center gap-1 overflow-hidden whitespace-nowrap opacity-0"
     >
       {children}
     </motion.div>

@@ -34,6 +34,7 @@ import {
   inputStore,
   outputStore,
   panelDrawerStore,
+  runStatusStore,
   testCasesStore,
   type TestCase,
 } from "@/store/atom";
@@ -41,6 +42,7 @@ import { cn, useIsMobile } from "@/lib/utils";
 import { handleRun } from "@/api/run";
 import { AnimatePresence, motion } from "motion/react";
 import IconMotion from "./IconMotion";
+import { Spinner } from "./ui/spinner";
 interface EditDialogOptions {
   title?: string;
   name?: string;
@@ -337,6 +339,7 @@ export function OutputPanel({ drawer = false }: { drawer?: boolean }) {
   const [output, setOutput] = useAtom(outputStore);
   const [copied, setCopied] = React.useState(false);
   const [cleared, setCleared] = React.useState(false);
+  const [runStatus] = useAtom(runStatusStore);
   return (
     <div
       className={cn(
@@ -379,7 +382,17 @@ export function OutputPanel({ drawer = false }: { drawer?: boolean }) {
           </Button>
         </Tip>
       </div>
-      {output.length === 0 ? (
+      {runStatus === "building" ? (
+        <div className="mt-4 flex-col flex justify-center w-full h-[90%] items-center gap-2">
+          <Spinner></Spinner>
+          <p className="text-sm text-muted-foreground">Building</p>
+        </div>
+      ) : runStatus === "running" ? (
+        <div className="mt-4 flex-col flex justify-center w-full h-[90%] items-center gap-2">
+          <Spinner></Spinner>
+          <p className="text-sm text-muted-foreground">Running</p>
+        </div>
+      ) : output.length === 0 ? (
         <div className="mt-4">
           <p className="text-sm text-muted-foreground pl-2">No output yet.</p>
         </div>
