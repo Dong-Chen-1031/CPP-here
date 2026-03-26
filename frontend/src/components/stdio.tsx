@@ -387,7 +387,7 @@ export function OutputPanel({ drawer = false }: { drawer?: boolean }) {
           <Spinner></Spinner>
           <p className="text-sm text-muted-foreground">Building</p>
         </div>
-      ) : runStatus === "running" ? (
+      ) : output.length === 0 && runStatus === "running" ? (
         <div className="mt-4 flex-col flex justify-center w-full h-[90%] items-center gap-2">
           <Spinner></Spinner>
           <p className="text-sm text-muted-foreground">Running</p>

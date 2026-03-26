@@ -17,6 +17,7 @@ import {
   editorRefStore,
   runModeStore,
   editorErrorStore,
+  runStatusStore,
 } from "@/store/atom";
 import { getDefaultStore, useAtom, useAtomValue } from "jotai";
 import { Spinner } from "./ui/spinner";
@@ -108,7 +109,11 @@ function CppEditor({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       const runMode = defaultStore.get(runModeStore);
+      const runStatus = defaultStore.get(runStatusStore);
       if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+        if (runStatus !== "idle") {
+          return;
+        }
         if (runMode === "single") {
           handleRun();
         } else if (runMode === "all") {

@@ -2,6 +2,7 @@ import config from "@/config/constants";
 import {
   alertStore,
   codeStore,
+  codeWorkersStore,
   cppVersionStore,
   editorErrorStore,
   inputStore,
@@ -106,6 +107,41 @@ export async function url2WasmModule(url: string) {
   return wasmModule;
 }
 
+export class CodeWorker extends (typeof Worker !== "undefined"
+  ? Worker
+  : (class {
+      constructor() {}
+      postMessage() {}
+      addEventListener() {}
+      removeEventListener() {}
+    } as typeof Worker)) {
+  running: boolean = false;
+
+  constructor({ jsCode }: { jsCode: string }) {
+    const blobUrl = URL.createObjectURL(
+      new Blob([jsCode], { type: "application/javascript" }),
+    );
+    super(blobUrl);
+    try {
+      defaultStore.set(codeWorkersStore, (prev) => [...prev, this]);
+      this.running = true;
+    } catch (error) {
+      console.error("Failed to create CodeWorker:", error);
+      throw error;
+    } finally {
+      URL.revokeObjectURL(blobUrl);
+    }
+  }
+
+  terminate() {
+    super.terminate();
+    this.running = false;
+    defaultStore.set(codeWorkersStore, (prev) =>
+      prev.filter((w) => w !== this),
+    );
+  }
+}
+
 export async function runCode(
   jsCode: string,
   inputData: string,
@@ -122,21 +158,27 @@ export async function runCode(
     wasmModule,
   }: RunOptions,
 ) {
+  if (typeof Worker === "undefined") {
+    const errorMsg = "Web Workers are not supported in this environment.";
+    console.error(errorMsg);
+    onError && onError(errorMsg);
+    onExit && onExit();
+    return;
+  }
   try {
-    const blobUrl = await text2BlobUrl(jsCode);
-    const worker = new Worker(blobUrl);
-    URL.revokeObjectURL(blobUrl);
     if (!wasmModule) {
       if (!wasmUrl) {
-        throw new Error("Either wasmUrl or wasmModule must be provided");
+        throw new Error("You must provide either wasmUrl or wasmModule.");
       }
       const wasmResponse = await fetch(wasmUrl);
       wasmModule = await WebAssembly.compileStreaming(wasmResponse);
     }
+    const worker = new CodeWorker({ jsCode });
     const taskId = crypto.randomUUID();
     worker.onerror = (event) => {
       worker.terminate();
       onError && onError(event.message);
+      onExit && onExit();
     };
     worker.onmessage = (event) => {
       console.log("Worker message received:", event.data);
@@ -167,7 +209,7 @@ export async function runCode(
           break;
         case "stderr":
           onStderr && onStderr(content);
-          onExit && onExit();
+          // onExit && onExit();
           break;
         default:
           console.warn("Unknown status from worker:", content);
@@ -259,6 +301,7 @@ export async function handleRun({
 
   store.set(runStatusStore, "building");
   store.set(editorErrorStore, []);
+  store.set(outputStore, []);
   window.screen.width < 768 && store.set(panelDrawerStore, "output");
 
   const response = await buildCode(code, cppVersion);
@@ -275,9 +318,6 @@ export async function handleRun({
 
   runCode(response.js_code, input, {
     wasmUrl: response.wasm_url,
-    onInit: () => {
-      store.set(outputStore, []);
-    },
     onStdout: (output) => {
       store.set(outputStore, (prev) => [
         { content: (prev[prev.length - 1]?.content || "") + output + "\n" },
@@ -351,6 +391,7 @@ export async function handleRunAll() {
   }
   store.set(runStatusStore, "building");
   store.set(editorErrorStore, []);
+  store.set(outputStore, []);
   window.screen.width < 768 && store.set(panelDrawerStore, "output");
 
   const response = await buildCode(code, cppVersion);
@@ -364,7 +405,6 @@ export async function handleRunAll() {
     return;
   }
   const wasmModule = await url2WasmModule(response.wasm_url);
-  store.set(outputStore, []);
 
   exitCount = 0;
 
@@ -388,9 +428,9 @@ export async function handleRunAll() {
       },
       onExit() {
         exitCount += 1;
-        console.log(
-          `Test case ${testCase.name} completed. (${exitCount}/${testCases.length})`,
-        );
+        // console.log(
+        //   `Test case ${testCase.name} completed. (${exitCount}/${testCases.length})`,
+        // );
         if (exitCount === testCases.length) {
           store.set(runStatusStore, "idle");
         }

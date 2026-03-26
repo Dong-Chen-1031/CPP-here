@@ -8,7 +8,9 @@
     "dev": "PUBLIC_RUN_MODE=dev concurrently \"bun run frontend\" \"bun run backend\"",
     "build": "cd frontend && astro build",
     "preview": "cd frontend && astro preview",
-    "astro": "cd frontend && astro"
+    "astro": "cd frontend && astro",
+    "dev:ext": "cd extensions && bun dev",
+    "dev:ext:zen": "cd extensions && bun run dev:zen"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
