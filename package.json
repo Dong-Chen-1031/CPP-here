@@ -9,7 +9,8 @@
     "build": "cd frontend && astro build",
     "preview": "cd frontend && astro preview",
     "astro": "cd frontend && astro",
-    "dev:ext": "cd extensions && bun dev"
+    "ext": "cd extensions && bun dev",
+    "ext:firefox": "cd extensions && bun dev:firefox"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
