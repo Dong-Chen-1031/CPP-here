@@ -4,6 +4,7 @@ import { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import type { RefObject } from "react";
 import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import type { CodeWorker } from "@/api/run";
+import type { AlertDialogOptions } from "@/components/Alert";
 export interface TestCase {
   id: string;
   name: string;
@@ -66,6 +67,7 @@ export const testCasesStore = atomWithStorage<TestCase[]>("testCases", [
 export const codeWorkersStore = atom<CodeWorker[]>([]);
 
 export const verifyJwtStore = atom<string | null>(null);
+export const alertDialogStore = atom<AlertDialogOptions | null>(null);
 export const panelDrawerStore = atom<PanelDrawerView | null>(null);
 
 export function useResetAllAtoms() {

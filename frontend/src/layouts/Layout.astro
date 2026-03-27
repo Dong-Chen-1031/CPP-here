@@ -1,5 +1,5 @@
 ---
-import { Alerts } from "@/components/Alert";
+import { Alerts, AlertDialogGood } from "@/components/Alert";
 import { GlobalPanelDrawer } from "@/components/Drawer";
 import TurnstileWidget from "@/components/turnstile";
 import "@/styles/global.css";
@@ -103,6 +103,7 @@ const lsVersion = {
     <GlobalPanelDrawer client:load />
     <TurnstileWidget client:only="react" />
     <Alerts client:only="react" />
+    <AlertDialogGood client:only="react" />
   </body>
 </html>
 

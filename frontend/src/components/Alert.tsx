@@ -1,10 +1,21 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn, useIsMobile } from "@/lib/utils";
-import { alertStore } from "@/store/atom";
+import { alertDialogStore, alertStore } from "@/store/atom";
 import { useAtom } from "jotai";
 import { AlertCircleIcon } from "lucide-react";
 import { use, useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export function Alerts() {
   const [alerts, setAlerts] = useAtom(alertStore);
@@ -52,5 +63,42 @@ export function Alerts() {
         ))}
       </AnimatePresence>
     </div>
+  );
+}
+
+export interface AlertDialogOptions {
+  title?: string;
+  description?: string;
+  actionText?: string;
+  cancelText?: string;
+  handleAction: () => void;
+}
+
+export function AlertDialogGood() {
+  const [alertDialog, setAlertDialog] = useAtom(alertDialogStore);
+  return (
+    <>
+      <AlertDialog
+        open={alertDialog !== null}
+        onOpenChange={() => setAlertDialog(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{alertDialog?.title}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {alertDialog?.description || "This action cannot be undone. "}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {alertDialog?.cancelText || "Cancel"}
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={alertDialog?.handleAction}>
+              {alertDialog?.actionText || "Continue"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

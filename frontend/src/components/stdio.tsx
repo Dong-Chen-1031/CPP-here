@@ -12,7 +12,7 @@ import {
   CircleCheckBig,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 
 import {
@@ -31,6 +31,7 @@ import Tip from "./ui/tips";
 import { TooltipProvider } from "./ui/tooltip";
 import { useAtom } from "jotai";
 import {
+  alertDialogStore,
   inputStore,
   outputStore,
   panelDrawerStore,
@@ -43,6 +44,7 @@ import { handleRun } from "@/api/run";
 import { AnimatePresence, motion } from "motion/react";
 import IconMotion from "./IconMotion";
 import { Spinner } from "./ui/spinner";
+import { AlertDialogGood } from "./Alert";
 interface EditDialogOptions {
   title?: string;
   name?: string;
@@ -223,13 +225,82 @@ export function InputPanel({ drawer = false }: { drawer?: boolean }) {
     </div>
   );
 }
+interface Test {
+  input: string;
+  output: string;
+}
+enum TestType {
+  Single = "single",
+  MultiNumber = "multiNumber",
+}
+
+interface OutputConfiguration {
+  type: "stdout" | "file";
+  fileName?: string;
+}
+
+interface LanguageConfiguration {
+  java: JavaConfiguration;
+}
+
+interface JavaConfiguration {
+  mainClass: string;
+  taskClass: string;
+}
+interface InputConfiguration {
+  type: "stdin" | "file" | "regex";
+  fileName?: string;
+  pattern?: string;
+}
+
+interface OutputConfiguration {
+  type: "stdout" | "file";
+  fileName?: string;
+}
+interface Batch {
+  id: string;
+  size: number;
+}
+
+interface extTestCase {
+  name: string;
+  group: string;
+  url: string;
+  interactive: boolean;
+  memoryLimit: number;
+  timeLimit: number;
+  tests: Test[];
+  testType: TestType;
+  input: InputConfiguration;
+  output: OutputConfiguration;
+  languages: LanguageConfiguration;
+  batch: Batch;
+}
 
 export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
   const [, setInput] = useAtom(inputStore);
   const [testCases, setTestCases] = useAtom(testCasesStore);
   const [, setPanel] = useAtom(panelDrawerStore);
+  const [, setAlertDialog] = useAtom(alertDialogStore);
   const isMobile = useIsMobile();
-
+  useEffect(() => {
+    const handleExtEvent = (event: Event) => {
+      const customEvent = event as CustomEvent<extTestCase>;
+      console.log("Received ext event with payload:", customEvent.detail);
+      setAlertDialog;
+      ({
+        title: "Received Test Case from Extension",
+        description: `Test case "${customEvent.detail.name}" has been received. Do you want to add it to your test cases?`,
+        handleAction: () => {
+          console.log("Adding test case from extension:", customEvent.detail);
+        },
+      });
+    };
+    window.addEventListener("ext", handleExtEvent);
+    return () => {
+      window.removeEventListener("ext", handleExtEvent);
+    };
+  }, []);
   function handleAddTestCase(name: string, input: string) {
     const newTestCase: TestCase = {
       id: crypto.randomUUID(),
@@ -240,98 +311,100 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
   }
 
   return (
-    <div
-      className={cn(
-        "p-4 border-border border-2 rounded-md mr-4 ml-2 my-2 h-[calc(100%-16px)] @container",
-        drawer && "mr-2",
-      )}
-    >
-      <div className="flex gap-2 items-center">
-        <TestTubes className="w-3 h-3 shrink-0" />
-        <p className="text-sm truncate">Test Case</p>
-        <div className="flex-1"></div>
-        <TestEditDialog
-          tips="Add new test case"
-          trigger={
-            <Button variant="outline" className="px-2">
-              <CirclePlus className="w-4 h-4" />
-              <span className="hidden @[250px]:inline">New</span>
-            </Button>
-          }
-          name={`test Case ${testCases.length + 1}`}
-          handleSubmit={handleAddTestCase}
-        />
-      </div>
-      <div className="mt-4 overflow-y-auto max-h-[calc(100%-2rem)]">
-        {testCases.length === 0 ? (
-          <p className="text-sm text-muted-foreground pl-2">
-            No test cases yet.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {testCases.map((testCase) => (
-              <div
-                key={testCase.id}
-                className="text-sm bg-accent/75 p-2 rounded-md cursor-pointer hover:bg-accent flex items-center justify-between gap-2"
-                onClick={() => {
-                  setInput(testCase.input);
-                  isMobile && setPanel("input");
-                }}
-              >
-                <Tip label="Set Input to this Test Case">
-                  <p className="flex-1 truncate">{testCase.name}</p>
-                </Tip>
-                <Tip label="Run this Test Case">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRun({ input: testCase.input });
-                    }}
-                  >
-                    <Play className="w-4 h-4" />
-                  </Button>
-                </Tip>
-                <TestEditDialog
-                  trigger={
-                    <Button variant="outline" size="icon">
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                  }
-                  tips="Edit test case"
-                  title="Edit Test Case"
-                  name={testCase.name}
-                  input={testCase.input}
-                  submitBtnName="Save"
-                  handleSubmit={(name, input) => {
-                    setTestCases((prev) =>
-                      prev.map((tc) =>
-                        tc.id === testCase.id ? { ...tc, name, input } : tc,
-                      ),
-                    );
+    <>
+      <div
+        className={cn(
+          "p-4 border-border border-2 rounded-md mr-4 ml-2 my-2 h-[calc(100%-16px)] @container",
+          drawer && "mr-2",
+        )}
+      >
+        <div className="flex gap-2 items-center">
+          <TestTubes className="w-3 h-3 shrink-0" />
+          <p className="text-sm truncate">Test Case</p>
+          <div className="flex-1"></div>
+          <TestEditDialog
+            tips="Add new test case"
+            trigger={
+              <Button variant="outline" className="px-2">
+                <CirclePlus className="w-4 h-4" />
+                <span className="hidden @[250px]:inline">New</span>
+              </Button>
+            }
+            name={`test Case ${testCases.length + 1}`}
+            handleSubmit={handleAddTestCase}
+          />
+        </div>
+        <div className="mt-4 overflow-y-auto max-h-[calc(100%-2rem)]">
+          {testCases.length === 0 ? (
+            <p className="text-sm text-muted-foreground pl-2">
+              No test cases yet.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {testCases.map((testCase) => (
+                <div
+                  key={testCase.id}
+                  className="text-sm bg-accent/75 p-2 rounded-md cursor-pointer hover:bg-accent flex items-center justify-between gap-2"
+                  onClick={() => {
+                    setInput(testCase.input);
+                    isMobile && setPanel("input");
                   }}
-                />
-                <Tip label="Delete Test Case">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
+                >
+                  <Tip label="Set Input to this Test Case">
+                    <p className="flex-1 truncate">{testCase.name}</p>
+                  </Tip>
+                  <Tip label="Run this Test Case">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRun({ input: testCase.input });
+                      }}
+                    >
+                      <Play className="w-4 h-4" />
+                    </Button>
+                  </Tip>
+                  <TestEditDialog
+                    trigger={
+                      <Button variant="outline" size="icon">
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    }
+                    tips="Edit test case"
+                    title="Edit Test Case"
+                    name={testCase.name}
+                    input={testCase.input}
+                    submitBtnName="Save"
+                    handleSubmit={(name, input) => {
                       setTestCases((prev) =>
-                        prev.filter((tc) => tc.id !== testCase.id),
+                        prev.map((tc) =>
+                          tc.id === testCase.id ? { ...tc, name, input } : tc,
+                        ),
                       );
                     }}
-                  >
-                    <Trash className="w-4 h-4" />
-                  </Button>
-                </Tip>
-              </div>
-            ))}
-          </div>
-        )}
+                  />
+                  <Tip label="Delete Test Case">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTestCases((prev) =>
+                          prev.filter((tc) => tc.id !== testCase.id),
+                        );
+                      }}
+                    >
+                      <Trash className="w-4 h-4" />
+                    </Button>
+                  </Tip>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

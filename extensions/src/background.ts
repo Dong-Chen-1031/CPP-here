@@ -2,12 +2,17 @@ import type { Menus, Runtime, Tabs } from 'webextension-polyfill';
 import { getHosts } from './hosts/hosts';
 import { Message, MessageAction } from './models/messaging';
 import { browser } from './utils/browser';
+import { noop } from './utils/noop';
 import { sendToContent } from './utils/messaging';
 import { request, requiredPermissions } from './utils/request';
+import { config } from './utils/config';
 
 declare global {
   const PARSER_NAMES: string[];
 }
+
+const DEFAULT_TARGET_URL = 'https://cpp.doong.me/*';
+let targetPermissionPattern = DEFAULT_TARGET_URL;
 
 function createContextMenu(): void {
   browser.contextMenus.create({
@@ -55,9 +60,7 @@ async function loadContentScript(tab: Tabs.Tab, parserName: string): Promise<voi
     }
   }
 
-  if (permissionOrigins.length > 0) {
-    await browser.permissions.request({ origins: permissionOrigins });
-  }
+  await ensurePermissionsOnGesture(permissionOrigins);
 
   await browser.scripting.executeScript({
     target: {
@@ -111,47 +114,66 @@ async function dispatchExtEvent(tabId: number, payload: unknown): Promise<void> 
   });
 }
 
+function normalizeTargetUrl(rawTargetUrl: string): { pattern: string; entry: string } {
+  const trimmed = rawTargetUrl.trim();
+  const fallback = DEFAULT_TARGET_URL;
+  const candidate = trimmed.length > 0 ? trimmed : fallback;
+
+  const entry = candidate.endsWith('/*') ? candidate.slice(0, -1) : candidate;
+  const pattern = entry.endsWith('/*') ? entry : `${entry.replace(/\/$/, '')}/*`;
+
+  return { pattern, entry: entry.replace(/\/$/, '') + '/' };
+}
+
+async function ensurePermissionsOnGesture(origins: string[]): Promise<void> {
+  const combinedOrigins = [...new Set([...origins, targetPermissionPattern])];
+  const granted = await browser.permissions.contains({ origins: combinedOrigins });
+  if (!granted) {
+    throw new Error(`Missing host permissions for ${combinedOrigins.join(', ')}`);
+  }
+}
+
+async function refreshTargetPermissionPattern(): Promise<void> {
+  const configuredTargetUrl = await config.get('targetUrl');
+  targetPermissionPattern = normalizeTargetUrl(configuredTargetUrl).pattern;
+}
+
+void refreshTargetPermissionPattern().catch(noop);
+
 async function sendTask(tabId: number, messageId: string, data: string): Promise<void> {
   try {
-    // 1. 解析傳入的資料
     const parsedData = JSON.parse(data);
-    const targetUrl = 'https://cpp.doong.me/*';
-    const targetEntry = 'https://cpp.doong.me/';
+    const configuredTargetUrl = await config.get('targetUrl');
+    const { pattern: targetUrl, entry: targetEntry } = normalizeTargetUrl(configuredTargetUrl);
+    targetPermissionPattern = targetUrl;
     const eventPayload = parsedData.eventPayload ?? parsedData;
 
-    const permissionGranted = await browser.permissions.request({ origins: [targetUrl] });
+    const permissionGranted = await browser.permissions.contains({ origins: [targetUrl] });
     if (!permissionGranted) {
-      throw new Error('Permission denied for https://cpp.doong.me/*');
+      throw new Error(`No host permission for ${targetUrl}. Click the extension action once to grant it.`);
     }
 
     let targetTabId: number;
 
-    // 2. 尋找是否已經有開啟該網址的分頁 (使用 browser.tabs)
     const tabs = await browser.tabs.query({ url: targetUrl });
 
     if (tabs.length > 0) {
-      // 3a. 如果存在，取第一個找到的分頁並切換過去
       targetTabId = tabs[0].id!;
 
       await browser.tabs.update(targetTabId, { active: true });
 
-      // 確保該分頁所在的視窗被拉到最上層
       if (tabs[0].windowId) {
         await browser.windows.update(tabs[0].windowId, { focused: true });
       }
     } else {
-      // 3b. 如果不存在，開啟一個新分頁
       const newTab = await browser.tabs.create({ url: targetEntry, active: true });
       targetTabId = newTab.id!;
 
-      // 等待新分頁載入完成
       await waitForTabLoad(targetTabId);
     }
 
-    // 4. 在頁面主世界觸發 ext 事件，讓站點可以直接 window.addEventListener('ext', ...) 監聽
     await dispatchExtEvent(targetTabId, eventPayload);
 
-    // 5. 任務成功，回傳結果給原本發起請求的 Content Script
     sendToContent(tabId, MessageAction.SendTaskDone, { messageId });
   } catch (err) {
     const message = err instanceof Error ? err.message : `${err}`;

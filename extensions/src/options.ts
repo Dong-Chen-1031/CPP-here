@@ -4,7 +4,10 @@ import { noop } from './utils/noop';
 const customPortsInput = document.querySelector<HTMLInputElement>('#custom-ports');
 const customRulesContainer = document.querySelector<HTMLDivElement>('#custom-rules-container');
 const requestTimeoutInput = document.querySelector<HTMLInputElement>('#request-timeout');
+const targetUrlInput = document.querySelector<HTMLInputElement>('#target-url');
 const debugModeInput = document.querySelector<HTMLInputElement>('#debug-mode');
+
+const DEFAULT_TARGET_URL = 'https://cpp.doong.me/*';
 
 function updateCustomRules(): void {
   const rows = customRulesContainer.querySelectorAll('.custom-rules-row');
@@ -125,6 +128,14 @@ requestTimeoutInput.addEventListener('input', function (): void {
     .catch(noop);
 });
 
+targetUrlInput.addEventListener('input', function (): void {
+  const normalized = this.value.trim();
+  config
+    .set('targetUrl', normalized.length > 0 ? normalized : DEFAULT_TARGET_URL)
+    .then(noop)
+    .catch(noop);
+});
+
 debugModeInput.addEventListener('input', function (): void {
   config.set('debugMode', this.checked).then(noop).catch(noop);
 });
@@ -151,6 +162,13 @@ config
   .get('requestTimeout')
   .then(value => {
     requestTimeoutInput.valueAsNumber = value;
+  })
+  .catch(noop);
+
+config
+  .get('targetUrl')
+  .then(value => {
+    targetUrlInput.value = value;
   })
   .catch(noop);
 
