@@ -76,7 +76,7 @@ async function parse(parser: Parser): Promise<void> {
       [
         `Something went wrong while running C++ Here's ${parser.constructor.name}.`,
         'Open the browser console to see the error.',
-        'Please open an issue at https://github.com/jmerle/competitive-companion/issues if you think this is a bug (make sure to include a link to this page).',
+        // 'Please open an issue at https://github.com/jmerle/competitive-companion/issues if you think this is a bug (make sure to include a link to this page).',
       ].join(' '),
     );
   }
@@ -100,8 +100,8 @@ async function handleMessage(message: Message | any, sender: Runtime.MessageSend
           alert(
             [
               'C++ Here could not determine which parser to parse this page with.',
-              'Please right-click on the plus icon and select the parser to use via the "Parse with" context menu.',
-              'Please open an issue at https://github.com/jmerle/competitive-companion/issues if you think this is a bug (make sure to include a link to this page).',
+              'Please right-click on the extension icon and select the parser to use via the "Parse with" context menu.',
+              // 'Please open an issue at https://github.com/jmerle/competitive-companion/issues if you think this is a bug (make sure to include a link to this page).',
             ].join(' '),
           );
           return;
