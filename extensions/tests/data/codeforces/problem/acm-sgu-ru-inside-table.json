@@ -1,0 +1,31 @@
+{
+  "url": "https://codeforces.com/problemsets/acmsguru/problem/99999/123?locale=en",
+  "parser": "CodeforcesProblemParser",
+  "result": {
+    "name": "123. The sum",
+    "group": "Codeforces - acm.sgu.ru archive",
+    "url": "https://codeforces.com/problemsets/acmsguru/problem/99999/123?locale=en",
+    "interactive": false,
+    "memoryLimit": 4,
+    "timeLimit": 250,
+    "tests": [
+      {
+        "input": "5\n",
+        "output": "12\n"
+      }
+    ],
+    "testType": "single",
+    "input": {
+      "type": "stdin"
+    },
+    "output": {
+      "type": "stdout"
+    },
+    "languages": {
+      "java": {
+        "mainClass": "Main",
+        "taskClass": "TheSum"
+      }
+    }
+  }
+}

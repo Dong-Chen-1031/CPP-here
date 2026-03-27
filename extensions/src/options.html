@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>C++ Here Options</title>
+    <style>
+      :root {
+        --bg-page: #f8fafc;
+        --bg-card: #ffffff;
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --primary: #3b82f6;
+        --primary-hover: #2563eb;
+        --danger: #ef4444;
+        --danger-bg: #fee2e2;
+        --danger-hover: #fca5a5;
+        --border: #e2e8f0;
+        --ring: #bfdbfe;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 2rem 1rem;
+        font-family:
+          Arial,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        background-color: var(--bg-page);
+        color: var(--text-main);
+        line-height: 1.5;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .header {
+        margin-bottom: 2rem;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background-color: #e0e7ff;
+        color: #4338ca;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: #1e293b;
+      }
+
+      .header p {
+        margin: 0.5rem 0 0;
+        color: var(--text-muted);
+      }
+
+      .card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      h2 {
+        margin: 0 0 1rem;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #0f172a;
+      }
+
+      label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #334155;
+      }
+
+      input[type='text'],
+      input[type='number'],
+      .custom-rules-row > input,
+      select {
+        width: 100%;
+        padding: 0.625rem 0.875rem;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+        background-color: #fff;
+        color: #1e293b;
+      }
+
+      input[type='text']:focus,
+      input[type='number']:focus,
+      .custom-rules-row > input:focus,
+      select:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+
+      .description {
+        margin: 0.75rem 0 0;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+      }
+
+      .error {
+        margin: 0.5rem 0 0;
+        color: var(--danger);
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .custom-rules-row {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+      }
+
+      .custom-rules-row > input {
+        flex: 1;
+      }
+
+      .custom-rules-row > select {
+        width: 200px;
+      }
+
+      .custom-rules-row > button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        padding: 0;
+        background-color: var(--danger-bg);
+        color: var(--danger);
+        border: none;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .custom-rules-row > button:hover {
+        background-color: var(--danger-hover);
+      }
+
+      .toggle-wrapper {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        margin-top: 0.5rem;
+        background-color: #f8fafc;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+      }
+
+      .toggle-wrapper input[type='checkbox'] {
+        width: 1.125rem;
+        height: 1.125rem;
+        accent-color: var(--primary);
+        cursor: pointer;
+        margin: 0;
+      }
+
+      .toggle-wrapper label {
+        margin: 0;
+        cursor: pointer;
+      }
+
+      @media (max-width: 640px) {
+        .custom-rules-row {
+          flex-direction: column;
+        }
+        .custom-rules-row > select,
+        .custom-rules-row > button {
+          width: 100%;
+        }
+        .custom-rules-row > button {
+          padding: 0.625rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="badge">C++ Here</div>
+        <h1>Options Center</h1>
+        <p>Configure ports, parsing behavior, timeout, and debug mode.</p>
+      </div>
+
+      <div class="card">
+        <h2>Custom tools</h2>
+        <label for="custom-ports">Custom ports</label>
+        <input type="text" id="custom-ports" title="Port numbers" placeholder="Example: 10043, 27121" />
+        <p id="custom-ports-error" class="error hidden">
+          Please make sure all ports are valid, and multiple ports are separated by commas.
+        </p>
+        <p class="description">Specify custom ports to send the parsed data to, separated by commas.</p>
+      </div>
+
+      <div class="card">
+        <h2>Custom rules</h2>
+        <div id="custom-rules-container"></div>
+        <p id="custom-rules-error" class="error hidden"></p>
+        <p class="description">
+          Custom rules can be used to override the parser selection. When a rule's regular expression matches with the
+          url of the problem that is being parsed, the parser configured in that rule is used instead of the default
+          parser.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Request timeout</h2>
+        <label for="request-timeout">Request timeout (ms)</label>
+        <input type="number" id="request-timeout" min="1" />
+        <p class="description">
+          When a problem is sent to the ports a tool could possibly be listening on, a timeout is set so requests sent
+          to ports with no listening tools aren't kept alive for too long. You should not change this value unless you
+          are facing issues with your tools not receiving the problem data after clicking the "+" button when they
+          should be.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Debugging</h2>
+        <div class="toggle-wrapper">
+          <input type="checkbox" id="debug-mode" />
+          <label for="debug-mode">Debug mode</label>
+        </div>
+        <p class="description">
+          If debug mode is enabled, all the JSON data that is sent is logged to the console as well.
+        </p>
+      </div>
+    </div>
+
+    <script src="js/options.js"></script>
+  </body>
+</html>

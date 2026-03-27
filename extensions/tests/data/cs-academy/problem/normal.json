@@ -1,0 +1,36 @@
+{
+  "url": "https://csacademy.com/contest/archive/task/addition/",
+  "parser": "CSAcademyProblemParser",
+  "before": "beforeCSAcademy",
+  "result": {
+    "name": "Addition",
+    "group": "CS Academy",
+    "url": "https://csacademy.com/contest/archive/task/addition/",
+    "interactive": false,
+    "memoryLimit": 128,
+    "timeLimit": 500,
+    "tests": [
+      {
+        "input": "10 20\n",
+        "output": "30\n"
+      },
+      {
+        "input": "333 876\n",
+        "output": "1209\n"
+      }
+    ],
+    "testType": "single",
+    "input": {
+      "type": "stdin"
+    },
+    "output": {
+      "type": "stdout"
+    },
+    "languages": {
+      "java": {
+        "mainClass": "Main",
+        "taskClass": "Addition"
+      }
+    }
+  }
+}

@@ -9,7 +9,7 @@
     "build": "cd frontend && astro build",
     "preview": "cd frontend && astro preview",
     "astro": "cd frontend && astro",
-    "ext": "cd extensions && bun dev",
+    "ext:chrome": "cd extensions && bun dev:chrome",
     "ext:firefox": "cd extensions && bun dev:firefox"
   },
   "dependencies": {

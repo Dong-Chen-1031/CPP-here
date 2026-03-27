@@ -1,0 +1,32 @@
+{
+  "url": "https://codingcompetitions.withgoogle.com/codejam/round/0000000000007766/000000000004dbbd",
+  "parser": "GoogleCodingCompetitionsProblemParser",
+  "before": "beforeGoogleCodingCompetitions",
+  "result": {
+    "name": "Jurisdiction Restrictions",
+    "group": "Google Coding Competitions - World Finals 2018 - Code Jam 2018",
+    "url": "https://codingcompetitions.withgoogle.com/codejam/round/0000000000007766/000000000004dbbd",
+    "interactive": false,
+    "memoryLimit": 1024,
+    "timeLimit": 30000,
+    "tests": [
+      {
+        "input": "2\n3 4 2\n1 1 1\n3 3 2\n5 5 2\n4 1 2\n3 2 2\n",
+        "output": "Case #1: 4\nCase #2: 0\n"
+      }
+    ],
+    "testType": "multiNumber",
+    "input": {
+      "type": "stdin"
+    },
+    "output": {
+      "type": "stdout"
+    },
+    "languages": {
+      "java": {
+        "mainClass": "Solution",
+        "taskClass": "JurisdictionRestrictions"
+      }
+    }
+  }
+}

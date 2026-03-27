@@ -1,0 +1,32 @@
+{
+  "url": "https://www.codechef.com/MAY18B/problems/RD19",
+  "parser": "CodeChefNewProblemParser",
+  "before": "beforeCodeChefNew",
+  "result": {
+    "name": "Minimum Deletions",
+    "group": "CodeChef - MAY18B",
+    "url": "https://www.codechef.com/MAY18B/problems/RD19",
+    "interactive": false,
+    "memoryLimit": 256,
+    "timeLimit": 1000,
+    "tests": [
+      {
+        "input": "2\n2\n2 3\n2\n2 4\n",
+        "output": "0\n-1\n"
+      }
+    ],
+    "testType": "single",
+    "input": {
+      "type": "stdin"
+    },
+    "output": {
+      "type": "stdout"
+    },
+    "languages": {
+      "java": {
+        "mainClass": "Main",
+        "taskClass": "MinimumDeletions"
+      }
+    }
+  }
+}

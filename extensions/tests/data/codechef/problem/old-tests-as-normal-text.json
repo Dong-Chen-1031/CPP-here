@@ -1,0 +1,27 @@
+{
+  "url": "https://www.codechef.com/KQ102018/problems-old/QM10B",
+  "parser": "CodeChefOldProblemParser",
+  "before": "beforeCodeChefOld",
+  "result": {
+    "name": "Total Graphs (keteki)",
+    "group": "CodeChef - KQ102018",
+    "url": "https://www.codechef.com/KQ102018/problems-old/QM10B",
+    "interactive": false,
+    "memoryLimit": 256,
+    "timeLimit": 1000,
+    "tests": [],
+    "testType": "single",
+    "input": {
+      "type": "stdin"
+    },
+    "output": {
+      "type": "stdout"
+    },
+    "languages": {
+      "java": {
+        "mainClass": "Main",
+        "taskClass": "TotalGraphsKeteki"
+      }
+    }
+  }
+}

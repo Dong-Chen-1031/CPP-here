@@ -1,0 +1,141 @@
+{
+  "url": "https://acm.hdu.edu.cn/contests/contest_show.php?cid=26",
+  "parser": "HDOJContestParser",
+  "result": [
+    {
+      "name": "Lowest Common Multiple Plus",
+      "group": "HDOJ",
+      "url": "https://acm.hdu.edu.cn/contests/contest_showproblem.php?pid=1001&cid=26",
+      "interactive": false,
+      "memoryLimit": 32,
+      "timeLimit": 1000,
+      "tests": [
+        {
+          "input": "2 4 6\n3 2 5 7\n",
+          "output": "12\n70\n"
+        }
+      ],
+      "testType": "single",
+      "input": {
+        "type": "stdin"
+      },
+      "output": {
+        "type": "stdout"
+      },
+      "languages": {
+        "java": {
+          "mainClass": "Main",
+          "taskClass": "LowestCommonMultiplePlus"
+        }
+      }
+    },
+    {
+      "name": "Palindromes _easy version",
+      "group": "HDOJ",
+      "url": "https://acm.hdu.edu.cn/contests/contest_showproblem.php?pid=1002&cid=26",
+      "interactive": false,
+      "memoryLimit": 32,
+      "timeLimit": 1000,
+      "tests": [
+        {
+          "input": "4\nlevel\nabcde\nnoon\nhaha\n",
+          "output": "yes\nno\nyes\nno\n"
+        }
+      ],
+      "testType": "single",
+      "input": {
+        "type": "stdin"
+      },
+      "output": {
+        "type": "stdout"
+      },
+      "languages": {
+        "java": {
+          "mainClass": "Main",
+          "taskClass": "PalindromesEasyVersion"
+        }
+      }
+    },
+    {
+      "name": "����ͳ��",
+      "group": "HDOJ",
+      "url": "https://acm.hdu.edu.cn/contests/contest_showproblem.php?pid=1003&cid=26",
+      "interactive": false,
+      "memoryLimit": 32,
+      "timeLimit": 1000,
+      "tests": [
+        {
+          "input": "2\nWaHaHa! WaHaHa! ������ڲ�˵��Ҫ˵ֻ˵��ͨ��WaHaHa! WaHaHa!\n���Ͼ�Ҫ��ĩ������Are you ready?\n",
+          "output": "14\n9\n"
+        }
+      ],
+      "testType": "single",
+      "input": {
+        "type": "stdin"
+      },
+      "output": {
+        "type": "stdout"
+      },
+      "languages": {
+        "java": {
+          "mainClass": "Main",
+          "taskClass": "Task"
+        }
+      }
+    },
+    {
+      "name": "����ת��",
+      "group": "HDOJ",
+      "url": "https://acm.hdu.edu.cn/contests/contest_showproblem.php?pid=1004&cid=26",
+      "interactive": false,
+      "memoryLimit": 32,
+      "timeLimit": 1000,
+      "tests": [
+        {
+          "input": "7 2\n23 12\n-4 3\n",
+          "output": "111\n1B\n-11\n"
+        }
+      ],
+      "testType": "single",
+      "input": {
+        "type": "stdin"
+      },
+      "output": {
+        "type": "stdout"
+      },
+      "languages": {
+        "java": {
+          "mainClass": "Main",
+          "taskClass": "Task"
+        }
+      }
+    },
+    {
+      "name": "�������",
+      "group": "HDOJ",
+      "url": "https://acm.hdu.edu.cn/contests/contest_showproblem.php?pid=1005&cid=26",
+      "interactive": false,
+      "memoryLimit": 32,
+      "timeLimit": 1000,
+      "tests": [
+        {
+          "input": "2 3\n",
+          "output": "1\n1 1\n\n1\n1 1\n1 2 1\n"
+        }
+      ],
+      "testType": "single",
+      "input": {
+        "type": "stdin"
+      },
+      "output": {
+        "type": "stdout"
+      },
+      "languages": {
+        "java": {
+          "mainClass": "Main",
+          "taskClass": "Task"
+        }
+      }
+    }
+  ]
+}

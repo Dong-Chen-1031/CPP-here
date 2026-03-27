@@ -1,0 +1,35 @@
+{
+  "url": "https://dmoj.ca/problem/aac1p1",
+  "parser": "DMOJProblemParser",
+  "result": {
+    "name": "P1 - Alpaca Shapes",
+    "group": "DMOJ - An Animal Contest 1",
+    "url": "https://dmoj.ca/problem/aac1p1",
+    "interactive": false,
+    "memoryLimit": 256,
+    "timeLimit": 2000,
+    "tests": [
+      {
+        "input": "6 2\n",
+        "output": "SQUARE\n"
+      },
+      {
+        "input": "12 124\n",
+        "output": "CIRCLE\n"
+      }
+    ],
+    "testType": "single",
+    "input": {
+      "type": "stdin"
+    },
+    "output": {
+      "type": "stdout"
+    },
+    "languages": {
+      "java": {
+        "mainClass": "Main",
+        "taskClass": "P1AlpacaShapes"
+      }
+    }
+  }
+}

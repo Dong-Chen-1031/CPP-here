@@ -1,0 +1,626 @@
+# 專案目錄與檔案用途總覽
+
+- 產生日期：2026-03-27
+- 掃描範圍：workspace（排除 .git、node_modules）
+- 目錄數：154
+- 檔案數：458
+
+> 本文件以路徑規則自動整理，核心程式碼使用較精確描述；大量測資檔案以「站點 + 類型 + 情境」描述。
+
+## 目錄用途
+
+- .github: GitHub 設定（CI 工作流程與自動化）。
+- .github/workflows: GitHub Actions 工作流程目錄。
+- build-chrome: Chrome 版本擴充套件建置輸出。
+- build-chrome/icons: Chrome 打包輸出中的子目錄或資源。
+- build-chrome/js: Chrome 打包輸出中的子目錄或資源。
+- build-firefox: Firefox 版本擴充套件建置輸出。
+- build-firefox/icons: Firefox 打包輸出中的子目錄或資源。
+- build-firefox/js: Firefox 打包輸出中的子目錄或資源。
+- firefox-tmp: Firefox 開發啟動時使用的暫存資料。
+- media: 專案圖像資源根目錄（icon、banner 等）。
+- media/banners: 商店或宣傳用橫幅素材。
+- media/icons: 擴充套件圖示素材。
+- scripts: 建置、啟動與資產產生腳本。
+- scripts/build: 擴充套件與測試建置流程腳本。
+- scripts/start: 本機啟動 Chrome/Firefox 開發流程腳本。
+- src: 擴充套件主要原始碼。
+- src/hosts: 資料傳送目標（Host）抽象與實作。
+- src/models: 題目/比賽與訊息資料模型定義。
+- src/parsers: 解析器框架與註冊入口。
+- src/parsers/contest: 各站比賽頁（Contest）解析器實作。
+- src/parsers/problem: 各站題目頁（Problem）解析器實作。
+- src/utils: DOM、請求、壓縮、設定等共用工具。
+- src/vendor: 第三方程式碼（vendor）副本。
+- tests: 測試程式與測試資料。
+- tests/build: 測試建置輔助檔。
+- tests/data: 解析器回歸測試資料集。
+- tests/data/a2-online-judge: 解析器回歸測試資料集。
+- tests/data/a2-online-judge/problem: 解析器回歸測試資料集。
+- tests/data/aizu-online-judge: 解析器回歸測試資料集。
+- tests/data/aizu-online-judge-beta: 解析器回歸測試資料集。
+- tests/data/aizu-online-judge-beta/problem: 解析器回歸測試資料集。
+- tests/data/aizu-online-judge/problem: 解析器回歸測試資料集。
+- tests/data/algotester: 解析器回歸測試資料集。
+- tests/data/algotester/problem: 解析器回歸測試資料集。
+- tests/data/anarchy-golf: 解析器回歸測試資料集。
+- tests/data/anarchy-golf/problem: 解析器回歸測試資料集。
+- tests/data/atcoder: 解析器回歸測試資料集。
+- tests/data/atcoder/contest: 解析器回歸測試資料集。
+- tests/data/atcoder/problem: 解析器回歸測試資料集。
+- tests/data/baekjoon-online-judge: 解析器回歸測試資料集。
+- tests/data/baekjoon-online-judge/problem: 解析器回歸測試資料集。
+- tests/data/bjtu-oj: 解析器回歸測試資料集。
+- tests/data/bjtu-oj/problem: 解析器回歸測試資料集。
+- tests/data/buctoj: 解析器回歸測試資料集。
+- tests/data/buctoj/problem: 解析器回歸測試資料集。
+- tests/data/code-drills: 解析器回歸測試資料集。
+- tests/data/code-drills/problem: 解析器回歸測試資料集。
+- tests/data/codechef: 解析器回歸測試資料集。
+- tests/data/codechef/contest: 解析器回歸測試資料集。
+- tests/data/codechef/problem: 解析器回歸測試資料集。
+- tests/data/codeforces: 解析器回歸測試資料集。
+- tests/data/codeforces/contest: 解析器回歸測試資料集。
+- tests/data/codeforces/problem: 解析器回歸測試資料集。
+- tests/data/codemarshal: 解析器回歸測試資料集。
+- tests/data/codemarshal/problem: 解析器回歸測試資料集。
+- tests/data/contest-hunter: 解析器回歸測試資料集。
+- tests/data/contest-hunter/contest: 解析器回歸測試資料集。
+- tests/data/contest-hunter/problem: 解析器回歸測試資料集。
+- tests/data/cpython-uz: 解析器回歸測試資料集。
+- tests/data/cpython-uz/contest: 解析器回歸測試資料集。
+- tests/data/cpython-uz/problem: 解析器回歸測試資料集。
+- tests/data/cs-academy: 解析器回歸測試資料集。
+- tests/data/cs-academy/problem: 解析器回歸測試資料集。
+- tests/data/cses: 解析器回歸測試資料集。
+- tests/data/cses/contest: 解析器回歸測試資料集。
+- tests/data/cses/problem: 解析器回歸測試資料集。
+- tests/data/dmoj: 解析器回歸測試資料集。
+- tests/data/dmoj/contest: 解析器回歸測試資料集。
+- tests/data/dmoj/problem: 解析器回歸測試資料集。
+- tests/data/google-coding-competitions: 解析器回歸測試資料集。
+- tests/data/google-coding-competitions/problem: 解析器回歸測試資料集。
+- tests/data/hackerearth: 解析器回歸測試資料集。
+- tests/data/hackerearth/problem: 解析器回歸測試資料集。
+- tests/data/hdoj: 解析器回歸測試資料集。
+- tests/data/hdoj/contest: 解析器回歸測試資料集。
+- tests/data/hdoj/problem: 解析器回歸測試資料集。
+- tests/data/hrbust-online-judge: 解析器回歸測試資料集。
+- tests/data/hrbust-online-judge/problem: 解析器回歸測試資料集。
+- tests/data/hydro: 解析器回歸測試資料集。
+- tests/data/hydro/problem: 解析器回歸測試資料集。
+- tests/data/infoarena: 解析器回歸測試資料集。
+- tests/data/infoarena/problem: 解析器回歸測試資料集。
+- tests/data/jutge: 解析器回歸測試資料集。
+- tests/data/jutge/problem: 解析器回歸測試資料集。
+- tests/data/kattis: 解析器回歸測試資料集。
+- tests/data/kattis/contest: 解析器回歸測試資料集。
+- tests/data/kattis/problem: 解析器回歸測試資料集。
+- tests/data/kilonova: 解析器回歸測試資料集。
+- tests/data/kilonova/contest: 解析器回歸測試資料集。
+- tests/data/kilonova/problem: 解析器回歸測試資料集。
+- tests/data/library-checker: 解析器回歸測試資料集。
+- tests/data/library-checker-old: 解析器回歸測試資料集。
+- tests/data/library-checker-old/problem: 解析器回歸測試資料集。
+- tests/data/library-checker/problem: 解析器回歸測試資料集。
+- tests/data/libreoj: 解析器回歸測試資料集。
+- tests/data/libreoj/contest: 解析器回歸測試資料集。
+- tests/data/libreoj/problem: 解析器回歸測試資料集。
+- tests/data/lightoj: 解析器回歸測試資料集。
+- tests/data/lightoj/problem: 解析器回歸測試資料集。
+- tests/data/meta-coding-competitions: 解析器回歸測試資料集。
+- tests/data/meta-coding-competitions/problem: 解析器回歸測試資料集。
+- tests/data/mr-judge: 解析器回歸測試資料集。
+- tests/data/mr-judge/problem: 解析器回歸測試資料集。
+- tests/data/neps-academy: 解析器回歸測試資料集。
+- tests/data/neps-academy/problem: 解析器回歸測試資料集。
+- tests/data/nerdarena: 解析器回歸測試資料集。
+- tests/data/nerdarena/problem: 解析器回歸測試資料集。
+- tests/data/noj: 解析器回歸測試資料集。
+- tests/data/noj/problem: 解析器回歸測試資料集。
+- tests/data/omega-up: 解析器回歸測試資料集。
+- tests/data/omega-up/problem: 解析器回歸測試資料集。
+- tests/data/open-judge: 解析器回歸測試資料集。
+- tests/data/open-judge/contest: 解析器回歸測試資料集。
+- tests/data/open-judge/problem: 解析器回歸測試資料集。
+- tests/data/otog: 解析器回歸測試資料集。
+- tests/data/otog/problem: 解析器回歸測試資料集。
+- tests/data/pbinfo: 解析器回歸測試資料集。
+- tests/data/pbinfo/problem: 解析器回歸測試資料集。
+- tests/data/peg-judge: 解析器回歸測試資料集。
+- tests/data/peg-judge/problem: 解析器回歸測試資料集。
+- tests/data/poj: 解析器回歸測試資料集。
+- tests/data/poj/contest: 解析器回歸測試資料集。
+- tests/data/poj/problem: 解析器回歸測試資料集。
+- tests/data/robocontest: 解析器回歸測試資料集。
+- tests/data/robocontest/contest: 解析器回歸測試資料集。
+- tests/data/robocontest/problem: 解析器回歸測試資料集。
+- tests/data/sdut-online-judge: 解析器回歸測試資料集。
+- tests/data/sdut-online-judge/problem: 解析器回歸測試資料集。
+- tests/data/spoj: 解析器回歸測試資料集。
+- tests/data/spoj/problem: 解析器回歸測試資料集。
+- tests/data/ssoier: 解析器回歸測試資料集。
+- tests/data/ssoier/problem: 解析器回歸測試資料集。
+- tests/data/timus-online-judge: 解析器回歸測試資料集。
+- tests/data/timus-online-judge/contest: 解析器回歸測試資料集。
+- tests/data/timus-online-judge/problem: 解析器回歸測試資料集。
+- tests/data/tlx: 解析器回歸測試資料集。
+- tests/data/tlx/problem: 解析器回歸測試資料集。
+- tests/data/toph: 解析器回歸測試資料集。
+- tests/data/toph/problem: 解析器回歸測試資料集。
+- tests/data/udebug: 解析器回歸測試資料集。
+- tests/data/udebug/problem: 解析器回歸測試資料集。
+- tests/data/uoj: 解析器回歸測試資料集。
+- tests/data/uoj/contest: 解析器回歸測試資料集。
+- tests/data/uoj/problem: 解析器回歸測試資料集。
+- tests/data/usaco: 解析器回歸測試資料集。
+- tests/data/usaco/problem: 解析器回歸測試資料集。
+- tests/data/virtual-judge: 解析器回歸測試資料集。
+- tests/data/virtual-judge/contest: 解析器回歸測試資料集。
+- tests/data/virtual-judge/problem: 解析器回歸測試資料集。
+- tests/data/zoj: 解析器回歸測試資料集。
+- tests/data/zoj/problem: 解析器回歸測試資料集。
+- tests/data/zufeoj: 解析器回歸測試資料集。
+- tests/data/zufeoj/contest: 解析器回歸測試資料集。
+- tests/data/zufeoj/problem: 解析器回歸測試資料集。
+
+## 檔案用途
+
+- .editorconfig: 編輯器一致化規則（縮排、行尾等）。
+- .github/workflows/build.yml: CI：建置/測試流程定義。
+- .gitignore: Git 忽略規則。
+- build-chrome/icons/icon-128.png: Chrome 建置輸出的圖示檔。
+- build-chrome/icons/icon-16.png: Chrome 建置輸出的圖示檔。
+- build-chrome/icons/icon-19.png: Chrome 建置輸出的圖示檔。
+- build-chrome/icons/icon-20.png: Chrome 建置輸出的圖示檔。
+- build-chrome/icons/icon-24.png: Chrome 建置輸出的圖示檔。
+- build-chrome/icons/icon-32.png: Chrome 建置輸出的圖示檔。
+- build-chrome/icons/icon-38.png: Chrome 建置輸出的圖示檔。
+- build-chrome/icons/icon-48.png: Chrome 建置輸出的圖示檔。
+- build-chrome/icons/icon-64.png: Chrome 建置輸出的圖示檔。
+- build-chrome/icons/icon-96.png: Chrome 建置輸出的圖示檔。
+- build-chrome/js/background.js: Chrome 背景腳本（建置結果）。
+- build-chrome/js/content.js: Chrome 內容腳本（建置結果）。
+- build-chrome/js/options.js: Chrome 選項頁腳本（建置結果）。
+- build-chrome/LICENSE: Chrome 發佈包附帶授權檔。
+- build-chrome/manifest.json: Chrome 擴充套件 Manifest（建置結果）。
+- build-chrome/options.html: Chrome 選項頁（建置結果）。
+- build-firefox/icons/icon-128.png: Firefox 建置輸出的圖示檔。
+- build-firefox/icons/icon-16.png: Firefox 建置輸出的圖示檔。
+- build-firefox/icons/icon-19.png: Firefox 建置輸出的圖示檔。
+- build-firefox/icons/icon-20.png: Firefox 建置輸出的圖示檔。
+- build-firefox/icons/icon-24.png: Firefox 建置輸出的圖示檔。
+- build-firefox/icons/icon-32.png: Firefox 建置輸出的圖示檔。
+- build-firefox/icons/icon-38.png: Firefox 建置輸出的圖示檔。
+- build-firefox/icons/icon-48.png: Firefox 建置輸出的圖示檔。
+- build-firefox/icons/icon-64.png: Firefox 建置輸出的圖示檔。
+- build-firefox/icons/icon-96.png: Firefox 建置輸出的圖示檔。
+- build-firefox/js/background.js: Firefox 背景腳本（建置結果）。
+- build-firefox/js/content.js: Firefox 內容腳本（建置結果）。
+- build-firefox/js/options.js: Firefox 選項頁腳本（建置結果）。
+- build-firefox/LICENSE: Firefox 發佈包附帶授權檔。
+- build-firefox/manifest.json: Firefox 擴充套件 Manifest（建置結果）。
+- build-firefox/options.html: Firefox 選項頁（建置結果）。
+- bun.lock: 專案檔案。
+- CHANGELOG.md: 版本更新紀錄。
+- eslint.config.js: ESLint 設定。
+- jest.config.cts: Jest 測試設定。
+- LICENSE: 授權條款（MIT）。
+- media/banners/chrome-large-promo.png: 宣傳橫幅點陣輸出。
+- media/banners/chrome-large-promo.svg: 宣傳橫幅向量圖來源。
+- media/banners/chrome-marquee-promo.png: 宣傳橫幅點陣輸出。
+- media/banners/chrome-marquee-promo.svg: 宣傳橫幅向量圖來源。
+- media/banners/chrome-small-promo.png: 宣傳橫幅點陣輸出。
+- media/banners/chrome-small-promo.svg: 宣傳橫幅向量圖來源。
+- media/banners/github-social-preview.png: 宣傳橫幅點陣輸出。
+- media/banners/github-social-preview.svg: 宣傳橫幅向量圖來源。
+- media/icons/icon-128.png: 擴充套件圖示資產。
+- media/icons/icon-16.png: 擴充套件圖示資產。
+- media/icons/icon-19.png: 擴充套件圖示資產。
+- media/icons/icon-20.png: 擴充套件圖示資產。
+- media/icons/icon-24.png: 擴充套件圖示資產。
+- media/icons/icon-32.png: 擴充套件圖示資產。
+- media/icons/icon-38.png: 擴充套件圖示資產。
+- media/icons/icon-48.png: 擴充套件圖示資產。
+- media/icons/icon-64.png: 擴充套件圖示資產。
+- media/icons/icon-96.png: 擴充套件圖示資產。
+- package.json: 套件與腳本入口設定。
+- README.md: 專案說明、支援網站與開發指南。
+- scripts/build/extension.ts: 建置 Chrome/Firefox 擴充套件的主腳本。
+- scripts/build/test.ts: 測試版本建置腳本。
+- scripts/build/utils.ts: 建置流程共用工具。
+- scripts/generate-banners.ts: 自動產生宣傳橫幅資產的腳本。
+- scripts/start/chrome.ts: 本機啟動 Chrome 開發流程。
+- scripts/start/firefox.ts: 本機啟動 Firefox 開發流程。
+- scripts/start/utils.ts: 啟動流程共用工具。
+- scripts/utils.ts: 腳本層共用工具函式。
+- src/background.ts: 擴充套件背景腳本主入口。
+- src/content.ts: 注入頁面的內容腳本入口。
+- src/hosts/CHelperHost.ts: CHelper 工具的 Host 實作。
+- src/hosts/CustomHost.ts: 自訂 Host 設定與傳送邏輯。
+- src/hosts/Host.ts: Host 抽象基底介面/類別。
+- src/hosts/hosts.ts: 內建 Host 清單與註冊。
+- src/models/Batch.ts: 批次傳送資訊模型。
+- src/models/Contest.ts: 比賽資料模型。
+- src/models/IOConfiguration.ts: 輸入/輸出設定模型。
+- src/models/LanguageConfiguration.ts: 語言特定設定模型。
+- src/models/messaging.ts: 背景與內容腳本訊息型別。
+- src/models/Sendable.ts: 可傳送資料型別抽象。
+- src/models/Task.ts: 題目（Task）資料模型。
+- src/models/TaskBuilder.ts: Task 建構器。
+- src/models/Test.ts: 測資（input/output）模型。
+- src/models/TestType.ts: 測資型態定義。
+- src/options.html: 擴充套件選項頁 HTML。
+- src/options.ts: 擴充套件選項頁邏輯。
+- src/parsers/contest/A2OnlineJudgeContestParser.ts: A2OnlineJudge 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/AtCoderContestParser.ts: AtCoder 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/BAPSOJContestParser.ts: BAPSOJ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/BeecrowdContestParser.ts: Beecrowd 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/BUCTOJContestParser.ts: BUCTOJ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/CodeChefContestParser.ts: CodeChef 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/CodeforcesContestParser.ts: Codeforces 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/CodeMarshalContestParser.ts: CodeMarshal 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/CodeRunContestParser.ts: CodeRun 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/COJContestParser.ts: COJ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/ContestHunterContestParser.ts: ContestHunter 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/CPythonUZContestParser.ts: CPythonUZ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/CSESContestParser.ts: CSES 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/CSGOJContestParser.ts: CSGOJ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/CSUACMOnlineJudgeContestParser.ts: CSUACMOnlineJudge 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/DMOJContestParser.ts: DMOJ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/DOMjudgeContestParser.ts: DOMjudge 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/DotOJContestParser.ts: DotOJ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/ECNUOnlineJudgeContestParser.ts: ECNUOnlineJudge 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/EolympBasecampContestParser.ts: EolympBasecamp 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/FZUOnlineJudgeContestParser.ts: FZUOnlineJudge 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/HackerEarthContestParser.ts: HackerEarth 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/HackerRankContestParser.ts: HackerRank 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/HDOJContestParser.ts: HDOJ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/HDOJNewContestParser.ts: HDOJNew 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/HihoCoderContestParser.ts: HihoCoder 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/HKOIOnlineJudgeContestParser.ts: HKOIOnlineJudge 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/HUSTOJSyzojContestParser.ts: HUSTOJSyzoj 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/HydroContestParser.ts: Hydro 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/KattisContestParser.ts: Kattis 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/KEPUZContestParser.ts: KEPUZ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/KilonovaContestParser.ts: Kilonova 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/LanqiaoContestParser.ts: Lanqiao 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/LibreOJContestParser.ts: LibreOJ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/LightOJContestParser.ts: LightOJ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/LuoguContestParser.ts: Luogu 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/MarisaOJContestParser.ts: MarisaOJ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/NBUTOnlineJudgeContestParser.ts: NBUTOnlineJudge 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/NOJContestParser.ts: NOJ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/OpenJudgeContestParser.ts: OpenJudge 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/PEGJudgeContestParser.ts: PEGJudge 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/POJContestParser.ts: POJ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/QDUOJContestParser.ts: QDUOJ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/RoboContestContestParser.ts: RoboContest 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/SeriousOJContestParser.ts: SeriousOJ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/TimusOnlineJudgeContestParser.ts: TimusOnlineJudge 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/TLXContestParser.ts: TLX 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/UniversalCupContestParser.ts: UniversalCup 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/UOJContestParser.ts: UOJ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/VirtualJudgeContestParser.ts: VirtualJudge 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/YandexContestParser.ts: Yandex 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/YukicoderContestParser.ts: Yukicoder 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/contest/ZUFEOJContestParser.ts: ZUFEOJ 比賽頁解析器實作（抽取題目列表與比賽資訊）。
+- src/parsers/ContestParser.ts: 比賽解析器基底抽象。
+- src/parsers/Parser.ts: 解析器基底抽象。
+- src/parsers/parsers.ts: 所有解析器的註冊與匯出入口。
+- src/parsers/problem/A2OnlineJudgeProblemParser.ts: A2OnlineJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/ACMPProblemParser.ts: ACMP 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/AcWingProblemParser.ts: AcWing 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/AizuOnlineJudgeBetaProblemParser.ts: AizuOnlineJudgeBeta 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/AizuOnlineJudgeProblemParser.ts: AizuOnlineJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/AlgotesterProblemParser.ts: Algotester 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/AlgoZenithNewProblemParser.ts: AlgoZenithNew 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/AlgoZenithOldProblemParser.ts: AlgoZenithOld 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/AnarchyGolfProblemParser.ts: AnarchyGolf 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/AtCoderProblemParser.ts: AtCoder 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/BaekjoonOnlineJudgeProblemParser.ts: BaekjoonOnlineJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/BAPSOJProblemParser.ts: BAPSOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/BeecrowdProblemParser.ts: Beecrowd 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/BJTUOJProblemParser.ts: BJTUOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/BloombergCodeConProblemParser.ts: BloombergCodeCon 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/BUCTOJProblemParser.ts: BUCTOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/CodeChefNewProblemParser.ts: CodeChefNew 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/CodeChefOldProblemParser.ts: CodeChefOld 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/CodeDrillsProblemParser.ts: CodeDrills 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/CodeforcesProblemParser.ts: Codeforces 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/CodeMarshalProblemParser.ts: CodeMarshal 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/CodeRunProblemParser.ts: CodeRun 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/CodeUpProblemParser.ts: CodeUp 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/COJProblemParser.ts: COJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/ContestHunterProblemParser.ts: ContestHunter 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/CPythonUZProblemParser.ts: CPythonUZ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/CSAcademyProblemParser.ts: CSAcademy 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/CSESProblemParser.ts: CSES 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/CSGOJProblemParser.ts: CSGOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/CSUACMOnlineJudgeProblemParser.ts: CSUACMOnlineJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/DimikOJProblemParser.ts: DimikOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/DMOJProblemParser.ts: DMOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/DotOJProblemParser.ts: DotOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/ECNUOnlineJudgeProblemParser.ts: ECNUOnlineJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/EolympBasecampProblemParser.ts: EolympBasecamp 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/FZUOnlineJudgeProblemParser.ts: FZUOnlineJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/GoogleCodingCompetitionsProblemParser.ts: GoogleCodingCompetitions 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/HackerEarthCodeArenaParser.ts: HackerEarthCodeArenaParser 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/HackerEarthProblemParser.ts: HackerEarth 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/HackerRankProblemParser.ts: HackerRank 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/HDOJNewProblemParser.ts: HDOJNew 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/HDOJProblemParser.ts: HDOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/HihoCoderProblemParser.ts: HihoCoder 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/HITOnlineJudgeProblemParser.ts: HITOnlineJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/HKOIOnlineJudgeProblemParser.ts: HKOIOnlineJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/HOJProblemParser.ts: HOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/HrbustOnlineJudgeProblemParser.ts: HrbustOnlineJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/HUSTOJSyzojProblemParser.ts: HUSTOJSyzoj 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/HydroProblemParser.ts: Hydro 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/InfoArenaProblemParser.ts: InfoArena 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/ITCoderHUTECHProblemParser.ts: ITCoderHUTECH 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/JutgeProblemParser.ts: Jutge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/KattisProblemParser.ts: Kattis 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/KEPUZProblemParser.ts: KEPUZ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/KilonovaProblemParser.ts: Kilonova 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/LanqiaoProblemParser.ts: Lanqiao 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/LibraryCheckerOldProblemParser.ts: LibraryCheckerOld 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/LibraryCheckerProblemParser.ts: LibraryChecker 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/LibreOJProblemParser.ts: LibreOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/LightOJProblemParser.ts: LightOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/LSYOIProblemParser.ts: LSYOI 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/LuoguProblemParser.ts: Luogu 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/MarisaOJProblemParser.ts: MarisaOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/MendoProblemParser.ts: Mendo 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/MetaCodingCompetitionsProblemParser.ts: MetaCodingCompetitions 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/MrJudgeProblemParser.ts: MrJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/MSKInformaticsProblemParser.ts: MSKInformatics 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/NBUTOnlineJudgeProblemParser.ts: NBUTOnlineJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/NepsAcademyProblemParser.ts: NepsAcademy 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/NewtonSchoolProblemParser.ts: NewtonSchool 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/NOJProblemParser.ts: NOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/NowCoderProblemParser.ts: NowCoder 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/OlinfoProblemParser.ts: Olinfo 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/OlympicodeProblemParser.ts: Olympicode 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/OmegaUpProblemParser.ts: OmegaUp 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/OpenJudgeProblemParser.ts: OpenJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/OTOGProblemParser.ts: OTOG 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/PandaOnlineJudgeProblemParser.ts: PandaOnlineJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/PBInfoProblemParser.ts: PBInfo 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/PEGJudgeProblemParser.ts: PEGJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/POJProblemParser.ts: POJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/PTAProblemParser.ts: PTA 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/QBXTOJProblemParser.ts: QBXTOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/QDUOJProblemParser.ts: QDUOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/QQWhaleProblemParser.ts: QQWhale 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/RoboContestProblemParser.ts: RoboContest 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/SDUTOnlineJudgeProblemParser.ts: SDUTOnlineJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/SeriousOJProblemParser.ts: SeriousOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/SortMeProblemParser.ts: SortMe 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/SPOJProblemParser.ts: SPOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/SSOIERProblemParser.ts: SSOIER 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/StarryCodingProblemParser.ts: StarryCoding 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/TheJobOverflowProblemParser.ts: TheJobOverflow 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/TimusOnlineJudgeProblemParser.ts: TimusOnlineJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/TLXProblemParser.ts: TLX 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/TophProblemParser.ts: Toph 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/UDebugProblemParser.ts: UDebug 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/UniversalCupProblemParser.ts: UniversalCup 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/UOJProblemParser.ts: UOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/USACOProblemParser.ts: USACO 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/USACOTrainingProblemParser.ts: USACOTraining 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/UVaOnlineJudgeProblemParser.ts: UVaOnlineJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/VirtualJudgeProblemParser.ts: VirtualJudge 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/XCampProblemParser.ts: XCamp 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/XXMProblemParser.ts: XXM 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/YACSProblemParser.ts: YACS 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/YandexProblemParser.ts: Yandex 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/YukicoderProblemParser.ts: Yukicoder 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/ZOJProblemParser.ts: ZOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/problem/ZUFEOJProblemParser.ts: ZUFEOJ 題目頁解析器實作（抽取題目資訊與範例測資）。
+- src/parsers/SimpleContestParser.ts: 簡化型比賽解析器基底。
+- src/utils/browser.ts: 瀏覽器 API 相容與封裝工具。
+- src/utils/config.ts: 設定讀寫與預設值工具。
+- src/utils/dom.ts: DOM 操作輔助函式。
+- src/utils/messaging.ts: 訊息傳遞輔助函式。
+- src/utils/noop.ts: 空操作函式。
+- src/utils/pdf.ts: PDF 內容擷取相關工具。
+- src/utils/random.ts: 隨機字串/值工具。
+- src/utils/request.ts: HTTP 請求輔助工具。
+- src/utils/zip.ts: 壓縮檔處理工具。
+- src/vendor/match-pattern-to-reg-exp.ts: 第三方 vendor 程式碼。
+- tests/before-functions.ts: 測試前置輔助函式。
+- tests/build/expose-parsers.ts: 測試建置時暴露解析器的橋接檔。
+- tests/data/a2-online-judge/problem/normal.json: A2 Online Judge 題目頁解析測試資料（情境：normal）。
+- tests/data/aizu-online-judge-beta/problem/arena.json: Aizu Online Judge Beta 題目頁解析測試資料（情境：arena）。
+- tests/data/aizu-online-judge-beta/problem/normal.json: Aizu Online Judge Beta 題目頁解析測試資料（情境：normal）。
+- tests/data/aizu-online-judge/problem/japanese.json: Aizu Online Judge 題目頁解析測試資料（情境：japanese）。
+- tests/data/aizu-online-judge/problem/normal.json: Aizu Online Judge 題目頁解析測試資料（情境：normal）。
+- tests/data/algotester/problem/normal.json: Algotester 題目頁解析測試資料（情境：normal）。
+- tests/data/anarchy-golf/problem/normal.json: Anarchy Golf 題目頁解析測試資料（情境：normal）。
+- tests/data/atcoder/contest/normal.json: Atcoder 比賽頁解析測試資料（情境：normal）。
+- tests/data/atcoder/problem/interactive.json: Atcoder 題目頁解析測試資料（情境：interactive）。
+- tests/data/atcoder/problem/normal_ja.json: Atcoder 題目頁解析測試資料（情境：normal_ja）。
+- tests/data/atcoder/problem/normal.json: Atcoder 題目頁解析測試資料（情境：normal）。
+- tests/data/baekjoon-online-judge/problem/multiple-time-limits.json: Baekjoon Online Judge 題目頁解析測試資料（情境：multiple time limits）。
+- tests/data/baekjoon-online-judge/problem/normal.json: Baekjoon Online Judge 題目頁解析測試資料（情境：normal）。
+- tests/data/bjtu-oj/problem/citel-normal.json: Bjtu OJ 題目頁解析測試資料（情境：citel normal）。
+- tests/data/bjtu-oj/problem/normal.json: Bjtu OJ 題目頁解析測試資料（情境：normal）。
+- tests/data/buctoj/problem/normal.json: Buctoj 題目頁解析測試資料（情境：normal）。
+- tests/data/code-drills/problem/contest-problem.json: Code Drills 題目頁解析測試資料（情境：contest problem）。
+- tests/data/code-drills/problem/normal.json: Code Drills 題目頁解析測試資料（情境：normal）。
+- tests/data/codechef/contest/normal.json: Codechef 比賽頁解析測試資料（情境：normal）。
+- tests/data/codechef/contest/samples-in-api.json: Codechef 比賽頁解析測試資料（情境：samples in api）。
+- tests/data/codechef/problem/new-copy-button.json: Codechef 題目頁解析測試資料（情境：new copy button）。
+- tests/data/codechef/problem/new-example-headers-as-normal-text.json: Codechef 題目頁解析測試資料（情境：new example headers as normal text）。
+- tests/data/codechef/problem/new-input-output-after-example-header.json: Codechef 題目頁解析測試資料（情境：new input output after example header）。
+- tests/data/codechef/problem/new-input-output-as-normal-text.json: Codechef 題目頁解析測試資料（情境：new input output as normal text）。
+- tests/data/codechef/problem/new-input-output-in-different-pre.json: Codechef 題目頁解析測試資料（情境：new input output in different pre）。
+- tests/data/codechef/problem/new-input-output-in-same-pre.json: Codechef 題目頁解析測試資料（情境：new input output in same pre）。
+- tests/data/codechef/problem/new-tests-as-normal-text.json: Codechef 題目頁解析測試資料（情境：new tests as normal text）。
+- tests/data/codechef/problem/old-copy-button.json: Codechef 題目頁解析測試資料（情境：old copy button）。
+- tests/data/codechef/problem/old-example-headers-as-normal-text.json: Codechef 題目頁解析測試資料（情境：old example headers as normal text）。
+- tests/data/codechef/problem/old-input-output-after-example-header.json: Codechef 題目頁解析測試資料（情境：old input output after example header）。
+- tests/data/codechef/problem/old-input-output-as-normal-text.json: Codechef 題目頁解析測試資料（情境：old input output as normal text）。
+- tests/data/codechef/problem/old-input-output-in-different-pre.json: Codechef 題目頁解析測試資料（情境：old input output in different pre）。
+- tests/data/codechef/problem/old-input-output-in-same-pre.json: Codechef 題目頁解析測試資料（情境：old input output in same pre）。
+- tests/data/codechef/problem/old-tests-as-normal-text.json: Codechef 題目頁解析測試資料（情境：old tests as normal text）。
+- tests/data/codeforces/contest/complete-problemset.json: Codeforces 比賽頁解析測試資料（情境：complete problemset）。
+- tests/data/codeforces/contest/normal.json: Codeforces 比賽頁解析測試資料（情境：normal）。
+- tests/data/codeforces/contest/statements-in-pdf.json: Codeforces 比賽頁解析測試資料（情境：statements in pdf）。
+- tests/data/codeforces/problem/acm-sgu-ru-inside-table.json: Codeforces 題目頁解析測試資料（情境：acm sgu ru inside table）。
+- tests/data/codeforces/problem/acm-sgu-ru-not-inside-table.json: Codeforces 題目頁解析測試資料（情境：acm sgu ru not inside table）。
+- tests/data/codeforces/problem/cursive-input-output.json: Codeforces 題目頁解析測試資料（情境：cursive input output）。
+- tests/data/codeforces/problem/file-input-output.json: Codeforces 題目頁解析測試資料（情境：file input output）。
+- tests/data/codeforces/problem/gym.json: Codeforces 題目頁解析測試資料（情境：gym）。
+- tests/data/codeforces/problem/highlighted-input-deep.json: Codeforces 題目頁解析測試資料（情境：highlighted input deep）。
+- tests/data/codeforces/problem/highlighted-input.json: Codeforces 題目頁解析測試資料（情境：highlighted input）。
+- tests/data/codeforces/problem/html-entities-1.json: Codeforces 題目頁解析測試資料（情境：html entities 1）。
+- tests/data/codeforces/problem/html-entities-2.json: Codeforces 題目頁解析測試資料（情境：html entities 2）。
+- tests/data/codeforces/problem/inside-group.json: Codeforces 題目頁解析測試資料（情境：inside group）。
+- tests/data/codeforces/problem/interactive-russian.json: Codeforces 題目頁解析測試資料（情境：interactive russian）。
+- tests/data/codeforces/problem/interactive.json: Codeforces 題目頁解析測試資料（情境：interactive）。
+- tests/data/codeforces/problem/nbsp.json: Codeforces 題目頁解析測試資料（情境：nbsp）。
+- tests/data/codeforces/problem/normal.json: Codeforces 題目頁解析測試資料（情境：normal）。
+- tests/data/codeforces/problem/russian-stdin-stdout.json: Codeforces 題目頁解析測試資料（情境：russian stdin stdout）。
+- tests/data/codemarshal/problem/normal.json: Codemarshal 題目頁解析測試資料（情境：normal）。
+- tests/data/contest-hunter/contest/normal.json: Contest Hunter 比賽頁解析測試資料（情境：normal）。
+- tests/data/contest-hunter/problem/normal.json: Contest Hunter 題目頁解析測試資料（情境：normal）。
+- tests/data/cpython-uz/contest/normal.json: Cpython UZ 比賽頁解析測試資料（情境：normal）。
+- tests/data/cpython-uz/problem/contest.json: Cpython UZ 題目頁解析測試資料（情境：contest）。
+- tests/data/cpython-uz/problem/duel.json: Cpython UZ 題目頁解析測試資料（情境：duel）。
+- tests/data/cpython-uz/problem/normal.json: Cpython UZ 題目頁解析測試資料（情境：normal）。
+- tests/data/cs-academy/problem/normal.json: Cs Academy 題目頁解析測試資料（情境：normal）。
+- tests/data/cses/contest/normal.json: Cses 比賽頁解析測試資料（情境：normal）。
+- tests/data/cses/problem/code_blocks_in_statement.json: Cses 題目頁解析測試資料（情境：code_blocks_in_statement）。
+- tests/data/cses/problem/normal.json: Cses 題目頁解析測試資料（情境：normal）。
+- tests/data/dmoj/contest/normal.json: Dmoj 比賽頁解析測試資料（情境：normal）。
+- tests/data/dmoj/problem/contest-with-p-number.json: Dmoj 題目頁解析測試資料（情境：contest with p number）。
+- tests/data/dmoj/problem/contest-with-problem-number.json: Dmoj 題目頁解析測試資料（情境：contest with problem number）。
+- tests/data/dmoj/problem/contest-without-problem-number.json: Dmoj 題目頁解析測試資料（情境：contest without problem number）。
+- tests/data/dmoj/problem/normal.json: Dmoj 題目頁解析測試資料（情境：normal）。
+- tests/data/dmoj/problem/output-for-sample-input.json: Dmoj 題目頁解析測試資料（情境：output for sample input）。
+- tests/data/google-coding-competitions/problem/codejam.json: Google Coding Competitions 題目頁解析測試資料（情境：codejam）。
+- tests/data/google-coding-competitions/problem/kickstart-new.json: Google Coding Competitions 題目頁解析測試資料（情境：kickstart new）。
+- tests/data/google-coding-competitions/problem/kickstart.json: Google Coding Competitions 題目頁解析測試資料（情境：kickstart）。
+- tests/data/google-coding-competitions/problem/multiple-samples.json: Google Coding Competitions 題目頁解析測試資料（情境：multiple samples）。
+- tests/data/hackerearth/problem/normal.json: Hackerearth 題目頁解析測試資料（情境：normal）。
+- tests/data/hdoj/contest/normal.json: Hdoj 比賽頁解析測試資料（情境：normal）。
+- tests/data/hdoj/problem/contest-problem.json: Hdoj 題目頁解析測試資料（情境：contest problem）。
+- tests/data/hdoj/problem/normal.json: Hdoj 題目頁解析測試資料（情境：normal）。
+- tests/data/hrbust-online-judge/problem/input-padding.json: Hrbust Online Judge 題目頁解析測試資料（情境：input padding）。
+- tests/data/hrbust-online-judge/problem/normal.json: Hrbust Online Judge 題目頁解析測試資料（情境：normal）。
+- tests/data/hydro/problem/normal.json: Hydro 題目頁解析測試資料（情境：normal）。
+- tests/data/infoarena/problem/interactive-stdin-first.json: Infoarena 題目頁解析測試資料（情境：interactive stdin first）。
+- tests/data/infoarena/problem/interactive-stdout-first.json: Infoarena 題目頁解析測試資料（情境：interactive stdout first）。
+- tests/data/infoarena/problem/multiple-examples.json: Infoarena 題目頁解析測試資料（情境：multiple examples）。
+- tests/data/infoarena/problem/normal.json: Infoarena 題目頁解析測試資料（情境：normal）。
+- tests/data/jutge/problem/interactive.json: Jutge 題目頁解析測試資料（情境：interactive）。
+- tests/data/jutge/problem/normal.json: Jutge 題目頁解析測試資料（情境：normal）。
+- tests/data/kattis/contest/normal.json: Kattis 比賽頁解析測試資料（情境：normal）。
+- tests/data/kattis/problem/interactive-1.json: Kattis 題目頁解析測試資料（情境：interactive 1）。
+- tests/data/kattis/problem/interactive-2.json: Kattis 題目頁解析測試資料（情境：interactive 2）。
+- tests/data/kattis/problem/lines-ending-with-spaces.json: Kattis 題目頁解析測試資料（情境：lines ending with spaces）。
+- tests/data/kattis/problem/no-output.json: Kattis 題目頁解析測試資料（情境：no output）。
+- tests/data/kattis/problem/normal.json: Kattis 題目頁解析測試資料（情境：normal）。
+- tests/data/kilonova/contest/normal.json: Kilonova 比賽頁解析測試資料（情境：normal）。
+- tests/data/kilonova/problem/console.json: Kilonova 題目頁解析測試資料（情境：console）。
+- tests/data/kilonova/problem/file.json: Kilonova 題目頁解析測試資料（情境：file）。
+- tests/data/kilonova/problem/multiple-examples.json: Kilonova 題目頁解析測試資料（情境：multiple examples）。
+- tests/data/library-checker-old/problem/normal.json: Library Checker Old 題目頁解析測試資料（情境：normal）。
+- tests/data/library-checker/problem/normal.json: Library Checker 題目頁解析測試資料（情境：normal）。
+- tests/data/libreoj/contest/normal.json: Libreoj 比賽頁解析測試資料（情境：normal）。
+- tests/data/libreoj/problem/normal.json: Libreoj 題目頁解析測試資料（情境：normal）。
+- tests/data/lightoj/problem/normal.json: Lightoj 題目頁解析測試資料（情境：normal）。
+- tests/data/meta-coding-competitions/problem/normal.json: Meta Coding Competitions 題目頁解析測試資料（情境：normal）。
+- tests/data/mr-judge/problem/normal.json: Mr Judge 題目頁解析測試資料（情境：normal）。
+- tests/data/neps-academy/problem/lesson-br.json: Neps Academy 題目頁解析測試資料（情境：lesson br）。
+- tests/data/neps-academy/problem/lesson.json: Neps Academy 題目頁解析測試資料（情境：lesson）。
+- tests/data/neps-academy/problem/normal-br.json: Neps Academy 題目頁解析測試資料（情境：normal br）。
+- tests/data/neps-academy/problem/normal.json: Neps Academy 題目頁解析測試資料（情境：normal）。
+- tests/data/nerdarena/problem/multiple-examples.json: Nerdarena 題目頁解析測試資料（情境：multiple examples）。
+- tests/data/nerdarena/problem/normal.json: Nerdarena 題目頁解析測試資料（情境：normal）。
+- tests/data/noj/problem/multiple-samples.json: Noj 題目頁解析測試資料（情境：multiple samples）。
+- tests/data/noj/problem/normal.json: Noj 題目頁解析測試資料（情境：normal）。
+- tests/data/omega-up/problem/normal.json: Omega Up 題目頁解析測試資料（情境：normal）。
+- tests/data/open-judge/contest/normal.json: Open Judge 比賽頁解析測試資料（情境：normal）。
+- tests/data/open-judge/problem/normal.json: Open Judge 題目頁解析測試資料（情境：normal）。
+- tests/data/otog/problem/normal.json: Otog 題目頁解析測試資料（情境：normal）。
+- tests/data/pbinfo/problem/console.json: Pbinfo 題目頁解析測試資料（情境：console）。
+- tests/data/pbinfo/problem/file.json: Pbinfo 題目頁解析測試資料（情境：file）。
+- tests/data/pbinfo/problem/multiple-examples.json: Pbinfo 題目頁解析測試資料（情境：multiple examples）。
+- tests/data/pbinfo/problem/new-console.json: Pbinfo 題目頁解析測試資料（情境：new console）。
+- tests/data/pbinfo/problem/new-file.json: Pbinfo 題目頁解析測試資料（情境：new file）。
+- tests/data/pbinfo/problem/new-multiple-examples.json: Pbinfo 題目頁解析測試資料（情境：new multiple examples）。
+- tests/data/peg-judge/problem/normal.json: Peg Judge 題目頁解析測試資料（情境：normal）。
+- tests/data/poj/contest/normal.json: Poj 比賽頁解析測試資料（情境：normal）。
+- tests/data/poj/problem/normal.json: Poj 題目頁解析測試資料（情境：normal）。
+- tests/data/poj/problem/with-source.json: Poj 題目頁解析測試資料（情境：with source）。
+- tests/data/robocontest/contest/normal.json: Robocontest 比賽頁解析測試資料（情境：normal）。
+- tests/data/robocontest/problem/normal.json: Robocontest 題目頁解析測試資料（情境：normal）。
+- tests/data/robocontest/problem/olympiad.json: Robocontest 題目頁解析測試資料（情境：olympiad）。
+- tests/data/sdut-online-judge/problem/normal.json: Sdut Online Judge 題目頁解析測試資料（情境：normal）。
+- tests/data/spoj/problem/multiple-blocks.json: Spoj 題目頁解析測試資料（情境：multiple blocks）。
+- tests/data/spoj/problem/one-block-1.json: Spoj 題目頁解析測試資料（情境：one block 1）。
+- tests/data/spoj/problem/one-block-2.json: Spoj 題目頁解析測試資料（情境：one block 2）。
+- tests/data/spoj/problem/one-block-3.json: Spoj 題目頁解析測試資料（情境：one block 3）。
+- tests/data/spoj/problem/one-block-4.json: Spoj 題目頁解析測試資料（情境：one block 4）。
+- tests/data/spoj/problem/two-blocks.json: Spoj 題目頁解析測試資料（情境：two blocks）。
+- tests/data/ssoier/problem/extended-problem-set.json: Ssoier 題目頁解析測試資料（情境：extended problem set）。
+- tests/data/ssoier/problem/normal.json: Ssoier 題目頁解析測試資料（情境：normal）。
+- tests/data/timus-online-judge/contest/normal.json: Timus Online Judge 比賽頁解析測試資料（情境：normal）。
+- tests/data/timus-online-judge/problem/example-test-cases-one-column.json: Timus Online Judge 題目頁解析測試資料（情境：example test cases one column）。
+- tests/data/timus-online-judge/problem/normal.json: Timus Online Judge 題目頁解析測試資料（情境：normal）。
+- tests/data/timus-online-judge/problem/russian.json: Timus Online Judge 題目頁解析測試資料（情境：russian）。
+- tests/data/tlx/problem/from_contest_en.json: Tlx 題目頁解析測試資料（情境：from_contest_en）。
+- tests/data/tlx/problem/from_contest_id.json: Tlx 題目頁解析測試資料（情境：from_contest_id）。
+- tests/data/tlx/problem/from_problemset_en.json: Tlx 題目頁解析測試資料（情境：from_problemset_en）。
+- tests/data/tlx/problem/from_problemset_id.json: Tlx 題目頁解析測試資料（情境：from_problemset_id）。
+- tests/data/toph/problem/normal.json: Toph 題目頁解析測試資料（情境：normal）。
+- tests/data/toph/problem/samples-not-in-table.json: Toph 題目頁解析測試資料（情境：samples not in table）。
+- tests/data/toph/problem/time-limit-in-ms.json: Toph 題目頁解析測試資料（情境：time limit in ms）。
+- tests/data/udebug/problem/normal.json: Udebug 題目頁解析測試資料（情境：normal）。
+- tests/data/uoj/contest/public-judge.json: Uoj 比賽頁解析測試資料（情境：public judge）。
+- tests/data/uoj/contest/uoj.json: Uoj 比賽頁解析測試資料（情境：uoj）。
+- tests/data/uoj/problem/daimayuan-online-judge.json: Uoj 題目頁解析測試資料（情境：daimayuan online judge）。
+- tests/data/uoj/problem/public-judge.json: Uoj 題目頁解析測試資料（情境：public judge）。
+- tests/data/uoj/problem/uoj.json: Uoj 題目頁解析測試資料（情境：uoj）。
+- tests/data/usaco/problem/interactive.json: Usaco 題目頁解析測試資料（情境：interactive）。
+- tests/data/usaco/problem/multiple-sample-cases.json: Usaco 題目頁解析測試資料（情境：multiple sample cases）。
+- tests/data/usaco/problem/normal.json: Usaco 題目頁解析測試資料（情境：normal）。
+- tests/data/virtual-judge/contest/normal.json: Virtual Judge 比賽頁解析測試資料（情境：normal）。
+- tests/data/virtual-judge/problem/51nod.json: Virtual Judge 題目頁解析測試資料（情境：51nod）。
+- tests/data/virtual-judge/problem/aizu.json: Virtual Judge 題目頁解析測試資料（情境：aizu）。
+- tests/data/virtual-judge/problem/atcoder.json: Virtual Judge 題目頁解析測試資料（情境：atcoder）。
+- tests/data/virtual-judge/problem/codechef.json: Virtual Judge 題目頁解析測試資料（情境：codechef）。
+- tests/data/virtual-judge/problem/codeforces-file-input-output.json: Virtual Judge 題目頁解析測試資料（情境：codeforces file input output）。
+- tests/data/virtual-judge/problem/codeforces-gym-chinese.json: Virtual Judge 題目頁解析測試資料（情境：codeforces gym chinese）。
+- tests/data/virtual-judge/problem/codeforces-gym.json: Virtual Judge 題目頁解析測試資料（情境：codeforces gym）。
+- tests/data/virtual-judge/problem/codeforces.json: Virtual Judge 題目頁解析測試資料（情境：codeforces）。
+- tests/data/virtual-judge/problem/csu.json: Virtual Judge 題目頁解析測試資料（情境：csu）。
+- tests/data/virtual-judge/problem/e-olymp.json: Virtual Judge 題目頁解析測試資料（情境：e olymp）。
+- tests/data/virtual-judge/problem/fzu.json: Virtual Judge 題目頁解析測試資料（情境：fzu）。
+- tests/data/virtual-judge/problem/hdu.json: Virtual Judge 題目頁解析測試資料（情境：hdu）。
+- tests/data/virtual-judge/problem/hiho-coder.json: Virtual Judge 題目頁解析測試資料（情境：hiho coder）。
+- tests/data/virtual-judge/problem/hrbust.json: Virtual Judge 題目頁解析測試資料（情境：hrbust）。
+- tests/data/virtual-judge/problem/hysbz.json: Virtual Judge 題目頁解析測試資料（情境：hysbz）。
+- tests/data/virtual-judge/problem/kattis.json: Virtual Judge 題目頁解析測試資料（情境：kattis）。
+- tests/data/virtual-judge/problem/light-oj.json: Virtual Judge 題目頁解析測試資料（情境：light oj）。
+- tests/data/virtual-judge/problem/nbut.json: Virtual Judge 題目頁解析測試資料（情境：nbut）。
+- tests/data/virtual-judge/problem/openj-bailian.json: Virtual Judge 題目頁解析測試資料（情境：openj bailian）。
+- tests/data/virtual-judge/problem/openj-poj.json: Virtual Judge 題目頁解析測試資料（情境：openj poj）。
+- tests/data/virtual-judge/problem/poj.json: Virtual Judge 題目頁解析測試資料（情境：poj）。
+- tests/data/virtual-judge/problem/scu.json: Virtual Judge 題目頁解析測試資料（情境：scu）。
+- tests/data/virtual-judge/problem/sgu.json: Virtual Judge 題目頁解析測試資料（情境：sgu）。
+- tests/data/virtual-judge/problem/spoj.json: Virtual Judge 題目頁解析測試資料（情境：spoj）。
+- tests/data/virtual-judge/problem/topcoder.json: Virtual Judge 題目頁解析測試資料（情境：topcoder）。
+- tests/data/virtual-judge/problem/ural.json: Virtual Judge 題目頁解析測試資料（情境：ural）。
+- tests/data/virtual-judge/problem/uva-live.json: Virtual Judge 題目頁解析測試資料（情境：uva live）。
+- tests/data/virtual-judge/problem/uva.json: Virtual Judge 題目頁解析測試資料（情境：uva）。
+- tests/data/virtual-judge/problem/zoj-3209.json: Virtual Judge 題目頁解析測試資料（情境：zoj 3209）。
+- tests/data/virtual-judge/problem/zoj-3496.json: Virtual Judge 題目頁解析測試資料（情境：zoj 3496）。
+- tests/data/zoj/problem/normal.json: Zoj 題目頁解析測試資料（情境：normal）。
+- tests/data/zufeoj/contest/normal.json: Zufeoj 比賽頁解析測試資料（情境：normal）。
+- tests/data/zufeoj/problem/normal.json: Zufeoj 題目頁解析測試資料（情境：normal）。
+- tests/parsers.spec.ts: 解析器主測試。
+- tsconfig.json: TypeScript 編譯設定。

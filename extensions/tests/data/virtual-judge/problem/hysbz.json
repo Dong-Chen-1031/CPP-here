@@ -1,0 +1,31 @@
+{
+  "url": "https://vjudge.net/problem/HYSBZ-1954",
+  "parser": "VirtualJudgeProblemParser",
+  "result": {
+    "name": "Pku3764 The xor-longest Path",
+    "group": "Virtual Judge - HYSBZ",
+    "url": "https://vjudge.net/problem/HYSBZ-1954",
+    "interactive": false,
+    "memoryLimit": 64,
+    "timeLimit": 1000,
+    "tests": [
+      {
+        "input": "4\n1 2 3\n2 3 4\n2 4 6\n",
+        "output": "7\n"
+      }
+    ],
+    "testType": "single",
+    "input": {
+      "type": "stdin"
+    },
+    "output": {
+      "type": "stdout"
+    },
+    "languages": {
+      "java": {
+        "mainClass": "Main",
+        "taskClass": "Pku3764TheXorLongestPath"
+      }
+    }
+  }
+}

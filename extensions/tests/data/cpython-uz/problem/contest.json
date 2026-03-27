@@ -1,0 +1,36 @@
+{
+  "url": "https://cpython.uz/competitions/contests/contest/297/problem/A",
+  "parser": "CPythonUZProblemParser",
+  "before": "beforeCPythonUZ",
+  "result": {
+    "name": "A. One Line | Divisible",
+    "group": "CPython.uz - One Line #8 | Feat. Less Code",
+    "url": "https://cpython.uz/competitions/contests/contest/297/problem/A",
+    "interactive": false,
+    "memoryLimit": 256,
+    "timeLimit": 500,
+    "tests": [
+      {
+        "input": "4\n2\n",
+        "output": "Yes\n"
+      },
+      {
+        "input": "2\n4\n",
+        "output": "No\n"
+      }
+    ],
+    "testType": "single",
+    "input": {
+      "type": "stdin"
+    },
+    "output": {
+      "type": "stdout"
+    },
+    "languages": {
+      "java": {
+        "mainClass": "Main",
+        "taskClass": "AOneLineDivisible"
+      }
+    }
+  }
+}
