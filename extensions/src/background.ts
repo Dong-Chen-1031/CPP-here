@@ -101,12 +101,28 @@ function waitForTabLoad(tabId: number): Promise<void> {
   });
 }
 
+async function dispatchExtEvent(tabId: number, payload: unknown): Promise<void> {
+  await browser.scripting.executeScript({
+    target: { tabId },
+    args: [payload],
+    func: injectedPayload => {
+      window.dispatchEvent(new CustomEvent('ext', { detail: injectedPayload }));
+    },
+  });
+}
+
 async function sendTask(tabId: number, messageId: string, data: string): Promise<void> {
   try {
     // 1. 解析傳入的資料
     const parsedData = JSON.parse(data);
-    const targetUrl = 'https://cpp.doong.me/';
-    const eventPayload = parsedData.eventPayload;
+    const targetUrl = 'https://cpp.doong.me/*';
+    const targetEntry = 'https://cpp.doong.me/';
+    const eventPayload = parsedData.eventPayload ?? parsedData;
+
+    const permissionGranted = await browser.permissions.request({ origins: [targetUrl] });
+    if (!permissionGranted) {
+      throw new Error('Permission denied for https://cpp.doong.me/*');
+    }
 
     let targetTabId: number;
 
@@ -125,19 +141,15 @@ async function sendTask(tabId: number, messageId: string, data: string): Promise
       }
     } else {
       // 3b. 如果不存在，開啟一個新分頁
-      const exactUrl = targetUrl.replace('/*', '');
-      const newTab = await browser.tabs.create({ url: exactUrl, active: true });
+      const newTab = await browser.tabs.create({ url: targetEntry, active: true });
       targetTabId = newTab.id!;
 
       // 等待新分頁載入完成
       await waitForTabLoad(targetTabId);
     }
 
-    // 4. 對該目標分頁觸發 Event (發送訊息給目標分頁的 Content Script)
-    await browser.tabs.sendMessage(targetTabId, {
-      action: 'TRIGGER_TARGET_EVENT',
-      payload: eventPayload,
-    });
+    // 4. 在頁面主世界觸發 ext 事件，讓站點可以直接 window.addEventListener('ext', ...) 監聽
+    await dispatchExtEvent(targetTabId, eventPayload);
 
     // 5. 任務成功，回傳結果給原本發起請求的 Content Script
     sendToContent(tabId, MessageAction.SendTaskDone, { messageId });
@@ -179,9 +191,9 @@ async function handleMessage(message: Message | any, sender: Runtime.MessageSend
   }
 
   if (message.action === MessageAction.SendTask) {
-    sendTask(sender.tab.id, message.payload.messageId, message.payload.message);
+    void sendTask(sender.tab.id, message.payload.messageId, message.payload.message);
   } else if (message.action === MessageAction.Fetch) {
-    makeRequest(
+    void makeRequest(
       sender.tab.id,
       message.payload.messageId,
       message.payload.url,

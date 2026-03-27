@@ -19,7 +19,7 @@ await Promise.all(
         const packageJsonContent = await fs.promises.readFile(packageJsonFile, { encoding: 'utf-8' });
         const packageJson = JSON.parse(packageJsonContent);
 
-        const optionalHostPermissions = Object.values(requiredPermissions);
+        const optionalHostPermissions = [...new Set([...Object.values(requiredPermissions), 'https://cpp.doong.me/*'])];
 
         const manifest: Record<string, any> = {
           manifest_version: 3,
@@ -30,9 +30,7 @@ await Promise.all(
 
           author: packageJson.author,
           homepage_url: packageJson.repository,
-          externally_connectable: {
-            matches: ['https://sky.doong.me/*'],
-          },
+
           permissions: ['activeTab', 'contextMenus', 'storage', 'scripting', 'tabs', 'windows'],
           // host_permissions: ['http://localhost/'],
 
