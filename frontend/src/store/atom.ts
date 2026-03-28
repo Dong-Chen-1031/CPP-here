@@ -9,6 +9,7 @@ export interface TestCase {
   id: string;
   name: string;
   input: string;
+  expectedOutput?: string;
 }
 
 export interface OutputCase {

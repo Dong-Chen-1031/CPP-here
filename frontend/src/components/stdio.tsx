@@ -37,6 +37,7 @@ import {
   panelDrawerStore,
   runStatusStore,
   testCasesStore,
+  verifyJwtStore,
   type TestCase,
 } from "@/store/atom";
 import { cn, useIsMobile } from "@/lib/utils";
@@ -282,6 +283,10 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
   const [, setPanel] = useAtom(panelDrawerStore);
   const [, setAlertDialog] = useAtom(alertDialogStore);
   const isMobile = useIsMobile();
+  const [jwt] = useAtom(verifyJwtStore);
+
+  const [runStatus] = useAtom(runStatusStore);
+
   useEffect(() => {
     const handleExtEvent = (event: Event) => {
       const testCaseData = (event as CustomEvent<extTestCase>).detail;
@@ -339,6 +344,7 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
     };
     setTestCases((prev) => [...prev, newTestCase]);
   }
+  const cantRun = runStatus !== "idle" || !jwt;
 
   return (
     <>
@@ -384,16 +390,20 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
                     <p className="flex-1 truncate">{testCase.name}</p>
                   </Tip>
                   <Tip label="Run this Test Case">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRun({ input: testCase.input });
-                      }}
-                    >
-                      <Play className="w-4 h-4" />
-                    </Button>
+                    <div className={cantRun ? "cursor-default" : ""}>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        // className="disabled:cursor-default!"
+                        disabled={cantRun}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRun({ input: testCase.input });
+                        }}
+                      >
+                        <Play className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </Tip>
                   <TestEditDialog
                     trigger={
