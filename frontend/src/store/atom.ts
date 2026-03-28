@@ -50,7 +50,7 @@ export const editorErrorStore = atomWithStorage<
 
 export const codeStore = atomWithStorage<string>(
   "code",
-  `#include <iostream>\nusing namespace std;\n\nint main() {\n  cout << "Hello C++ Here";\n  return 0;\n}`,
+  `#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello C++ Here";\n    return 0;\n}`,
 );
 export const cppVersionStore = atomWithStorage<string>("cppVersion", "c++17");
 export const inputStore = atomWithStorage<string>("input", "");

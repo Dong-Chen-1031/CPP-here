@@ -4,7 +4,7 @@ import { cpp } from "@codemirror/lang-cpp";
 // import { oneDark } from "@codemirror/theme-one-dark";
 import { vscodeDarkInit } from "@uiw/codemirror-theme-vscode";
 import { EditorView } from "@codemirror/view";
-
+import { indentUnit } from "@codemirror/language";
 import {
   autocompletion,
   type CompletionContext,
@@ -197,6 +197,7 @@ function CppEditor({
           autocompletion({ override: [cppCompletions] }),
           EditorView.lineWrapping,
           errorField,
+          indentUnit.of("    "),
           ...extensions,
         ]}
         onChange={handleChange}
