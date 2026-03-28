@@ -8,11 +8,27 @@
 
 html {
   font-family:
-    "JetBrainsMono", ui-monospace, "SFMono-Regular", "Menlo", "Monaco",
-    "Consolas", "Liberation Mono", "Courier New", "LiHei Pro", "黑體-繁",
-    "微軟正黑體";
+    "JetBrains Mono", "JetBrainsMono", "Cascadia Code", "SFMono-Regular",
+    "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New",
+    "Noto Sans Mono", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei",
+    "微軟正黑體", "ui-monospace", monospace;
+
+  font-variant-numeric: tabular-nums;
+  font-style: normal;
 }
 
+.inter {
+  font-family: "Inter", "Noto Sans Mono", sans-serif;
+  font-optical-sizing: auto;
+}
+
+code {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.855em;
+  padding: 2px;
+  background: oklch(from var(--background) calc(l + 0.1) c h);
+}
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;

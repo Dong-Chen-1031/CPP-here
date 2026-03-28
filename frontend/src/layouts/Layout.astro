@@ -31,6 +31,13 @@ const lsVersion = {
     <meta name="apple-mobile-web-app-title" content="C++ Here" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="generator" content={Astro.generator} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@100..800&family=Noto+Sans+Mono:wght@100..900&family=Noto+Sans+TC:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
 
     <title>C++ Here</title>
 
@@ -97,6 +104,15 @@ const lsVersion = {
           }
         });
     </script> -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+    </style>
   </head>
   <body>
     <slot />
@@ -106,13 +122,3 @@ const lsVersion = {
     <AlertDialogGood client:only="react" />
   </body>
 </html>
-
-<style>
-  html,
-  body {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  }
-</style>

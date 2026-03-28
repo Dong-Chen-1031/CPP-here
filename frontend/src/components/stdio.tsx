@@ -44,7 +44,6 @@ import { handleRun } from "@/api/run";
 import { AnimatePresence, motion } from "motion/react";
 import IconMotion from "./IconMotion";
 import { Spinner } from "./ui/spinner";
-import { AlertDialogGood } from "./Alert";
 interface EditDialogOptions {
   title?: string;
   name?: string;
@@ -285,18 +284,49 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
   const isMobile = useIsMobile();
   useEffect(() => {
     const handleExtEvent = (event: Event) => {
-      const customEvent = event as CustomEvent<extTestCase>;
-      console.log("Received ext event with payload:", customEvent.detail);
-      setAlertDialog;
-      ({
+      const testCaseData = (event as CustomEvent<extTestCase>).detail;
+      const testCases = testCaseData.tests.map((test, index) => ({
+        id: crypto.randomUUID(),
+        name: `${testCaseData.name} - Test ${index + 1}`,
+        input: test.input,
+      }));
+      console.log("Received ext event with payload:", testCaseData);
+      setAlertDialog({
         title: "Received Test Case from Extension",
-        description: `Test case "${customEvent.detail.name}" has been received. Do you want to add it to your test cases?`,
-        handleAction: () => {
-          console.log("Adding test case from extension:", customEvent.detail);
-        },
+        descriptionNode: (
+          <>
+            Test case <code>{testCaseData.name}</code> has been received. Would
+            you like to overwrite or insert the new test cases?
+          </>
+        ),
+        actions: [
+          {
+            text: "Overwrite",
+            onClick: () => {
+              setTestCases(testCases);
+              if (isMobile) {
+                setPanel("testCases");
+              }
+            },
+          },
+          {
+            text: "Insert",
+            autoFocus: true,
+            onClick: () => {
+              setTestCases((prev) => [...testCases, ...prev]);
+              if (isMobile) {
+                setPanel("testCases");
+              }
+            },
+          },
+        ],
+        cancelText: "Cancel",
       });
     };
     window.addEventListener("ext", handleExtEvent);
+
+    // @ts-ignore
+    window.eventListenerLoaded = true;
     return () => {
       window.removeEventListener("ext", handleExtEvent);
     };

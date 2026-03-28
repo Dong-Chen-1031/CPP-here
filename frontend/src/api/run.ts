@@ -374,7 +374,7 @@ export async function handleRunAll() {
   const testCases = store.get(testCasesStore);
   const code = store.get(codeStore);
   const cppVersion = store.get(cppVersionStore);
-  let exitCount = 0;
+  // let exitCount = 0;
 
   if (testCases.length === 0) {
     store.set(alertStore, (p) => [
@@ -406,7 +406,7 @@ export async function handleRunAll() {
   }
   const wasmModule = await url2WasmModule(response.wasm_url);
 
-  exitCount = 0;
+  // exitCount = 0;
 
   for (const testCase of testCases) {
     runCode(response.js_code, testCase.input, {
@@ -427,11 +427,11 @@ export async function handleRunAll() {
         });
       },
       onExit() {
-        exitCount += 1;
+        // exitCount += 1;
         // console.log(
         //   `Test case ${testCase.name} completed. (${exitCount}/${testCases.length})`,
         // );
-        if (exitCount === testCases.length) {
+        if (defaultStore.get(codeWorkersStore).length === 0) {
           store.set(runStatusStore, "idle");
         }
       },

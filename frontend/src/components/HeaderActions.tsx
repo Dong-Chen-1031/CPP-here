@@ -8,7 +8,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDownIcon, RotateCcw, TestTubes } from "lucide-react";
+import {
+  ChevronDownIcon,
+  CircleStopIcon,
+  RotateCcw,
+  SquareIcon,
+  TestTubes,
+} from "lucide-react";
 import { Play, UndoIcon, RedoIcon } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -22,8 +28,9 @@ import {
   SelectLabel,
 } from "@/components/ui/select";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useAtom } from "jotai";
+import { getDefaultStore, useAtom } from "jotai";
 import {
+  codeWorkersStore,
   cppVersionStore,
   editorRefStore,
   panelDrawerStore,
@@ -116,8 +123,10 @@ const MotionButtonLabel = React.forwardRef(function MotionButtonLabel(
   {
     children,
     lastWidthRef,
+    className = "",
     initial = true,
   }: {
+    className?: string;
     children: React.ReactNode;
     lastWidthRef: React.RefObject<number[]>;
     initial?: boolean;
@@ -163,7 +172,10 @@ const MotionButtonLabel = React.forwardRef(function MotionButtonLabel(
       // transition={{
       //   duration: 3,
       // }}
-      className="w-full h-full flex items-center justify-center gap-1 overflow-hidden whitespace-nowrap opacity-0"
+      className={cn(
+        "w-full h-full flex items-center justify-center gap-1 overflow-hidden whitespace-nowrap opacity-0",
+        className,
+      )}
     >
       {children}
     </motion.div>
@@ -179,12 +191,12 @@ export function RunButton({
 }) {
   const [runMode, setRunMode] = useAtom(runModeStore);
   const [jwt] = useAtom(verifyJwtStore);
-
+  const defaultStore = getDefaultStore();
   const [runStatus] = useAtom(runStatusStore);
   const lastWidthRef = React.useRef([8.2]);
   const isMobile = useIsMobile();
   const btnTextRef = React.useRef<HTMLSpanElement>(null);
-  const cantPress = !jwt || runStatus !== "idle";
+  const cantPress = !jwt || (runStatus !== "idle" && runStatus !== "running");
 
   return (
     <ButtonGroup className={className}>
@@ -205,12 +217,20 @@ export function RunButton({
         }
       >
         <Button
-          variant="outline"
+          variant={runStatus === "running" ? "destructive" : "outline"}
           className="overflow-hidden"
           // style={{ maxWidth: `${buttonMaxWidth}rem` }}
           disabled={cantPress}
           onClick={(e) => {
             if (cantPress) return;
+            if (runStatus === "running") {
+              defaultStore
+                .get(codeWorkersStore)
+                .forEach((worker) => worker.terminate());
+              defaultStore.set(runStatusStore, "idle");
+
+              return;
+            }
             if (runMode === "single") {
               handleRun();
             } else {
@@ -239,10 +259,15 @@ export function RunButton({
                 </span>
               </MotionButtonLabel>
             ) : runStatus === "running" ? (
-              <MotionButtonLabel key="running" lastWidthRef={lastWidthRef}>
-                <Spinner className="size-3" />
+              <MotionButtonLabel
+                key="running"
+                lastWidthRef={lastWidthRef}
+                className="relative"
+              >
+                {/* <Spinner></Spinner> */}
+                <SquareIcon className="" />
                 <span className="text-xs" id="runBtnText" ref={btnTextRef}>
-                  Running
+                  Stop
                 </span>
               </MotionButtonLabel>
             ) : runMode === "single" ? (
@@ -263,49 +288,63 @@ export function RunButton({
           </AnimatePresence>
         </Button>
       </Tip>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            className="p-1"
-            disabled={runStatus !== "idle" || !jwt}
-          >
-            <ChevronDownIcon />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="min-w-fit">
-          <DropdownMenuGroup>
-            {runMode === "single" ? (
-              <DropdownMenuItem
-                onClick={(e) => {
-                  setRunMode("all");
-                  handleRunAll();
-                  onClick(e);
-                }}
+      <AnimatePresence mode="popLayout">
+        {
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant={runStatus === "running" ? "destructive" : "outline"}
+                className="p-1"
+                disabled={cantPress || runStatus === "running"}
+                // asChild
               >
-                <TestTubes />
-                <Tip label="Run all test cases">
-                  <p className="text-xs">Run All</p>
-                </Tip>
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem
-                onClick={(e) => {
-                  setRunMode("single");
-                  handleRun();
-                  onClick(e);
-                }}
-                className="w-27"
-              >
-                <Play />
-                <Tip label="Run current input">
-                  <p className="text-xs flex-1">Run</p>
-                </Tip>
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+                {/* <motion.div
+                  layoutId="1111111"
+                  initial={{ x: -30, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: -30, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                > */}
+                <ChevronDownIcon />
+                {/* </motion.div> */}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-fit">
+              <DropdownMenuGroup>
+                {runMode === "single" ? (
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      setRunMode("all");
+                      handleRunAll();
+                      onClick(e);
+                    }}
+                  >
+                    <TestTubes />
+                    <Tip label="Run all test cases">
+                      <p className="text-xs">Run All</p>
+                    </Tip>
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      setRunMode("single");
+                      handleRun();
+                      onClick(e);
+                    }}
+                    className="w-27"
+                  >
+                    <Play />
+                    <Tip label="Run current input">
+                      <p className="text-xs flex-1">Run</p>
+                    </Tip>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        }
+      </AnimatePresence>
+
       {/* <Button variant="outline">Run in interactive</Button> */}
     </ButtonGroup>
   );

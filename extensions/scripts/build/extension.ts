@@ -20,14 +20,7 @@ await Promise.all(
         const packageJson = JSON.parse(packageJsonContent);
 
         const optionalHostPermissions = [
-          ...new Set([
-            ...Object.values(requiredPermissions),
-            'https://cpp.doong.me/*',
-            // 'http://localhost/*',
-            // 'https://localhost/*',
-            // 'http://127.0.0.1/*',
-            // 'https://127.0.0.1/*',
-          ]),
+          ...new Set([...Object.values(requiredPermissions), 'http://127.0.0.1:4321/*']),
         ];
 
         const manifest: Record<string, any> = {
@@ -41,6 +34,7 @@ await Promise.all(
           homepage_url: packageJson.repository,
 
           permissions: ['activeTab', 'contextMenus', 'storage', 'scripting', 'tabs', 'windows'],
+          host_permissions: ['https://cpp.doong.me/*'],
 
           icons: {
             '16': 'icons/icon-16.png',
@@ -84,7 +78,6 @@ await Promise.all(
         };
 
         if (target === 'chrome') {
-          manifest.host_permissions = optionalHostPermissions;
           manifest.optional_host_permissions = optionalHostPermissions;
 
           manifest.background = {

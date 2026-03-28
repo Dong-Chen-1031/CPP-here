@@ -3,7 +3,7 @@ import { cn, useIsMobile } from "@/lib/utils";
 import { alertDialogStore, alertStore } from "@/store/atom";
 import { useAtom } from "jotai";
 import { AlertCircleIcon } from "lucide-react";
-import { use, useEffect } from "react";
+import { use, useEffect, type ReactElement } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
   AlertDialog,
@@ -69,9 +69,11 @@ export function Alerts() {
 export interface AlertDialogOptions {
   title?: string;
   description?: string;
-  actionText?: string;
+  actions?: { text: string; onClick: () => void; autoFocus?: boolean }[];
   cancelText?: string;
-  handleAction: () => void;
+  close?: boolean;
+
+  descriptionNode?: React.ReactNode;
 }
 
 export function AlertDialogGood() {
@@ -79,23 +81,33 @@ export function AlertDialogGood() {
   return (
     <>
       <AlertDialog
-        open={alertDialog !== null}
-        onOpenChange={() => setAlertDialog(null)}
+        open={alertDialog !== null && alertDialog?.close !== false}
+        onOpenChange={() =>
+          setAlertDialog((p) => (p ? { ...p, close: false } : null))
+        }
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{alertDialog?.title}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {alertDialog?.description || "This action cannot be undone. "}
+            <AlertDialogDescription className="inter">
+              {alertDialog?.descriptionNode ||
+                alertDialog?.description ||
+                "This action cannot be undone. "}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>
               {alertDialog?.cancelText || "Cancel"}
             </AlertDialogCancel>
-            <AlertDialogAction onClick={alertDialog?.handleAction}>
-              {alertDialog?.actionText || "Continue"}
-            </AlertDialogAction>
+            {alertDialog?.actions?.map((action, index) => (
+              <AlertDialogAction
+                key={index}
+                onClick={action.onClick}
+                autoFocus={action.autoFocus}
+              >
+                {action.text}
+              </AlertDialogAction>
+            ))}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

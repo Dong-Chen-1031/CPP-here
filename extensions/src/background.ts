@@ -83,15 +83,12 @@ function onContextMenu(info: Menus.OnClickData, tab: Tabs.Tab): void {
   }
 }
 
-// 輔助函式：等待分頁完全載入
 function waitForTabLoad(tabId: number): Promise<void> {
   return new Promise(resolve => {
-    // browser.tabs.get 直接回傳 Promise
     browser.tabs.get(tabId).then(tab => {
       if (tab.status === 'complete') {
         resolve();
       } else {
-        // 如果狀態還沒 complete，就掛載監聽器等待
         const listener = (updatedTabId: number, changeInfo: any) => {
           if (updatedTabId === tabId && changeInfo.status === 'complete') {
             browser.tabs.onUpdated.removeListener(listener);
@@ -108,8 +105,28 @@ async function dispatchExtEvent(tabId: number, payload: unknown): Promise<void> 
   await browser.scripting.executeScript({
     target: { tabId },
     args: [payload],
+    world: 'MAIN',
     func: injectedPayload => {
-      window.dispatchEvent(new CustomEvent('ext', { detail: injectedPayload }));
+      function waitForEventListener(): Promise<void> {
+        return new Promise(resolve => {
+          if ((window as any).eventListenerLoaded) {
+            resolve();
+          } else {
+            const checkInterval = setInterval(() => {
+              // console.log(window.eventListenerLoaded);
+              if ((window as any).eventListenerLoaded) {
+                clearInterval(checkInterval);
+                resolve();
+              }
+            }, 50);
+          }
+        });
+      }
+
+      waitForEventListener().then(() => {
+        console.log('Dispatching ext event with payload:', injectedPayload);
+        window.dispatchEvent(new CustomEvent('ext', { detail: injectedPayload }));
+      });
     },
   });
 }
@@ -127,9 +144,10 @@ function normalizeTargetUrl(rawTargetUrl: string): { pattern: string; entry: str
 
 async function ensurePermissionsOnGesture(origins: string[]): Promise<void> {
   const combinedOrigins = [...new Set([...origins, targetPermissionPattern])];
-  const granted = await browser.permissions.contains({ origins: combinedOrigins });
+  const granted = await browser.permissions.request({ origins: combinedOrigins });
+
   if (!granted) {
-    throw new Error(`Missing host permissions for ${combinedOrigins.join(', ')}`);
+    throw new Error(`User denied host permissions for ${combinedOrigins.join(', ')}`);
   }
 }
 
@@ -147,11 +165,6 @@ async function sendTask(tabId: number, messageId: string, data: string): Promise
     const { pattern: targetUrl, entry: targetEntry } = normalizeTargetUrl(configuredTargetUrl);
     targetPermissionPattern = targetUrl;
     const eventPayload = parsedData.eventPayload ?? parsedData;
-
-    const permissionGranted = await browser.permissions.contains({ origins: [targetUrl] });
-    if (!permissionGranted) {
-      throw new Error(`No host permission for ${targetUrl}. Click the extension action once to grant it.`);
-    }
 
     let targetTabId: number;
 
