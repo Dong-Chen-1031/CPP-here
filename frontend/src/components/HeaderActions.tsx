@@ -1,4 +1,6 @@
 import * as React from "react";
+import "../lib/i18n";
+
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { ButtonGroup } from "@/components/ui/button-group";

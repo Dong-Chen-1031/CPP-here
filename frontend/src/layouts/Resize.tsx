@@ -105,7 +105,7 @@ export function SplitViewEditor() {
 
   useEffect(() => {
     setLoaded(true);
-    console.log("SplitViewEditor loaded");
+    // console.log("SplitViewEditor loaded");
     if (document.location.origin === "https://cpp-here.pages.dev") {
       setAlert((p) => [
         ...p,
