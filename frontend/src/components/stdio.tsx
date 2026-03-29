@@ -45,6 +45,7 @@ import { handleRun } from "@/api/run";
 import { AnimatePresence, motion } from "motion/react";
 import IconMotion from "./IconMotion";
 import { Spinner } from "./ui/spinner";
+import { useTranslation } from "react-i18next";
 interface EditDialogOptions {
   title?: string;
   name?: string;
@@ -453,6 +454,7 @@ export function OutputPanel({ drawer = false }: { drawer?: boolean }) {
   const [copied, setCopied] = React.useState(false);
   const [cleared, setCleared] = React.useState(false);
   const [runStatus] = useAtom(runStatusStore);
+  const { t } = useTranslation("editor");
   return (
     <div
       className={cn(
@@ -462,7 +464,7 @@ export function OutputPanel({ drawer = false }: { drawer?: boolean }) {
     >
       <div className="flex gap-2 items-center">
         <SquareTerminal className="w-3 h-3 shrink-0" />
-        <p className="text-sm truncate">Output</p>
+        <p className="text-sm truncate">{t("output")}</p>
         <div className="flex-1"></div>
         <Tip label="Copy first output">
           <Button
