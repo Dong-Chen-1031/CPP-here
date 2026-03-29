@@ -18,7 +18,7 @@
       "titleCreate": "New Test Case",
       "title": "Edit Test Case",
       "caseNameLabel": "Case Name",
-      "saveBtn": "Save",
+      "saveBtn": "儲存",
       "inputLabel": "Input",
       "inputPlaceholder": "Type your input here."
     },
@@ -29,7 +29,7 @@
         "description": "Test case {{problemName}} has been received. Would\nyou like to overwrite or insert the new test cases?",
         "overwrite": "Overwrite",
         "insert": "Insert",
-        "cancel": "Cancel"
+        "cancel": "取消"
       }
     }
   }
