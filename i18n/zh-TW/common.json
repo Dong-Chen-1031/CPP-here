@@ -1,11 +1,11 @@
 {
-  "copy": "Copy",
-  "clear": "Clear",
-  "save": "Save",
-  "create": "Create",
-  "cancel": "Cancel",
+  "copy": "複製",
+  "clear": "清除",
+  "save": "儲存",
+  "create": "建立",
+  "cancel": "取消",
   "runStatus": {
-    "running": "Running",
-    "building": "Building"
+    "running": "運行中",
+    "building": "建置中"
   }
 }
