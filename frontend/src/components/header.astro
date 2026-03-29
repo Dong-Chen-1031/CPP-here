@@ -10,17 +10,17 @@ import { Commands } from "./Commands";
   <div class="flex-1 min-w-0"></div>
 
   <div class="hidden md:block">
-    <HeaderActions client:load />
+    <HeaderActions client:only="react" />
   </div>
 
   <div class="flex md:hidden shrink min-w-0 h-7 overflow-hidden items-start">
     <div
       class="flex flex-row-reverse flex-wrap justify-start items-center content-start gap-1"
     >
-      <RunButton client:load className="shrink-0" />
-      <Commands client:load className="shrink-0" />
+      <RunButton client:only="react" className="shrink-0" />
+      <Commands client:only="react" className="shrink-0" />
       <div class="shrink-0 flex items-center">
-        <UndoRedo client:load />
+        <UndoRedo client:only="react" />
       </div>
     </div>
   </div>
