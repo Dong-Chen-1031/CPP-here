@@ -6,10 +6,13 @@ import { vscodeDarkInit } from "@uiw/codemirror-theme-vscode";
 import { EditorView } from "@codemirror/view";
 import { indentUnit } from "@codemirror/language";
 import {
+  acceptCompletion,
   autocompletion,
   type CompletionContext,
   type CompletionResult,
 } from "@codemirror/autocomplete";
+import { Prec } from "@codemirror/state";
+import { keymap } from "@codemirror/view";
 import { cppKeywords } from "../config/cppKeywords";
 import {
   codeStore,
@@ -198,6 +201,14 @@ function CppEditor({
           EditorView.lineWrapping,
           errorField,
           indentUnit.of("    "),
+          Prec.highest(
+            keymap.of([
+              {
+                key: "Tab",
+                run: acceptCompletion, // 如果選單開啟，按下 Tab 就選取補全
+              },
+            ]),
+          ),
           ...extensions,
         ]}
         onChange={handleChange}
