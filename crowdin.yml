@@ -1,2 +1,5 @@
 bundles:
   - 1
+files:
+  - source: /i18n/en/*.json
+    translation: /i18n/%locale%/%file_name%.%file_extension%
