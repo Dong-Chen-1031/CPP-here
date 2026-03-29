@@ -51,17 +51,17 @@ interface EditDialogOptions {
   name?: string;
   input?: string;
   submitBtnName?: string;
-  tips?: string;
+  tip?: string;
   handleSubmit?: (name: string, input: string) => void;
 }
 
 export function TestEditDialog({
   trigger,
-  title = "New Test Case",
-  name = "Test Case 1",
+  title,
+  name,
   input = "",
-  tips = "",
-  submitBtnName = "Create",
+  tip = "",
+  submitBtnName,
   handleSubmit = (n, i) => {
     console.log(n, i);
   },
@@ -69,6 +69,14 @@ export function TestEditDialog({
   const [open, setOpen] = React.useState(false);
   const caseNameRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const { t } = useTranslation(["editor", "common"]);
+
+  if (!submitBtnName) {
+    submitBtnName = t("common:create");
+  }
+  if (!title) {
+    title = t("testCase.editDialog.titleCreate");
+  }
 
   function handleSubmitWrapper() {
     const name = caseNameRef.current?.value || "";
@@ -87,8 +95,8 @@ export function TestEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {tips ? (
-        <Tip label={tips}>
+      {tip ? (
+        <Tip label={tip}>
           <DialogTrigger asChild>{trigger}</DialogTrigger>
         </Tip>
       ) : (
@@ -104,7 +112,9 @@ export function TestEditDialog({
         </DialogHeader>
         <FieldGroup className="p-2">
           <Field>
-            <Label htmlFor="name-1">Case Name</Label>
+            <Label htmlFor="name-1">
+              {t("testCase.editDialog.caseNameLabel")}
+            </Label>
             <Input
               id="name-1"
               name="name"
@@ -116,11 +126,13 @@ export function TestEditDialog({
             />
           </Field>
           <Field>
-            <Label htmlFor="username-1">Input</Label>
+            <Label htmlFor="username-1">
+              {t("testCase.editDialog.inputLabel")}
+            </Label>
             <Textarea
               className="h-50"
               name="input"
-              placeholder="Type your input here."
+              placeholder={t("testCase.editDialog.inputPlaceholder")}
               defaultValue={input}
               autoFocus
               onFocus={(e) => {
@@ -135,19 +147,19 @@ export function TestEditDialog({
           <Tip
             content={
               <>
-                Cancel <Kbd>Esc</Kbd>
+                {t("common:cancel")} <Kbd>Esc</Kbd>
               </>
             }
           >
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline">{t("common:cancel")}</Button>
             </DialogClose>
           </Tip>
 
           <Tip
             content={
               <>
-                Submit{" "}
+                {t("common:save")}{" "}
                 {navigator.platform.includes("Mac") ? (
                   <Kbd>⌘</Kbd>
                 ) : (
@@ -285,29 +297,40 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
   const [, setAlertDialog] = useAtom(alertDialogStore);
   const isMobile = useIsMobile();
   const [jwt] = useAtom(verifyJwtStore);
+  const { t } = useTranslation(["editor", "common"]);
 
   const [runStatus] = useAtom(runStatusStore);
 
   useEffect(() => {
     const handleExtEvent = (event: Event) => {
+      const alertDialogDescription = t(
+        "testCase.extension.alertDialog.description",
+        {
+          problemName: "||||",
+        },
+      ).split("||||");
       const testCaseData = (event as CustomEvent<extTestCase>).detail;
       const testCases = testCaseData.tests.map((test, index) => ({
         id: crypto.randomUUID(),
-        name: `${testCaseData.name} - Test ${index + 1}`,
+        name: t("testCase.extension.caseName", {
+          problemName: testCaseData.name,
+          index: index + 1,
+        }),
         input: test.input,
       }));
       console.log("Received ext event with payload:", testCaseData);
       setAlertDialog({
-        title: "Received Test Case from Extension",
+        title: t("testCase.extension.alertDialog.title"),
         descriptionNode: (
           <>
-            Test case <code>{testCaseData.name}</code> has been received. Would
-            you like to overwrite or insert the new test cases?
+            {alertDialogDescription[0]}
+            <code>{testCaseData.name}</code>
+            {alertDialogDescription[1]}
           </>
         ),
         actions: [
           {
-            text: "Overwrite",
+            text: t("testCase.extension.alertDialog.overwrite"),
             onClick: () => {
               setTestCases(testCases);
               if (isMobile) {
@@ -316,7 +339,7 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
             },
           },
           {
-            text: "Insert",
+            text: t("testCase.extension.alertDialog.insert"),
             autoFocus: true,
             onClick: () => {
               setTestCases((prev) => [...testCases, ...prev]);
@@ -326,11 +349,13 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
             },
           },
         ],
-        cancelText: "Cancel",
+        cancelText: t("testCase.extension.alertDialog.cancel"),
       });
     };
     window.addEventListener("ext", handleExtEvent);
 
+    // this is used by the extension to check if the event listener is loaded
+    // don't remove this or the extension won't work
     // @ts-ignore
     window.eventListenerLoaded = true;
     return () => {
@@ -357,24 +382,26 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
       >
         <div className="flex gap-2 items-center">
           <TestTubes className="w-3 h-3 shrink-0" />
-          <p className="text-sm truncate">Test Case</p>
+          <p className="text-sm truncate">{t("testCase.label")}</p>
           <div className="flex-1"></div>
           <TestEditDialog
-            tips="Add new test case"
+            tip={t("testCase.addTip")}
             trigger={
               <Button variant="outline" className="px-2">
                 <CirclePlus className="w-4 h-4" />
-                <span className="hidden @[250px]:inline">New</span>
+                <span className="hidden @[250px]:inline">
+                  {t("testCase.addBtn")}
+                </span>
               </Button>
             }
-            name={`test Case ${testCases.length + 1}`}
+            name={t("testCase.addDefaultName", { index: testCases.length + 1 })}
             handleSubmit={handleAddTestCase}
           />
         </div>
         <div className="mt-4 overflow-y-auto max-h-[calc(100%-2rem)]">
           {testCases.length === 0 ? (
             <p className="text-sm text-muted-foreground pl-2">
-              No test cases yet.
+              {t("testCase.noTestCases")}
             </p>
           ) : (
             <div className="flex flex-col gap-2">
@@ -387,10 +414,10 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
                     isMobile && setPanel("input");
                   }}
                 >
-                  <Tip label="Set Input to this Test Case">
+                  <Tip label={t("testCase.setInputTip")}>
                     <p className="flex-1 truncate">{testCase.name}</p>
                   </Tip>
-                  <Tip label="Run this Test Case">
+                  <Tip label={t("testCase.runTip")}>
                     <div className={cantRun ? "cursor-default" : ""}>
                       <Button
                         variant="outline"
@@ -412,11 +439,11 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
                         <Pencil className="w-4 h-4" />
                       </Button>
                     }
-                    tips="Edit test case"
-                    title="Edit Test Case"
+                    tip={t("testCase.editTip")}
+                    title={t("testCase.editDialog.title")}
                     name={testCase.name}
                     input={testCase.input}
-                    submitBtnName="Save"
+                    submitBtnName={t("testCase.editDialog.saveBtn")}
                     handleSubmit={(name, input) => {
                       setTestCases((prev) =>
                         prev.map((tc) =>
@@ -454,7 +481,7 @@ export function OutputPanel({ drawer = false }: { drawer?: boolean }) {
   const [copied, setCopied] = React.useState(false);
   const [cleared, setCleared] = React.useState(false);
   const [runStatus] = useAtom(runStatusStore);
-  const { t } = useTranslation("editor");
+  const { t } = useTranslation(["editor", "common"]);
   return (
     <div
       className={cn(
@@ -464,9 +491,9 @@ export function OutputPanel({ drawer = false }: { drawer?: boolean }) {
     >
       <div className="flex gap-2 items-center">
         <SquareTerminal className="w-3 h-3 shrink-0" />
-        <p className="text-sm truncate">{t("output")}</p>
+        <p className="text-sm truncate">{t("output.label")}</p>
         <div className="flex-1"></div>
-        <Tip label="Copy first output">
+        <Tip label={t("output.copyTip")}>
           <Button
             variant="outline"
             onClick={() => {
@@ -478,10 +505,12 @@ export function OutputPanel({ drawer = false }: { drawer?: boolean }) {
             disabled={output.length === 0}
           >
             <IconMotion show={copied} HideIcon={ClipboardCopy} />{" "}
-            <span className="hidden @[250px]:inline ml-2">Copy</span>
+            <span className="hidden @[250px]:inline ml-2">
+              {t("common:copy")}
+            </span>
           </Button>
         </Tip>
-        <Tip label="Clear output">
+        <Tip label={t("output.clearTip")}>
           <Button
             variant="outline"
             onClick={() => {
@@ -493,23 +522,29 @@ export function OutputPanel({ drawer = false }: { drawer?: boolean }) {
             disabled={output.length === 0}
           >
             <IconMotion show={cleared} HideIcon={Trash} />
-            <span className="hidden @[250px]:inline">Clear</span>
+            <span className="hidden @[250px]:inline">{t("common:clear")}</span>
           </Button>
         </Tip>
       </div>
       {runStatus === "building" ? (
         <div className="mt-4 flex-col flex justify-center w-full h-[90%] items-center gap-2">
           <Spinner></Spinner>
-          <p className="text-sm text-muted-foreground">Building</p>
+          <p className="text-sm text-muted-foreground">
+            {t("common:runStatus.building")}
+          </p>
         </div>
       ) : output.length === 0 && runStatus === "running" ? (
         <div className="mt-4 flex-col flex justify-center w-full h-[90%] items-center gap-2">
           <Spinner></Spinner>
-          <p className="text-sm text-muted-foreground">Running</p>
+          <p className="text-sm text-muted-foreground">
+            {t("common:runStatus.running")}
+          </p>
         </div>
       ) : output.length === 0 ? (
         <div className="mt-4">
-          <p className="text-sm text-muted-foreground pl-2">No output yet.</p>
+          <p className="text-sm text-muted-foreground pl-2">
+            {t("output.noOutput")}
+          </p>
         </div>
       ) : (
         <div className="mt-4 overflow-y-auto h-[calc(100%-2rem)] w-full">

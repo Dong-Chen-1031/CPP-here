@@ -1,1 +1,36 @@
-{ "output": "Output" }
+{
+  "output": {
+    "label": "Output",
+    "copyTip": "Copy first output",
+    "clearTip": "Clear output",
+    "noOutput": "No output yet."
+  },
+  "testCase": {
+    "label": "Test Case",
+    "addTip": "Add new test case",
+    "addBtn": "Add",
+    "defaultName": "Test Case {{index}}",
+    "noTestCase": "No test case yet.",
+    "setInputTip": "Set Input to this Test Case",
+    "runTip": "Run this Test Case",
+    "editTip": "Edit this Test Case",
+    "editDialog": {
+      "titleCreate": "New Test Case",
+      "title": "Edit Test Case",
+      "caseNameLabel": "Case Name",
+      "saveBtn": "Save",
+      "inputLabel": "Input",
+      "inputPlaceholder": "Type your input here."
+    },
+    "extension": {
+      "caseName": "{{problemName}} - Test {{index}}",
+      "alertDialog": {
+        "title": "Received Test Case from Extension",
+        "description": "Test case {{problemName}} has been received. Would\nyou like to overwrite or insert the new test cases?",
+        "overwrite": "Overwrite",
+        "insert": "Insert",
+        "cancel": "Cancel"
+      }
+    }
+  }
+}
