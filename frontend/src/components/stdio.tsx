@@ -394,7 +394,7 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
                 </span>
               </Button>
             }
-            name={t("testCase.addDefaultName", { index: testCases.length + 1 })}
+            name={t("testCase.defaultName", { index: testCases.length + 1 })}
             handleSubmit={handleAddTestCase}
           />
         </div>
