@@ -1,6 +1,8 @@
 build-chrome
 build-firefox
 
+frontend/public/i18n
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

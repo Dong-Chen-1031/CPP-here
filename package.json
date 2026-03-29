@@ -3,12 +3,13 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "frontend": "cd frontend && astro dev --host",
+    "copy-i18n": "cp -r ./i18n ./frontend/public/i18n",
+    "frontend": "bun copy-i18n && cd frontend && astro dev --host",
     "backend": "cd backend && python main.py",
     "dev": "PUBLIC_RUN_MODE=dev concurrently \"bun run frontend\" \"bun run backend\"",
-    "build": "cd frontend && astro build",
-    "preview": "cd frontend && astro preview",
-    "astro": "cd frontend && astro",
+    "build": "bun copy-i18n && cd frontend && astro build",
+    "preview": "bun copy-i18n && cd frontend && astro preview",
+    "astro": "bun copy-i18n && cd frontend && astro",
     "ext:chrome": "cd extensions && bun dev:chrome",
     "ext:firefox": "cd extensions && bun dev:firefox"
   },
