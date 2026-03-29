@@ -4,6 +4,7 @@ import { alertDialogStore, alertStore } from "@/store/atom";
 import { useAtom } from "jotai";
 import { AlertCircleIcon } from "lucide-react";
 import { use, useEffect, type ReactElement } from "react";
+import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "motion/react";
 import {
   AlertDialog,
@@ -78,6 +79,7 @@ export interface AlertDialogOptions {
 
 export function AlertDialogGood() {
   const [alertDialog, setAlertDialog] = useAtom(alertDialogStore);
+  const { t } = useTranslation(["editor", "common"]);
   return (
     <>
       <AlertDialog
@@ -92,12 +94,12 @@ export function AlertDialogGood() {
             <AlertDialogDescription className="inter">
               {alertDialog?.descriptionNode ||
                 alertDialog?.description ||
-                "This action cannot be undone. "}
+                t("editor:alert.defaultDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>
-              {alertDialog?.cancelText || "Cancel"}
+              {alertDialog?.cancelText || t("common:cancel")}
             </AlertDialogCancel>
             {alertDialog?.actions?.map((action, index) => (
               <AlertDialogAction

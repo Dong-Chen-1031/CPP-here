@@ -1,5 +1,6 @@
 import "../lib/i18n";
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -84,13 +85,14 @@ function MobileLayout({
 }
 
 function EditorLoader() {
+  const { t } = useTranslation(["editor"]);
   return (
     <div
       className={
         "w-full h-full flex flex-col gap-4 items-center justify-center top-0 left-0 pointer-events-none"
       }
     >
-      <p>Loading Editor</p>
+      <p>{t("resize.loadingEditor")}</p>
       <Spinner className="size-9" />
     </div>
   );

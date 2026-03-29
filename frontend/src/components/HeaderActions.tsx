@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
   DropdownMenu,
@@ -51,13 +52,14 @@ import { AnimatePresence, motion } from "motion/react";
 
 export function UndoRedo({ menu = false }: { menu?: boolean }) {
   const [editorGlobal] = useAtom(editorRefStore);
+  const { t } = useTranslation(["editor"]);
 
   return (
     <ButtonGroup>
       <Tip
         content={
           <>
-            Undo <Kbd>{commandKey}</Kbd>
+            {t("headerActions.undo")} <Kbd>{commandKey}</Kbd>
             <Kbd>Z</Kbd>
           </>
         }
@@ -65,7 +67,7 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
         <Button
           variant="outline"
           size={menu ? "sm" : "icon-sm"}
-          aria-label="Undo"
+          aria-label={t("headerActions.undo")}
           onClick={() => {
             if (editorGlobal?.current?.view) {
               undo(editorGlobal.current.view);
@@ -87,7 +89,7 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
       <Tip
         content={
           <>
-            Redo <Kbd>{commandKey}</Kbd>
+            {t("headerActions.redo")} <Kbd>{commandKey}</Kbd>
             <Kbd>⇧</Kbd>
             <Kbd>Z</Kbd>
           </>
@@ -96,7 +98,7 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
         <Button
           variant="outline"
           size={menu ? "sm" : "icon-sm"}
-          aria-label="Redo"
+          aria-label={t("headerActions.redo")}
           onClick={() => {
             if (editorGlobal?.current?.view) {
               redo(editorGlobal.current.view);
@@ -197,6 +199,7 @@ export function RunButton({
   const isMobile = useIsMobile();
   const btnTextRef = React.useRef<HTMLSpanElement>(null);
   const cantPress = !jwt || (runStatus !== "idle" && runStatus !== "running");
+  const { t } = useTranslation(["editor"]);
 
   return (
     <ButtonGroup className={className}>
@@ -205,12 +208,12 @@ export function RunButton({
         content={
           runMode === "single" ? (
             <>
-              Run Code <Kbd>{commandKey}</Kbd>
+              {t("headerActions.runCode")} <Kbd>{commandKey}</Kbd>
               <Kbd>⏎</Kbd>
             </>
           ) : (
             <>
-              Run all test cases <Kbd>{commandKey}</Kbd>
+              {t("headerActions.runAllTestCases")} <Kbd>{commandKey}</Kbd>
               <Kbd>⏎</Kbd>
             </>
           )
@@ -248,14 +251,14 @@ export function RunButton({
               >
                 <Spinner className="size-3" />
                 <span className="text-xs" id="runBtnText" ref={btnTextRef}>
-                  Verifying
+                  {t("headerActions.verifying")}
                 </span>
               </MotionButtonLabel>
             ) : runStatus === "building" ? (
               <MotionButtonLabel key="building" lastWidthRef={lastWidthRef}>
                 <Spinner className="size-3" />
                 <span className="text-xs" id="runBtnText" ref={btnTextRef}>
-                  Building
+                  {t("headerActions.building")}
                 </span>
               </MotionButtonLabel>
             ) : runStatus === "running" ? (
@@ -267,21 +270,21 @@ export function RunButton({
                 {/* <Spinner></Spinner> */}
                 <SquareIcon className="" />
                 <span className="text-xs" id="runBtnText" ref={btnTextRef}>
-                  Stop
+                  {t("headerActions.stop")}
                 </span>
               </MotionButtonLabel>
             ) : runMode === "single" ? (
               <MotionButtonLabel key="run" lastWidthRef={lastWidthRef}>
                 <Play />
                 <span id="runBtnText" ref={btnTextRef}>
-                  Run
+                  {t("headerActions.run")}
                 </span>
               </MotionButtonLabel>
             ) : (
               <MotionButtonLabel key="run-all" lastWidthRef={lastWidthRef}>
                 <TestTubes />
                 <span id="runBtnText" ref={btnTextRef}>
-                  Run All
+                  {t("headerActions.runAll")}
                 </span>
               </MotionButtonLabel>
             )}
@@ -320,8 +323,8 @@ export function RunButton({
                     }}
                   >
                     <TestTubes />
-                    <Tip label="Run all test cases">
-                      <p className="text-xs">Run All</p>
+                    <Tip label={t("headerActions.runAllTestCases")}>
+                      <p className="text-xs">{t("headerActions.runAll")}</p>
                     </Tip>
                   </DropdownMenuItem>
                 ) : (
@@ -334,8 +337,8 @@ export function RunButton({
                     className="w-27"
                   >
                     <Play />
-                    <Tip label="Run current input">
-                      <p className="text-xs flex-1">Run</p>
+                    <Tip label={t("headerActions.runCurrentInput")}>
+                      <p className="text-xs flex-1">{t("headerActions.run")}</p>
                     </Tip>
                   </DropdownMenuItem>
                 )}
@@ -358,10 +361,11 @@ export function ResetButton({
   onClick?: (e: React.MouseEvent) => void;
 }) {
   const resetAll = useResetAllAtoms();
+  const { t } = useTranslation(["editor"]);
 
   return (
     <ButtonGroup>
-      <Tip label="Reset Everything">
+      <Tip label={t("headerActions.resetEverything")}>
         <Button
           variant="outline"
           className={className}
@@ -371,7 +375,7 @@ export function ResetButton({
           }}
         >
           <RotateCcw />
-          Reset
+          {t("headerActions.resetBtn")}
         </Button>
       </Tip>
     </ButtonGroup>

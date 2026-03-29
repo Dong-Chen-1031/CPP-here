@@ -1,4 +1,39 @@
 {
+  "alert": {
+    "defaultDescription": "This action cannot be undone."
+  },
+  "commands": {
+    "menuBtn": "Menu",
+    "noResults": "No results found.",
+    "actionsGroup": "Actions",
+    "panelsGroup": "Panels",
+    "input": "Input",
+    "testCase": "Test Case",
+    "output": "Output"
+  },
+  "drawer": {
+    "openBtn": "Open Drawer",
+    "closeBtn": "Close",
+    "inputPanel": {
+      "title": "Input Panel",
+      "subTitle": "Type your custom input here."
+    },
+    "testCases": {
+      "title": "Test Cases",
+      "subTitle": "Click to set the test case to the input."
+    },
+    "output": {
+      "title": "Output",
+      "subTitle": "View the output of your code here."
+    }
+  },
+  "input": {
+    "label": "Input",
+    "pasteTip": "Paste from clipboard",
+    "pasteBtn": "Paste",
+    "clearTip": "Clear input",
+    "placeholder": "Type your input here."
+  },
   "output": {
     "label": "Output",
     "copyTip": "Copy first output",
@@ -14,6 +49,7 @@
     "setInputTip": "Set Input to this Test Case",
     "runTip": "Run this Test Case",
     "editTip": "Edit this Test Case",
+    "deleteTip": "Delete Test Case",
     "editDialog": {
       "titleCreate": "New Test Case",
       "title": "Edit Test Case",
@@ -32,5 +68,31 @@
         "cancel": "取消"
       }
     }
+  },
+  "headerActions": {
+    "undo": "Undo",
+    "redo": "Redo",
+    "runCode": "Run Code",
+    "runAllTestCases": "Run all test cases",
+    "runCurrentInput": "Run current input",
+    "verifying": "Verifying",
+    "building": "Building",
+    "stop": "Stop",
+    "run": "Run",
+    "runAll": "Run All",
+    "resetEverything": "Reset Everything",
+    "resetBtn": "Reset",
+    "shareCode": "Share Code"
+  },
+  "turnstile": {
+    "verificationFailed": "Verification Failed",
+    "verificationFailedDesc": "Failed to verify Turnstile token. Please try again later.",
+    "unsupported": "Turnstile Unsupported",
+    "unsupportedDesc": "Your browser does not support Turnstile. Please use a modern browser.",
+    "error": "Turnstile Error",
+    "errorDesc": "An error occurred during Turnstile verification. Please try reloading the page."
+  },
+  "resize": {
+    "loadingEditor": "Loading Editor"
   }
 }

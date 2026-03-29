@@ -182,6 +182,7 @@ export function InputPanel({ drawer = false }: { drawer?: boolean }) {
   const [input, setInput] = useAtom(inputStore);
   const [pasted, setPasted] = React.useState(false);
   const [cleared, setCleared] = React.useState(false);
+  const { t } = useTranslation(["editor", "common"]);
   return (
     <div
       className={cn(
@@ -191,10 +192,10 @@ export function InputPanel({ drawer = false }: { drawer?: boolean }) {
     >
       <div className="flex gap-2 items-center">
         <Keyboard className="w-3 h-3 shrink-0" />
-        <p className="text-sm truncate">Input</p>
+        <p className="text-sm truncate">{t("input.label")}</p>
         <div className="flex-1"></div>
 
-        <Tip label="Paste from clipboard">
+        <Tip label={t("input.pasteTip")}>
           <Button
             variant="outline"
             onClick={async () => {
@@ -205,10 +206,12 @@ export function InputPanel({ drawer = false }: { drawer?: boolean }) {
             className="px-2"
           >
             <IconMotion show={pasted} HideIcon={ClipboardPaste} />
-            <span className="hidden @[250px]:inline">Paste</span>
+            <span className="hidden @[250px]:inline">
+              {t("input.pasteBtn")}
+            </span>
           </Button>
         </Tip>
-        <Tip label="Clear input">
+        <Tip label={t("input.clearTip")}>
           <Button
             variant="outline"
             onClick={() => {
@@ -220,14 +223,14 @@ export function InputPanel({ drawer = false }: { drawer?: boolean }) {
             className="px-2"
           >
             <IconMotion show={cleared} HideIcon={Trash} />
-            <span className="hidden @[250px]:inline">Clear</span>
+            <span className="hidden @[250px]:inline">{t("common:clear")}</span>
           </Button>
         </Tip>
       </div>
       <div className="mt-4 overflow-y-auto h-[calc(100%-2rem)]">
         <Textarea
           className="text-xs!"
-          placeholder="Type your input here."
+          placeholder={t("input.placeholder")}
           value={input}
           onChange={(e) => {
             setInput(e.target.value);
@@ -401,7 +404,7 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
         <div className="mt-4 overflow-y-auto max-h-[calc(100%-2rem)]">
           {testCases.length === 0 ? (
             <p className="text-sm text-muted-foreground pl-2">
-              {t("testCase.noTestCases")}
+              {t("testCase.noTestCase")}
             </p>
           ) : (
             <div className="flex flex-col gap-2">
@@ -452,7 +455,7 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
                       );
                     }}
                   />
-                  <Tip label="Delete Test Case">
+                  <Tip label={t("testCase.deleteTip")}>
                     <Button
                       variant="outline"
                       size="icon"

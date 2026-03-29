@@ -1,5 +1,6 @@
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import axios from "axios";
 import config from "@/config/constants";
 import { useAtom } from "jotai";
@@ -10,6 +11,7 @@ export default function TurnstileWidget() {
   const [jwt, setJwt] = useAtom(verifyJwtStore);
   const [alerts, setAlert] = useAtom(alertStore);
   const [, setTurnstileRefGlobal] = useAtom(turnstileRefStore);
+  const { t } = useTranslation(["editor"]);
   useEffect(() => {
     setTurnstileRefGlobal(turnstileRef);
   }, []);
@@ -37,9 +39,8 @@ export default function TurnstileWidget() {
           setAlert((p) => [
             ...p,
             {
-              title: "Verification Failed",
-              description:
-                "Failed to verify Turnstile token. Please try again later.",
+              title: t("turnstile.verificationFailed"),
+              description: t("turnstile.verificationFailedDesc"),
               variant: "destructive",
               id: crypto.randomUUID(),
             },
@@ -52,9 +53,8 @@ export default function TurnstileWidget() {
         setAlert((p) => [
           ...p,
           {
-            title: "Turnstile Unsupported",
-            description:
-              "Your browser does not support Turnstile. Please use a modern browser.",
+            title: t("turnstile.unsupported"),
+            description: t("turnstile.unsupportedDesc"),
             variant: "destructive",
             id: crypto.randomUUID(),
           },
@@ -68,9 +68,8 @@ export default function TurnstileWidget() {
         setAlert((p) => [
           ...p,
           {
-            title: "Turnstile Error",
-            description:
-              "An error occurred during Turnstile verification. Please try reloading the page.",
+            title: t("turnstile.error"),
+            description: t("turnstile.errorDesc"),
             variant: "destructive",
             id: crypto.randomUUID(),
           },

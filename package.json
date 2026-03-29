@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "copy-i18n": "cp -r ./i18n ./frontend/public/i18n",
+    "copy-i18n": "cp -r ./i18n ./frontend/public/",
     "frontend": "bun copy-i18n && cd frontend && astro dev --host",
     "backend": "cd backend && python main.py",
     "dev": "PUBLIC_RUN_MODE=dev concurrently \"bun run frontend\" \"bun run backend\"",
