@@ -49,6 +49,7 @@ import { useResetAllAtoms } from "@/store/atom";
 import { cn, commandKey, useIsMobile } from "@/lib/utils";
 import { Kbd } from "./ui/kbd";
 import { AnimatePresence, motion } from "motion/react";
+import { useEffect } from "react";
 
 export function UndoRedo({ menu = false }: { menu?: boolean }) {
   const [editorGlobal] = useAtom(editorRefStore);
@@ -164,7 +165,7 @@ const MotionButtonLabel = React.forwardRef(function MotionButtonLabel(
       }
       layout
       animate={{ width: "auto", opacity: 1 }}
-      exit={{ width: "auto", opacity: 0 }}
+      // exit={{ width: "auto", opacity: 0 }}
       transition={{
         type: "spring",
         stiffness: 300,
@@ -196,13 +197,15 @@ export function RunButton({
   const defaultStore = getDefaultStore();
   const [runStatus] = useAtom(runStatusStore);
   const lastWidthRef = React.useRef([8.2]);
-  const isMobile = useIsMobile();
+  const runBtnGroupRef = React.useRef<HTMLDivElement>(
+    undefined,
+  ) as React.RefObject<HTMLDivElement>;
   const btnTextRef = React.useRef<HTMLSpanElement>(null);
   const cantPress = !jwt || (runStatus !== "idle" && runStatus !== "running");
   const { t } = useTranslation(["editor"]);
 
   return (
-    <ButtonGroup className={className}>
+    <ButtonGroup className={className} ref={runBtnGroupRef}>
       <Tip
         show={!cantPress}
         content={
@@ -291,62 +294,66 @@ export function RunButton({
           </AnimatePresence>
         </Button>
       </Tip>
-      <AnimatePresence mode="popLayout">
-        {
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant={runStatus === "running" ? "destructive" : "outline"}
-                className="p-1"
-                disabled={cantPress || runStatus === "running"}
-                // asChild
-              >
-                {/* <motion.div
+      {
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant={runStatus === "running" ? "destructive" : "outline"}
+              className="p-1"
+              disabled={cantPress || runStatus === "running"}
+              // asChild
+            >
+              {/* <motion.div
                   layoutId="1111111"
                   initial={{ x: -30, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: -30, opacity: 0 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 > */}
-                <ChevronDownIcon />
-                {/* </motion.div> */}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-fit">
-              <DropdownMenuGroup>
-                {runMode === "single" ? (
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      setRunMode("all");
-                      handleRunAll();
-                      onClick(e);
-                    }}
-                  >
-                    <TestTubes />
-                    <Tip label={t("headerActions.runAllTestCases")}>
-                      <p className="text-xs">{t("headerActions.runAll")}</p>
-                    </Tip>
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      setRunMode("single");
-                      handleRun();
-                      onClick(e);
-                    }}
-                    className="w-27"
-                  >
-                    <Play />
-                    <Tip label={t("headerActions.runCurrentInput")}>
-                      <p className="text-xs flex-1">{t("headerActions.run")}</p>
-                    </Tip>
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        }
-      </AnimatePresence>
+              <ChevronDownIcon />
+              {/* </motion.div> */}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="max-w-fit min-w-fit w-fit"
+          >
+            <DropdownMenuGroup>
+              {runMode === "single" ? (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    setRunMode("all");
+                    handleRunAll();
+                    onClick(e);
+                  }}
+                >
+                  <TestTubes />
+                  <Tip label={t("headerActions.runAllTestCases")}>
+                    <p className="text-xs flex-1 text-left">
+                      {t("headerActions.runAll")}
+                    </p>
+                  </Tip>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    setRunMode("single");
+                    handleRun();
+                    onClick(e);
+                  }}
+                >
+                  <Play />
+                  <Tip label={t("headerActions.runCurrentInput")}>
+                    <p className="text-xs flex-1 text-left pr-5">
+                      {t("headerActions.run")}
+                    </p>
+                  </Tip>
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      }
 
       {/* <Button variant="outline">Run in interactive</Button> */}
     </ButtonGroup>
@@ -390,10 +397,14 @@ export function CppVersionSelect({
   className?: string;
 }) {
   const [cppVersion, setCppVersion] = useAtom(cppVersionStore);
+  const [cppVersionClient, setCppVersionClient] = React.useState("c++17");
+  useEffect(() => {
+    setCppVersionClient(cppVersion);
+  }, [cppVersion]);
 
   return (
     <Select
-      value={cppVersion || "c++17"}
+      value={cppVersionClient}
       onValueChange={(version) => {
         setCppVersion(version);
         onSelect?.(version);
