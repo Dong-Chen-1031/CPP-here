@@ -28,10 +28,26 @@ CPP-here 是一個輕量、快速的線上 C++ 執行與驗證平台。讓使用
 - **現代化且流暢的使用者介面**
   前端採用 Astro 框架結合 React 元件打造，確保極致的頁面載入速度與順暢的互動體驗。
 
+- **i18n**
+  支援多語言介面，使用者可以根據自己的語言偏好切換界面語言，提升使用體驗。
+
+- **安全性**
+  後端使用沙箱技術隔離執行環境，確保使用者提交的程式碼不會對伺服器造成安全威脅。
+
+- **開放原始碼**
+  CPP-here 的原始碼完全開放，歡迎社群參與貢獻，讓這個專案持續成長與改進。
+
+- **免費使用**
+  CPP-here 提供完全免費的線上 C++ 編輯與執行服務，讓每個人都能輕鬆學習與使用 C++。
+
+- **簡潔優雅，不失強大**
+  雖然功能豐富，但 CPP-here 的使用者介面保持簡潔優雅，讓使用者能夠專注於程式碼本身，而不會被過多的功能選項分散注意力。
+
 ## 技術棧
 
-- **前端**: Astro, TypeScript, React
-- **後端**: Python, FastAPI, Uvicorn
+- **前端**: Astro, Bun, Motion, React, Shadcn, Tailwind CSS, TypeScript, axios, cloudflare turnstile, codemirror, i18next, jotai Atom, lucide
+- **瀏覽器擴充**: Bun, TypeScript, esbuild, web-ext
+- **後端**: FastAPI, PyJWT, PyTurnstile, Python, SQLAlchemy, Uvicorn, aiodocker, aiofiles, aiosqlite, apscheduler
 
 ## 快速開始
 

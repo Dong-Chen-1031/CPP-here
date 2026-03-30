@@ -29,9 +29,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Tip from "./ui/tips";
 import { TooltipProvider } from "./ui/tooltip";
-import { useAtom } from "jotai";
+import { getDefaultStore, useAtom } from "jotai";
 import {
   alertDialogStore,
+  alertStore,
   inputStore,
   outputStore,
   panelDrawerStore,
@@ -298,11 +299,14 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
   const isMobile = useIsMobile();
   const [jwt] = useAtom(verifyJwtStore);
   const { t } = useTranslation(["editor", "common"]);
+  const defaultStore = getDefaultStore();
+  const [, setAlert] = useAtom(alertStore);
 
   const [runStatus] = useAtom(runStatusStore);
 
   useEffect(() => {
     const handleExtEvent = (event: Event) => {
+      const testCases = defaultStore.get(testCasesStore);
       const alertDialogDescription = t(
         "testCase.extension.alertDialog.description",
         {
@@ -310,7 +314,7 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
         },
       ).split("||||");
       const testCaseData = (event as CustomEvent<extTestCase>).detail;
-      const testCases = testCaseData.tests.map((test, index) => ({
+      const testCasesFromExtension = testCaseData.tests.map((test, index) => ({
         id: crypto.randomUUID(),
         name: t("testCase.extension.caseName", {
           problemName: testCaseData.name,
@@ -319,6 +323,25 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
         input: test.input,
       }));
       console.log("Received ext event with payload:", testCaseData);
+      // console.log(testCases);
+      if (testCases.length === 0) {
+        setTestCases(testCasesFromExtension);
+        setAlert((p) => [
+          ...p,
+          {
+            id: crypto.randomUUID(),
+            title: t("testCase.extension.alert.title"),
+            description: t("testCase.extension.alert.description", {
+              problemName: testCaseData.name,
+            }),
+            icon: <CircleCheckBig className="w-4 h-4" />,
+          },
+        ]);
+        if (isMobile) {
+          setPanel("testCases");
+        }
+        return;
+      }
       setAlertDialog({
         title: t("testCase.extension.alertDialog.title"),
         descriptionNode: (
@@ -332,7 +355,7 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
           {
             text: t("testCase.extension.alertDialog.overwrite"),
             onClick: () => {
-              setTestCases(testCases);
+              setTestCases(testCasesFromExtension);
               if (isMobile) {
                 setPanel("testCases");
               }
@@ -342,7 +365,7 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
             text: t("testCase.extension.alertDialog.insert"),
             autoFocus: true,
             onClick: () => {
-              setTestCases((prev) => [...testCases, ...prev]);
+              setTestCases((prev) => [...testCasesFromExtension, ...prev]);
               if (isMobile) {
                 setPanel("testCases");
               }
