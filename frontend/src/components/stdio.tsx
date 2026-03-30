@@ -185,10 +185,7 @@ export function InputPanel({ drawer = false }: { drawer?: boolean }) {
   const { t } = useTranslation(["editor", "common"]);
   return (
     <div
-      className={cn(
-        "p-4 border-border border-2 rounded-md h-full @container",
-        drawer && "mr-2",
-      )}
+      className={cn("p-4 border-border border-2 rounded-md h-full @container")}
     >
       <div className="flex gap-2 items-center">
         <Keyboard className="w-3 h-3 shrink-0" />
@@ -380,7 +377,6 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
       <div
         className={cn(
           "p-4 border-border border-2 rounded-md h-full @container",
-          drawer && "mr-2",
         )}
       >
         <div className="flex gap-2 items-center">
@@ -487,10 +483,7 @@ export function OutputPanel({ drawer = false }: { drawer?: boolean }) {
   const { t } = useTranslation(["editor", "common"]);
   return (
     <div
-      className={cn(
-        "p-4 border-border border-2 rounded-md h-full @container",
-        drawer && "mr-2",
-      )}
+      className={cn("p-4 border-border border-2 rounded-md h-full @container")}
     >
       <div className="flex gap-2 items-center">
         <SquareTerminal className="w-3 h-3 shrink-0" />

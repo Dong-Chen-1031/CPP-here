@@ -132,9 +132,7 @@ export function GlobalPanelDrawer() {
           <div className="px-4">{content.children}</div>
           <DrawerFooter>
             <DrawerClose asChild>
-              <Button variant="outline" className="mx-2">
-                {t("drawer.closeBtn")}
-              </Button>
+              <Button variant="outline">{t("drawer.closeBtn")}</Button>
             </DrawerClose>
           </DrawerFooter>
         </div>
