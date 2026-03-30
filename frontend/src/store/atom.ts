@@ -33,6 +33,10 @@ export const alertStore = atom<
   }[]
 >([]);
 
+export const loadedCountStore = atom(0);
+
+export const loadedStore = atom((get) => get(loadedCountStore) >= 3);
+
 export const turnstileRefStore =
   atom<RefObject<TurnstileInstance | null> | null>(null);
 

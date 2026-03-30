@@ -4,6 +4,7 @@ import "../lib/i18n";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { ButtonGroup } from "@/components/ui/button-group";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +37,8 @@ import {
   codeWorkersStore,
   cppVersionStore,
   editorRefStore,
+  loadedCountStore,
+  loadedStore,
   panelDrawerStore,
   runModeStore,
   runStatusStore,
@@ -52,6 +55,7 @@ import { cn, commandKey, useIsMobile } from "@/lib/utils";
 import { Kbd } from "./ui/kbd";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect } from "react";
+import { Commands } from "./Commands";
 
 export function UndoRedo({ menu = false }: { menu?: boolean }) {
   const [editorGlobal] = useAtom(editorRefStore);
@@ -430,33 +434,74 @@ export function CppVersionSelect({
 }
 
 export default function HeaderActions() {
-  return (
-    <div className="flex items-center space-x-2">
-      <UndoRedo />
-      <ResetButton />
-      <CppVersionSelect />
-      <RunButton />
+  const [loaded] = useAtom(loadedStore);
+  const [, setLoadedCount] = useAtom(loadedCountStore);
+  useEffect(() => setLoadedCount((c) => c + 1), []);
 
-      {/* <ButtonGroup>
-        <Button variant="outline">
-          <Download />
-          Download
-        </Button>
-      </ButtonGroup>
-      <ButtonGroup>
-        <Button variant="outline">
-          <Upload />
-          Upload
-        </Button>
-      </ButtonGroup> */}
-      {/* <ButtonGroup>
-          <Tip label="Share Code">
-            <Button variant="outline">
-              <Share2 />
-              Share
-            </Button>
-          </Tip>
-        </ButtonGroup> */}
+  return (
+    <div className="flex items-center space-x-2 h-full">
+      <AnimatePresence initial={false} mode="popLayout">
+        {!loaded ? (
+          <motion.div
+            key="loader"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Skeleton className="w-[376.617px] h-7" />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="actions"
+            className="flex items-center space-x-2 h-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <UndoRedo />
+            <ResetButton />
+            <CppVersionSelect />
+            <RunButton />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export function HeaderActionsMobile() {
+  const [loaded] = useAtom(loadedStore);
+  const [, setLoadedCount] = useAtom(loadedCountStore);
+  useEffect(() => setLoadedCount((c) => c + 1), []);
+
+  return (
+    <div className="flex flex-row-reverse flex-wrap justify-start items-center content-start gap-1">
+      <AnimatePresence initial={false} mode="popLayout">
+        {!loaded ? (
+          <motion.div
+            key="loader"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Skeleton className="w-61.25 h-7" />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="actions"
+            className="flex flex-row-reverse flex-wrap justify-start items-center content-start gap-1"
+          >
+            <RunButton className="shrink-0" />
+            <Commands className="shrink-0" />
+            <div className="shrink-0 flex items-center">
+              <UndoRedo />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

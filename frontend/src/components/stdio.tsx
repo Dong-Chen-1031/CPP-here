@@ -186,7 +186,7 @@ export function InputPanel({ drawer = false }: { drawer?: boolean }) {
   return (
     <div
       className={cn(
-        "p-4 border-border border-2 rounded-md mr-4 ml-2 mt-0 mb-2 h-[calc(100%-8px)] @container",
+        "p-4 border-border border-2 rounded-md h-full @container",
         drawer && "mr-2",
       )}
     >
@@ -379,7 +379,7 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
     <>
       <div
         className={cn(
-          "p-4 border-border border-2 rounded-md mr-4 ml-2 my-2 h-[calc(100%-16px)] @container",
+          "p-4 border-border border-2 rounded-md h-full @container",
           drawer && "mr-2",
         )}
       >
@@ -488,7 +488,7 @@ export function OutputPanel({ drawer = false }: { drawer?: boolean }) {
   return (
     <div
       className={cn(
-        "p-4 border-border border-2 rounded-md ml-2 mr-4 mt-2 h-[calc(100%-8px)] @container",
+        "p-4 border-border border-2 rounded-md h-full @container",
         drawer && "mr-2",
       )}
     >

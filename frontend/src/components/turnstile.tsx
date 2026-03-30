@@ -1,3 +1,4 @@
+import "../lib/i18n";
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
