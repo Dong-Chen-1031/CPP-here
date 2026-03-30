@@ -209,7 +209,11 @@ export function RunButton({
   const btnTextRef = React.useRef<HTMLSpanElement>(null);
   const cantPress = !jwt || (runStatus !== "idle" && runStatus !== "running");
   const { t } = useTranslation(["editor"]);
+  const [hasLoaded, setHasLoaded] = React.useState(false);
 
+  React.useEffect(() => {
+    setHasLoaded(true);
+  }, []);
   return (
     <ButtonGroup className={className} ref={runBtnGroupRef}>
       <Tip
@@ -251,7 +255,7 @@ export function RunButton({
             onClick(e);
           }}
         >
-          <AnimatePresence mode="popLayout">
+          <AnimatePresence mode="popLayout" initial={hasLoaded}>
             {!jwt ? (
               <MotionButtonLabel
                 key="verify"
