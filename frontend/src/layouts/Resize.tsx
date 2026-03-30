@@ -7,7 +7,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 
-import { InputPanel, TestCasePanel, OutputPanel } from "@/components/stdio";
+import { InputPanel, OutputPanel, TestCasePanel } from "@/components/Panels";
 
 import Editor from "@/components/Editor";
 import { cn, useIsMobile } from "@/lib/utils";

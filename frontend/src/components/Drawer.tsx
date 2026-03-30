@@ -13,7 +13,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { panelDrawerStore, type PanelDrawerView } from "@/store/atom";
-import { InputPanel, OutputPanel, TestCasePanel } from "./stdio";
+import { InputPanel, OutputPanel, TestCasePanel } from "./Panels";
 
 interface DrawerProps {
   title?: string;
