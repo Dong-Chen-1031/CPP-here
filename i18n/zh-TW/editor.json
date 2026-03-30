@@ -66,6 +66,10 @@
         "overwrite": "Overwrite",
         "insert": "Insert",
         "cancel": "取消"
+      },
+      "alert": {
+        "title": "A new test case has been received",
+        "description": "Test case {{problemName}} has been received. It has been added to the test case list."
       }
     }
   },
@@ -76,7 +80,7 @@
     "runAllTestCases": "Run all test cases",
     "runCurrentInput": "Run current input",
     "verifying": "Verifying",
-    "building": "Building",
+    "building": "建置中",
     "stop": "Stop",
     "run": "Run",
     "runAll": "Run All",
