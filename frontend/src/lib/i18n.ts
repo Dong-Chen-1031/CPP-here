@@ -4,7 +4,8 @@ import Backend from "i18next-http-backend";
 import LanguageDetector from "i18next-browser-languagedetector";
 import enCommon from "../../../i18n/en/common.json";
 import enEditor from "../../../i18n/en/editor.json";
-
+import twCommon from "../../../i18n/zh-TW/common.json";
+import twEditor from "../../../i18n/zh-TW/editor.json";
 i18n
   .use(Backend)
   .use(LanguageDetector)
@@ -25,6 +26,10 @@ i18n
       en: {
         common: enCommon,
         editor: enEditor,
+      },
+      "zh-TW": {
+        common: twCommon,
+        editor: twEditor,
       },
     },
 

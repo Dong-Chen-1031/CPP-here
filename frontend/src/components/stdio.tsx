@@ -29,9 +29,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Tip from "./ui/tips";
 import { TooltipProvider } from "./ui/tooltip";
-import { useAtom } from "jotai";
+import { getDefaultStore, useAtom } from "jotai";
 import {
   alertDialogStore,
+  alertStore,
   inputStore,
   outputStore,
   panelDrawerStore,
@@ -182,19 +183,17 @@ export function InputPanel({ drawer = false }: { drawer?: boolean }) {
   const [input, setInput] = useAtom(inputStore);
   const [pasted, setPasted] = React.useState(false);
   const [cleared, setCleared] = React.useState(false);
+  const { t } = useTranslation(["editor", "common"]);
   return (
     <div
-      className={cn(
-        "p-4 border-border border-2 rounded-md mr-4 ml-2 mt-0 mb-2 h-[calc(100%-8px)] @container",
-        drawer && "mr-2",
-      )}
+      className={cn("p-4 border-border border-2 rounded-md h-full @container")}
     >
       <div className="flex gap-2 items-center">
         <Keyboard className="w-3 h-3 shrink-0" />
-        <p className="text-sm truncate">Input</p>
+        <p className="text-sm truncate">{t("input.label")}</p>
         <div className="flex-1"></div>
 
-        <Tip label="Paste from clipboard">
+        <Tip label={t("input.pasteTip")}>
           <Button
             variant="outline"
             onClick={async () => {
@@ -205,10 +204,12 @@ export function InputPanel({ drawer = false }: { drawer?: boolean }) {
             className="px-2"
           >
             <IconMotion show={pasted} HideIcon={ClipboardPaste} />
-            <span className="hidden @[250px]:inline">Paste</span>
+            <span className="hidden @[250px]:inline">
+              {t("input.pasteBtn")}
+            </span>
           </Button>
         </Tip>
-        <Tip label="Clear input">
+        <Tip label={t("input.clearTip")}>
           <Button
             variant="outline"
             onClick={() => {
@@ -220,14 +221,14 @@ export function InputPanel({ drawer = false }: { drawer?: boolean }) {
             className="px-2"
           >
             <IconMotion show={cleared} HideIcon={Trash} />
-            <span className="hidden @[250px]:inline">Clear</span>
+            <span className="hidden @[250px]:inline">{t("common:clear")}</span>
           </Button>
         </Tip>
       </div>
       <div className="mt-4 overflow-y-auto h-[calc(100%-2rem)]">
         <Textarea
           className="text-xs!"
-          placeholder="Type your input here."
+          placeholder={t("input.placeholder")}
           value={input}
           onChange={(e) => {
             setInput(e.target.value);
@@ -298,11 +299,14 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
   const isMobile = useIsMobile();
   const [jwt] = useAtom(verifyJwtStore);
   const { t } = useTranslation(["editor", "common"]);
+  const defaultStore = getDefaultStore();
+  const [, setAlert] = useAtom(alertStore);
 
   const [runStatus] = useAtom(runStatusStore);
 
   useEffect(() => {
     const handleExtEvent = (event: Event) => {
+      const testCases = defaultStore.get(testCasesStore);
       const alertDialogDescription = t(
         "testCase.extension.alertDialog.description",
         {
@@ -310,7 +314,7 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
         },
       ).split("||||");
       const testCaseData = (event as CustomEvent<extTestCase>).detail;
-      const testCases = testCaseData.tests.map((test, index) => ({
+      const testCasesFromExtension = testCaseData.tests.map((test, index) => ({
         id: crypto.randomUUID(),
         name: t("testCase.extension.caseName", {
           problemName: testCaseData.name,
@@ -319,6 +323,25 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
         input: test.input,
       }));
       console.log("Received ext event with payload:", testCaseData);
+      // console.log(testCases);
+      if (testCases.length === 0) {
+        setTestCases(testCasesFromExtension);
+        setAlert((p) => [
+          ...p,
+          {
+            id: crypto.randomUUID(),
+            title: t("testCase.extension.alert.title"),
+            description: t("testCase.extension.alert.description", {
+              problemName: testCaseData.name,
+            }),
+            icon: <CircleCheckBig className="w-4 h-4" />,
+          },
+        ]);
+        if (isMobile) {
+          setPanel("testCases");
+        }
+        return;
+      }
       setAlertDialog({
         title: t("testCase.extension.alertDialog.title"),
         descriptionNode: (
@@ -332,7 +355,7 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
           {
             text: t("testCase.extension.alertDialog.overwrite"),
             onClick: () => {
-              setTestCases(testCases);
+              setTestCases(testCasesFromExtension);
               if (isMobile) {
                 setPanel("testCases");
               }
@@ -342,7 +365,7 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
             text: t("testCase.extension.alertDialog.insert"),
             autoFocus: true,
             onClick: () => {
-              setTestCases((prev) => [...testCases, ...prev]);
+              setTestCases((prev) => [...testCasesFromExtension, ...prev]);
               if (isMobile) {
                 setPanel("testCases");
               }
@@ -376,8 +399,7 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
     <>
       <div
         className={cn(
-          "p-4 border-border border-2 rounded-md mr-4 ml-2 my-2 h-[calc(100%-16px)] @container",
-          drawer && "mr-2",
+          "p-4 border-border border-2 rounded-md h-full @container",
         )}
       >
         <div className="flex gap-2 items-center">
@@ -394,14 +416,14 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
                 </span>
               </Button>
             }
-            name={t("testCase.addDefaultName", { index: testCases.length + 1 })}
+            name={t("testCase.defaultName", { index: testCases.length + 1 })}
             handleSubmit={handleAddTestCase}
           />
         </div>
         <div className="mt-4 overflow-y-auto max-h-[calc(100%-2rem)]">
           {testCases.length === 0 ? (
             <p className="text-sm text-muted-foreground pl-2">
-              {t("testCase.noTestCases")}
+              {t("testCase.noTestCase")}
             </p>
           ) : (
             <div className="flex flex-col gap-2">
@@ -452,7 +474,7 @@ export function TestCasePanel({ drawer = false }: { drawer?: boolean }) {
                       );
                     }}
                   />
-                  <Tip label="Delete Test Case">
+                  <Tip label={t("testCase.deleteTip")}>
                     <Button
                       variant="outline"
                       size="icon"
@@ -484,10 +506,7 @@ export function OutputPanel({ drawer = false }: { drawer?: boolean }) {
   const { t } = useTranslation(["editor", "common"]);
   return (
     <div
-      className={cn(
-        "p-4 border-border border-2 rounded-md ml-2 mr-4 mt-2 h-[calc(100%-8px)] @container",
-        drawer && "mr-2",
-      )}
+      className={cn("p-4 border-border border-2 rounded-md h-full @container")}
     >
       <div className="flex gap-2 items-center">
         <SquareTerminal className="w-3 h-3 shrink-0" />

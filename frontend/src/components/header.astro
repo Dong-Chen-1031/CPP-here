@@ -1,11 +1,10 @@
 ---
-import { Code } from "@lucide/astro";
-import HeaderActions, { RunButton, UndoRedo } from "@/components/HeaderActions";
-import { Commands } from "./Commands";
+import { CodeIcon } from "@lucide/astro";
+import HeaderActions, { HeaderActionsMobile } from "@/components/HeaderActions";
 ---
 
 <div class="w-full h-15 flex items-center px-2 md:px-4">
-  <Code class="w-5 h-5 mr-2 md:w-6 md:h-6 shrink-0" />
+  <CodeIcon class="w-5 h-5 mr-2 md:w-6 md:h-6 shrink-0" />
   <h1 class="text-[min(1.25rem,3.5vw)] pr-2 font-bold shrink-0">C++ Here</h1>
   <div class="flex-1 min-w-0"></div>
 
@@ -14,14 +13,6 @@ import { Commands } from "./Commands";
   </div>
 
   <div class="flex md:hidden shrink min-w-0 h-7 overflow-hidden items-start">
-    <div
-      class="flex flex-row-reverse flex-wrap justify-start items-center content-start gap-1"
-    >
-      <RunButton client:load className="shrink-0" />
-      <Commands client:load className="shrink-0" />
-      <div class="shrink-0 flex items-center">
-        <UndoRedo client:load />
-      </div>
-    </div>
+    <HeaderActionsMobile client:load />
   </div>
 </div>

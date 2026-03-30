@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useAtom } from "jotai";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -26,10 +27,11 @@ export function DrawerDemo({
   children,
   trigger,
 }: DrawerProps) {
+  const { t } = useTranslation(["editor"]);
   return (
     <Drawer>
       <DrawerTrigger asChild>
-        {trigger || <Button variant="outline">Open Drawer</Button>}
+        {trigger || <Button variant="outline">{t("drawer.openBtn")}</Button>}
       </DrawerTrigger>
       <DrawerContent>
         <div className="mx-auto w-full max-w-sm">
@@ -41,7 +43,7 @@ export function DrawerDemo({
           <DrawerFooter>
             <DrawerClose asChild>
               <Button variant="outline" className="mx-2">
-                Close
+                {t("drawer.closeBtn")}
               </Button>
             </DrawerClose>
           </DrawerFooter>
@@ -80,6 +82,7 @@ export function GlobalPanelDrawer() {
   const [panel, setPanel] = useAtom(panelDrawerStore);
   const [activePanel, setActivePanel] =
     React.useState<PanelDrawerView>("input");
+  const { t } = useTranslation(["editor"]);
 
   React.useEffect(() => {
     if (panel) {
@@ -87,7 +90,33 @@ export function GlobalPanelDrawer() {
     }
   }, [panel]);
 
-  const content = panelDrawerContent[activePanel];
+  // Build content with translations
+  const panelDrawerContentLocalized: Record<
+    PanelDrawerView,
+    {
+      title: string;
+      subTitle: string;
+      children: React.ReactNode;
+    }
+  > = {
+    input: {
+      title: t("drawer.inputPanel.title"),
+      subTitle: t("drawer.inputPanel.subTitle"),
+      children: <InputPanel drawer />,
+    },
+    testCases: {
+      title: t("drawer.testCases.title"),
+      subTitle: t("drawer.testCases.subTitle"),
+      children: <TestCasePanel drawer />,
+    },
+    output: {
+      title: t("drawer.output.title"),
+      subTitle: t("drawer.output.subTitle"),
+      children: <OutputPanel drawer />,
+    },
+  };
+
+  const content = panelDrawerContentLocalized[activePanel];
 
   return (
     <Drawer
@@ -103,9 +132,7 @@ export function GlobalPanelDrawer() {
           <div className="px-4">{content.children}</div>
           <DrawerFooter>
             <DrawerClose asChild>
-              <Button variant="outline" className="mx-2">
-                Close
-              </Button>
+              <Button variant="outline">{t("drawer.closeBtn")}</Button>
             </DrawerClose>
           </DrawerFooter>
         </div>

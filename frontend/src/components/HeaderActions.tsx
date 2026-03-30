@@ -1,6 +1,10 @@
 import * as React from "react";
+import "../lib/i18n";
+
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 import { ButtonGroup } from "@/components/ui/button-group";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +37,8 @@ import {
   codeWorkersStore,
   cppVersionStore,
   editorRefStore,
+  loadedCountStore,
+  loadedStore,
   panelDrawerStore,
   runModeStore,
   runStatusStore,
@@ -48,16 +54,19 @@ import { useResetAllAtoms } from "@/store/atom";
 import { cn, commandKey, useIsMobile } from "@/lib/utils";
 import { Kbd } from "./ui/kbd";
 import { AnimatePresence, motion } from "motion/react";
+import { useEffect } from "react";
+import { Commands } from "./Commands";
 
 export function UndoRedo({ menu = false }: { menu?: boolean }) {
   const [editorGlobal] = useAtom(editorRefStore);
+  const { t } = useTranslation(["editor"]);
 
   return (
     <ButtonGroup>
       <Tip
         content={
           <>
-            Undo <Kbd>{commandKey}</Kbd>
+            {t("headerActions.undo")} <Kbd>{commandKey}</Kbd>
             <Kbd>Z</Kbd>
           </>
         }
@@ -65,7 +74,7 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
         <Button
           variant="outline"
           size={menu ? "sm" : "icon-sm"}
-          aria-label="Undo"
+          aria-label={t("headerActions.undo")}
           onClick={() => {
             if (editorGlobal?.current?.view) {
               undo(editorGlobal.current.view);
@@ -87,7 +96,7 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
       <Tip
         content={
           <>
-            Redo <Kbd>{commandKey}</Kbd>
+            {t("headerActions.redo")} <Kbd>{commandKey}</Kbd>
             <Kbd>⇧</Kbd>
             <Kbd>Z</Kbd>
           </>
@@ -96,7 +105,7 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
         <Button
           variant="outline"
           size={menu ? "sm" : "icon-sm"}
-          aria-label="Redo"
+          aria-label={t("headerActions.redo")}
           onClick={() => {
             if (editorGlobal?.current?.view) {
               redo(editorGlobal.current.view);
@@ -162,7 +171,7 @@ const MotionButtonLabel = React.forwardRef(function MotionButtonLabel(
       }
       layout
       animate={{ width: "auto", opacity: 1 }}
-      exit={{ width: "auto", opacity: 0 }}
+      // exit={{ width: "auto", opacity: 0 }}
       transition={{
         type: "spring",
         stiffness: 300,
@@ -194,23 +203,30 @@ export function RunButton({
   const defaultStore = getDefaultStore();
   const [runStatus] = useAtom(runStatusStore);
   const lastWidthRef = React.useRef([8.2]);
-  const isMobile = useIsMobile();
+  const runBtnGroupRef = React.useRef<HTMLDivElement>(
+    undefined,
+  ) as React.RefObject<HTMLDivElement>;
   const btnTextRef = React.useRef<HTMLSpanElement>(null);
   const cantPress = !jwt || (runStatus !== "idle" && runStatus !== "running");
+  const { t } = useTranslation(["editor"]);
+  const [hasLoaded, setHasLoaded] = React.useState(false);
 
+  React.useEffect(() => {
+    setHasLoaded(true);
+  }, []);
   return (
-    <ButtonGroup className={className}>
+    <ButtonGroup className={className} ref={runBtnGroupRef}>
       <Tip
         show={!cantPress}
         content={
           runMode === "single" ? (
             <>
-              Run Code <Kbd>{commandKey}</Kbd>
+              {t("headerActions.runCode")} <Kbd>{commandKey}</Kbd>
               <Kbd>⏎</Kbd>
             </>
           ) : (
             <>
-              Run all test cases <Kbd>{commandKey}</Kbd>
+              {t("headerActions.runAllTestCases")} <Kbd>{commandKey}</Kbd>
               <Kbd>⏎</Kbd>
             </>
           )
@@ -239,7 +255,7 @@ export function RunButton({
             onClick(e);
           }}
         >
-          <AnimatePresence mode="popLayout">
+          <AnimatePresence mode="popLayout" initial={hasLoaded}>
             {!jwt ? (
               <MotionButtonLabel
                 key="verify"
@@ -248,14 +264,14 @@ export function RunButton({
               >
                 <Spinner className="size-3" />
                 <span className="text-xs" id="runBtnText" ref={btnTextRef}>
-                  Verifying
+                  {t("headerActions.verifying")}
                 </span>
               </MotionButtonLabel>
             ) : runStatus === "building" ? (
               <MotionButtonLabel key="building" lastWidthRef={lastWidthRef}>
                 <Spinner className="size-3" />
                 <span className="text-xs" id="runBtnText" ref={btnTextRef}>
-                  Building
+                  {t("headerActions.building")}
                 </span>
               </MotionButtonLabel>
             ) : runStatus === "running" ? (
@@ -267,83 +283,87 @@ export function RunButton({
                 {/* <Spinner></Spinner> */}
                 <SquareIcon className="" />
                 <span className="text-xs" id="runBtnText" ref={btnTextRef}>
-                  Stop
+                  {t("headerActions.stop")}
                 </span>
               </MotionButtonLabel>
             ) : runMode === "single" ? (
               <MotionButtonLabel key="run" lastWidthRef={lastWidthRef}>
                 <Play />
                 <span id="runBtnText" ref={btnTextRef}>
-                  Run
+                  {t("headerActions.run")}
                 </span>
               </MotionButtonLabel>
             ) : (
               <MotionButtonLabel key="run-all" lastWidthRef={lastWidthRef}>
                 <TestTubes />
                 <span id="runBtnText" ref={btnTextRef}>
-                  Run All
+                  {t("headerActions.runAll")}
                 </span>
               </MotionButtonLabel>
             )}
           </AnimatePresence>
         </Button>
       </Tip>
-      <AnimatePresence mode="popLayout">
-        {
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant={runStatus === "running" ? "destructive" : "outline"}
-                className="p-1"
-                disabled={cantPress || runStatus === "running"}
-                // asChild
-              >
-                {/* <motion.div
+      {
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant={runStatus === "running" ? "destructive" : "outline"}
+              className="p-1"
+              disabled={cantPress || runStatus === "running"}
+              // asChild
+            >
+              {/* <motion.div
                   layoutId="1111111"
                   initial={{ x: -30, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: -30, opacity: 0 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 > */}
-                <ChevronDownIcon />
-                {/* </motion.div> */}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-fit">
-              <DropdownMenuGroup>
-                {runMode === "single" ? (
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      setRunMode("all");
-                      handleRunAll();
-                      onClick(e);
-                    }}
-                  >
-                    <TestTubes />
-                    <Tip label="Run all test cases">
-                      <p className="text-xs">Run All</p>
-                    </Tip>
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      setRunMode("single");
-                      handleRun();
-                      onClick(e);
-                    }}
-                    className="w-27"
-                  >
-                    <Play />
-                    <Tip label="Run current input">
-                      <p className="text-xs flex-1">Run</p>
-                    </Tip>
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        }
-      </AnimatePresence>
+              <ChevronDownIcon />
+              {/* </motion.div> */}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="max-w-fit min-w-fit w-fit"
+          >
+            <DropdownMenuGroup>
+              {runMode === "single" ? (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    setRunMode("all");
+                    handleRunAll();
+                    onClick(e);
+                  }}
+                >
+                  <TestTubes />
+                  <Tip label={t("headerActions.runAllTestCases")}>
+                    <p className="text-xs flex-1 text-left">
+                      {t("headerActions.runAll")}
+                    </p>
+                  </Tip>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    setRunMode("single");
+                    handleRun();
+                    onClick(e);
+                  }}
+                >
+                  <Play />
+                  <Tip label={t("headerActions.runCurrentInput")}>
+                    <p className="text-xs flex-1 text-left pr-5">
+                      {t("headerActions.run")}
+                    </p>
+                  </Tip>
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      }
 
       {/* <Button variant="outline">Run in interactive</Button> */}
     </ButtonGroup>
@@ -358,10 +378,11 @@ export function ResetButton({
   onClick?: (e: React.MouseEvent) => void;
 }) {
   const resetAll = useResetAllAtoms();
+  const { t } = useTranslation(["editor"]);
 
   return (
     <ButtonGroup>
-      <Tip label="Reset Everything">
+      <Tip label={t("headerActions.resetEverything")}>
         <Button
           variant="outline"
           className={className}
@@ -371,7 +392,7 @@ export function ResetButton({
           }}
         >
           <RotateCcw />
-          Reset
+          {t("headerActions.resetBtn")}
         </Button>
       </Tip>
     </ButtonGroup>
@@ -386,10 +407,14 @@ export function CppVersionSelect({
   className?: string;
 }) {
   const [cppVersion, setCppVersion] = useAtom(cppVersionStore);
+  const [cppVersionClient, setCppVersionClient] = React.useState("c++17");
+  useEffect(() => {
+    setCppVersionClient(cppVersion);
+  }, [cppVersion]);
 
   return (
     <Select
-      value={cppVersion || "c++17"}
+      value={cppVersionClient}
       onValueChange={(version) => {
         setCppVersion(version);
         onSelect?.(version);
@@ -413,33 +438,74 @@ export function CppVersionSelect({
 }
 
 export default function HeaderActions() {
-  return (
-    <div className="flex items-center space-x-2">
-      <UndoRedo />
-      <ResetButton />
-      <CppVersionSelect />
-      <RunButton />
+  const [loaded] = useAtom(loadedStore);
+  const [, setLoadedCount] = useAtom(loadedCountStore);
+  useEffect(() => setLoadedCount((c) => c + 1), []);
 
-      {/* <ButtonGroup>
-        <Button variant="outline">
-          <Download />
-          Download
-        </Button>
-      </ButtonGroup>
-      <ButtonGroup>
-        <Button variant="outline">
-          <Upload />
-          Upload
-        </Button>
-      </ButtonGroup> */}
-      {/* <ButtonGroup>
-          <Tip label="Share Code">
-            <Button variant="outline">
-              <Share2 />
-              Share
-            </Button>
-          </Tip>
-        </ButtonGroup> */}
+  return (
+    <div className="flex items-center space-x-2 h-full">
+      <AnimatePresence initial={false} mode="popLayout">
+        {!loaded ? (
+          <motion.div
+            key="loader"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Skeleton className="w-[376.617px] h-7" />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="actions"
+            className="flex items-center space-x-2 h-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <UndoRedo />
+            <ResetButton />
+            <CppVersionSelect />
+            <RunButton />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export function HeaderActionsMobile() {
+  const [loaded] = useAtom(loadedStore);
+  const [, setLoadedCount] = useAtom(loadedCountStore);
+  useEffect(() => setLoadedCount((c) => c + 1), []);
+
+  return (
+    <div className="flex flex-row-reverse flex-wrap justify-start items-center content-start gap-1">
+      <AnimatePresence initial={false} mode="popLayout">
+        {!loaded ? (
+          <motion.div
+            key="loader"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Skeleton className="w-61.25 h-7" />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="actions"
+            className="flex flex-row-reverse flex-wrap justify-start items-center content-start gap-1"
+          >
+            <RunButton className="shrink-0" />
+            <Commands className="shrink-0" />
+            <div className="shrink-0 flex items-center">
+              <UndoRedo />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
