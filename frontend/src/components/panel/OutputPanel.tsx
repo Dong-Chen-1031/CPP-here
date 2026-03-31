@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Trash, SquareTerminal, ClipboardCopy } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
 
 import Tip from "../ui/tips";
 import { useAtom } from "jotai";
@@ -13,9 +13,18 @@ import { useTranslation } from "react-i18next";
 export default function OutputPanel({ drawer = false }: { drawer?: boolean }) {
   const [output, setOutput] = useAtom(outputStore);
   const [copied, setCopied] = React.useState(false);
+  const [copiedCases, setCopiedCases] = React.useState(
+    {} as Record<string, boolean>,
+  );
   const [cleared, setCleared] = React.useState(false);
   const [runStatus] = useAtom(runStatusStore);
   const { t } = useTranslation(["editor", "common"]);
+  useEffect(() => {
+    const values = Object.values(copiedCases);
+    if (values.length > 0 && values.every((v) => !v)) {
+      setCopiedCases({});
+    }
+  }, [copiedCases, output]);
   return (
     <div
       className={cn("p-4 border-border border-2 rounded-md h-full @container")}
@@ -83,7 +92,7 @@ export default function OutputPanel({ drawer = false }: { drawer?: boolean }) {
             <div
               key={index}
               className={cn(
-                "text-xs p-[4.5px] rounded-md whitespace-pre-wrap break-all my-2 output-card",
+                "text-xs rounded-md whitespace-pre-wrap break-all my-2 output-card",
                 line.type === "err" ? " text-destructive" : "",
                 line.status == "running"
                   ? "loading"
@@ -95,9 +104,36 @@ export default function OutputPanel({ drawer = false }: { drawer?: boolean }) {
               )}
             >
               {line.testCaseId && (
-                <p className="text-[0.6rem] text-accent-foreground/80 mb-1">
-                  <span>{line.testCaseName}</span>
-                </p>
+                <div className="text-[0.6rem] text-accent-foreground/80 mb-1 flex justify-between ">
+                  <p>{line.testCaseName}</p>
+                  <Tip label={t("output.copyThisCaseTip")}>
+                    <div
+                      className="cursor-pointer"
+                      onClick={() => {
+                        navigator.clipboard.writeText(line.content);
+                        setCopiedCases({
+                          ...copiedCases,
+                          [line.testCaseId as string]: true,
+                        });
+
+                        setTimeout(
+                          () =>
+                            setCopiedCases((prev) => ({
+                              ...prev,
+                              [line.testCaseId as string]: false,
+                            })),
+                          1500,
+                        );
+                      }}
+                    >
+                      <IconMotion
+                        show={copiedCases[line.testCaseId]}
+                        HideIcon={ClipboardCopy}
+                        className="w-3 h-3 "
+                      />
+                    </div>
+                  </Tip>
+                </div>
               )}
               <p>{line.content}</p>
             </div>

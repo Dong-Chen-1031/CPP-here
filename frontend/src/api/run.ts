@@ -181,7 +181,7 @@ export async function runCode(
       onExit && onExit();
     };
     worker.onmessage = (event) => {
-      console.log("Worker message received:", event.data);
+      // console.log("Worker message received:", event.data);
       onEvent && onEvent(event);
       const { type, content } = event.data;
       switch (type) {
@@ -338,7 +338,7 @@ export async function handleRun({
 }
 
 function insertInOrder(prev: OutputCase[], item: OutputCase) {
-  console.log("Inserting output item:", item);
+  // console.log("Inserting output item:", item);
   const testCases = store.get(testCasesStore);
 
   const lastSameIdx = prev.findLastIndex(
@@ -440,14 +440,14 @@ export async function handleRunAll() {
             .filter((o) => o.testCaseId === testCase.id)
             .map((o) => o.content.trim())
             .join("\n");
-          console.log(
-            `Test case "${testCase.name}" expected output:`,
-            testCase.expectedOutput,
-          );
-          console.log(
-            `Test case "${testCase.name}" actual output:`,
-            currentOutput,
-          );
+          // console.log(
+          //   `Test case "${testCase.name}" expected output:`,
+          //   testCase.expectedOutput,
+          // );
+          // console.log(
+          //   `Test case "${testCase.name}" actual output:`,
+          //   currentOutput,
+          // );
           if (currentOutput === testCase.expectedOutput.trim()) {
             status = "ac";
           } else {

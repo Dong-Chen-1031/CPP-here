@@ -115,6 +115,7 @@ code {
 }
 
 .output-card {
+  padding: 4.5px;
   --output-card-bg: oklch(23.929% 0.00003 271.152);
   border: 3.5px solid var(--output-card-bg);
 
@@ -136,10 +137,12 @@ code {
 }
 
 .output-card.success {
+  padding: 7px;
   border: 1px solid oklch(from var(--success) calc(l - 0) c h / 0.8);
 }
 
 .output-card.fail {
+  padding: 7px;
   border: 1px solid oklch(from var(--destructive) calc(l - 0.1) c h / 0.8);
 }
 
