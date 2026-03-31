@@ -37,6 +37,7 @@
   "output": {
     "label": "Output",
     "copyTip": "Copy first output",
+    "copyThisCaseTip": "Copy output of this test case",
     "clearTip": "Clear output",
     "noOutput": "No output yet."
   },
