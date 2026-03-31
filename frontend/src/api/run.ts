@@ -338,6 +338,7 @@ export async function handleRun({
 }
 
 function insertInOrder(prev: OutputCase[], item: OutputCase) {
+  console.log("Inserting output item:", item);
   const testCases = store.get(testCasesStore);
 
   const lastSameIdx = prev.findLastIndex(
@@ -346,7 +347,11 @@ function insertInOrder(prev: OutputCase[], item: OutputCase) {
   if (lastSameIdx !== -1) {
     const merged = {
       ...prev[lastSameIdx],
-      content: prev[lastSameIdx].content + "\n" + item.content,
+      content:
+        item.content !== ""
+          ? prev[lastSameIdx].content + "\n" + item.content
+          : prev[lastSameIdx].content,
+      status: item.status ?? prev[lastSameIdx].status,
     };
     return [
       ...prev.slice(0, lastSameIdx),
@@ -428,12 +433,35 @@ export async function handleRunAll() {
         });
       },
       onExit() {
-        insertInOrder(store.get(outputStore), {
-          content: "",
-          testCaseId: testCase.id,
-          testCaseName: testCase.name,
-          status: "finished",
-        });
+        let status: "finished" | "running" | "error" | "ac" | "wa" = "finished";
+        if (testCase.expectedOutput) {
+          const currentOutput = store
+            .get(outputStore)
+            .filter((o) => o.testCaseId === testCase.id)
+            .map((o) => o.content.trim())
+            .join("\n");
+          console.log(
+            `Test case "${testCase.name}" expected output:`,
+            testCase.expectedOutput,
+          );
+          console.log(
+            `Test case "${testCase.name}" actual output:`,
+            currentOutput,
+          );
+          if (currentOutput === testCase.expectedOutput.trim()) {
+            status = "ac";
+          } else {
+            status = "wa";
+          }
+        }
+        store.set(outputStore, (prev) =>
+          insertInOrder(prev, {
+            content: "",
+            testCaseId: testCase.id,
+            testCaseName: testCase.name,
+            status: status,
+          }),
+        );
         if (defaultStore.get(codeWorkersStore).length === 0) {
           store.set(runStatusStore, "idle");
         }

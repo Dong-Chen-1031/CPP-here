@@ -18,7 +18,7 @@ export interface OutputCase {
   testCaseName?: string;
   expectedOutput?: string;
   content: string;
-  status?: "running" | "finished";
+  status?: "running" | "ac" | "error" | "wa" | "finished";
 }
 
 export type PanelDrawerView = "input" | "testCases" | "output";

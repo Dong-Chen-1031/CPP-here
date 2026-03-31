@@ -83,8 +83,15 @@ export default function OutputPanel({ drawer = false }: { drawer?: boolean }) {
             <div
               key={index}
               className={cn(
-                "text-xs bg-accent/75 p-2 rounded-md whitespace-pre-wrap break-all my-2 loader-card loading",
-                line.type === "err" ? " text-destructive fail" : "",
+                "text-xs p-[4.5px] rounded-md whitespace-pre-wrap break-all my-2 output-card",
+                line.type === "err" ? " text-destructive" : "",
+                line.status == "running"
+                  ? "loading"
+                  : line.status === "ac"
+                    ? "success"
+                    : line.status === "wa"
+                      ? "fail"
+                      : "",
               )}
             >
               {line.testCaseId && (

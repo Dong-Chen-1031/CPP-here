@@ -21,9 +21,10 @@ export interface EditDialogOptions {
   title?: string;
   name?: string;
   input?: string;
+  expected?: string;
   submitBtnName?: string;
   tip?: string;
-  handleSubmit?: (name: string, input: string) => void;
+  handleSubmit?: (name: string, input: string, expected: string) => void;
 }
 
 export default function TestEditDialog({
@@ -31,15 +32,17 @@ export default function TestEditDialog({
   title,
   name,
   input = "",
+  expected = "",
   tip = "",
   submitBtnName,
-  handleSubmit = (n, i) => {
-    console.log(n, i);
+  handleSubmit = (n, i, e) => {
+    console.log(n, i, e);
   },
 }: EditDialogOptions & { trigger: React.ReactNode }) {
   const [open, setOpen] = React.useState(false);
   const caseNameRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const expectedRef = useRef<HTMLTextAreaElement>(null);
   const { t } = useTranslation(["editor", "common"]);
 
   if (!submitBtnName) {
@@ -52,7 +55,8 @@ export default function TestEditDialog({
   function handleSubmitWrapper() {
     const name = caseNameRef.current?.value || "";
     const input = inputRef.current?.value || "";
-    handleSubmit(name, input);
+    const expected = expectedRef.current?.value || "";
+    handleSubmit(name, input, expected);
     setOpen(false);
   }
 
@@ -113,8 +117,9 @@ export default function TestEditDialog({
             <Textarea
               className="h-30"
               name="expected"
+              defaultValue={expected}
               placeholder={t("testCase.editDialog.expectedPlaceholder")}
-              ref={inputRef}
+              ref={expectedRef}
             />
           </Field>
         </FieldGroup>

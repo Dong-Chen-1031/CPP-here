@@ -106,14 +106,17 @@ export default function TestCasePanel({
         },
       ).split("||||");
       const testCaseData = (event as CustomEvent<extTestCase>).detail;
-      const testCasesFromExtension = testCaseData.tests.map((test, index) => ({
-        id: crypto.randomUUID(),
-        name: t("testCase.extension.caseName", {
-          problemName: testCaseData.name,
-          index: index + 1,
+      const testCasesFromExtension: TestCase[] = testCaseData.tests.map(
+        (test, index) => ({
+          id: crypto.randomUUID(),
+          name: t("testCase.extension.caseName", {
+            problemName: testCaseData.name,
+            index: index + 1,
+          }),
+          input: test.input,
+          expectedOutput: test.output,
         }),
-        input: test.input,
-      }));
+      );
       console.log("Received ext event with payload:", testCaseData);
       // console.log(testCases);
       if (testCases.length === 0) {
@@ -177,11 +180,12 @@ export default function TestCasePanel({
       window.removeEventListener("ext", handleExtEvent);
     };
   }, []);
-  function handleAddTestCase(name: string, input: string) {
+  function handleAddTestCase(name: string, input: string, expected: string) {
     const newTestCase: TestCase = {
       id: crypto.randomUUID(),
       name,
       input,
+      expectedOutput: expected,
     };
     setTestCases((prev) => [...prev, newTestCase]);
   }
@@ -257,11 +261,14 @@ export default function TestCasePanel({
                     title={t("testCase.editDialog.title")}
                     name={testCase.name}
                     input={testCase.input}
+                    expected={testCase.expectedOutput}
                     submitBtnName={t("testCase.editDialog.saveBtn")}
-                    handleSubmit={(name, input) => {
+                    handleSubmit={(name, input, expected) => {
                       setTestCases((prev) =>
                         prev.map((tc) =>
-                          tc.id === testCase.id ? { ...tc, name, input } : tc,
+                          tc.id === testCase.id
+                            ? { ...tc, name, input, expectedOutput: expected }
+                            : tc,
                         ),
                       );
                     }}
