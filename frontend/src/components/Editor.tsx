@@ -145,8 +145,8 @@ function CppEditor({
   );
 
   return (
-    <div className="relative h-full">
-      <div className="absolute bottom-5 right-5 z-1">
+    <div className="relative h-full w-full">
+      <div className="absolute bottom-5 right-5 z-10">
         <ButtonGroup
           orientation="horizontal"
           aria-label="Media controls"
@@ -178,48 +178,50 @@ function CppEditor({
         </ButtonGroup>
       </div>
 
-      <CodeMirror
-        className={className}
-        style={style}
-        value={code}
-        height="100%"
-        theme={vscodeDarkInit({
-          settings: {
-            fontSize: `${fontSize}px`,
-            background: "#1F1F1F",
-            gutterBackground: "#1F1F1F",
-          },
-        })}
-        ref={editorRef}
-        onCreateEditor={() => {
-          setEditorGlobal(editorRef);
-          setIsEditorReady(true);
-        }}
-        extensions={[
-          cpp(),
-          autocompletion({ override: [cppCompletions] }),
-          EditorView.lineWrapping,
-          errorField,
-          indentUnit.of("    "),
-          Prec.highest(
-            keymap.of([
-              {
-                key: "Tab",
-                run: acceptCompletion, // 如果選單開啟，按下 Tab 就選取補全
-              },
-            ]),
-          ),
-          ...extensions,
-        ]}
-        onChange={handleChange}
-        basicSetup={{
-          lineNumbers: true,
-          foldGutter: true,
-          highlightActiveLine: true,
-          ...(typeof basicSetup === "object" ? basicSetup : {}),
-        }}
-        {...rest}
-      />
+      <div className="absolute inset-0">
+        <CodeMirror
+          className={className}
+          style={style}
+          value={code}
+          height="100%"
+          theme={vscodeDarkInit({
+            settings: {
+              fontSize: `${fontSize}px`,
+              background: "#1F1F1F",
+              gutterBackground: "#1F1F1F",
+            },
+          })}
+          ref={editorRef}
+          onCreateEditor={() => {
+            setEditorGlobal(editorRef);
+            setIsEditorReady(true);
+          }}
+          extensions={[
+            cpp(),
+            autocompletion({ override: [cppCompletions] }),
+            EditorView.lineWrapping,
+            errorField,
+            indentUnit.of("    "),
+            Prec.highest(
+              keymap.of([
+                {
+                  key: "Tab",
+                  run: acceptCompletion, // 如果選單開啟，按下 Tab 就選取補全
+                },
+              ]),
+            ),
+            ...extensions,
+          ]}
+          onChange={handleChange}
+          basicSetup={{
+            lineNumbers: true,
+            foldGutter: true,
+            highlightActiveLine: true,
+            ...(typeof basicSetup === "object" ? basicSetup : {}),
+          }}
+          {...rest}
+        />
+      </div>
     </div>
   );
 }

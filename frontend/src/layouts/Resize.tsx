@@ -88,7 +88,7 @@ function ComputerLayout({
       >
         <ResizablePanelGroup orientation="vertical" defaultLayout={LAYOUT2}>
           <ResizablePanel id="InputPanel" defaultSize={LAYOUT2.InputPanel}>
-            <LoadingPanel className="mr-4 ml-2 mt-0 mb-2 h-[calc(100%-8px)]">
+            <LoadingPanel className="mr-4 ml-2 mt-0 mb-2 h-[calc(100%-0.5rem)]">
               <InputPanel />
             </LoadingPanel>
           </ResizablePanel>
@@ -97,7 +97,7 @@ function ComputerLayout({
             id="TestCasePanel"
             defaultSize={LAYOUT2.TestCasePanel}
           >
-            <LoadingPanel className="mr-4 ml-2 my-2 h-[calc(100%-16px)]">
+            <LoadingPanel className="mr-4 ml-2 my-2 h-[calc(100%-1rem)]">
               <TestCasePanel />
             </LoadingPanel>
           </ResizablePanel>

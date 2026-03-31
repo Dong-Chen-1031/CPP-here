@@ -56,7 +56,9 @@
       "caseNameLabel": "Case Name",
       "saveBtn": "Save",
       "inputLabel": "Input",
-      "inputPlaceholder": "Type your input here."
+      "inputPlaceholder": "Stdin input here for this test case.",
+      "expectedOutputLabel": "Output",
+      "expectedPlaceholder": "Expected output here for auto verification. (Optional)"
     },
     "extension": {
       "caseName": "{{problemName}} - Test {{index}}",

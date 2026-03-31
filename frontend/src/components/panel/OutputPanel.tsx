@@ -82,17 +82,17 @@ export default function OutputPanel({ drawer = false }: { drawer?: boolean }) {
           {output.map((line, index) => (
             <div
               key={index}
-              className={
-                "text-xs bg-accent/75 p-2 rounded-md whitespace-pre-wrap break-all my-2 " +
-                (line.type === "err" ? " text-destructive" : "")
-              }
+              className={cn(
+                "text-xs bg-accent/75 p-2 rounded-md whitespace-pre-wrap break-all my-2 loader-card loading",
+                line.type === "err" ? " text-destructive fail" : "",
+              )}
             >
               {line.testCaseId && (
                 <p className="text-[0.6rem] text-accent-foreground/80 mb-1">
-                  {line.testCaseName}
+                  <span>{line.testCaseName}</span>
                 </p>
               )}
-              {line.content}
+              <p>{line.content}</p>
             </div>
           ))}
         </div>

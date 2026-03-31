@@ -83,9 +83,7 @@ export default function TestEditDialog({
         </DialogHeader>
         <FieldGroup className="p-2">
           <Field>
-            <Label htmlFor="name-1">
-              {t("testCase.editDialog.caseNameLabel")}
-            </Label>
+            <Label>{t("testCase.editDialog.caseNameLabel")}</Label>
             <Input
               id="name-1"
               name="name"
@@ -97,11 +95,9 @@ export default function TestEditDialog({
             />
           </Field>
           <Field>
-            <Label htmlFor="username-1">
-              {t("testCase.editDialog.inputLabel")}
-            </Label>
+            <Label>{t("testCase.editDialog.inputLabel")}</Label>
             <Textarea
-              className="h-50"
+              className="h-30"
               name="input"
               placeholder={t("testCase.editDialog.inputPlaceholder")}
               defaultValue={input}
@@ -109,6 +105,15 @@ export default function TestEditDialog({
               onFocus={(e) => {
                 window.innerWidth > 768 && e.target.select();
               }}
+              ref={inputRef}
+            />
+          </Field>
+          <Field>
+            <Label>{t("testCase.editDialog.expectedOutputLabel")}</Label>
+            <Textarea
+              className="h-30"
+              name="expected"
+              placeholder={t("testCase.editDialog.expectedPlaceholder")}
               ref={inputRef}
             />
           </Field>

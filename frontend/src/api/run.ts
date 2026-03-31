@@ -417,6 +417,7 @@ export async function handleRunAll() {
             content: output,
             testCaseId: testCase.id,
             testCaseName: testCase.name,
+            status: "running",
           }),
         );
       },
@@ -427,10 +428,12 @@ export async function handleRunAll() {
         });
       },
       onExit() {
-        // exitCount += 1;
-        // console.log(
-        //   `Test case ${testCase.name} completed. (${exitCount}/${testCases.length})`,
-        // );
+        insertInOrder(store.get(outputStore), {
+          content: "",
+          testCaseId: testCase.id,
+          testCaseName: testCase.name,
+          status: "finished",
+        });
         if (defaultStore.get(codeWorkersStore).length === 0) {
           store.set(runStatusStore, "idle");
         }

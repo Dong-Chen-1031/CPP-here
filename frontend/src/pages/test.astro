@@ -1,0 +1,90 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout>
+  <div class="flex justify-center items-center h-screen gap-10">
+    <div class="loader-card fail">
+      <span>fail</span>
+    </div>
+    <div class="loader-card success">
+      <span>success</span>
+    </div>
+    <div class="loader-card loading">
+      <span>loading</span>
+    </div>
+  </div>
+
+  <style>
+    .loader-card {
+      position: relative;
+      width: 200px;
+      height: 100px;
+      background: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 10px;
+      overflow: hidden;
+      color: white;
+    }
+
+    .loader-card.loading::before {
+      content: "";
+      position: absolute;
+      width: 70%;
+      height: 50%;
+      background: var(--border);
+      backdrop-filter: blur(3px);
+      animation: rotate 3s linear infinite;
+    }
+
+    .loader-card.success::before {
+      content: "";
+      position: absolute;
+      width: 150%;
+      height: 150%;
+      background: oklch(from var(--success) calc(l - 0.1) c h / 0.8);
+      backdrop-filter: blur(10px);
+    }
+
+    .loader-card.fail::before {
+      content: "";
+      position: absolute;
+      width: 150%;
+      height: 150%;
+      background: oklch(from var(--destructive) calc(l - 0.1) c h / 0.8);
+      backdrop-filter: blur(10px);
+    }
+
+    .loader-card.loader-card.success::after,
+    .loader-card.loader-card.fail::after {
+      border-radius: 8px;
+      inset: 2px;
+    }
+
+    .loader-card::after {
+      content: "";
+      position: absolute;
+      inset: 3px;
+      background: #1a1a1a;
+      border-radius: 8px;
+    }
+
+    @keyframes rotate {
+      0% {
+        transform: rotate(0deg) translateX(50px);
+      }
+      50% {
+        transform: rotate(180deg) translateX(50px);
+      }
+      100% {
+        transform: rotate(360deg) translateX(50px);
+      }
+    }
+
+    .loader-card.span {
+      z-index: 1;
+    }
+  </style>
+</Layout>
