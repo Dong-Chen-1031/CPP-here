@@ -4,6 +4,13 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../components/header.astro";
 
 import { SplitViewEditor } from "@/layouts/Resize";
+import { GlobalPanelDrawer } from "@/components/Drawer";
+import TurnstileWidget from "@/components/turnstile";
+import { AlertDialogGood, Alerts } from "@/components/Alert";
+import { Settings } from "@/components/Settings";
+import { getLanguages } from "@/lib/langList";
+
+const allLangs = getLanguages();
 ---
 
 <Layout>
@@ -11,5 +18,10 @@ import { SplitViewEditor } from "@/layouts/Resize";
     <Header />
 
     <SplitViewEditor client:load />
+    <GlobalPanelDrawer client:load />
+    <TurnstileWidget client:only="react" />
+    <Alerts client:only="react" />
+    <AlertDialogGood client:only="react" />
+    <Settings client:only="react" allLangs={allLangs} />
   </div>
 </Layout>

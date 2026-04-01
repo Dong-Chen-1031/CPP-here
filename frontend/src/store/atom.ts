@@ -75,6 +75,7 @@ export const codeWorkersStore = atom<CodeWorker[]>([]);
 export const verifyJwtStore = atom<string | null>(null);
 export const alertDialogStore = atom<AlertDialogOptions | null>(null);
 export const panelDrawerStore = atom<PanelDrawerView | null>(null);
+export const settingsPanelStore = atom(false);
 
 export function useResetAllAtoms() {
   const resetCode = useResetAtom(codeStore);

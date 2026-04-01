@@ -17,6 +17,7 @@ import {
   CppVersionSelect,
   ResetButton,
   RunButton,
+  SettingsButton,
   UndoRedo,
 } from "./HeaderActions";
 import { panelDrawerStore, type PanelDrawerView } from "@/store/atom";
@@ -45,6 +46,7 @@ export function Commands({ className = "" }: { className?: string }) {
               <CommandItem>
                 <UndoRedo menu />
                 <ResetButton onClick={() => setOpen(false)} />
+                <SettingsButton onClick={() => setOpen(false)} />
               </CommandItem>
               <CommandItem>
                 <CppVersionSelect

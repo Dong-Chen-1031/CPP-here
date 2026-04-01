@@ -6,6 +6,7 @@ import enCommon from "../../../i18n/en/common.json";
 import enEditor from "../../../i18n/en/editor.json";
 import twCommon from "../../../i18n/zh-TW/common.json";
 import twEditor from "../../../i18n/zh-TW/editor.json";
+
 i18n
   .use(Backend)
   .use(LanguageDetector)

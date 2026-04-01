@@ -16,6 +16,7 @@ import {
   ChevronDownIcon,
   CircleStopIcon,
   RotateCcw,
+  SettingsIcon,
   SquareIcon,
   TestTubes,
 } from "lucide-react";
@@ -31,7 +32,6 @@ import {
   SelectValue,
   SelectLabel,
 } from "@/components/ui/select";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { getDefaultStore, useAtom } from "jotai";
 import {
   codeWorkersStore,
@@ -39,9 +39,9 @@ import {
   editorRefStore,
   loadedCountStore,
   loadedStore,
-  panelDrawerStore,
   runModeStore,
   runStatusStore,
+  settingsPanelStore,
   verifyJwtStore,
 } from "@/store/atom";
 
@@ -437,6 +437,29 @@ export function CppVersionSelect({
   );
 }
 
+export function SettingsButton({
+  onClick,
+}: {
+  onClick?: (e: React.MouseEvent) => void;
+}) {
+  const [, setSettingsOpen] = useAtom(settingsPanelStore);
+  const { t } = useTranslation(["editor"]);
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={(e) => {
+        onClick && onClick?.(e);
+        setSettingsOpen(true);
+      }}
+    >
+      <SettingsIcon className="mr-1" />
+      {t("headerActions.settings")}
+    </Button>
+  );
+}
+
 export default function HeaderActions() {
   const [loaded] = useAtom(loadedStore);
   const [, setLoadedCount] = useAtom(loadedCountStore);
@@ -465,6 +488,7 @@ export default function HeaderActions() {
             transition={{ duration: 0.3 }}
           >
             <UndoRedo />
+            <SettingsButton />
             <ResetButton />
             <CppVersionSelect />
             <RunButton />

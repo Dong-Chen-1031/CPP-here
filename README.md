@@ -43,32 +43,11 @@ CPP-here 是一個輕量、快速的線上 C++ 執行與驗證平台。讓使用
 - **簡潔優雅，不失強大**
   雖然功能豐富，但 CPP-here 的使用者介面保持簡潔優雅，讓使用者能夠專注於程式碼本身，而不會被過多的功能選項分散注意力。
 
+- **匯入測資**
+  透過瀏覽器插件一鍵匯入競賽平台的測試資料，支援超過 100 個主流競賽平台。
+
 ## 技術棧
 
-- **前端**: Astro, Bun, Motion, React, Shadcn, Tailwind CSS, TypeScript, axios, cloudflare turnstile, codemirror, i18next, jotai Atom, lucide
+- **前端**: Astro, Bun, Motion, React, Shadcn, Tailwind CSS, TypeScript, axios, cloudflare turnstile, codemirror, i18next, Jotai Atom, lucide
 - **瀏覽器擴充**: Bun, TypeScript, esbuild, web-ext
 - **後端**: FastAPI, PyJWT, PyTurnstile, Python, SQLAlchemy, Uvicorn, aiodocker, aiofiles, aiosqlite, apscheduler
-
-## 快速開始
-
-### 啟動後端
-
-進入後端目錄並安裝相依套件，接著啟動 FastAPI 伺服器：
-
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
-
-### 啟動前端
-
-進入前端目錄，安裝相依套件並啟動開發伺服器：
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-啟動後，開啟終端機提示的本地網址即可開始使用。

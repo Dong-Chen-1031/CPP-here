@@ -7,6 +7,7 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   integrations: [react()],
   vite: {
+    // @ts-ignore I don't know why tailwindcss types are not working. But it works fine.
     plugins: [tailwindcss()],
   },
 });

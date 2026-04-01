@@ -253,7 +253,11 @@ export default function TestCasePanel({
                   </Tip>
                   <TestEditDialog
                     trigger={
-                      <Button variant="outline" size="icon">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <Pencil className="w-4 h-4" />
                       </Button>
                     }
