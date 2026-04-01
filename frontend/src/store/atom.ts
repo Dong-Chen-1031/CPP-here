@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import { atomWithStorage, useResetAtom } from "jotai/utils";
+import { atomWithStorage, RESET, useResetAtom } from "jotai/utils";
 import { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import type { RefObject } from "react";
 import type { TurnstileInstance } from "@marsidev/react-turnstile";
@@ -54,9 +54,24 @@ export const editorErrorStore = atomWithStorage<
   }[]
 >("editorErrors", []);
 
-export const codeStore = atomWithStorage<string>(
-  "code",
+export const defCodeStore = atomWithStorage<string>(
+  "defCode",
   `#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello C++ Here";\n    return 0;\n}`,
+);
+const baseCodeAtom = atomWithStorage<string | null>("code", null);
+export const codeStore = atom(
+  (get) => get(baseCodeAtom) ?? get(defCodeStore),
+  (get, set, update: string | typeof RESET | ((prev: string) => string)) => {
+    if (update === RESET) {
+      set(baseCodeAtom, RESET);
+    } else {
+      const nextValue =
+        typeof update === "function"
+          ? update(get(baseCodeAtom) ?? get(defCodeStore))
+          : update;
+      set(baseCodeAtom, nextValue);
+    }
+  },
 );
 export const cppVersionStore = atomWithStorage<string>("cppVersion", "c++17");
 export const inputStore = atomWithStorage<string>("input", "");

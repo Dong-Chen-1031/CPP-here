@@ -476,7 +476,7 @@ export default function HeaderActions() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <Skeleton className="w-[376.617px] h-7" />
+            <Skeleton className="w-[490px] h-7" />
           </motion.div>
         ) : (
           <motion.div
