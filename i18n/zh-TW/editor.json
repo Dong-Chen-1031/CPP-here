@@ -104,7 +104,8 @@
     "title": "Settings",
     "language": "Language",
     "selectLanguage": "Select a language",
-    "noLanguage": "No Language found."
+    "noLanguage": "No Language found.",
+    "fontSize": "Font Size"
   },
   "resize": {
     "loadingEditor": "Loading Editor"
