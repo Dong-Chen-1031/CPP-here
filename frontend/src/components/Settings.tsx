@@ -27,6 +27,8 @@ import {
   ComboboxList,
 } from "@/components/ui/combobox";
 import { useTranslation } from "react-i18next";
+import { set } from "astro:schema";
+import { useEffect, useRef } from "react";
 
 interface SettingsProps {
   allLangs: Record<string, string>;
@@ -34,6 +36,7 @@ interface SettingsProps {
 
 export function Settings({ allLangs }: SettingsProps) {
   const [open, setOpen] = useAtom(settingsPanelStore);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { t, i18n } = useTranslation("editor");
 
   const handleLanguageChange = (newLang: string | null) => {
@@ -42,14 +45,17 @@ export function Settings({ allLangs }: SettingsProps) {
     }
   };
 
+  useEffect(() => {
+    setTimeout(() => {
+      inputRef.current?.setSelectionRange(-1, -1);
+    }, 10);
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-100 w-[calc(100%-2rem)]">
         <DialogHeader>
           <DialogTitle>{t("settings.title")}</DialogTitle>
-          {/* <DialogDescription>
-            This is a dialog with scrollable content.
-          </DialogDescription> */}
         </DialogHeader>
         <FieldSet>
           <FieldGroup>
@@ -67,12 +73,16 @@ export function Settings({ allLangs }: SettingsProps) {
                   ) || null
                 }
               >
-                <ComboboxInput placeholder={t("settings.selectLanguage")} />
+                <ComboboxInput
+                  placeholder={t("settings.selectLanguage")}
+                  autoFocus={false}
+                  ref={inputRef}
+                />
                 <ComboboxContent>
                   <ComboboxEmpty>{t("settings.noLanguage")}</ComboboxEmpty>
                   <ComboboxList>
                     {(item) => (
-                      <ComboboxItem key={item} value={item}>
+                      <ComboboxItem key={item} value={item} autoFocus={false}>
                         {item}
                       </ComboboxItem>
                     )}

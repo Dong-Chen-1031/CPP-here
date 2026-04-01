@@ -5,6 +5,7 @@ import type { RefObject } from "react";
 import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import type { CodeWorker } from "@/api/run";
 import type { AlertDialogOptions } from "@/components/Alert";
+import type { EditDialogOptions } from "@/components/panel/TestEditDialog";
 export interface TestCase {
   id: string;
   name: string;
@@ -75,6 +76,7 @@ export const codeWorkersStore = atom<CodeWorker[]>([]);
 export const verifyJwtStore = atom<string | null>(null);
 export const alertDialogStore = atom<AlertDialogOptions | null>(null);
 export const panelDrawerStore = atom<PanelDrawerView | null>(null);
+export const testCaseEditStore = atom<EditDialogOptions | null>(null);
 export const settingsPanelStore = atom(false);
 
 export function useResetAllAtoms() {

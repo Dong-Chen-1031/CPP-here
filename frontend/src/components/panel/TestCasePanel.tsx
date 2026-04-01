@@ -17,6 +17,7 @@ import {
   inputStore,
   panelDrawerStore,
   runStatusStore,
+  testCaseEditStore,
   testCasesStore,
   verifyJwtStore,
   type TestCase,
@@ -95,6 +96,7 @@ export default function TestCasePanel({
   const [, setAlert] = useAtom(alertStore);
 
   const [runStatus] = useAtom(runStatusStore);
+  const [, setTestCaseEditArgs] = useAtom(testCaseEditStore);
 
   useEffect(() => {
     const handleExtEvent = (event: Event) => {
@@ -202,19 +204,27 @@ export default function TestCasePanel({
           <TestTubes className="w-3 h-3 shrink-0" />
           <p className="text-sm truncate">{t("testCase.label")}</p>
           <div className="flex-1"></div>
-          <TestEditDialog
-            tip={t("testCase.addTip")}
-            trigger={
-              <Button variant="outline" className="px-2">
-                <CirclePlus className="w-4 h-4" />
-                <span className="hidden @[250px]:inline">
-                  {t("testCase.addBtn")}
-                </span>
-              </Button>
-            }
-            name={t("testCase.defaultName", { index: testCases.length + 1 })}
-            handleSubmit={handleAddTestCase}
-          />
+          <Tip>
+            <Button
+              variant="outline"
+              className="px-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                setTestCaseEditArgs({
+                  open: true,
+                  name: t("testCase.defaultName", {
+                    index: testCases.length + 1,
+                  }),
+                  handleSubmit: handleAddTestCase,
+                });
+              }}
+            >
+              <CirclePlus className="w-4 h-4" />
+              <span className="hidden @[250px]:inline">
+                {t("testCase.addBtn")}
+              </span>
+            </Button>
+          </Tip>
         </div>
         <div className="mt-4 overflow-y-auto max-h-[calc(100%-2rem)]">
           {testCases.length === 0 ? (
@@ -251,32 +261,40 @@ export default function TestCasePanel({
                       </Button>
                     </div>
                   </Tip>
-                  <TestEditDialog
-                    trigger={
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                    }
-                    tip={t("testCase.editTip")}
-                    title={t("testCase.editDialog.title")}
-                    name={testCase.name}
-                    input={testCase.input}
-                    expected={testCase.expectedOutput}
-                    submitBtnName={t("testCase.editDialog.saveBtn")}
-                    handleSubmit={(name, input, expected) => {
-                      setTestCases((prev) =>
-                        prev.map((tc) =>
-                          tc.id === testCase.id
-                            ? { ...tc, name, input, expectedOutput: expected }
-                            : tc,
-                        ),
-                      );
-                    }}
-                  />
+                  <Tip label={t("testCase.editTip")}>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTestCaseEditArgs({
+                          open: true,
+                          title: t("testCase.editDialog.title"),
+                          name: testCase.name,
+                          input: testCase.input,
+                          expected: testCase.expectedOutput,
+                          submitBtnName: t("testCase.editDialog.saveBtn"),
+                          handleSubmit: (name, input, expected) => {
+                            setTestCases((prev) =>
+                              prev.map((tc) =>
+                                tc.id === testCase.id
+                                  ? {
+                                      ...tc,
+                                      name,
+                                      input,
+                                      expectedOutput: expected,
+                                    }
+                                  : tc,
+                              ),
+                            );
+                          },
+                        });
+                      }}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                  </Tip>
+
                   <Tip label={t("testCase.deleteTip")}>
                     <Button
                       variant="outline"

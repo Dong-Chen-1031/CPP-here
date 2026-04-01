@@ -16,6 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import React, { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import Tip from "../ui/tips";
+import { useAtom } from "jotai";
+import { testCaseEditStore } from "@/store/atom";
 
 export interface EditDialogOptions {
   title?: string;
@@ -23,41 +25,42 @@ export interface EditDialogOptions {
   input?: string;
   expected?: string;
   submitBtnName?: string;
-  tip?: string;
+  open?: boolean;
+  onClose?: () => void;
   handleSubmit?: (name: string, input: string, expected: string) => void;
 }
 
-export default function TestEditDialog({
-  trigger,
-  title,
-  name,
-  input = "",
-  expected = "",
-  tip = "",
-  submitBtnName,
-  handleSubmit = (n, i, e) => {
-    console.log(n, i, e);
-  },
-}: EditDialogOptions & { trigger: React.ReactNode }) {
-  const [open, setOpen] = React.useState(false);
+export default function TestEditDialog() {
+  const [args, setArgs] = useAtom(testCaseEditStore);
+  // console.log("TestEditDialog render", args);
   const caseNameRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const expectedRef = useRef<HTMLTextAreaElement>(null);
   const { t } = useTranslation(["editor", "common"]);
 
+  const setOpen = (open: boolean) => {
+    setArgs((p) => (p ? { ...p, open } : null));
+  };
+  let { title, name, input, expected, submitBtnName, handleSubmit, open } =
+    args || {};
+
+  if (!args) {
+    return null;
+  }
+
   if (!submitBtnName) {
-    submitBtnName = t("common:create");
+    args.submitBtnName = t("common:create");
   }
   if (!title) {
-    title = t("testCase.editDialog.titleCreate");
+    args.title = t("testCase.editDialog.titleCreate");
   }
 
   function handleSubmitWrapper() {
     const name = caseNameRef.current?.value || "";
     const input = inputRef.current?.value || "";
     const expected = expectedRef.current?.value || "";
-    handleSubmit(name, input, expected);
-    setOpen(false);
+    handleSubmit && handleSubmit(name, input, expected);
+    setArgs((p) => (p ? { ...p, open: false } : null));
   }
 
   function handleDialogKeyDown(e: React.KeyboardEvent) {
@@ -70,13 +73,6 @@ export default function TestEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {tip ? (
-        <Tip label={tip}>
-          <DialogTrigger asChild>{trigger}</DialogTrigger>
-        </Tip>
-      ) : (
-        <DialogTrigger asChild>{trigger}</DialogTrigger>
-      )}
       <DialogContent
         className="md:max-w-125"
         showCloseButton={false}

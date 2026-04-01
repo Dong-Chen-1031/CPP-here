@@ -9,6 +9,7 @@ import TurnstileWidget from "@/components/turnstile";
 import { AlertDialogGood, Alerts } from "@/components/Alert";
 import { Settings } from "@/components/Settings";
 import { getLanguages } from "@/lib/langList";
+import TestEditDialog from "@/components/panel/TestEditDialog";
 
 const allLangs = getLanguages();
 ---
@@ -23,5 +24,6 @@ const allLangs = getLanguages();
     <Alerts client:only="react" />
     <AlertDialogGood client:only="react" />
     <Settings client:only="react" allLangs={allLangs} />
-  </div>
-</Layout>
+    <TestEditDialog client:only="react" />
+  </div></Layout
+>
