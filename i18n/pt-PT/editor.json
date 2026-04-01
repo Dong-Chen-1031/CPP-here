@@ -89,7 +89,8 @@
     "runAll": "Run All",
     "resetEverything": "Reset Everything",
     "resetBtn": "Reset",
-    "shareCode": "Share Code"
+    "shareCode": "Share Code",
+    "settings": "Settings"
   },
   "turnstile": {
     "verificationFailed": "Verification Failed",
@@ -98,6 +99,12 @@
     "unsupportedDesc": "Your browser does not support Turnstile. Please use a modern browser.",
     "error": "Turnstile Error",
     "errorDesc": "An error occurred during Turnstile verification. Please try reloading the page."
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "selectLanguage": "Select a language",
+    "noLanguage": "No Language found."
   },
   "resize": {
     "loadingEditor": "Loading Editor"
