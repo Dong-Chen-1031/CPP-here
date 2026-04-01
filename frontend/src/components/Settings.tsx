@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { settingsPanelStore } from "@/store/atom";
+import { editorFontSizeStore, settingsPanelStore } from "@/store/atom";
 import { useAtom } from "jotai";
 import {
   Field,
@@ -29,6 +29,8 @@ import {
 import { useTranslation } from "react-i18next";
 import { set } from "astro:schema";
 import { useEffect, useRef } from "react";
+import { ButtonGroup } from "./ui/button-group";
+import { MinusIcon, PlusIcon } from "lucide-react";
 
 interface SettingsProps {
   allLangs: Record<string, string>;
@@ -38,6 +40,7 @@ export function Settings({ allLangs }: SettingsProps) {
   const [open, setOpen] = useAtom(settingsPanelStore);
   const inputRef = useRef<HTMLInputElement>(null);
   const { t, i18n } = useTranslation("editor");
+  const [fontSize, setFontSize] = useAtom(editorFontSizeStore);
 
   const handleLanguageChange = (newLang: string | null) => {
     if (newLang) {
@@ -89,6 +92,41 @@ export function Settings({ allLangs }: SettingsProps) {
                   </ComboboxList>
                 </ComboboxContent>
               </Combobox>
+            </Field>
+            <Field orientation="horizontal" className="items-center">
+              <FieldContent>
+                <FieldLabel>{t("settings.fontSize")}</FieldLabel>
+                {/* <FieldDescription></FieldDescription> */}
+              </FieldContent>
+              <ButtonGroup
+                orientation="horizontal"
+                aria-label="Media controls"
+                className="h-fit"
+              >
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setFontSize((p) => Math.max(p - 1, 5))}
+                  disabled={fontSize <= 5}
+                >
+                  <MinusIcon />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="bg-input/30! cursor-default"
+                >
+                  {fontSize}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setFontSize((p) => Math.min(p + 1, 50))}
+                  disabled={fontSize >= 50}
+                >
+                  <PlusIcon />
+                </Button>
+              </ButtonGroup>
             </Field>
           </FieldGroup>
         </FieldSet>

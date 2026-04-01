@@ -146,37 +146,9 @@ function CppEditor({
 
   return (
     <div className="relative h-full w-full">
-      <div className="absolute bottom-5 right-5 z-10">
-        <ButtonGroup
-          orientation="horizontal"
-          aria-label="Media controls"
-          className="h-fit"
-        >
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setFontSize((p) => Math.max(p - 1, 5))}
-            disabled={fontSize <= 5}
-          >
-            <MinusIcon />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="bg-input/30! cursor-default"
-          >
-            {fontSize}
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setFontSize((p) => Math.min(p + 1, 50))}
-            disabled={fontSize >= 50}
-          >
-            <PlusIcon />
-          </Button>
-        </ButtonGroup>
-      </div>
+      {/* <div className="absolute bottom-5 right-5 z-10">
+        
+      </div> */}
 
       <div className="absolute inset-0">
         <CodeMirror
