@@ -55,7 +55,7 @@
       "titleCreate": "New Test Case",
       "title": "Edit Test Case",
       "caseNameLabel": "Case Name",
-      "saveBtn": "儲存",
+      "saveBtn": "Save",
       "inputLabel": "Input",
       "inputPlaceholder": "Stdin input here for this test case.",
       "expectedOutputLabel": "Output",
@@ -68,7 +68,7 @@
         "description": "Test case {{problemName}} has been received. Would\nyou like to overwrite or insert the new test cases?",
         "overwrite": "Overwrite",
         "insert": "Insert",
-        "cancel": "取消"
+        "cancel": "Cancel"
       },
       "alert": {
         "title": "A new test case has been received",
@@ -83,7 +83,7 @@
     "runAllTestCases": "Run all test cases",
     "runCurrentInput": "Run current input",
     "verifying": "Verifying",
-    "building": "建置中",
+    "building": "Building",
     "stop": "Stop",
     "run": "Run",
     "runAll": "Run All",
