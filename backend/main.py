@@ -7,12 +7,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from prometheus_fastapi_instrumentator import Instrumentator
 from services.resource_manager import lifespan
 from settings import DEV_MODE, FRONTEND_URL, PORT
 from utils.log import logger
 
 if DEV_MODE:
     logger.info("Running in development mode")
+
 
 app = FastAPI(
     lifespan=lifespan,
@@ -22,6 +24,8 @@ app = FastAPI(
     openapi_url="/openapi.json" if DEV_MODE else None,
 )
 
+
+Instrumentator().instrument(app).expose(app)
 
 app.mount(
     f"/{settings.CATCH_PATH}",

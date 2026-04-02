@@ -11,3 +11,4 @@ sqlalchemy[asyncio]
 apscheduler
 asyncpg
 aiosqlite
+prometheus-fastapi-instrumentator

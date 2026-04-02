@@ -6,6 +6,7 @@ from typing import Literal
 import aiofiles
 from aiofiles import open
 from fastapi import APIRouter, Depends
+from prometheus_client import Counter, Histogram
 from pydantic import BaseModel
 from router.verify import need_token
 from services.build import BuildError, build
@@ -14,6 +15,38 @@ from utils import catch
 from utils.log import logger
 
 router = APIRouter()
+
+BUILD_COUNT = Counter("cpp_build_total", "Total number of C++ builds", ["status"])
+
+# 統計程式碼行數
+BUILD_LINES = Histogram(
+    "cpp_build_lines_of_code",
+    "Lines of code per build",
+    buckets=[50, 100, 200, 300, 400, 500, 1000, 5000, 10000, float("inf")],
+)
+BUILD_LINES_TOTAL = Counter(
+    "cpp_build_lines_total", "Total lines of code compiled (precise)"
+)
+BUILD_SIZE_TOTAL = Counter(
+    "cpp_build_artifact_size_total_bytes",
+    "Total size of compiled binaries in bytes (precise)",
+)
+
+# 統計編譯後的檔案大小 (Bytes)
+BUILD_SIZE = Histogram(
+    "cpp_build_artifact_size_bytes",
+    "Size of the compiled binary in bytes",
+    buckets=[
+        1024 * 100,
+        1024 * 500,
+        1024 * 600,
+        1024 * 700,
+        1024 * 800,
+        1024 * 1024,
+        1024 * 1024 * 5,
+        float("inf"),
+    ],  # 100K, 500K, 1M, 5M
+)
 
 
 class BuildRequest(BaseModel):
@@ -45,10 +78,14 @@ async def build_cpp(
     request: BuildRequest, token: dict = Depends(need_token)
 ) -> BuildResponse:
     global WORKER_CODE
+    code_lines = len(request.code.splitlines())
+    BUILD_LINES.observe(code_lines)
+    BUILD_LINES_TOTAL.inc(code_lines)
     case_id = request.hash()
     catch_entry = await catch.get_catch(case_id)
     if catch_entry:
         logger.info(f"Cache hit for code {case_id}")
+        BUILD_COUNT.labels(status="cache").inc()
         return BuildResponse(
             ok=True,
             js_url=f"{BACKEND_URL}/{CATCH_PATH}/{case_id}/build.js",
@@ -63,7 +100,12 @@ async def build_cpp(
     try:
         await build(request.code, name=js_name, output_dir=output_path)
         logger.info("Build succeeded")
+        BUILD_COUNT.labels(status="success").inc()
+        file_size = (pathlib.Path(output_path) / wasm_name).stat().st_size
+        BUILD_SIZE.observe(file_size)
+        BUILD_SIZE_TOTAL.inc(file_size)
     except BuildError as e:
+        BUILD_COUNT.labels(status="failure").inc()
         return BuildResponse(
             ok=False,
             js_url="",
