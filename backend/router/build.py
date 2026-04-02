@@ -1,5 +1,6 @@
 import pathlib
 import re
+import time
 from hashlib import sha256
 from typing import Literal
 
@@ -48,6 +49,13 @@ BUILD_SIZE = Histogram(
     ],  # 100K, 500K, 1M, 5M
 )
 
+# 統計編譯耗時 (秒)
+BUILD_DURATION = Histogram(
+    "cpp_build_duration_seconds",
+    "Time spent during the C++ build process",
+    buckets=[0.1, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 30, float("inf")],
+)
+
 
 class BuildRequest(BaseModel):
     code: str
@@ -78,6 +86,7 @@ async def build_cpp(
     request: BuildRequest, token: dict = Depends(need_token)
 ) -> BuildResponse:
     global WORKER_CODE
+    start_time = time.perf_counter()
     code_lines = len(request.code.splitlines())
     BUILD_LINES.observe(code_lines)
     BUILD_LINES_TOTAL.inc(code_lines)
@@ -132,6 +141,8 @@ async def build_cpp(
         js_code += worker_code
 
     await catch.add_catch(case_id)
+    BUILD_DURATION.observe(time.perf_counter() - start_time)
+
     return BuildResponse(
         ok=True,
         js_url=f"{BACKEND_URL}/{output_path}/{js_name}",
