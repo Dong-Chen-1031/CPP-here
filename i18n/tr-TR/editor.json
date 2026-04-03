@@ -108,7 +108,10 @@
     "fontSize": "Font Size",
     "defaultCode": "Default Code",
     "defaultCodeDesc": "Set the current code as default.",
-    "defaultCodeBtn": "Set"
+    "defaultCodeBtn": "Set",
+    "resetSettings": "Reset Settings",
+    "resetSettingsDesc": "Reset all settings to default values.",
+    "resetSettingsBtn": "Reset"
   },
   "resize": {
     "loadingEditor": "Loading Editor"
