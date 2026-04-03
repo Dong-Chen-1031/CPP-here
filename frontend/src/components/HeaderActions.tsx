@@ -50,7 +50,7 @@ import { undo, redo } from "@codemirror/commands";
 import { handleRun, handleRunAll } from "@/api/run";
 
 import Tip from "@/components/ui/tips";
-import { useResetAllAtoms } from "@/store/atom";
+import { useResetEditorAtoms } from "@/store/atom";
 import { cn, commandKey, useIsMobile } from "@/lib/utils";
 import { Kbd } from "./ui/kbd";
 import { AnimatePresence, motion } from "motion/react";
@@ -377,7 +377,7 @@ export function ResetButton({
   className?: string;
   onClick?: (e: React.MouseEvent) => void;
 }) {
-  const resetAll = useResetAllAtoms();
+  const resetAll = useResetEditorAtoms();
   const { t } = useTranslation(["editor"]);
 
   return (

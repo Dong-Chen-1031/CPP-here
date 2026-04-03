@@ -5,12 +5,13 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog-fix";
 import {
   codeStore,
   defCodeStore,
   editorFontSizeStore,
   settingsPanelStore,
+  useResetSettingsAtoms,
 } from "@/store/atom";
 import { useAtom } from "jotai";
 import {
@@ -30,11 +31,12 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
-} from "@/components/ui/combobox";
+} from "@/components/ui/combobox-fix";
 import { useTranslation } from "react-i18next";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { ButtonGroup } from "./ui/button-group";
-import { MinusIcon, PlusIcon } from "lucide-react";
+import { ListRestart, MinusIcon, PlusIcon } from "lucide-react";
+import IconMotion from "./IconMotion";
 
 interface SettingsProps {
   allLangs: Record<string, string>;
@@ -47,12 +49,30 @@ export function Settings({ allLangs }: SettingsProps) {
   const [fontSize, setFontSize] = useAtom(editorFontSizeStore);
   const [defCode, setDefCode] = useAtom(defCodeStore);
   const [code, setCode] = useAtom(codeStore);
+  const resetSettingsAtoms = useResetSettingsAtoms();
+
+  const matchedLang =
+    Object.keys(allLangs).find(
+      (code: string) => allLangs[code] === i18n.language,
+    ) || null;
+
+  const [localLang, setLocalLang] = React.useState<string | null>(matchedLang);
+  const [comboOpen, setComboOpen] = React.useState(false);
+
+  useEffect(() => {
+    setLocalLang(matchedLang);
+  }, [matchedLang]);
 
   const handleLanguageChange = (newLang: string | null) => {
     if (newLang) {
+      setLocalLang(newLang);
       i18n.changeLanguage(allLangs[newLang]);
+      setComboOpen(false);
     }
   };
+
+  const [portalContainer, setPortalContainer] =
+    React.useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setTimeout(() => {
@@ -62,36 +82,40 @@ export function Settings({ allLangs }: SettingsProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-100 w-[calc(100%-2rem)]">
+      <DialogContent className="max-w-120 w-[calc(100%-2rem)]">
         <DialogHeader>
           <DialogTitle>{t("settings.title")}</DialogTitle>
         </DialogHeader>
         <FieldSet>
           <FieldGroup>
-            <Field orientation="horizontal" className="items-center">
+            <Field orientation="horizontal" className="items-center!">
               <FieldContent>
                 <FieldLabel>{t("settings.language")}</FieldLabel>
                 {/* <FieldDescription></FieldDescription> */}
               </FieldContent>
               <Combobox
+                open={comboOpen}
+                onOpenChange={setComboOpen}
                 items={Object.keys(allLangs)}
                 onValueChange={handleLanguageChange}
-                value={
-                  Object.keys(allLangs).find(
-                    (code: string) => allLangs[code] === i18n.language,
-                  ) || null
-                }
+                value={localLang}
               >
                 <ComboboxInput
                   placeholder={t("settings.selectLanguage")}
                   autoFocus={false}
                   ref={inputRef}
                 />
-                <ComboboxContent>
+                <ComboboxContent container={portalContainer}>
                   <ComboboxEmpty>{t("settings.noLanguage")}</ComboboxEmpty>
-                  <ComboboxList>
+                  <ComboboxList className="max-h-[300px] overflow-y-auto">
                     {(item) => (
-                      <ComboboxItem key={item} value={item} autoFocus={false}>
+                      <ComboboxItem
+                        key={item}
+                        value={item}
+                        autoFocus={false}
+                        onPointerDown={(e) => e.preventDefault()}
+                        onPointerUp={() => handleLanguageChange(item)}
+                      >
                         {item}
                       </ComboboxItem>
                     )}
@@ -99,7 +123,7 @@ export function Settings({ allLangs }: SettingsProps) {
                 </ComboboxContent>
               </Combobox>
             </Field>
-            <Field orientation="horizontal" className="items-center">
+            <Field orientation="horizontal" className="items-center!">
               <FieldContent>
                 <FieldLabel>{t("settings.fontSize")}</FieldLabel>
                 {/* <FieldDescription></FieldDescription> */}
@@ -134,7 +158,7 @@ export function Settings({ allLangs }: SettingsProps) {
                 </Button>
               </ButtonGroup>
             </Field>
-            <Field orientation="horizontal" className="items-center">
+            <Field orientation="horizontal" className="items-center!">
               <FieldContent>
                 <FieldLabel>{t("settings.defaultCode")}</FieldLabel>
                 <FieldDescription className="text-xs">
@@ -156,8 +180,27 @@ export function Settings({ allLangs }: SettingsProps) {
                 </Button>
               </ButtonGroup>
             </Field>
+            <Field orientation="horizontal" className="items-center!">
+              <FieldContent>
+                <FieldLabel>{t("settings.resetSettings")}</FieldLabel>
+                <FieldDescription className="text-xs">
+                  {t("settings.resetSettingsDesc")}
+                </FieldDescription>
+              </FieldContent>
+              <ButtonGroup
+                orientation="horizontal"
+                aria-label="Media controls"
+                className="h-fit"
+              >
+                <Button variant="outline" onClick={resetSettingsAtoms}>
+                  <IconMotion show={false} HideIcon={ListRestart} />
+                  {t("settings.resetSettingsBtn")}
+                </Button>
+              </ButtonGroup>
+            </Field>
           </FieldGroup>
         </FieldSet>
+        <div ref={setPortalContainer} className="absolute" />
       </DialogContent>
     </Dialog>
   );

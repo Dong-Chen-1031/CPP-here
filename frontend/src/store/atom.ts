@@ -94,13 +94,14 @@ export const panelDrawerStore = atom<PanelDrawerView | null>(null);
 export const testCaseEditStore = atom<EditDialogOptions | null>(null);
 export const settingsPanelStore = atom(false);
 
-export function useResetAllAtoms() {
+export function useResetEditorAtoms() {
   const resetCode = useResetAtom(codeStore);
   const resetCppVersion = useResetAtom(cppVersionStore);
   const resetInput = useResetAtom(inputStore);
   const resetOutput = useResetAtom(outputStore);
   const resetRunMode = useResetAtom(runModeStore);
   const resetTestCases = useResetAtom(testCasesStore);
+  const resetEditorErrors = useResetAtom(editorErrorStore);
 
   return () => {
     resetCode();
@@ -109,5 +110,16 @@ export function useResetAllAtoms() {
     resetOutput();
     resetRunMode();
     resetTestCases();
+    resetEditorErrors();
+  };
+}
+
+export function useResetSettingsAtoms() {
+  const resetEditorFontSize = useResetAtom(editorFontSizeStore);
+  const resetDefCode = useResetAtom(defCodeStore);
+
+  return () => {
+    resetEditorFontSize();
+    resetDefCode();
   };
 }
