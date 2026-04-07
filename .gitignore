@@ -17,6 +17,7 @@ node_modules/
 .vscode/
 
 catch/
+cache/
 
 # C extensions
 *.so
