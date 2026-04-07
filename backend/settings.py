@@ -24,10 +24,10 @@ CACHE_LIMIT = 100
 
 CACHE_EXPIRY = 24 * 3600 * 7
 
-CACHE_PATH = "catch"  # TODO: rename to cache
+CACHE_PATH = "cache"  # TODO: rename to cache
 
 CACHE_SQLITE_PATH = (
-    f"sqlite+aiosqlite:///{CACHE_PATH}/catch.db"  # TODO: rename to cache.db
+    f"sqlite+aiosqlite:///{CACHE_PATH}/cache.db"  # TODO: rename to cache.db
 )
 
 TURNSTILE_SECRET = os.getenv("TURNSTILE_SECRET", "")

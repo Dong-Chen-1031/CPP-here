@@ -13,9 +13,8 @@ from pydantic import BaseModel, Field
 from router.verify import need_token
 from services.build import BuildError, build
 from settings import BACKEND_URL, BUILD_VERSION, CACHE_PATH
+from utils import cache
 from utils.log import logger
-
-from backend.utils import cache
 
 router = APIRouter()
 
