@@ -1,3 +1,4 @@
+import asyncio
 import os
 import shlex
 from pathlib import Path
@@ -70,7 +71,12 @@ async def build(
     try:
         await container.start()
 
-        result = await container.wait()
+        try:
+            result = await asyncio.wait_for(container.wait(), timeout=60)
+        except asyncio.TimeoutError:
+            logger.warning("Container timeout, killing...")
+            await container.kill()
+            raise BuildError("Build timed out")
         exit_code = result["StatusCode"]
 
         logs = await container.log(stdout=True, stderr=True)

@@ -2,7 +2,7 @@ import asyncio
 import shutil
 import time
 
-from settings import CATCH_EXPIRY, CATCH_LIMIT, CATCH_PATH, CATCH_SQLITE_PATH
+from settings import CACHE_EXPIRY, CACHE_LIMIT, CACHE_PATH, CACHE_SQLITE_PATH
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlmodel import Field, SQLModel, col, select
@@ -10,17 +10,19 @@ from utils.log import logger
 from utils.scheduler import scheduler
 
 
-class Catch(SQLModel, table=True):
+class Catch(
+    SQLModel, table=True
+):  # TODO: rename to Cache, but my db already has a table named Catch, so I have to keep this name for now
     hash_id: str = Field(default=None, primary_key=True)
     version: str = Field(default="0.1.0")
     timestamp: int = Field(default_factory=lambda: int(time.time()))
     delete_at: int = Field(
-        default_factory=lambda: int(time.time()) + CATCH_EXPIRY
+        default_factory=lambda: int(time.time()) + CACHE_EXPIRY
     )  # default to delete after 7 days
     use_time: int = Field(default=1)
 
 
-engine = create_async_engine(CATCH_SQLITE_PATH)
+engine = create_async_engine(CACHE_SQLITE_PATH)
 
 async_session = async_sessionmaker(engine, expire_on_commit=False)
 
@@ -30,14 +32,14 @@ async def init_db():
         await conn.run_sync(SQLModel.metadata.create_all)
 
 
-async def add_catch(hash_id: str):
+async def add_cache(hash_id: str):
     async with async_session() as session:
-        catch = Catch(hash_id=hash_id)
-        session.add(catch)
+        cache = Catch(hash_id=hash_id)
+        session.add(cache)
         await session.commit()
 
 
-async def get_catch(hash_id: str) -> Catch | None:
+async def get_cache(hash_id: str) -> Catch | None:
     async with async_session() as session:
         try:
             result = await session.get(Catch, hash_id)
@@ -45,7 +47,7 @@ async def get_catch(hash_id: str) -> Catch | None:
                 if result.delete_at > int(time.time()):
                     result.use_time += 1
                     result.delete_at = (
-                        int(time.time()) + CATCH_EXPIRY
+                        int(time.time()) + CACHE_EXPIRY
                     )  # extend expiry on access
                     await session.commit()
                     return result
@@ -57,52 +59,52 @@ async def get_catch(hash_id: str) -> Catch | None:
     return None
 
 
-async def del_oldest_catch(num: int):
+async def del_oldest_cache(num: int):
     async with async_session() as session:
         try:
             statement = select(Catch).order_by(col(Catch.delete_at)).limit(num)
             result = await session.execute(statement)
-            oldest_catches = result.scalars().all()
+            oldest_caches = result.scalars().all()
 
-            for catch in oldest_catches:
+            for cache in oldest_caches:
                 await asyncio.to_thread(
-                    shutil.rmtree, f"{CATCH_PATH}/{catch.hash_id}", ignore_errors=True
+                    shutil.rmtree, f"{CACHE_PATH}/{cache.hash_id}", ignore_errors=True
                 )
-                await session.delete(catch)
+                await session.delete(cache)
             await session.commit()
         except Exception as e:
-            logger.error(f"Error deleting oldest catches: {e}")
+            logger.error(f"Error deleting oldest caches: {e}")
 
 
-async def delete_expired_catches():
+async def delete_expired_caches():
     async with async_session() as session:
         try:
             statement = select(Catch).where(Catch.delete_at <= int(time.time()))
 
             result = await session.execute(statement)
-            expired_catches = result.scalars().all()
+            expired_caches = result.scalars().all()
 
-            for catch in expired_catches:
+            for cache in expired_caches:
                 await asyncio.to_thread(
-                    shutil.rmtree, f"{CATCH_PATH}/{catch.hash_id}", ignore_errors=True
+                    shutil.rmtree, f"{CACHE_PATH}/{cache.hash_id}", ignore_errors=True
                 )
-                await session.delete(catch)
+                await session.delete(cache)
 
             await session.commit()
         except Exception as e:
-            logger.error(f"Error deleting expired catches: {e}")
+            logger.error(f"Error deleting expired caches: {e}")
 
 
-async def cleanup_catches():
+async def cleanup_caches():
     async with async_session() as session:
         try:
             count = (
                 await session.execute(select(func.count()).select_from(Catch))
             ).scalar() or 0
-            if count > CATCH_LIMIT:
-                await del_oldest_catch(count - CATCH_LIMIT)
+            if count > CACHE_LIMIT:
+                await del_oldest_cache(count - CACHE_LIMIT)
         except Exception as e:
-            logger.error(f"Error cleaning up catches: {e}")
+            logger.error(f"Error cleaning up caches: {e}")
 
 
-scheduler.add_job(delete_expired_catches, "interval", days=1)
+scheduler.add_job(delete_expired_caches, "interval", days=1)

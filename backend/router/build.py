@@ -12,9 +12,10 @@ from prometheus_client import Counter, Histogram
 from pydantic import BaseModel, Field
 from router.verify import need_token
 from services.build import BuildError, build
-from settings import BACKEND_URL, BUILD_VERSION, CATCH_PATH
-from utils import catch
+from settings import BACKEND_URL, BUILD_VERSION, CACHE_PATH
 from utils.log import logger
+
+from backend.utils import cache
 
 router = APIRouter()
 
@@ -120,21 +121,21 @@ async def build_cpp(
 ) -> BuildResponse:
     global WORKER_CODE
     case_id = request.hash()
-    catch_entry = await catch.get_catch(case_id)
-    if catch_entry:
+    cache_entry = await cache.get_cache(case_id)
+    if cache_entry:
         logger.info(f"Cache hit for code {case_id}")
         return BuildResponse(
             ok=True,
-            js_url=f"{BACKEND_URL}/{CATCH_PATH}/{case_id}/build.js",
-            wasm_url=f"{BACKEND_URL}/{CATCH_PATH}/{case_id}/build.wasm",
-            js_code=(await read_file(f"{CATCH_PATH}/{case_id}/build.js")),
+            js_url=f"{BACKEND_URL}/{CACHE_PATH}/{case_id}/build.js",
+            wasm_url=f"{BACKEND_URL}/{CACHE_PATH}/{case_id}/build.wasm",
+            js_code=(await read_file(f"{CACHE_PATH}/{case_id}/build.js")),
             metric_status="cache",
-            wasm_size_bytes=get_size(f"{CATCH_PATH}/{case_id}/build.wasm"),
+            wasm_size_bytes=get_size(f"{CACHE_PATH}/{case_id}/build.wasm"),
         )
     logger.info(f"Received build request {case_id}")
     js_name = "build.js"
     wasm_name = "build.wasm"
-    output_path = pathlib.Path(CATCH_PATH) / case_id
+    output_path = pathlib.Path(CACHE_PATH) / case_id
 
     try:
         await build(request.code, name=js_name, output_dir=output_path)
@@ -166,7 +167,7 @@ async def build_cpp(
 
         js_code += worker_code
 
-    await catch.add_catch(case_id)
+    await cache.add_cache(case_id)
 
     return BuildResponse(
         ok=True,

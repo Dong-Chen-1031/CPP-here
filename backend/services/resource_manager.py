@@ -3,9 +3,10 @@ from typing import AsyncContextManager
 import aiodocker
 from fastapi import FastAPI
 from fastapi.concurrency import asynccontextmanager
-from utils.catch import init_db
 from utils.log import logger
 from utils.scheduler import scheduler
+
+from backend.utils.cache import init_db
 
 
 class AsyncResourceManager:

@@ -20,13 +20,15 @@ ALLOW_ORIGINS = (
 
 BUILD_VERSION = "0.1.0"
 
-CATCH_LIMIT = 100
+CACHE_LIMIT = 100
 
-CATCH_EXPIRY = 24 * 3600 * 7
+CACHE_EXPIRY = 24 * 3600 * 7
 
-CATCH_PATH = "catch"
+CACHE_PATH = "catch"  # TODO: rename to cache
 
-CATCH_SQLITE_PATH = f"sqlite+aiosqlite:///{CATCH_PATH}/catch.db"
+CACHE_SQLITE_PATH = (
+    f"sqlite+aiosqlite:///{CACHE_PATH}/catch.db"  # TODO: rename to cache.db
+)
 
 TURNSTILE_SECRET = os.getenv("TURNSTILE_SECRET", "")
 

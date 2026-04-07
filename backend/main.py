@@ -28,9 +28,9 @@ app = FastAPI(
 Instrumentator().instrument(app).expose(app)
 
 app.mount(
-    f"/{settings.CATCH_PATH}",
-    StaticFiles(directory=settings.CATCH_PATH),
-    name=settings.CATCH_PATH,
+    f"/{settings.CACHE_PATH}",
+    StaticFiles(directory=settings.CACHE_PATH),
+    name=settings.CACHE_PATH,
 )
 
 app.add_middleware(
