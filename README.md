@@ -1,53 +1,76 @@
-# CPP-here - Online C++ Editor
+# C++ Here - Online C++ Editor
 
-CPP-here 是一個輕量、快速的線上 C++ 執行與驗證平台。讓使用者可以在網頁端直接輸入、編譯並測試 C++ 程式碼。
+> This readme also has a [Traditional Chinese version](README-TW.md).
 
-## 功能亮點
+C++ Here is a lightweight and fast online C++ execution and validation platform. It allows users to write, compile, and test C++ code directly in their browsers.
 
-- **線上編譯與即時執行**
-  提供安全且快速的後端環境，讓使用者可以直接在網頁上編寫 C++ 程式碼，並立即提交查看編譯過程與執行結果。
+![Screenshot](screenshot/image.png)
 
-- **Test Case 支援**
-  使用者可以為程式碼添加多組測試案例，系統會自動執行並顯示每個測試案例的結果，幫助使用者驗證程式碼的正確性。
+> Try it now: https://cpp.doong.me
 
-- **專為競程設計**
-  CPP-here 的功能和介面設計特別適合競賽程式設計（Competitive Programming）的需求，讓使用者能夠快速測試和驗證他們的解法。
+## Features
 
-- **即時錯誤提示**
-  編譯過程中若發生錯誤，系統會高亮顯示錯誤位置並提供詳細的錯誤訊息，幫助使用者快速定位問題並修正程式碼。
+- **Online Compilation & Instant Execution**
+  Compiles C++ code into WebAssembly modules and executes them directly in the frontend, without any resource limitations. It eliminates the need for backend compilation for every test, significantly improving execution speed.
 
-- **多平台支援**
-  無論是在桌面瀏覽器還是行動裝置上，CPP-here 都能提供流暢的使用體驗，讓使用者隨時隨地都能編寫與測試 C++ 程式碼。
+- **Test Case Support**
+  Users can add multiple test cases for their code. The system will automatically execute and display the results of each test case, helping users verify the correctness of their code.
 
-- **簡潔但強大的編輯器**
-  前端使用了簡潔的介面，但功能完整，提供良好的使用者體驗。
+- **Designed for Competitive Programming**
+  The features and interface design of C++ Here are particularly suitable for the needs of Competitive Programming, allowing users to quickly test and verify their solutions.
 
-- **智慧編譯快取 (Catch)**
-  後端實作了編譯結果快取功能。當使用者提交與過去相同的程式碼時，系統會自動比對雜湊值並直接返回快取的執行結果，大幅減少重複編譯的時間與伺服器運算負載。
+- **Real-time Error Prompts**
+  If an error occurs during compilation, the system will highlight the error location and provide detailed error messages, helping users quickly locate the problem and fix the code.
 
-- **現代化且流暢的使用者介面**
-  前端採用 Astro 框架結合 React 元件打造，確保極致的頁面載入速度與順暢的互動體驗。
+- **Multi-platform Support**
+  Whether on a desktop browser or a mobile device, C++ Here provides a smooth user experience, allowing users to write and test C++ code anytime, anywhere.
+
+- **Simple Yet Powerful Editor**
+  The frontend uses a minimalist interface but has complete features, providing a good user experience.
+
+- **Smart Compilation Cache (Catch)**
+  The backend implements a compilation result caching feature. When a user submits code identical to a past submission, the system will automatically compare hash values and return the cached execution result directly, significantly reducing duplicate compilation time and server computational load.
+
+- **Modern and Fluid UI**
+  The frontend is built with the Astro framework combined with React components, ensuring ultimate page load speeds and smooth interactive experiences.
 
 - **i18n**
-  支援多語言介面，使用者可以根據自己的語言偏好切換界面語言，提升使用體驗。
+  Supports a multi-language interface, allowing users to switch the interface language according to their preference to enhance user experience.
 
-- **安全性**
-  後端使用沙箱技術隔離執行環境，確保使用者提交的程式碼不會對伺服器造成安全威脅。
+- **Security**
+  The backend uses sandbox technology to isolate the execution environment, ensuring that the code submitted by users does not pose a security threat to the server.
 
-- **開放原始碼**
-  CPP-here 的原始碼完全開放，歡迎社群參與貢獻，讓這個專案持續成長與改進。
+- **Open Source**
+  The source code of C++ Here is completely open. We welcome the community to participate and contribute to keep the project growing and improving.
 
-- **免費使用**
-  CPP-here 提供完全免費的線上 C++ 編輯與執行服務，讓每個人都能輕鬆學習與使用 C++。
+- **Free to Use**
+  C++ Here provides completely free online C++ editing and execution services, making it easy for everyone to learn and use C++.
 
-- **簡潔優雅，不失強大**
-  雖然功能豐富，但 CPP-here 的使用者介面保持簡潔優雅，讓使用者能夠專注於程式碼本身，而不會被過多的功能選項分散注意力。
+- **Simple and Elegant, Without Losing Power**
+  Although feature-rich, the user interface of C++ Here remains simple and elegant, allowing users to focus on the code itself instead of being distracted by too many functional options.
 
-- **匯入測資**
-  透過瀏覽器插件一鍵匯入競賽平台的測試資料，支援超過 100 個主流競賽平台。
+- **Import Test Data**
+  Import test data from competitive programming platforms with one click via a browser extension, supporting over 100 mainstream CP platforms.
 
-## 技術棧
+## Tech Stack
 
-- **前端**: Astro, Bun, Motion, React, Shadcn, Tailwind CSS, TypeScript, axios, cloudflare turnstile, codemirror, i18next, Jotai Atom, lucide
-- **瀏覽器擴充**: Bun, TypeScript, esbuild, web-ext
-- **後端**: FastAPI, PyJWT, PyTurnstile, Python, SQLAlchemy, Uvicorn, aiodocker, aiofiles, aiosqlite, apscheduler
+- **Frontend**: Astro, Bun, Motion, React, Shadcn, Tailwind CSS, TypeScript, axios, cloudflare turnstile, codemirror, i18next, Jotai Atom, lucide
+- **Browser Extension**: Bun, TypeScript, esbuild, web-ext
+- **Backend**: FastAPI, PyJWT, PyTurnstile, Python, SQLAlchemy, Uvicorn, aiodocker, aiofiles, aiosqlite, apscheduler
+
+## Principles and Advantages
+
+The main difference between C++ Here and other online C++ editors is that we compile C++ files into WebAssembly and execute them directly in the frontend. The advantages of this approach are:
+
+1. **Fast**: Since the compiled WebAssembly modules can run directly in the browser, there is no need to rely on the backend for execution every time, significantly improving execution speed.
+2. **Secure**: WebAssembly runs in the browser and features sandbox isolation, which effectively prevents malicious code from threatening the system.
+3. **Concurrent**: Executing WebAssembly modules on the frontend can leverage the browser's multi-threading capabilities for more efficient concurrent execution, which is particularly suitable for handling numerous test cases in competitive programming.
+4. **Unlimited**: Because the execution happens on the frontend, users are not constrained by backend computing resources. They can freely write and test code without worrying about overloading the server.
+
+## Contributing
+
+Any contributions are greatly appreciated. If you have a suggestion that would make this project better, please fork the repo and create a Pull Request. You can also [open an issue](https://github.com/Dong-Chen-1031/Cpp-Here/issues).
+
+## License
+
+Published under the [MIT License](LICENSE).
