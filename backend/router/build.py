@@ -1,3 +1,4 @@
+import asyncio
 import functools
 import pathlib
 import re
@@ -56,7 +57,7 @@ BUILD_DURATION = Histogram(
 
 
 class BuildRequest(BaseModel):
-    code: str
+    code: str = Field(max_length=50_000)
     cpp_version: Literal["c++98", "c++11", "c++14", "c++17", "c++20", "c++23"]
 
     def hash(self) -> str:
@@ -77,6 +78,7 @@ class BuildResponse(BaseModel):
 
 
 WORKER_CODE = ""
+_in_flight: dict[str, asyncio.Event] = {}
 
 
 async def read_file(path: str) -> str:
@@ -120,59 +122,78 @@ async def build_cpp(
 ) -> BuildResponse:
     global WORKER_CODE
     case_id = request.hash()
+
+    if case_id in _in_flight:
+        await _in_flight[case_id].wait()
+
     cache_entry = await cache.get_cache(case_id)
     if cache_entry:
-        logger.info(f"Cache hit for code {case_id}")
-        return BuildResponse(
-            ok=True,
-            js_url=f"{BACKEND_URL}/{CACHE_PATH}/{case_id}/build.js",
-            wasm_url=f"{BACKEND_URL}/{CACHE_PATH}/{case_id}/build.wasm",
-            js_code=(await read_file(f"{CACHE_PATH}/{case_id}/build.js")),
-            metric_status="cache",
-            wasm_size_bytes=get_size(f"{CACHE_PATH}/{case_id}/build.wasm"),
+        js_path = pathlib.Path(CACHE_PATH) / case_id / "build.js"
+        wasm_path = pathlib.Path(CACHE_PATH) / case_id / "build.wasm"
+        if js_path.exists() and wasm_path.exists():
+            logger.info(f"Cache hit for code {case_id}")
+            return BuildResponse(
+                ok=True,
+                js_url=f"{BACKEND_URL}/{CACHE_PATH}/{case_id}/build.js",
+                wasm_url=f"{BACKEND_URL}/{CACHE_PATH}/{case_id}/build.wasm",
+                js_code=(await read_file(str(js_path))),
+                metric_status="cache",
+                wasm_size_bytes=get_size(wasm_path),
+            )
+        logger.warning(
+            f"Cache files missing for {case_id}, invalidating and rebuilding"
         )
+        await cache.del_cache(case_id)
+
     logger.info(f"Received build request {case_id}")
     js_name = "build.js"
     wasm_name = "build.wasm"
     output_path = pathlib.Path(CACHE_PATH) / case_id
 
+    event = asyncio.Event()
+    _in_flight[case_id] = event
     try:
-        await build(request.code, name=js_name, output_dir=output_path)
-        logger.info("Build succeeded")
-    except BuildError as e:
-        return BuildResponse(
-            ok=False,
-            js_url="",
-            wasm_url="",
-            js_code="",
-            errors=[
-                re.sub(
-                    r"emcc: error:[\s\S]*?failed \(returned 1\)\n?",
-                    "",
-                    str(e.build_logs),
-                ).strip()
-            ],
-            metric_status="failure",
-        )
+        try:
+            await build(request.code, name=js_name, output_dir=output_path)
+            logger.info("Build succeeded")
+        except BuildError as e:
+            return BuildResponse(
+                ok=False,
+                js_url="",
+                wasm_url="",
+                js_code="",
+                errors=[
+                    re.sub(
+                        r"emcc: error:[\s\S]*?failed \(returned 1\)\n?",
+                        "",
+                        str(e.build_logs),
+                    ).strip()
+                ],
+                metric_status="failure",
+            )
 
-    if not WORKER_CODE:
-        async with aiofiles.open("assets/worker.js", mode="r") as f:
-            WORKER_CODE = await f.read()
+        if not WORKER_CODE:
+            async with aiofiles.open("assets/worker.js", mode="r") as f:
+                WORKER_CODE = await f.read()
 
-    async with aiofiles.open(f"{output_path}/{js_name}", mode="r+") as f:
-        js_code = await f.read()
         worker_code = f"\n\n// Worker code\n{WORKER_CODE}"
-        await f.write(worker_code)
+        async with aiofiles.open(f"{output_path}/{js_name}", mode="r") as f:
+            js_code = await f.read()
+        async with aiofiles.open(f"{output_path}/{js_name}", mode="a") as f:
+            await f.write(worker_code)
 
         js_code += worker_code
 
-    await cache.add_cache(case_id)
+        await cache.add_cache(case_id)
 
-    return BuildResponse(
-        ok=True,
-        js_url=f"{BACKEND_URL}/{output_path}/{js_name}",
-        wasm_url=f"{BACKEND_URL}/{output_path}/{wasm_name}",
-        js_code=js_code,
-        wasm_size_bytes=get_size(f"{output_path}/{wasm_name}"),
-        metric_status="success",
-    )
+        return BuildResponse(
+            ok=True,
+            js_url=f"{BACKEND_URL}/{output_path}/{js_name}",
+            wasm_url=f"{BACKEND_URL}/{output_path}/{wasm_name}",
+            js_code=js_code,
+            wasm_size_bytes=get_size(f"{output_path}/{wasm_name}"),
+            metric_status="success",
+        )
+    finally:
+        event.set()
+        _in_flight.pop(case_id, None)

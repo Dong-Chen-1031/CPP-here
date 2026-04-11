@@ -4,6 +4,7 @@ import time
 
 from settings import CACHE_EXPIRY, CACHE_LIMIT, CACHE_PATH, CACHE_SQLITE_PATH
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlmodel import Field, SQLModel, col, select
 from utils.log import logger
@@ -34,9 +35,24 @@ async def init_db():
 
 async def add_cache(hash_id: str):
     async with async_session() as session:
-        cache = Catch(hash_id=hash_id)
-        session.add(cache)
-        await session.commit()
+        try:
+            cache = Catch(hash_id=hash_id)
+            session.add(cache)
+            await session.commit()
+        except IntegrityError:
+            await session.rollback()
+            logger.warning(f"Cache entry {hash_id} already exists, skipping.")
+
+
+async def del_cache(hash_id: str):
+    async with async_session() as session:
+        try:
+            result = await session.get(Catch, hash_id)
+            if result:
+                await session.delete(result)
+                await session.commit()
+        except Exception as e:
+            logger.error(f"Error deleting cache {hash_id}: {e}")
 
 
 async def get_cache(hash_id: str) -> Catch | None:
@@ -108,3 +124,4 @@ async def cleanup_caches():
 
 
 scheduler.add_job(delete_expired_caches, "interval", days=1)
+scheduler.add_job(cleanup_caches, "interval", days=1)

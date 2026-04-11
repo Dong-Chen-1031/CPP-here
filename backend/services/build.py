@@ -75,7 +75,10 @@ async def build(
             result = await asyncio.wait_for(container.wait(), timeout=60)
         except asyncio.TimeoutError:
             logger.warning("Container timeout, killing...")
-            await container.kill()
+            try:
+                await container.kill()
+            except Exception:
+                pass
             raise BuildError("Build timed out")
         exit_code = result["StatusCode"]
 
