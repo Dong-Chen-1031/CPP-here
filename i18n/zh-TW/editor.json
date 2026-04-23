@@ -1,65 +1,65 @@
 {
   "alert": {
-    "defaultDescription": "This action cannot be undone."
+    "defaultDescription": "此操作無法復原"
   },
   "commands": {
-    "menuBtn": "Menu",
-    "noResults": "No results found.",
-    "actionsGroup": "Actions",
-    "panelsGroup": "Panels",
-    "input": "Input",
-    "testCase": "Test Case",
-    "output": "Output"
+    "menuBtn": "選單",
+    "noResults": "找不到結果",
+    "actionsGroup": "動作",
+    "panelsGroup": "面板",
+    "input": "輸入",
+    "testCase": "測資",
+    "output": "輸出"
   },
   "drawer": {
-    "openBtn": "Open Drawer",
-    "closeBtn": "Close",
+    "openBtn": "開啟抽屜",
+    "closeBtn": "關閉",
     "inputPanel": {
-      "title": "Input Panel",
-      "subTitle": "Type your custom input here."
+      "title": "輸入面板",
+      "subTitle": "在此輸入您的自定義輸入"
     },
     "testCases": {
-      "title": "Test Cases",
-      "subTitle": "Click to set the test case to the input."
+      "title": "測資",
+      "subTitle": "點擊以將測資設為輸入"
     },
     "output": {
-      "title": "Output",
-      "subTitle": "View the output of your code here."
+      "title": "輸出",
+      "subTitle": "在此檢視你的程式的輸出"
     }
   },
   "input": {
-    "label": "Input",
-    "pasteTip": "Paste from clipboard",
-    "pasteBtn": "Paste",
-    "clearTip": "Clear input",
-    "placeholder": "Type your input here."
+    "label": "輸入",
+    "pasteTip": "從剪貼簿貼上",
+    "pasteBtn": "貼上",
+    "clearTip": "清除輸入",
+    "placeholder": "從剪貼簿貼上"
   },
   "output": {
-    "label": "Output",
-    "copyTip": "Copy first output",
-    "copyThisCaseTip": "Copy output of this test case",
-    "clearTip": "Clear output",
-    "noOutput": "No output yet."
+    "label": "輸出",
+    "copyTip": "複製第一筆輸出",
+    "copyThisCaseTip": "複製此測資的輸出",
+    "clearTip": "清除輸出",
+    "noOutput": "尚無輸出結果"
   },
   "testCase": {
-    "label": "Test Case",
-    "addTip": "Add new test case",
-    "addBtn": "Add",
-    "defaultName": "Test Case {{index}}",
-    "noTestCase": "No test case yet.",
-    "setInputTip": "Set Input to this Test Case",
-    "runTip": "Run this Test Case",
-    "editTip": "Edit this Test Case",
-    "deleteTip": "Delete Test Case",
+    "label": "測資",
+    "addTip": "新增測資",
+    "addBtn": "新增",
+    "defaultName": "測資 {{index}}",
+    "noTestCase": "尚無測資",
+    "setInputTip": "將輸入設為此測資",
+    "runTip": "執行此測資",
+    "editTip": "編輯此測資",
+    "deleteTip": "刪除此測資",
     "editDialog": {
-      "titleCreate": "New Test Case",
-      "title": "Edit Test Case",
-      "caseNameLabel": "Case Name",
+      "titleCreate": "新增測資",
+      "title": "編輯測資",
+      "caseNameLabel": "測資名稱",
       "saveBtn": "儲存",
-      "inputLabel": "Input",
-      "inputPlaceholder": "Stdin input here for this test case.",
-      "expectedOutputLabel": "Output",
-      "expectedPlaceholder": "Expected output here for auto verification. (Optional)"
+      "inputLabel": "輸入",
+      "inputPlaceholder": "此測資的標準輸入",
+      "expectedOutputLabel": "輸出",
+      "expectedPlaceholder": "在此輸入預期輸出以進行自動驗證"
     },
     "extension": {
       "caseName": "{{problemName}} - Test {{index}}",
