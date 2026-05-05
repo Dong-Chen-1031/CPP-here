@@ -26,6 +26,8 @@ CACHE_EXPIRY = 24 * 3600 * 7
 
 CACHE_PATH = "cache"  # TODO: rename to cache
 
+HOST_CACHE_PATH = os.getenv("HOST_CACHE_PATH", os.path.abspath(CACHE_PATH))
+
 CACHE_SQLITE_PATH = (
     f"sqlite+aiosqlite:///{CACHE_PATH}/cache.db"  # TODO: rename to cache.db
 )
