@@ -19,6 +19,7 @@
     "@codemirror/autocomplete": "^6.20.1",
     "@codemirror/lang-cpp": "^6.0.3",
     "@codemirror/theme-one-dark": "^6.1.3",
+    "@icons-pack/react-simple-icons": "^13.13.0",
     "@lucide/astro": "^0.576.0",
     "@marsidev/react-turnstile": "^1.4.2",
     "@tailwindcss/vite": "^4.2.1",
