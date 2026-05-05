@@ -1,18 +1,29 @@
 ---
 import { CodeIcon } from "@lucide/astro";
 import HeaderActions, { HeaderActionsMobile } from "@/components/HeaderActions";
+import { Button } from "./ui/button";
+import { Github } from "simple-icons-astro";
 ---
 
 <div class="w-full h-13 flex items-center px-2 md:px-4 shrink-0">
-  <CodeIcon class="w-5 h-5 mr-2 md:w-6 md:h-6 shrink-0" />
-  <h1 class="text-[min(1.25rem,3.5vw)] pr-2 font-bold shrink-0">C++ Here</h1>
-  <div class="flex-1 min-w-0"></div>
+    <CodeIcon class="w-5 h-5 mr-2 md:w-6 md:h-6 shrink-0" />
+    <h1 class="text-[min(1.25rem,3.5vw)] pr-2 font-bold shrink-0">C++ Here</h1>
+    <a
+        href="https://github.com/Dong-Chen-1031/CPP-Here"
+        target="_blank"
+        class="ml-2"
+        rel="noopener noreferrer">
+        <Button variant={"outline"} size="sm" client:load>
+            <Github class="w-5 h-5 mr-1" />Star
+        </Button>
+    </a>
+    <div class="flex-1 min-w-0"></div>
 
-  <div class="hidden md:block">
-    <HeaderActions client:load />
-  </div>
+    <div class="hidden md:block">
+        <HeaderActions client:load />
+    </div>
 
-  <div class="flex md:hidden shrink min-w-0 h-7 overflow-hidden items-start">
-    <HeaderActionsMobile client:load />
-  </div>
+    <div class="flex md:hidden shrink min-w-0 h-7 overflow-hidden items-start">
+        <HeaderActionsMobile client:load />
+    </div>
 </div>
