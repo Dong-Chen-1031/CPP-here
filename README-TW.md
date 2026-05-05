@@ -1,11 +1,13 @@
 # C++ Here - Online C++ Editor
 
+> [!NOTE]
 > This readme also has a [English version](README.md).
 
 C++ Here 是一個輕量、快速的線上 C++ 執行與驗證平台。讓使用者可以在網頁端直接輸入、編譯並測試 C++ 程式碼。
 
 ![Screenshot](screenshot/image.png)
 
+> [!TIP]
 > 立即體驗: https://cpp.doong.me
 
 ## 功能亮點
@@ -56,11 +58,11 @@ C++ Here 是一個輕量、快速的線上 C++ 執行與驗證平台。讓使用
 
 - **前端**: Astro, Bun, Motion, React, Shadcn, Tailwind CSS, TypeScript, axios, cloudflare turnstile, codemirror, i18next, Jotai Atom, lucide
 - **瀏覽器擴充**: Bun, TypeScript, esbuild, web-ext
-- **後端**: FastAPI, PyJWT, PyTurnstile, Python, SQLAlchemy, Uvicorn, aiodocker, aiofiles, aiosqlite, apscheduler
+- **後端**: FastAPI, PyJWT, PyTurnstile, Python, SQLAlchemy, Uvicorn, aiodocker, aiofiles, aiosqlite, apscheduler, [safe-cpp2wasm](https://github.com/Dong-Chen-1031/safe-cpp2wasm/)
 
 ## 原理及優勢
 
-C++ Here 與其他線上 C++ 編輯器的最大不同在於我們是將 C++ 檔案編譯成 WebAssembly，並在前端直接執行。這種方式的優勢在於：
+C++ Here 與其他線上 C++ 編輯器的最大不同在於我們使用 [safe-cpp2wasm](https://github.com/Dong-Chen-1031/safe-cpp2wasm/) 將 C++ 檔案編譯成 WebAssembly，並在前端直接執行。這種方式的優勢在於：
 
 1. 快速：由於編譯後的 WebAssembly 模組可以直接在瀏覽器中執行，無需每次測試都進行後端編譯，極大地提升了執行速度。
 2. 安全：WebAssembly 在瀏覽器中運行，具有沙箱隔離特性，可以有效防止惡意程式碼對系統造成威脅。
