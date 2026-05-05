@@ -3,6 +3,8 @@ services:
     image: ghcr.io/dong-chen-1031/cpp-here/backend:latest
     env_file:
       - .env
+    environment:
+      HOST_CACHE_PATH: "${PWD}/cache"
     ports:
       - "${PORT:-8000}:${PORT:-8000}"
     volumes:

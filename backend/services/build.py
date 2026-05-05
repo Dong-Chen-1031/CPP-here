@@ -5,6 +5,7 @@ from pathlib import Path
 
 from aiodocker import DockerError
 from services.resource_manager import resource_manager
+from settings import CACHE_PATH, HOST_CACHE_PATH
 from utils.log import logger
 
 
@@ -25,6 +26,16 @@ async def build(
         output_dir = Path(os.getcwd()) / "output"
     output_dir.mkdir(parents=True, exist_ok=True)
     os.chmod(output_dir, 0o777)
+
+    # Translate container-internal path to host path for Docker bind mount.
+    # When running inside Docker Compose, the daemon resolves bind paths against
+    # the host filesystem, not the container filesystem.
+    container_cache_root = (Path(os.getcwd()) / CACHE_PATH).resolve()
+    try:
+        rel = output_dir.absolute().resolve().relative_to(container_cache_root)
+        host_output_dir = Path(HOST_CACHE_PATH) / rel
+    except ValueError:
+        host_output_dir = output_dir.absolute()
 
     cmd = (
         f"printf '%s' {shlex.quote(code)} > /tmp/source.cpp && "
@@ -62,7 +73,7 @@ async def build(
             ],  # --ulimit fsize=50000000:50000000
             "CapDrop": ["ALL"],  # --cap-drop ALL
             "SecurityOpt": ["no-new-privileges:true"],
-            "Binds": [f"{output_dir.absolute()}:/out:rw"],
+            "Binds": [f"{host_output_dir}:/out:rw"],
         },
     }
 
