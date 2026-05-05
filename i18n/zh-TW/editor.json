@@ -1,119 +1,122 @@
 {
-  "alert": {
-    "defaultDescription": "此操作無法復原"
-  },
-  "commands": {
-    "menuBtn": "選單",
-    "noResults": "找不到結果",
-    "actionsGroup": "動作",
-    "panelsGroup": "面板",
-    "input": "輸入",
-    "testCase": "測資",
-    "output": "輸出"
-  },
-  "drawer": {
-    "openBtn": "開啟抽屜",
-    "closeBtn": "關閉",
-    "inputPanel": {
-      "title": "輸入面板",
-      "subTitle": "在此輸入您的自定義輸入"
+    "alert": {
+        "defaultDescription": "此操作無法復原"
     },
-    "testCases": {
-      "title": "測資",
-      "subTitle": "點擊以將測資設為輸入"
+    "commands": {
+        "menuBtn": "選單",
+        "noResults": "找不到結果",
+        "actionsGroup": "動作",
+        "panelsGroup": "面板",
+        "input": "輸入",
+        "testCase": "測資",
+        "output": "輸出"
+    },
+    "drawer": {
+        "openBtn": "開啟抽屜",
+        "closeBtn": "關閉",
+        "inputPanel": {
+            "title": "輸入面板",
+            "subTitle": "在此輸入您的自定義輸入"
+        },
+        "testCases": {
+            "title": "測資",
+            "subTitle": "點擊以將測資設為輸入"
+        },
+        "output": {
+            "title": "輸出",
+            "subTitle": "在此檢視你的程式的輸出"
+        }
+    },
+    "input": {
+        "label": "輸入",
+        "pasteTip": "從剪貼簿貼上",
+        "pasteBtn": "貼上",
+        "clearTip": "清除輸入",
+        "placeholder": "從剪貼簿貼上"
     },
     "output": {
-      "title": "輸出",
-      "subTitle": "在此檢視你的程式的輸出"
-    }
-  },
-  "input": {
-    "label": "輸入",
-    "pasteTip": "從剪貼簿貼上",
-    "pasteBtn": "貼上",
-    "clearTip": "清除輸入",
-    "placeholder": "從剪貼簿貼上"
-  },
-  "output": {
-    "label": "輸出",
-    "copyTip": "複製第一筆輸出",
-    "copyThisCaseTip": "複製此測資的輸出",
-    "clearTip": "清除輸出",
-    "noOutput": "尚無輸出結果"
-  },
-  "testCase": {
-    "label": "測資",
-    "addTip": "新增測資",
-    "addBtn": "新增",
-    "defaultName": "測資 {{index}}",
-    "noTestCase": "尚無測資",
-    "setInputTip": "將輸入設為此測資",
-    "runTip": "執行此測資",
-    "editTip": "編輯此測資",
-    "deleteTip": "刪除此測資",
-    "editDialog": {
-      "titleCreate": "新增測資",
-      "title": "編輯測資",
-      "caseNameLabel": "測資名稱",
-      "saveBtn": "儲存",
-      "inputLabel": "輸入",
-      "inputPlaceholder": "此測資的標準輸入",
-      "expectedOutputLabel": "輸出",
-      "expectedPlaceholder": "在此輸入預期輸出以進行自動驗證"
+        "label": "輸出",
+        "copyTip": "複製第一筆輸出",
+        "copyThisCaseTip": "複製此測資的輸出",
+        "clearTip": "清除輸出",
+        "noOutput": "尚無輸出結果"
     },
-    "extension": {
-      "caseName": "{{problemName}} - Test {{index}}",
-      "alertDialog": {
-        "title": "Received Test Case from Extension",
-        "description": "Test case {{problemName}} has been received. Would\nyou like to overwrite or insert the new test cases?",
-        "overwrite": "Overwrite",
-        "insert": "Insert",
-        "cancel": "取消"
-      },
-      "alert": {
-        "title": "A new test case has been received",
-        "description": "Test case {{problemName}} has been received. It has been added to the test case list."
-      }
+    "testCase": {
+        "label": "測資",
+        "addTip": "新增測資",
+        "addBtn": "新增",
+        "defaultName": "測資 {{index}}",
+        "noTestCase": "尚無測資",
+        "setInputTip": "將輸入設為此測資",
+        "runTip": "執行此測資",
+        "editTip": "編輯此測資",
+        "deleteTip": "刪除此測資",
+        "editDialog": {
+            "titleCreate": "新增測資",
+            "title": "編輯測資",
+            "caseNameLabel": "測資名稱",
+            "saveBtn": "儲存",
+            "inputLabel": "輸入",
+            "inputPlaceholder": "此測資的標準輸入",
+            "expectedOutputLabel": "輸出",
+            "expectedPlaceholder": "在此輸入預期輸出以進行自動驗證"
+        },
+        "extension": {
+            "caseName": "{{problemName}} - Test {{index}}",
+            "alertDialog": {
+                "title": "Received Test Case from Extension",
+                "description": "Test case {{problemName}} has been received. Would\nyou like to overwrite or insert the new test cases?",
+                "overwrite": "Overwrite",
+                "insert": "Insert",
+                "cancel": "取消"
+            },
+            "alert": {
+                "title": "A new test case has been received",
+                "description": "Test case {{problemName}} has been received. It has been added to the test case list."
+            }
+        }
+    },
+    "headerActions": {
+        "undo": "Undo",
+        "redo": "Redo",
+        "runCode": "Run Code",
+        "runAllTestCases": "Run all test cases",
+        "runCurrentInput": "Run current input",
+        "verifying": "Verifying",
+        "building": "編譯中",
+        "stop": "Stop",
+        "run": "Run",
+        "runAll": "Run All",
+        "resetEverything": "Reset Everything",
+        "resetBtn": "Reset",
+        "shareCode": "Share Code",
+        "settings": "Settings",
+        "runOptions": "Run options"
+    },
+    "turnstile": {
+        "verificationFailed": "Verification Failed",
+        "verificationFailedDesc": "Failed to verify Turnstile token. Please try again later.",
+        "unsupported": "Turnstile Unsupported",
+        "unsupportedDesc": "Your browser does not support Turnstile. Please use a modern browser.",
+        "error": "Turnstile Error",
+        "errorDesc": "An error occurred during Turnstile verification. Please try reloading the page."
+    },
+    "settings": {
+        "title": "Settings",
+        "language": "Language",
+        "selectLanguage": "Select a language",
+        "noLanguage": "No Language found.",
+        "fontSize": "Font Size",
+        "decreaseFontSize": "Decrease font size",
+        "increaseFontSize": "Increase font size",
+        "defaultCode": "Default Code",
+        "defaultCodeDesc": "Set the current code as default.",
+        "defaultCodeBtn": "Set",
+        "resetSettings": "Reset Settings",
+        "resetSettingsDesc": "Reset all settings to default values.",
+        "resetSettingsBtn": "Reset"
+    },
+    "resize": {
+        "loadingEditor": "Loading Editor"
     }
-  },
-  "headerActions": {
-    "undo": "Undo",
-    "redo": "Redo",
-    "runCode": "Run Code",
-    "runAllTestCases": "Run all test cases",
-    "runCurrentInput": "Run current input",
-    "verifying": "Verifying",
-    "building": "編譯中",
-    "stop": "Stop",
-    "run": "Run",
-    "runAll": "Run All",
-    "resetEverything": "Reset Everything",
-    "resetBtn": "Reset",
-    "shareCode": "Share Code",
-    "settings": "Settings"
-  },
-  "turnstile": {
-    "verificationFailed": "Verification Failed",
-    "verificationFailedDesc": "Failed to verify Turnstile token. Please try again later.",
-    "unsupported": "Turnstile Unsupported",
-    "unsupportedDesc": "Your browser does not support Turnstile. Please use a modern browser.",
-    "error": "Turnstile Error",
-    "errorDesc": "An error occurred during Turnstile verification. Please try reloading the page."
-  },
-  "settings": {
-    "title": "Settings",
-    "language": "Language",
-    "selectLanguage": "Select a language",
-    "noLanguage": "No Language found.",
-    "fontSize": "Font Size",
-    "defaultCode": "Default Code",
-    "defaultCodeDesc": "Set the current code as default.",
-    "defaultCodeBtn": "Set",
-    "resetSettings": "Reset Settings",
-    "resetSettingsDesc": "Reset all settings to default values.",
-    "resetSettingsBtn": "Reset"
-  },
-  "resize": {
-    "loadingEditor": "Loading Editor"
-  }
 }
