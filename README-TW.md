@@ -5,10 +5,10 @@
 
 C++ Here 是一個輕量、快速的線上 C++ 執行與驗證平台。讓使用者可以在網頁端直接輸入、編譯並測試 C++ 程式碼。
 
-![Screenshot](screenshot/image.png)
-
 > [!TIP]
 > 立即體驗: https://cpp.doong.me
+
+![Screenshot](screenshot/image.png)
 
 ## 功能亮點
 
