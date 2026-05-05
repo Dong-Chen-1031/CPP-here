@@ -1,119 +1,122 @@
 {
-  "alert": {
-    "defaultDescription": "This action cannot be undone."
-  },
-  "commands": {
-    "menuBtn": "Menu",
-    "noResults": "No results found.",
-    "actionsGroup": "Actions",
-    "panelsGroup": "Panels",
-    "input": "Input",
-    "testCase": "Test Case",
-    "output": "Output"
-  },
-  "drawer": {
-    "openBtn": "Open Drawer",
-    "closeBtn": "Close",
-    "inputPanel": {
-      "title": "Input Panel",
-      "subTitle": "Type your custom input here."
+    "alert": {
+        "defaultDescription": "This action cannot be undone."
     },
-    "testCases": {
-      "title": "Test Cases",
-      "subTitle": "Click to set the test case to the input."
+    "commands": {
+        "menuBtn": "Menu",
+        "noResults": "No results found.",
+        "actionsGroup": "Actions",
+        "panelsGroup": "Panels",
+        "input": "Input",
+        "testCase": "Test Case",
+        "output": "Output"
+    },
+    "drawer": {
+        "openBtn": "Open Drawer",
+        "closeBtn": "Close",
+        "inputPanel": {
+            "title": "Input Panel",
+            "subTitle": "Type your custom input here."
+        },
+        "testCases": {
+            "title": "Test Cases",
+            "subTitle": "Click to set the test case to the input."
+        },
+        "output": {
+            "title": "Output",
+            "subTitle": "View the output of your code here."
+        }
+    },
+    "input": {
+        "label": "Input",
+        "pasteTip": "Paste from clipboard",
+        "pasteBtn": "Paste",
+        "clearTip": "Clear input",
+        "placeholder": "Type your input here."
     },
     "output": {
-      "title": "Output",
-      "subTitle": "View the output of your code here."
-    }
-  },
-  "input": {
-    "label": "Input",
-    "pasteTip": "Paste from clipboard",
-    "pasteBtn": "Paste",
-    "clearTip": "Clear input",
-    "placeholder": "Type your input here."
-  },
-  "output": {
-    "label": "Output",
-    "copyTip": "Copy first output",
-    "copyThisCaseTip": "Copy output of this test case",
-    "clearTip": "Clear output",
-    "noOutput": "No output yet."
-  },
-  "testCase": {
-    "label": "Test Case",
-    "addTip": "Add new test case",
-    "addBtn": "Add",
-    "defaultName": "Test Case {{index}}",
-    "noTestCase": "No test case yet.",
-    "setInputTip": "Set Input to this Test Case",
-    "runTip": "Run this Test Case",
-    "editTip": "Edit this Test Case",
-    "deleteTip": "Delete Test Case",
-    "editDialog": {
-      "titleCreate": "New Test Case",
-      "title": "Edit Test Case",
-      "caseNameLabel": "Case Name",
-      "saveBtn": "Save",
-      "inputLabel": "Input",
-      "inputPlaceholder": "Stdin input here for this test case.",
-      "expectedOutputLabel": "Output",
-      "expectedPlaceholder": "Expected output here for auto verification. (Optional)"
+        "label": "Output",
+        "copyTip": "Copy first output",
+        "copyThisCaseTip": "Copy output of this test case",
+        "clearTip": "Clear output",
+        "noOutput": "No output yet."
     },
-    "extension": {
-      "caseName": "{{problemName}} - Test {{index}}",
-      "alertDialog": {
-        "title": "Received Test Case from Extension",
-        "description": "Test case {{problemName}} has been received. Would\nyou like to overwrite or insert the new test cases?",
-        "overwrite": "Overwrite",
-        "insert": "Insert",
-        "cancel": "Cancel"
-      },
-      "alert": {
-        "title": "A new test case has been received",
-        "description": "Test case {{problemName}} has been received. It has been added to the test case list."
-      }
+    "testCase": {
+        "label": "Test Case",
+        "addTip": "Add new test case",
+        "addBtn": "Add",
+        "defaultName": "Test Case {{index}}",
+        "noTestCase": "No test case yet.",
+        "setInputTip": "Set Input to this Test Case",
+        "runTip": "Run this Test Case",
+        "editTip": "Edit this Test Case",
+        "deleteTip": "Delete Test Case",
+        "editDialog": {
+            "titleCreate": "New Test Case",
+            "title": "Edit Test Case",
+            "caseNameLabel": "Case Name",
+            "saveBtn": "Save",
+            "inputLabel": "Input",
+            "inputPlaceholder": "Stdin input here for this test case.",
+            "expectedOutputLabel": "Output",
+            "expectedPlaceholder": "Expected output here for auto verification. (Optional)"
+        },
+        "extension": {
+            "caseName": "{{problemName}} - Test {{index}}",
+            "alertDialog": {
+                "title": "Received Test Case from Extension",
+                "description": "Test case {{problemName}} has been received. Would\nyou like to overwrite or insert the new test cases?",
+                "overwrite": "Overwrite",
+                "insert": "Insert",
+                "cancel": "Cancel"
+            },
+            "alert": {
+                "title": "A new test case has been received",
+                "description": "Test case {{problemName}} has been received. It has been added to the test case list."
+            }
+        }
+    },
+    "headerActions": {
+        "undo": "Undo",
+        "redo": "Redo",
+        "runCode": "Run Code",
+        "runAllTestCases": "Run all test cases",
+        "runCurrentInput": "Run current input",
+        "verifying": "Verifying",
+        "building": "Building",
+        "stop": "Stop",
+        "run": "Run",
+        "runAll": "Run All",
+        "resetEverything": "Reset Everything",
+        "resetBtn": "Reset",
+        "shareCode": "Share Code",
+        "settings": "Settings",
+        "runOptions": "Run options"
+    },
+    "turnstile": {
+        "verificationFailed": "Verification Failed",
+        "verificationFailedDesc": "Failed to verify Turnstile token. Please try again later.",
+        "unsupported": "Turnstile Unsupported",
+        "unsupportedDesc": "Your browser does not support Turnstile. Please use a modern browser.",
+        "error": "Turnstile Error",
+        "errorDesc": "An error occurred during Turnstile verification. Please try reloading the page."
+    },
+    "settings": {
+        "title": "Settings",
+        "language": "Language",
+        "selectLanguage": "Select a language",
+        "noLanguage": "No Language found.",
+        "fontSize": "Font Size",
+        "decreaseFontSize": "Decrease font size",
+        "increaseFontSize": "Increase font size",
+        "defaultCode": "Default Code",
+        "defaultCodeDesc": "Set the current code as default.",
+        "defaultCodeBtn": "Set",
+        "resetSettings": "Reset Settings",
+        "resetSettingsDesc": "Reset all settings to default values.",
+        "resetSettingsBtn": "Reset"
+    },
+    "resize": {
+        "loadingEditor": "Loading Editor"
     }
-  },
-  "headerActions": {
-    "undo": "Undo",
-    "redo": "Redo",
-    "runCode": "Run Code",
-    "runAllTestCases": "Run all test cases",
-    "runCurrentInput": "Run current input",
-    "verifying": "Verifying",
-    "building": "Building",
-    "stop": "Stop",
-    "run": "Run",
-    "runAll": "Run All",
-    "resetEverything": "Reset Everything",
-    "resetBtn": "Reset",
-    "shareCode": "Share Code",
-    "settings": "Settings"
-  },
-  "turnstile": {
-    "verificationFailed": "Verification Failed",
-    "verificationFailedDesc": "Failed to verify Turnstile token. Please try again later.",
-    "unsupported": "Turnstile Unsupported",
-    "unsupportedDesc": "Your browser does not support Turnstile. Please use a modern browser.",
-    "error": "Turnstile Error",
-    "errorDesc": "An error occurred during Turnstile verification. Please try reloading the page."
-  },
-  "settings": {
-    "title": "Settings",
-    "language": "Language",
-    "selectLanguage": "Select a language",
-    "noLanguage": "No Language found.",
-    "fontSize": "Font Size",
-    "defaultCode": "Default Code",
-    "defaultCodeDesc": "Set the current code as default.",
-    "defaultCodeBtn": "Set",
-    "resetSettings": "Reset Settings",
-    "resetSettingsDesc": "Reset all settings to default values.",
-    "resetSettingsBtn": "Reset"
-  },
-  "resize": {
-    "loadingEditor": "Loading Editor"
-  }
 }
