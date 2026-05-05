@@ -1,0 +1,12 @@
+services:
+  backend:
+    image: ghcr.io/dong-chen-1031/cpp-here/backend:latest
+    env_file:
+      - .env
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
+    volumes:
+      - ./cache:/app/cache
+      - ./logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
