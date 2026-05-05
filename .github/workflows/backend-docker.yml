@@ -15,7 +15,7 @@ on:
 
 env:
     REGISTRY: ghcr.io
-    IMAGE_NAME: ${{ github.repository }}/backend
+    IMAGE_NAME: dong-chen-1031/cpp-here/backend
 
 jobs:
     build:
