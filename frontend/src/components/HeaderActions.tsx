@@ -336,6 +336,7 @@ export function RunButton({
                             }
                             className="p-1"
                             disabled={cantPress || runStatus === "running"}
+                            aria-label={t("headerActions.runOptions")}
                             // asChild
                         >
                             {/* <motion.div
@@ -448,7 +449,8 @@ export function CppVersionSelect({
             }}>
             <SelectTrigger
                 className={cn("w-full max-w-48", className)}
-                size="sm">
+                size="sm"
+                aria-label="C++ Version">
                 <SelectValue placeholder="C++ Version" />
             </SelectTrigger>
             <SelectContent position="popper">
