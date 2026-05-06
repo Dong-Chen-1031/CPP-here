@@ -23,6 +23,14 @@ class Catch(
     use_time: int = Field(default=1)
 
 
+class BuildStats(SQLModel, table=True):
+    id: int = Field(default=1, primary_key=True)
+    total_count: int = Field(default=0)
+    total_lines: int = Field(default=0)
+    total_wasm_size_bytes: int = Field(default=0)
+    total_duration_seconds: float = Field(default=0.0)
+
+
 engine = create_async_engine(CACHE_SQLITE_PATH)
 
 async_session = async_sessionmaker(engine, expire_on_commit=False)
@@ -125,3 +133,27 @@ async def cleanup_caches():
 
 scheduler.add_job(delete_expired_caches, "interval", days=1)
 scheduler.add_job(cleanup_caches, "interval", days=1)
+
+
+async def add_build_stats(
+    lines: int, wasm_size_bytes: int, duration_seconds: float
+):
+    async with async_session() as session:
+        try:
+            stats = await session.get(BuildStats, 1)
+            if stats is None:
+                stats = BuildStats(
+                    total_count=1,
+                    total_lines=lines,
+                    total_wasm_size_bytes=wasm_size_bytes,
+                    total_duration_seconds=duration_seconds,
+                )
+                session.add(stats)
+            else:
+                stats.total_count += 1
+                stats.total_lines += lines
+                stats.total_wasm_size_bytes += wasm_size_bytes
+                stats.total_duration_seconds += duration_seconds
+            await session.commit()
+        except Exception as e:
+            logger.error(f"Error updating build stats: {e}")

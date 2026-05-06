@@ -15,6 +15,7 @@ from router.verify import need_token
 from services.build import BuildError, build
 from settings import BACKEND_URL, BUILD_VERSION, CACHE_PATH
 from utils import cache
+from utils.cache import add_build_stats
 from utils.log import logger
 
 router = APIRouter()
@@ -102,7 +103,14 @@ def log_build_request(func):
 
         if result.ok and result.wasm_size_bytes:
             BUILD_SIZE.labels(**labels).observe(result.wasm_size_bytes)
-        BUILD_DURATION.labels(**labels).observe(time.perf_counter() - start_time)
+        elapsed = time.perf_counter() - start_time
+        BUILD_DURATION.labels(**labels).observe(elapsed)
+
+        await add_build_stats(
+            lines=code_lines,
+            wasm_size_bytes=result.wasm_size_bytes or 0,
+            duration_seconds=elapsed,
+        )
 
         return result
 
