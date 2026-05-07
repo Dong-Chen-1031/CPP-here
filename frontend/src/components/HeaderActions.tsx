@@ -17,6 +17,7 @@ import {
 import {
     ChevronDownIcon,
     CircleStopIcon,
+    FormIcon,
     RotateCcw,
     SettingsIcon,
     SquareIcon,
@@ -36,6 +37,7 @@ import {
 } from "@/components/ui/select";
 import { getDefaultStore, useAtom } from "jotai";
 import {
+    codeStore,
     codeWorkersStore,
     cppVersionStore,
     editorRefStore,
@@ -53,11 +55,18 @@ import { handleRun, handleRunAll } from "@/api/run";
 
 import Tip from "@/components/ui/tips";
 import { useResetEditorAtoms } from "@/store/atom";
-import { cn, commandKey, useIsMobile } from "@/lib/utils";
+import {
+    cn,
+    commandKeyIcon,
+    optionsKeyIcon,
+    shiftKeyIcon,
+    useIsMobile,
+} from "@/lib/utils";
 import { Kbd } from "./ui/kbd";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect } from "react";
 import { Commands } from "./Commands";
+import { ensureFormatterInit, formatCode } from "@/lib/format";
 
 export function UndoRedo({ menu = false }: { menu?: boolean }) {
     const [editorGlobal] = useAtom(editorRefStore);
@@ -68,7 +77,7 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
             <Tip
                 content={
                     <>
-                        {t("headerActions.undo")} <Kbd>{commandKey}</Kbd>
+                        {t("headerActions.undo")} <Kbd>{commandKeyIcon}</Kbd>
                         <Kbd>Z</Kbd>
                     </>
                 }>
@@ -101,7 +110,7 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
             <Tip
                 content={
                     <>
-                        {t("headerActions.redo")} <Kbd>{commandKey}</Kbd>
+                        {t("headerActions.redo")} <Kbd>{commandKeyIcon}</Kbd>
                         <Kbd>⇧</Kbd>
                         <Kbd>Z</Kbd>
                     </>
@@ -228,13 +237,14 @@ export function RunButton({
                 content={
                     runMode === "single" ? (
                         <>
-                            {t("headerActions.runCode")} <Kbd>{commandKey}</Kbd>
+                            {t("headerActions.runCode")}{" "}
+                            <Kbd>{commandKeyIcon}</Kbd>
                             <Kbd>⏎</Kbd>
                         </>
                     ) : (
                         <>
                             {t("headerActions.runAllTestCases")}{" "}
-                            <Kbd>{commandKey}</Kbd>
+                            <Kbd>{commandKeyIcon}</Kbd>
                             <Kbd>⏎</Kbd>
                         </>
                     )
@@ -427,6 +437,50 @@ export function ResetButton({
     );
 }
 
+export function FormatButton({
+    className = "",
+    onClick = () => {},
+}: {
+    className?: string;
+    onClick?: (e: React.MouseEvent) => void;
+}) {
+    const [code, setCode] = useAtom(codeStore);
+    const { t } = useTranslation(["editor"]);
+    const [formatting, setFormatting] = React.useState(false);
+
+    return (
+        <ButtonGroup>
+            <Tip
+                content={
+                    <>
+                        {t("headerActions.formatCodeTip")}{" "}
+                        <Kbd>{optionsKeyIcon}</Kbd>
+                        <Kbd>{shiftKeyIcon}</Kbd>
+                        <Kbd>F</Kbd>
+                    </>
+                }>
+                <Button
+                    variant="outline"
+                    className={className}
+                    onClick={(e) => {
+                        setFormatting(true);
+                        formatCode(code).then((formatted) => {
+                            setCode(formatted);
+                            setFormatting(false);
+                        });
+                        onClick(e);
+                    }}
+                    onMouseEnter={() => {
+                        ensureFormatterInit();
+                    }}>
+                    {formatting ? <Spinner className="size-3" /> : <FormIcon />}
+                    {t("headerActions.formatCode")}
+                </Button>
+            </Tip>
+        </ButtonGroup>
+    );
+}
+
 export function CppVersionSelect({
     onSelect,
     className = "",
@@ -535,6 +589,7 @@ export default function HeaderActions() {
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}>
                         <UndoRedo />
+                        <FormatButton />
                         <SettingsButton />
                         <ResetButton />
                         <CppVersionSelect />

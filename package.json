@@ -26,6 +26,7 @@
     "@types/react-dom": "^19.2.3",
     "@uiw/codemirror-theme-vscode": "^4.25.7",
     "@uiw/react-codemirror": "^4.25.7",
+    "@wasm-fmt/clang-format": "^22.1.4",
     "astro": "^5.17.1",
     "axios": "1.13.6",
     "class-variance-authority": "^0.7.1",

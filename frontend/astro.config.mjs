@@ -5,9 +5,12 @@ import tailwindcss from "@tailwindcss/vite";
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [react()],
-  vite: {
-    // @ts-ignore I don't know why tailwindcss types are not working. But it works fine.
-    plugins: [tailwindcss()],
-  },
+    integrations: [react()],
+    vite: {
+        // @ts-ignore I don't know why tailwindcss types are not working. But it works fine.
+        plugins: [tailwindcss()],
+        ssr: {
+            noExternal: ["@wasm-fmt/clang-format"],
+        },
+    },
 });
