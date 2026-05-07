@@ -91,6 +91,8 @@
         "resetBtn": "Reset",
         "shareCode": "Share Code",
         "settings": "Settings",
+        "formatCode": "Format",
+        "formatCodeTip": "Format code",
         "runOptions": "Run options"
     },
     "turnstile": {
