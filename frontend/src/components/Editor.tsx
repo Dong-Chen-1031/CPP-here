@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import CodeMirror, { type ReactCodeMirrorProps } from "@uiw/react-codemirror";
 import { cpp } from "@codemirror/lang-cpp";
 // import { oneDark } from "@codemirror/theme-one-dark";
@@ -16,21 +16,17 @@ import { keymap } from "@codemirror/view";
 import { cppKeywords } from "../config/cppKeywords";
 import {
     codeStore,
-    editorFontSizeStore,
     editorRefStore,
     runModeStore,
     editorErrorStore,
     runStatusStore,
 } from "@/store/atom";
 import { getDefaultStore, useAtom, useAtomValue } from "jotai";
-import { Spinner } from "./ui/spinner";
 import { handleRun, handleRunAll } from "@/api/run";
-import { ButtonGroup } from "./ui/button-group";
-import { Button } from "./ui/button";
-import { MinusIcon, PlusIcon } from "lucide-react";
 import { addErrorEffect, clearErrorsEffect, errorField } from "./Error";
-import { commandKeyPress, isMac } from "@/lib/utils";
+import { commandKeyPress } from "@/lib/utils";
 import { formatCode } from "@/lib/format";
+import { editorFontSizeStore } from "@/store/configStore";
 
 type CppEditorProps = Omit<ReactCodeMirrorProps, "value" | "onChange"> & {
     defaultValue?: string;

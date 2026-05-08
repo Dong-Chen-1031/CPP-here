@@ -15,6 +15,7 @@ import { KeyboardIcon, SquareTerminalIcon, TestTubes } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
     CppVersionSelect,
+    FormatButton,
     GithubLink,
     ResetButton,
     RunButton,
@@ -22,6 +23,7 @@ import {
     UndoRedo,
 } from "./HeaderActions";
 import { panelDrawerStore, type PanelDrawerView } from "@/store/atom";
+import { SiGithub } from "@icons-pack/react-simple-icons";
 
 export function Commands({ className = "" }: { className?: string }) {
     const [open, setOpen] = React.useState(false);
@@ -50,11 +52,13 @@ export function Commands({ className = "" }: { className?: string }) {
                             <CommandItem>
                                 <UndoRedo menu />
                                 <ResetButton onClick={() => setOpen(false)} />
+                                <FormatButton onClick={() => setOpen(false)} />
+                                {/* <GithubLink /> */}
+                            </CommandItem>
+                            <CommandItem>
                                 <SettingsButton
                                     onClick={() => setOpen(false)}
                                 />
-                            </CommandItem>
-                            <CommandItem>
                                 <CppVersionSelect
                                     className="w-25"
                                     // onSelect={() => setOpen(false)}
@@ -64,7 +68,6 @@ export function Commands({ className = "" }: { className?: string }) {
                                         setOpen(false);
                                     }}
                                 />
-                                <GithubLink />
                             </CommandItem>
                         </CommandGroup>
                         <CommandSeparator />
@@ -87,6 +90,17 @@ export function Commands({ className = "" }: { className?: string }) {
                                 <span>{t("commands.output")}</span>
 
                                 {/* <CommandShortcut>⌘S</CommandShortcut> */}
+                            </CommandItem>
+                            <CommandItem
+                                onSelect={() => {
+                                    window.open(
+                                        "https://github.com/Dong-Chen-1031/CPP-Here",
+                                        "_blank",
+                                        "noopener,noreferrer",
+                                    );
+                                }}>
+                                <SiGithub className="size-4 mr-2" />
+                                Star on GitHub
                             </CommandItem>
                         </CommandGroup>
                     </CommandList>

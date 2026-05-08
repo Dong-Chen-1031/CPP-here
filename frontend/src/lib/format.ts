@@ -1,6 +1,9 @@
+import { codeFormatStyle } from "@/store/configStore";
 import init, { format, type Style } from "@wasm-fmt/clang-format/vite";
+import { getDefaultStore } from "jotai";
 
 let initPromise: Promise<unknown> | null = null;
+const defaultStore = getDefaultStore();
 
 export function ensureFormatterInit() {
     if (!initPromise) {
@@ -15,17 +18,35 @@ export function ensureFormatterInit() {
 export async function formatCode(
     code: string,
     {
-        style = { BasedOnStyle: "Google", IndentWidth: 4 },
+        style = "Default",
     }: {
         style?:
             | Style
+            | "Default"
             | {
-                  BasedOnStyle: Style;
+                  BasedOnStyle: Style | "Default";
                   IndentWidth: number;
                   ColumnLimit?: number;
               };
     } = {},
 ) {
+    if (style === "Default") {
+        style = {
+            BasedOnStyle: defaultStore.get(codeFormatStyle),
+            IndentWidth: 4,
+            ColumnLimit: 0,
+        };
+    }
+    if (
+        typeof style === "object" &&
+        "BasedOnStyle" in style &&
+        style.BasedOnStyle === "Default"
+    ) {
+        style = {
+            ...style,
+            BasedOnStyle: defaultStore.get(codeFormatStyle),
+        };
+    }
     try {
         await ensureFormatterInit();
         if (typeof style === "object") {

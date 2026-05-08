@@ -6,13 +6,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog-fix";
+import { codeStore, settingsPanelStore } from "@/store/atom";
 import {
-    codeStore,
     defCodeStore,
     editorFontSizeStore,
-    settingsPanelStore,
     useResetSettingsAtoms,
-} from "@/store/atom";
+} from "@/store/configStore";
 import { useAtom } from "jotai";
 import {
     Field,
@@ -20,7 +19,6 @@ import {
     FieldDescription,
     FieldGroup,
     FieldLabel,
-    FieldLegend,
     FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -37,6 +35,16 @@ import React, { useEffect, useRef } from "react";
 import { ButtonGroup } from "./ui/button-group";
 import { ListRestart, MinusIcon, PlusIcon } from "lucide-react";
 import IconMotion from "./IconMotion";
+import { codeFormatStyle } from "@/store/configStore";
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 interface SettingsProps {
     allLangs: Record<string, string>;
@@ -60,7 +68,7 @@ export function Settings({ allLangs }: SettingsProps) {
         matchedLang,
     );
     const [comboOpen, setComboOpen] = React.useState(false);
-
+    const [formatStyle, setFormatStyle] = useAtom(codeFormatStyle);
     useEffect(() => {
         setLocalLang(matchedLang);
     }, [matchedLang]);
@@ -198,6 +206,45 @@ export function Settings({ allLangs }: SettingsProps) {
                                     {t("settings.defaultCodeBtn")}
                                 </Button>
                             </ButtonGroup>
+                        </Field>
+
+                        <Field
+                            orientation="horizontal"
+                            className="items-center!">
+                            <FieldContent>
+                                <FieldLabel>
+                                    {t("settings.codeFormatStyle")}
+                                </FieldLabel>
+                                <FieldDescription>
+                                    {t("settings.codeFormatStyleDesc")}
+                                </FieldDescription>
+                            </FieldContent>
+
+                            <Select
+                                value={formatStyle}
+                                onValueChange={setFormatStyle}>
+                                <SelectTrigger className="w-full max-w-30">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectLabel>Format Style</SelectLabel>
+                                        {[
+                                            "LLVM",
+                                            "Google",
+                                            "Chromium",
+                                            "Mozilla",
+                                            "WebKit",
+                                            "Microsoft",
+                                            "GNU",
+                                        ].map((item) => (
+                                            <SelectItem key={item} value={item}>
+                                                {item}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
                         </Field>
                         <Field
                             orientation="horizontal"
