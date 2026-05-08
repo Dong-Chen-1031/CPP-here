@@ -116,7 +116,9 @@
         "defaultCodeBtn": "Set",
         "resetSettings": "Reset Settings",
         "resetSettingsDesc": "Reset all settings to default values.",
-        "resetSettingsBtn": "Reset"
+        "resetSettingsBtn": "Reset",
+        "codeFormatStyle": "Code Format Style",
+        "codeFormatStyleDesc": "Select a code formatting style."
     },
     "resize": {
         "loadingEditor": "Loading Editor"
