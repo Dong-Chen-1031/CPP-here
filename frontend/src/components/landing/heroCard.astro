@@ -1,6 +1,38 @@
 ---
-import { Picture } from "astro:assets";
+import { Picture, getImage } from "astro:assets";
 import heroImg from "@/assets/hero.png";
+import heroPhone from "@/assets/hero-phone.png";
+
+const mobileAvif = await Promise.all(
+    [800, heroPhone.width].map((w) =>
+        getImage({ src: heroPhone, format: "avif", width: w }),
+    ),
+);
+const mobileWebp = await Promise.all(
+    [800, heroPhone.width].map((w) =>
+        getImage({ src: heroPhone, format: "webp", width: w }),
+    ),
+);
+
+const desktopAvif = await Promise.all(
+    [800, 1200, 2000, heroImg.width].map((w) =>
+        getImage({ src: heroImg, format: "avif", width: w }),
+    ),
+);
+const desktopWebp = await Promise.all(
+    [800, 1200, 2000, heroImg.width].map((w) =>
+        getImage({ src: heroImg, format: "webp", width: w }),
+    ),
+);
+
+const toSrcset = (images: Awaited<ReturnType<typeof getImage>>[]) =>
+    images.map((img) => `${img.src} ${img.options.width}w`).join(", ");
+
+const fallback = await getImage({
+    src: heroImg,
+    format: "jpg",
+    width: 1200,
+});
 ---
 
 <script>
@@ -117,15 +149,51 @@ import heroImg from "@/assets/hero.png";
     }
 </style>
 
-<div class="p-20 w-full" id="hero-card">
-    <!-- <Picture
-        src={heroImg}
-        class="w-full rounded-lg relative z-1000"
-        alt="Hero Image"
-    /> -->
+<div class="px-7 py-20 md:px-20 w-full" id="hero-card">
+    <a href="/">
+        <picture>
+            {/* 手機：AVIF 優先 */}
+            <source
+                media="(max-width: 500px)"
+                type="image/avif"
+                srcset={toSrcset(mobileAvif)}
+            />
+            {/* 手機：WebP fallback */}
+            <source
+                media="(max-width: 500px)"
+                type="image/webp"
+                srcset={toSrcset(mobileWebp)}
+            />
 
-    <iframe
+            {/* 桌機：AVIF 優先 */}
+            <source
+                media="(min-width: 501px)"
+                type="image/avif"
+                srcset={toSrcset(desktopAvif)}
+            />
+            {/* 桌機：WebP fallback */}
+            <source
+                media="(min-width: 501px)"
+                type="image/webp"
+                srcset={toSrcset(desktopWebp)}
+            />
+
+            {/* 最後的 fallback */}
+            <img
+                src={fallback.src}
+                alt="Hero"
+                width={heroImg.width}
+                height={heroImg.height}
+                loading="eager"
+                fetchpriority="high"
+                id="hero-img"
+                class="w-full rounded-lg relative z-1000"
+            />
+        </picture>
+    </a>
+
+    <!-- <iframe
         src="/"
         class="w-full h-185 rounded-lg relative z-1000"
-        id="hero-img"></iframe>
+        id="hero-img"></iframe> -->
 </div>

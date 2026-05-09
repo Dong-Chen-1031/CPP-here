@@ -52,13 +52,13 @@ export function Commands({ className = "" }: { className?: string }) {
                             <CommandItem>
                                 <UndoRedo menu />
                                 <ResetButton onClick={() => setOpen(false)} />
-                                <FormatButton onClick={() => setOpen(false)} />
                                 {/* <GithubLink /> */}
-                            </CommandItem>
-                            <CommandItem>
                                 <SettingsButton
                                     onClick={() => setOpen(false)}
                                 />
+                            </CommandItem>
+                            <CommandItem>
+                                <FormatButton onClick={() => setOpen(false)} />
                                 <CppVersionSelect
                                     className="w-25"
                                     // onSelect={() => setOpen(false)}

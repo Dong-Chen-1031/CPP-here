@@ -1,6 +1,6 @@
 ---
 import { Button } from "@/components/ui/button";
-import Layout from "../layouts/LayoutLanding.astro";
+import Layout from "../layouts/Layout.astro";
 import { CodeIcon, PlayIcon } from "@lucide/astro";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import "../styles/landing.css";
@@ -48,18 +48,26 @@ const editorLink = "/";
         </div>
 
         <div class="flex flex-col items-center w-full justify-center">
-            <div class="h-[15vh]"></div>
+            <div
+                class="pointer-events-none absolute inset-0 opacity-60 -z-10
+                    bg-[linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)]
+                    bg-size-[64px_64px]
+                    mask-[radial-gradient(at_center_top,black_10%,transparent_70%)]">
+            </div>
+            <div class="h-[8vh]"></div>
             <div>
-                <p class="text-7xl font-bold text-balance text-center">
+                <p
+                    class="text-[min(4.5rem,8.5vw)] leading-none font-bold text-balance text-center">
                     Next-generation <br />in-browser C++ editor.
                 </p>
-                <p class="text-muted-foreground text-center mt-5 text-lg">
+                <p
+                    class="text-muted-foreground text-center mt-5 md:text-lg text-balance px-10">
                     An open-source, lightweight yet powerful C++ editor built
                     for competitive programming
                 </p>
             </div>
             <div
-                class="flex items-center justify-center mt-10 gap-5 *:text-[0.9rem]">
+                class="flex items-center justify-center mt-13 gap-5 *:text-[0.9rem]">
                 <a href={editorLink}>
                     <Button
                         className="hover:bg-primary/80 transition ml-3 "

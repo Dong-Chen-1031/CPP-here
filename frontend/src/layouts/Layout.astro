@@ -1,17 +1,5 @@
 ---
 import "@/styles/global.css";
-
-const lsVersion = {
-    code: "1",
-    cppVersion: "1",
-    input: "1",
-    output: "1",
-    runMode: "1",
-    testCases: "1.1",
-    editorErrors: "1",
-    fontSize: "1",
-    defCode: "1",
-};
 ---
 
 <!doctype html>
@@ -44,23 +32,17 @@ const lsVersion = {
             href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@100..700&family=JetBrains+Mono:wght@100..800&family=Noto+Sans+TC:wght@100..900&display=swap"
             rel="stylesheet"
         />
-        <link href="https://font.emtech.cc/css/GlowSansTC" rel="stylesheet" />
+        <link
+            href="https://font.emtech.cc/css/GlowSansTC/400"
+            rel="stylesheet"
+        />
+        <link
+            href="https://font.emtech.cc/css/GlowSansTC/700"
+            rel="stylesheet"
+        />
 
         <title>C++ Here</title>
 
-        <script is:inline define:vars={{ lsVersion }}>
-            const lsKeys = "lsVersion";
-            const cls = JSON.parse(localStorage.getItem(lsKeys));
-            for (const key in lsVersion) {
-                if (!cls || cls[key] !== lsVersion[key]) {
-                    localStorage.removeItem(key);
-                    console.log(
-                        `Cleared localStorage key: ${key} due to version mismatch.`,
-                    );
-                }
-            }
-            localStorage.setItem(lsKeys, JSON.stringify(lsVersion));
-        </script>
         <!-- Google tag (gtag.js) -->
         <script
             async
@@ -113,15 +95,6 @@ const lsVersion = {
           }
         });
     </script> -->
-        <style>
-            html,
-            body {
-                margin: 0;
-                width: 100%;
-                height: 100%;
-                overflow: hidden;
-            }
-        </style>
     </head>
     <body>
         <slot />
