@@ -1,0 +1,131 @@
+---
+import { Picture } from "astro:assets";
+import heroImg from "@/assets/hero.png";
+---
+
+<script>
+    class SpotlightCard {
+        card: HTMLElement;
+        img: HTMLImageElement;
+        currentX: number;
+        currentY: number;
+        targetX: number;
+        targetY: number;
+        leaveTimer: ReturnType<typeof setTimeout> | null = null;
+        rafId: number = 0;
+
+        constructor(card: HTMLElement, img: HTMLImageElement) {
+            this.card = card;
+            this.img = img;
+
+            const center = this.imgCenter();
+            this.currentX = this.targetX = center.x;
+            this.currentY = this.targetY = center.y;
+
+            card.addEventListener("mousemove", (e) => {
+                if (this.leaveTimer) {
+                    clearTimeout(this.leaveTimer);
+                    this.leaveTimer = null;
+                }
+
+                const rect = card.getBoundingClientRect();
+                const imgRect = img.getBoundingClientRect();
+                const rawX = e.clientX - rect.left;
+                const rawY = e.clientY - rect.top;
+                this.targetX = Math.max(
+                    imgRect.left - rect.left,
+                    Math.min(imgRect.right - rect.left, rawX),
+                );
+                this.targetY = Math.max(
+                    imgRect.top - rect.top,
+                    Math.min(imgRect.bottom - rect.top, rawY),
+                );
+            });
+
+            card.addEventListener("mouseleave", () => {
+                this.leaveTimer = setTimeout(() => {
+                    const c = this.imgCenter();
+                    this.currentX = c.x;
+                    this.currentY = c.y;
+                    this.targetX = c.x;
+                    this.targetY = c.y;
+                    this.leaveTimer = null;
+                }, 1000);
+            });
+
+            this.rafId = requestAnimationFrame(this.animate.bind(this));
+        }
+
+        imgCenter() {
+            const imgRect = this.img.getBoundingClientRect();
+            const cardRect = this.card.getBoundingClientRect();
+            return {
+                x: imgRect.left - cardRect.left + imgRect.width / 2,
+                y: imgRect.top - cardRect.top + imgRect.height / 2,
+            };
+        }
+
+        animate() {
+            this.currentX += (this.targetX - this.currentX) * 0.1;
+            this.currentY += (this.targetY - this.currentY) * 0.1;
+            this.card.style.setProperty("--mouse-x", this.currentX + "px");
+            this.card.style.setProperty("--mouse-y", this.currentY + "px");
+            this.rafId = requestAnimationFrame(this.animate.bind(this));
+        }
+    }
+
+    new SpotlightCard(
+        document.getElementById("hero-card") as HTMLElement,
+        document.getElementById("hero-img") as HTMLImageElement,
+    );
+</script>
+<style>
+    #hero-card {
+        --mouse-x: 50%;
+        --mouse-y: 0%;
+        position: relative;
+    }
+
+    #hero-card #hero-img {
+        box-shadow:
+            0 -50px 20px oklch(1 0 0 / 0.05),
+            0 -6px 30px oklch(1 0 0 / 0.3),
+            0 -8px 50px oklch(100% 0 0 / 0.2),
+            0 16px 40px oklch(10% 0 0 / 0.1);
+    }
+
+    #hero-card::before {
+        content: "";
+        position: absolute;
+        inset: -300px;
+        border-radius: inherit;
+        pointer-events: none;
+
+        background: radial-gradient(
+            500px circle at calc(var(--mouse-x) + 300px)
+                calc(var(--mouse-y) + 300px),
+            oklch(1 0 0 / 0.15),
+            transparent 40%
+        );
+
+        opacity: 0;
+        transition: opacity 0.7s ease;
+    }
+
+    #hero-card:hover::before {
+        opacity: 1;
+    }
+</style>
+
+<div class="p-20 w-full" id="hero-card">
+    <!-- <Picture
+        src={heroImg}
+        class="w-full rounded-lg relative z-1000"
+        alt="Hero Image"
+    /> -->
+
+    <iframe
+        src="/"
+        class="w-full h-200 rounded-lg relative z-1000"
+        id="hero-img"></iframe>
+</div>

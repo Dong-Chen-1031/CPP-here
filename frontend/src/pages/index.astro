@@ -14,15 +14,15 @@ const allLangs = getLanguages();
 ---
 
 <Layout>
-  <div class="w-full h-screen overflow-hidden flex items-center flex-col">
-    <Header />
+    <div class="w-full h-screen overflow-hidden flex items-center flex-col">
+        <Header />
 
-    <SplitViewEditor client:load />
-    <GlobalPanelDrawer client:load />
-    <TurnstileWidget client:only="react" />
-    <Alerts client:only="react" />
-    <AlertDialogGood client:only="react" />
-    <Settings client:only="react" allLangs={allLangs} />
-    <TestEditDialog client:only="react" />
-  </div></Layout
->
+        <SplitViewEditor client:load />
+        <GlobalPanelDrawer client:load />
+        <TurnstileWidget client:only="react" />
+        <Alerts client:only="react" />
+        <AlertDialogGood client:only="react" />
+        <Settings client:only="react" allLangs={allLangs} />
+        <TestEditDialog client:only="react" />
+    </div>
+</Layout>
