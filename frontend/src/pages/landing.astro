@@ -5,6 +5,9 @@ import { CodeIcon, PlayIcon } from "@lucide/astro";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import "../styles/landing.css";
 import HeroCard from "../components/landing/heroCard.astro";
+import config from "@/config/constants";
+
+const editorLink = "/";
 ---
 
 <!-- 
@@ -26,16 +29,24 @@ import HeroCard from "../components/landing/heroCard.astro";
             class="text-sm text-muted-foreground hover:text-primary/80 transition"
             href="#features">Features</a
             > -->
-
             <div class="flex-1"></div>
-            <Button className="hover:bg-primary/80 " variant={"outline"}>
-                <SiGithub />
-                <p class="ml-1">Github</p>
-            </Button>
-            <Button className="hover:bg-primary/80 transition ml-3"
-                >Open Editor</Button
-            >
+
+            <a
+                href={config.githubLink}
+                target="_blank"
+                rel="noopener noreferrer">
+                <Button className="hover:bg-primary/80 " variant={"outline"}>
+                    <SiGithub />
+                    <p class="ml-1">Github</p>
+                </Button>
+            </a>
+            <a href={editorLink}>
+                <Button className="hover:bg-primary/80 transition ml-3"
+                    >Open Editor</Button
+                >
+            </a>
         </div>
+
         <div class="flex flex-col items-center w-full justify-center">
             <div class="h-[15vh]"></div>
             <div>
@@ -49,19 +60,26 @@ import HeroCard from "../components/landing/heroCard.astro";
             </div>
             <div
                 class="flex items-center justify-center mt-10 gap-5 *:text-[0.9rem]">
-                <Button
-                    className="hover:bg-primary/80 transition ml-3 "
-                    size={"xl"}>
-                    <PlayIcon class="size-4" />
-                    <p>Start Coding</p>
-                </Button>
-                <Button
-                    className="hover:bg-primary/80 "
-                    variant={"outline"}
-                    size="xl">
-                    <SiGithub className="size-4" />
-                    <p class="ml-1">Star on Github</p>
-                </Button>
+                <a href={editorLink}>
+                    <Button
+                        className="hover:bg-primary/80 transition ml-3 "
+                        size={"xl"}>
+                        <PlayIcon class="size-4" />
+                        <p>Start Coding</p>
+                    </Button>
+                </a>
+                <a
+                    href={config.githubLink}
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    <Button
+                        className="hover:bg-primary/80 "
+                        variant={"outline"}
+                        size="xl">
+                        <SiGithub className="size-4" />
+                        <p class="ml-1">Star on Github</p>
+                    </Button>
+                </a>
             </div>
 
             <HeroCard />

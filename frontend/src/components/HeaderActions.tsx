@@ -67,6 +67,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect } from "react";
 import { Commands } from "./Commands";
 import { ensureFormatterInit, formatCode } from "@/lib/format";
+import config from "@/config/constants";
 
 export function UndoRedo({ menu = false }: { menu?: boolean }) {
     const [editorGlobal] = useAtom(editorRefStore);
@@ -553,7 +554,7 @@ export function GithubLink({
     return (
         <Button variant={"outline"} size={size} asChild className={className}>
             <a
-                href="https://github.com/Dong-Chen-1031/CPP-Here"
+                href={config.githubLink}
                 target="_blank"
                 rel="noopener noreferrer">
                 <SiGithub className="w-5 h-5 mr-1" />

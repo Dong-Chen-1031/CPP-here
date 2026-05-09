@@ -1,11 +1,13 @@
 // 應用程式配置常數
 export const config = {
-  run_mode: import.meta.env.PUBLIC_RUN_MODE || "dev",
+    run_mode: import.meta.env.PUBLIC_RUN_MODE || "dev",
 
-  turnstileSiteKey: import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "",
+    turnstileSiteKey: import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "",
 
-  // API 端點
-  api_endpoints: import.meta.env.PUBLIC_API_URL || "http://127.0.0.1:8000",
+    // API 端點
+    api_endpoints: import.meta.env.PUBLIC_API_URL || "http://127.0.0.1:8000",
+
+    githubLink: "https://github.com/Dong-Chen-1031/CPP-here",
 } as const;
 
 export default config;
