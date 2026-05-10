@@ -13,4 +13,7 @@ export default defineConfig({
             noExternal: ["@wasm-fmt/clang-format"],
         },
     },
+    build: {
+        inlineStylesheets: "auto",
+    },
 });
