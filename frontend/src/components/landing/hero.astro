@@ -1,0 +1,57 @@
+---
+import { Button } from "@/components/ui/button";
+import { PlayIcon } from "@lucide/astro";
+import { SiGithub } from "@icons-pack/react-simple-icons";
+import "@/styles/landing.css";
+import HeroCard from "@/components/landing/heroCard.astro";
+import config from "@/config/constants";
+---
+
+<div class="relative flex flex-col items-center w-full justify-center">
+    <div
+        class="pointer-events-none absolute inset-0 opacity-100 -z-10
+                    bg-[linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)]
+                    bg-size-[64px_64px]
+                    mask-[radial-gradient(ellipse_80%_600px_at_center_top,black_20%,transparent_100%)]">
+    </div>
+    <!-- <div
+                class="rounded-full px-3 py-1 flex justify-center items-center bg-accent/40 border-border border mt-25">
+                <p
+                    class="text-center text-xs md:text-sm text-muted-foreground uppercase">
+                    Support 1,000+ competitive programming websites!
+                </p>
+            </div> -->
+    <div class="mt-40">
+        <p
+            class="text-[min(4.5rem,7vw)] leading-none font-bold text-balance text-center tracking-tighter">
+            Next-generation <br />in-browser C++ editor.
+        </p>
+        <p
+            class="text-muted-foreground text-center mt-5 md:text-lg text-balance px-5">
+            An open-source, lightweight yet powerful C++ editor built for
+            competitive programming
+        </p>
+    </div>
+    <div class="flex items-center justify-center mt-13 gap-5 *:text-[0.9rem]">
+        <a href={config.editorLink}>
+            <Button
+                className="hover:bg-primary/80 transition ml-3 "
+                size={"xl"}>
+                <PlayIcon class="size-4" />
+                <p>Start Coding</p>
+            </Button>
+        </a>
+        <a href={config.githubLink} target="_blank" rel="noopener noreferrer">
+            <Button
+                className="hover:bg-primary/80 "
+                variant={"outline"}
+                size="xl">
+                <SiGithub className="size-4" />
+                <p class="ml-1">Star on Github</p>
+            </Button>
+        </a>
+    </div>
+
+    <HeroCard />
+    <div class="h-[5vh]"></div>
+</div>

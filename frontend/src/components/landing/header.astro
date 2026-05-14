@@ -1,0 +1,30 @@
+---
+import { Button } from "@/components/ui/button";
+import config from "@/config/constants";
+import { SiGithub } from "@icons-pack/react-simple-icons";
+import { CodeIcon } from "@lucide/astro";
+---
+
+<div
+    class="w-full absolute h-16 py-4 px-5 border-b-2 border-border flex items-center bg-background/50 backdrop-blur-md z-100">
+    <CodeIcon class="size-5" />
+    <p class="ml-2 font-bold text-md tracking-normal">C++ Here</p>
+    <div class="flex-1"></div>
+    <!-- <a
+            class="text-sm text-muted-foreground hover:text-primary/80 transition"
+            href="#features">Features</a
+            > -->
+    <div class="flex-1"></div>
+
+    <a href={config.githubLink} target="_blank" rel="noopener noreferrer">
+        <Button className="hover:bg-primary/80 " variant={"outline"}>
+            <SiGithub />
+            <p class="ml-1">Github</p>
+        </Button>
+    </a>
+    <a href={config.editorLink}>
+        <Button className="hover:bg-primary/80 transition ml-3"
+            >Open Editor</Button
+        >
+    </a>
+</div>

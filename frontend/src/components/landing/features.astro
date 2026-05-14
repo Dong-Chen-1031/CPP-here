@@ -1,0 +1,177 @@
+---
+import {
+    BinaryIcon,
+    CircleAlertIcon,
+    FlaskConicalIcon,
+    SparklesIcon,
+    LanguagesIcon,
+    TrophyIcon,
+} from "@lucide/astro";
+
+import { SiGithub } from "@icons-pack/react-simple-icons";
+import config from "@/config/constants";
+import Br from "@/components/landing/br.astro";
+
+const features = [
+    {
+        icon: BinaryIcon,
+        title: "C++ to WebAssembly",
+        desc: "Compiles C++ code into WebAssembly and executes them directly in the browser — fast, no resource limitations.",
+    },
+    {
+        icon: CircleAlertIcon,
+        title: "Error Highlighting",
+        desc: "Compiler errors are parsed and pinned to the exact line they occur — clear, actionable diagnostics without the noise.",
+    },
+    {
+        icon: FlaskConicalIcon,
+        title: "Built-in Test Cases",
+        desc: "Define, run, and compare multiple test cases side-by-side. Designed for the way competitive programmers actually work.",
+    },
+    {
+        icon: SparklesIcon,
+        title: "Code Formatting",
+        desc: "Clang-format integrated. One shortcut to keep your style consistent across every snippet you write.",
+    },
+    {
+        icon: LanguagesIcon,
+        title: "i18n Ready",
+        desc: "First-class support for English and Traditional Chinese, with more languages on the way.",
+    },
+    {
+        icon: TrophyIcon,
+        title: "Made for Competitive Programming",
+        desc: "Stress testing, fast I/O templates, and a workflow shaped by hours of contest experience.",
+    },
+];
+---
+
+<section class="relative w-full px-6 md:px-20 py-24">
+    <Br />
+    <div class="max-w-2xl mx-auto text-center mb-16">
+        <p
+            class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
+            // features
+        </p>
+        <h2
+            class="text-[min(3rem,6vw)] leading-[1.05] font-bold tracking-tighter text-balance">
+            Everything you need.<br />
+            <span class="text-muted-foreground">Nothing you don't.</span>
+        </h2>
+        <p class="text-muted-foreground mt-5 md:text-lg text-balance px-2">
+            A focused toolkit that turns the browser into a powerful C++
+            workspace.
+        </p>
+    </div>
+
+    <div
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-foreground/10 border border-foreground/10 rounded-xl overflow-hidden">
+        {
+            features.map(({ icon: Icon, title, desc }) => (
+                <div class="feature-card group relative bg-background p-8">
+                    <div class="relative z-10">
+                        <div class="flex items-center gap-3 mb-5">
+                            <div class="flex items-center justify-center size-10 rounded-md border border-foreground/15 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-all duration-300">
+                                <Icon class="size-5 text-foreground/80 group-hover:text-foreground transition-colors" />
+                            </div>
+                            <h3 class="text-lg font-semibold tracking-tight flex-1">
+                                {title}
+                            </h3>
+                        </div>
+                        <p class="text-sm leading-relaxed text-muted-foreground">
+                            {desc}
+                        </p>
+                    </div>
+                    <div class="spotlight pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                </div>
+            ))
+        }
+    </div>
+
+    <a
+        href={config.githubLink}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="mt-6 flex items-center justify-between gap-4 p-6 md:p-8 border border-foreground/20 rounded-xl hover:bg-foreground/4 hover:border-foreground/25 transition-all duration-300 group">
+        <div class="flex items-center gap-4 md:gap-5">
+            <div
+                class="flex items-center justify-center size-10 rounded-md border border-foreground/20 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-colors">
+                <SiGithub className="size-5 text-foreground/80" />
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold tracking-tight">
+                    Open-source & free forever
+                </h3>
+                <p class="text-sm text-muted-foreground mt-0.5">
+                    Audit it, fork it, ship it. MIT licensed.
+                </p>
+            </div>
+        </div>
+        <span
+            class="text-sm text-muted-foreground group-hover:text-foreground transition-colors whitespace-nowrap hidden sm:inline">
+            Star on GitHub →
+        </span>
+    </a>
+
+    <style>
+        .feature-card {
+            --mx: 50%;
+            --my: 0%;
+        }
+        .feature-card .spotlight {
+            background: radial-gradient(
+                350px circle at var(--mx) var(--my),
+                color-mix(in srgb, var(--foreground) 22%, transparent),
+                transparent 60%
+            );
+        }
+    </style>
+
+    <script>
+        class SpotlightFeatureCard {
+            card: HTMLElement;
+            currentX = 0;
+            currentY = 0;
+            targetX = 0;
+            targetY = 0;
+            hasEntered = false;
+            rafId: number = 0;
+
+            constructor(card: HTMLElement) {
+                this.card = card;
+
+                card.addEventListener("pointerenter", (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    this.currentX = this.targetX = x;
+                    this.currentY = this.targetY = y;
+                    if (!this.hasEntered) {
+                        this.hasEntered = true;
+                        this.rafId = requestAnimationFrame(
+                            this.animate.bind(this),
+                        );
+                    }
+                });
+
+                card.addEventListener("pointermove", (e) => {
+                    const rect = card.getBoundingClientRect();
+                    this.targetX = e.clientX - rect.left;
+                    this.targetY = e.clientY - rect.top;
+                });
+            }
+
+            animate() {
+                this.currentX += (this.targetX - this.currentX) * 0.1;
+                this.currentY += (this.targetY - this.currentY) * 0.1;
+                this.card.style.setProperty("--mx", this.currentX + "px");
+                this.card.style.setProperty("--my", this.currentY + "px");
+                this.rafId = requestAnimationFrame(this.animate.bind(this));
+            }
+        }
+
+        document
+            .querySelectorAll<HTMLElement>(".feature-card")
+            .forEach((card) => new SpotlightFeatureCard(card));
+    </script>
+</section>

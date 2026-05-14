@@ -8,6 +8,8 @@ export const config = {
     api_endpoints: import.meta.env.PUBLIC_API_URL || "http://127.0.0.1:8000",
 
     githubLink: "https://github.com/Dong-Chen-1031/CPP-here",
+
+    editorLink: "/",
 } as const;
 
 export default config;
