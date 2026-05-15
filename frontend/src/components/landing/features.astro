@@ -5,12 +5,12 @@ import {
     FlaskConicalIcon,
     SparklesIcon,
     LanguagesIcon,
-    TrophyIcon,
+    WandSparklesIcon,
 } from "@lucide/astro";
 
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import config from "@/config/constants";
-import Br from "@/components/landing/br.astro";
+import Hr from "@/components/landing/hr.astro";
 
 const features = [
     {
@@ -39,19 +39,19 @@ const features = [
         desc: "First-class support for English and Traditional Chinese, with more languages on the way.",
     },
     {
-        icon: TrophyIcon,
-        title: "Made for Competitive Programming",
-        desc: "Stress testing, fast I/O templates, and a workflow shaped by hours of contest experience.",
+        icon: WandSparklesIcon,
+        title: "Smart Autocomplete",
+        desc: "Context-aware suggestions for STL containers, algorithms, and your own symbols — write C++ faster without leaving the flow.",
     },
 ];
 ---
 
 <section class="relative w-full px-6 md:px-20 py-24">
-    <Br />
+    <Hr />
     <div class="max-w-2xl mx-auto text-center mb-16">
         <p
             class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
-            // features
+            <span class="mr-1 tracking-widest">//</span>features
         </p>
         <h2
             class="text-[min(3rem,6vw)] leading-[1.05] font-bold tracking-tighter text-balance">

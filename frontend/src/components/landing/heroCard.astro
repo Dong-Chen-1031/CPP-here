@@ -1,36 +1,39 @@
 ---
-import { Picture, getImage } from "astro:assets";
+import { getImage } from "astro:assets";
 import heroImg from "@/assets/hero.png";
 import heroPhone from "@/assets/hero-phone.png";
 
-const mobileAvif = await Promise.all(
-    [800, heroPhone.width].map((w) =>
-        getImage({ src: heroPhone, format: "avif", width: w }),
-    ),
-);
-const mobileWebp = await Promise.all(
-    [800, heroPhone.width].map((w) =>
-        getImage({ src: heroPhone, format: "webp", width: w }),
+const isProd = import.meta.env.PROD;
+const formats = isProd ? (["avif", "webp"] as const) : (["webp"] as const);
+
+const mobileImages = await Promise.all(
+    formats.flatMap((fmt) =>
+        [800, heroPhone.width].map((w) =>
+            getImage({ src: heroPhone, format: fmt, width: w }),
+        ),
     ),
 );
 
-const desktopAvif = await Promise.all(
-    [800, 1200, 2000, heroImg.width].map((w) =>
-        getImage({ src: heroImg, format: "avif", width: w }),
-    ),
-);
-const desktopWebp = await Promise.all(
-    [800, 1200, 2000, heroImg.width].map((w) =>
-        getImage({ src: heroImg, format: "webp", width: w }),
+const desktopImages = await Promise.all(
+    formats.flatMap((fmt) =>
+        [800, 1200, 2000].map((w) =>
+            getImage({ src: heroImg, format: fmt, width: w }),
+        ),
     ),
 );
 
-const toSrcset = (images: Awaited<ReturnType<typeof getImage>>[]) =>
-    images.map((img) => `${img.src} ${img.options.width}w`).join(", ");
+const toSrcset = (
+    images: Awaited<ReturnType<typeof getImage>>[],
+    fmt: string,
+) =>
+    images
+        .filter((img) => img.options.format === fmt)
+        .map((img) => `${img.src} ${img.options.width}w`)
+        .join(", ");
 
 const fallback = await getImage({
     src: heroImg,
-    format: "jpg",
+    format: "webp",
     width: 1200,
 });
 ---
@@ -150,50 +153,51 @@ const fallback = await getImage({
 </style>
 
 <div class="px-7 py-20 md:px-20 w-full" id="hero-card">
-    <a href="/">
-        <picture>
-            {/* 手機：AVIF 優先 */}
-            <source
-                media="(max-width: 500px)"
-                type="image/avif"
-                srcset={toSrcset(mobileAvif)}
-            />
-            {/* 手機：WebP fallback */}
-            <source
-                media="(max-width: 500px)"
-                type="image/webp"
-                srcset={toSrcset(mobileWebp)}
-            />
+    <picture>
+        {/* 手機：AVIF（僅 prod） */}
+        {
+            isProd && (
+                <source
+                    media="(max-width: 500px)"
+                    type="image/avif"
+                    srcset={toSrcset(mobileImages, "avif")}
+                />
+            )
+        }
+        {/* 手機：WebP */}
+        <source
+            media="(max-width: 500px)"
+            type="image/webp"
+            srcset={toSrcset(mobileImages, "webp")}
+        />
 
-            {/* 桌機：AVIF 優先 */}
-            <source
-                media="(min-width: 501px)"
-                type="image/avif"
-                srcset={toSrcset(desktopAvif)}
-            />
-            {/* 桌機：WebP fallback */}
-            <source
-                media="(min-width: 501px)"
-                type="image/webp"
-                srcset={toSrcset(desktopWebp)}
-            />
+        {/* 桌機：AVIF（僅 prod） */}
+        {
+            isProd && (
+                <source
+                    media="(min-width: 501px)"
+                    type="image/avif"
+                    srcset={toSrcset(desktopImages, "avif")}
+                />
+            )
+        }
+        {/* 桌機：WebP */}
+        <source
+            media="(min-width: 501px)"
+            type="image/webp"
+            srcset={toSrcset(desktopImages, "webp")}
+        />
 
-            {/* 最後的 fallback */}
-            <img
-                src={fallback.src}
-                alt="Hero"
-                width={heroImg.width}
-                height={heroImg.height}
-                loading="eager"
-                fetchpriority="high"
-                id="hero-img"
-                class="w-full rounded-lg relative z-10"
-            />
-        </picture>
-    </a>
-
-    <!-- <iframe
-        src="/"
-        class="w-full h-185 rounded-lg relative z-1000"
-        id="hero-img"></iframe> -->
+        {/* fallback */}
+        <img
+            src={fallback.src}
+            alt="Hero"
+            width={heroImg.width}
+            height={heroImg.height}
+            loading="eager"
+            fetchpriority="high"
+            id="hero-img"
+            class="w-full rounded-lg relative z-10"
+        />
+    </picture>
 </div>

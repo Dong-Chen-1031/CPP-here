@@ -1,0 +1,48 @@
+---
+import Hr from "@/components/landing/hr.astro";
+import ExtensionAlert from "@/components/landing/extensionAlert.astro";
+import RotatingCircle from "@/components/landing/rotatingCircle.tsx";
+import { Button } from "@/components/ui/button";
+---
+
+<section class="px-20 py-24 w-full relative">
+    <Hr />
+    <div class="max-w-2xl mx-auto text-center mb-16">
+        <p
+            class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
+            <span class="mr-1 tracking-widest">//</span>extensions
+        </p>
+        <h2
+            class="text-[min(3rem,6vw)] leading-[1.05] font-bold tracking-tighter text-balance text-muted-foreground">
+            One click. <br />
+            <span class="text-foreground">All your test cases.</span>
+        </h2>
+    </div>
+    <div
+        class="relative lg:grid lg:grid-cols-2 lg:gap-5"
+        id="extension-relative">
+        <div class="flex justify-center items-center">
+            <RotatingCircle client:only="react" />
+            <ExtensionAlert />
+        </div>
+        <div
+            class="w-fit relative lg:flex lg:ml-0 lg:flex-col lg:justify-center mt-6 lg:mt-0 lg:max-w-2xl lg:left-0!"
+            id="target">
+            <p class="text-xl font-bold">Skip the copy-paste</p>
+            <p class="text-muted-foreground mt-2 text-balance max-w-xl w-fit">
+                Import test cases directly from your browser with our extension.
+                Support over 100 competitive programming platforms.
+            </p>
+            <div class="flex gap-4 mt-6">
+                <Button className="hover:bg-primary/80" size={"lg"}
+                    >Get for Chrome</Button
+                >
+                <Button
+                    className="hover:bg-primary/80"
+                    size={"lg"}
+                    variant={"outline"}>Get for Firefox</Button
+                >
+            </div>
+        </div>
+    </div>
+</section>
