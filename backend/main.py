@@ -1,4 +1,5 @@
 import router
+import router.api
 import router.build
 import router.verify
 import settings
@@ -44,6 +45,7 @@ app.add_middleware(
 
 app.include_router(router.build.router)
 app.include_router(router.verify.router)
+app.include_router(router.api.router)
 
 
 @app.get("/")
