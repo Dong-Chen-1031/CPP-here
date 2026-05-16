@@ -155,3 +155,15 @@ async def add_build_stats(lines: int, wasm_size_bytes: int, duration_seconds: fl
             await session.commit()
         except Exception as e:
             logger.error(f"Error updating build stats: {e}")
+
+
+async def get_build_stats():
+    async with async_session() as session:
+        try:
+            stats = await session.get(BuildStats, 1)
+            if stats is None:
+                return BuildStats()
+            return stats
+        except Exception as e:
+            logger.error(f"Error fetching build stats: {e}")
+            return BuildStats()
