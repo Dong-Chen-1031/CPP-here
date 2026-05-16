@@ -24,6 +24,7 @@ const logos = [
     {
         src: usacoLogo,
         alt: "USACO",
+        style: { filter: "brightness(200%)" },
         pName: "Problem 3. Bessie's Dream",
     },
     {
@@ -109,6 +110,91 @@ export function RotatingCircle({
                                 width: LOGO_SIZE,
                                 left: `calc(50% + ${RADIUS - LOGO_SIZE / 2}px)`,
                                 top: `calc(50% - ${LOGO_SIZE / 2}px)`,
+                                ...logo.style,
+                            }}
+                        />
+                    </motion.div>
+                );
+            })}
+        </div>
+    );
+}
+
+export function RotatingCircleMobile({
+    className = "",
+    now,
+}: {
+    className?: string;
+    now: number;
+}) {
+    now -= 2;
+    const count = logos.length;
+    const step = 360 / count;
+    const anchorRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        const target = document.querySelector<HTMLElement>("#target");
+        if (!target || !anchorRef.current) return;
+
+        const updateX = () => {
+            const anchorRect = anchorRef.current!.getBoundingClientRect();
+            const parentRect = document
+                .querySelector("#extension-relative")!
+                .getBoundingClientRect();
+            target.style.paddingLeft = `${anchorRect.left - parentRect.left + anchorRect.width / 2}px`;
+        };
+
+        const ro = new ResizeObserver(updateX);
+        ro.observe(anchorRef.current);
+        window.addEventListener("resize", updateX);
+        updateX();
+
+        return () => {
+            ro.disconnect();
+            window.removeEventListener("resize", updateX);
+        };
+    }, []);
+
+    const size = (RADIUS + LOGO_SIZE) * 2;
+
+    return (
+        <div
+            className={`absolute -top-43 mx-auto ${className}`}
+            style={{
+                width: size,
+                height: size,
+                translate: "0px 90px",
+            }}
+            ref={anchorRef}>
+            {logos.map((logo, i) => {
+                const angle = (i + now) * step + 17;
+                const angleForOpacity = angle;
+                return (
+                    <motion.div
+                        key={i}
+                        className="absolute inset-0"
+                        animate={{ rotate: angle }}
+                        transition={{ duration: 0.5, ease: "easeInOut" }}>
+                        <motion.img
+                            src={logo.src}
+                            alt={logo.alt}
+                            animate={{
+                                rotate: -angle,
+                                opacity:
+                                    angleForOpacity % 360 === 257
+                                        ? 1
+                                        : Math.abs(angleForOpacity % 360) < 100
+                                          ? 0
+                                          : 0.5,
+                            }}
+                            transition={{ duration: 0.5, ease: "easeInOut" }}
+                            className="absolute"
+                            style={{
+                                width: LOGO_SIZE,
+                                height: LOGO_SIZE,
+                                objectFit: "contain",
+                                left: `calc(70% + ${RADIUS - LOGO_SIZE / 2}px)`,
+                                top: `calc(60% - ${LOGO_SIZE / 2}px)`,
                                 ...logo.style,
                             }}
                         />
@@ -239,9 +325,12 @@ export default function ExtensionMotion() {
     }, []);
 
     return (
-        <div className="flex justify-center items-center">
-            <RotatingCircle className="hidden md:block" now={now} />
-            <ExtensionAlert now={now} />
-        </div>
+        <>
+            <RotatingCircleMobile className="block md:hidden" now={now} />
+            <div className="flex justify-center items-center">
+                <RotatingCircle className="hidden md:block" now={now} />
+                <ExtensionAlert now={now} />
+            </div>
+        </>
     );
 }
