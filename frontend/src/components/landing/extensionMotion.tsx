@@ -1,11 +1,11 @@
 import { motion } from "motion/react";
-import React, { useState } from "react";
+import React from "react";
 import codeforcesLogo from "@/assets/logo/codeforces.svg?url";
-import atcoderLogo from "@/assets/logo/atcoder.png?url";
-import ceseLogo from "@/assets/logo/cses.png?url";
-import usacoLogo from "@/assets/logo/USACO.png?url";
-import spojLogo from "@/assets/logo/SPOJ.png?url";
-import kattisLogo from "@/assets/logo/Kattis.png?url";
+import atcoderLogo from "@/assets/logo/atcoder.avif?url";
+import ceseLogo from "@/assets/logo/cses.avif?url";
+import usacoLogo from "@/assets/logo/USACO.avif?url";
+import spojLogo from "@/assets/logo/SPOJ.avif?url";
+import kattisLogo from "@/assets/logo/Kattis.avif?url";
 import { AnimatePresence } from "motion/react";
 
 const RADIUS = 50;
@@ -20,7 +20,11 @@ const logos = [
         style: { filter: "invert(100%)" },
         pName: "D - Grid Repainting",
     },
-    { src: ceseLogo, alt: "CSES", pName: "Coin Combinations I" },
+    {
+        src: ceseLogo,
+        alt: "CSES",
+        pName: "Coin Combinations I",
+    },
     {
         src: usacoLogo,
         alt: "USACO",
