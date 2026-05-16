@@ -53,29 +53,33 @@ try {
         throw new Error(`Failed to fetch stats from API: ${error}`);
     console.error("Failed to fetch stats from API", error);
 }
+if (!apiData) {
+    console.error("API data is null");
+    throw new Error("Failed to load stats data");
+}
 
 const stats = [
     {
         icon: ZapIcon,
-        value: apiData ? formatCount(apiData.total_count) : "—",
+        value: formatCount(apiData.total_count),
         label: "Compilations",
         desc: "C++ programs compiled and executed directly in the browser.",
     },
     {
         icon: FileTextIcon,
-        value: apiData ? formatLines(apiData.total_lines) : "—",
+        value: formatLines(apiData.total_lines),
         label: "Lines Compiled",
         desc: "Lines of C++ code processed through the WebAssembly pipeline.",
     },
     {
         icon: DatabaseIcon,
-        value: apiData ? formatBytes(apiData.total_wasm_size_bytes) : "—",
+        value: formatBytes(apiData.total_wasm_size_bytes),
         label: "Wasm Compiled",
         desc: "Total size of source code submitted and compiled by users.",
     },
     {
         icon: ClockIcon,
-        value: apiData ? formatDuration(apiData.total_duration_seconds) : "—",
+        value: formatDuration(apiData.total_duration_seconds),
         label: "Total Time Compiled",
         desc: "Cumulative CPU time spent compiling across all users.",
     },
