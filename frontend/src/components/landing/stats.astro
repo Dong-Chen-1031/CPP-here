@@ -1,0 +1,180 @@
+---
+import { ZapIcon, FileTextIcon, DatabaseIcon, ClockIcon } from "@lucide/astro";
+import Hr from "@/components/landing/hr.astro";
+import config from "@/config/constants";
+
+interface StatusResponse {
+    total_count: number;
+    total_lines: number;
+    total_wasm_size_bytes: number;
+    total_duration_seconds: number;
+}
+
+function formatCount(n: number): string {
+    if (n >= 1_000_000)
+        return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M+";
+    if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K+";
+    return String(n);
+}
+
+function formatLines(n: number): string {
+    if (n >= 1_000_000)
+        return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M+";
+    if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K+";
+    return String(n);
+}
+
+function formatBytes(bytes: number): string {
+    if (bytes >= 1_073_741_824)
+        return (bytes / 1_073_741_824).toFixed(1).replace(/\.0$/, "") + " GB+";
+    if (bytes >= 1_048_576)
+        return (bytes / 1_048_576).toFixed(1).replace(/\.0$/, "") + " MB+";
+    if (bytes >= 1_024)
+        return (bytes / 1_024).toFixed(1).replace(/\.0$/, "") + " KB+";
+    return bytes + " B";
+}
+
+function formatDuration(seconds: number): string {
+    if (seconds >= 86_400)
+        return (seconds / 86_400).toFixed(1).replace(/\.0$/, "") + " days+";
+    if (seconds >= 3_600)
+        return (seconds / 3_600).toFixed(1).replace(/\.0$/, "") + " hrs+";
+    if (seconds >= 60)
+        return (seconds / 60).toFixed(1).replace(/\.0$/, "") + " min+";
+    return seconds.toFixed(0) + " s+";
+}
+
+let apiData: StatusResponse | null = null;
+try {
+    const res = await fetch(`${config.api_endpoints}/status`);
+    if (res.ok) apiData = await res.json();
+} catch (error) {
+    console.error("Failed to fetch stats from API", error);
+}
+
+const stats = [
+    {
+        icon: ZapIcon,
+        value: apiData ? formatCount(apiData.total_count) : "—",
+        label: "Compilations",
+        desc: "C++ programs compiled and executed directly in the browser.",
+    },
+    {
+        icon: FileTextIcon,
+        value: apiData ? formatLines(apiData.total_lines) : "—",
+        label: "Lines Compiled",
+        desc: "Lines of C++ code processed through the WebAssembly pipeline.",
+    },
+    {
+        icon: DatabaseIcon,
+        value: apiData ? formatBytes(apiData.total_wasm_size_bytes) : "—",
+        label: "Wasm Compiled",
+        desc: "Total size of source code submitted and compiled by users.",
+    },
+    {
+        icon: ClockIcon,
+        value: apiData ? formatDuration(apiData.total_duration_seconds) : "—",
+        label: "Total Time Compiled",
+        desc: "Cumulative CPU time spent compiling across all users.",
+    },
+];
+---
+
+<section class="px-6 md:px-20 py-24 w-full relative">
+    <Hr />
+    <div class="max-w-2xl mx-auto text-center mb-16">
+        <p
+            class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
+            <span class="mr-1 tracking-widest">//</span>stats
+        </p>
+        <h2
+            class="text-[min(3rem,9vw)] leading-[1.05] font-bold tracking-tighter text-balance">
+            Real numbers.<br />
+            <span class="text-muted-foreground">Real usage.</span>
+        </h2>
+    </div>
+
+    <div
+        class="grid grid-cols-2 lg:grid-cols-4 gap-px bg-foreground/10 border border-foreground/10 rounded-xl overflow-hidden">
+        {
+            stats.map(({ icon: Icon, value, label, desc }) => (
+                <div class="stat-card group relative bg-background sm:p-8 p-5">
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-center size-10 rounded-md border border-foreground/15 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-all duration-300 mb-5">
+                            <Icon class="size-5 text-foreground/80 group-hover:text-foreground transition-colors" />
+                        </div>
+                        <p class="text-3xl md:text-4xl font-bold tracking-tighter tabular-nums">
+                            {value}
+                        </p>
+                        <p class="text-sm font-semibold mt-2 tracking-tight">
+                            {label}
+                        </p>
+                        {/* <p class="text-sm leading-relaxed text-muted-foreground mt-1">
+                            {desc}
+                        </p> */}
+                    </div>
+                    <div class="spotlight pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                </div>
+            ))
+        }
+    </div>
+</section>
+
+<style>
+    .stat-card {
+        --mx: 50%;
+        --my: 0%;
+    }
+    .spotlight {
+        background: radial-gradient(
+            350px circle at var(--mx) var(--my),
+            color-mix(in srgb, var(--foreground) 22%, transparent),
+            transparent 60%
+        );
+    }
+</style>
+
+<script>
+    class SpotlightStatCard {
+        card: HTMLElement;
+        currentX = 0;
+        currentY = 0;
+        targetX = 0;
+        targetY = 0;
+        hasEntered = false;
+
+        constructor(card: HTMLElement) {
+            this.card = card;
+
+            card.addEventListener("pointerenter", (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                this.currentX = this.targetX = x;
+                this.currentY = this.targetY = y;
+                if (!this.hasEntered) {
+                    this.hasEntered = true;
+                    requestAnimationFrame(this.animate.bind(this));
+                }
+            });
+
+            card.addEventListener("pointermove", (e) => {
+                const rect = card.getBoundingClientRect();
+                this.targetX = e.clientX - rect.left;
+                this.targetY = e.clientY - rect.top;
+            });
+        }
+
+        animate() {
+            this.currentX += (this.targetX - this.currentX) * 0.1;
+            this.currentY += (this.targetY - this.currentY) * 0.1;
+            this.card.style.setProperty("--mx", this.currentX + "px");
+            this.card.style.setProperty("--my", this.currentY + "px");
+            requestAnimationFrame(this.animate.bind(this));
+        }
+    }
+
+    document
+        .querySelectorAll<HTMLElement>(".stat-card")
+        .forEach((card) => new SpotlightStatCard(card));
+</script>
