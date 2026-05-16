@@ -1,5 +1,7 @@
 ## Supported websites
 
+> fork from https://github.com/jmerle/competitive-companion
+
 | Website                    | Problem parser | Contest parser |
 | -------------------------- | -------------- | -------------- |
 | 33OJ                       | ✔              | ✔              |

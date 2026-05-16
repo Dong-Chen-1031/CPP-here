@@ -1,11 +1,10 @@
 ---
 import Hr from "@/components/landing/hr.astro";
-import ExtensionAlert from "@/components/landing/extensionAlert.astro";
-import RotatingCircle from "@/components/landing/rotatingCircle.tsx";
+import ExtensionMotion from "@/components/landing/extensionMotion.tsx";
 import { Button } from "@/components/ui/button";
 ---
 
-<section class="px-20 py-24 w-full relative">
+<section class="px-6 md:px-20 py-24 w-full relative">
     <Hr />
     <div class="max-w-2xl mx-auto text-center mb-16">
         <p
@@ -19,14 +18,11 @@ import { Button } from "@/components/ui/button";
         </h2>
     </div>
     <div
-        class="relative lg:grid lg:grid-cols-2 lg:gap-5"
+        class="relative lg:grid lg:grid-cols-2 lg:gap-10 max-[48rem]:flex max-[48rem]:flex-col max-[48rem]:items-center"
         id="extension-relative">
-        <div class="flex justify-center items-center">
-            <RotatingCircle client:only="react" />
-            <ExtensionAlert />
-        </div>
+        <ExtensionMotion client:only="react" />
         <div
-            class="w-fit relative lg:flex lg:ml-0 lg:flex-col lg:justify-center mt-6 lg:mt-0 lg:max-w-2xl lg:left-0!"
+            class="relative lg:flex lg:ml-0 lg:flex-col lg:justify-center mt-6 lg:mt-0 max-[48rem]:pl-0! lg:pl-0! max-w-md md:max-w-2xl md:mx-0"
             id="target">
             <p class="text-xl font-bold">Skip the copy-paste</p>
             <p class="text-muted-foreground mt-2 text-balance max-w-xl w-fit">
