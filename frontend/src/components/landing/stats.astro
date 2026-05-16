@@ -49,6 +49,8 @@ try {
     const res = await fetch(`${config.api_endpoints}/status`);
     if (res.ok) apiData = await res.json();
 } catch (error) {
+    if (config.run_mode !== "development")
+        throw new Error(`Failed to fetch stats from API: ${error}`);
     console.error("Failed to fetch stats from API", error);
 }
 

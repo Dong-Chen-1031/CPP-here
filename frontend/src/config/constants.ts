@@ -1,7 +1,6 @@
 // 應用程式配置常數
 export const config = {
-    run_mode: import.meta.env.PUBLIC_RUN_MODE || "dev",
-
+    run_mode: import.meta.env.MODE as "development" | "production",
     turnstileSiteKey: import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "",
 
     // API 端點
