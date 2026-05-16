@@ -15,7 +15,7 @@ class StatusResponse(BaseModel):
     total_duration_seconds: float
 
 
-@router.post("/status")
+@router.get("/status")
 async def status() -> StatusResponse:
     try:
         stats = await get_build_stats()
