@@ -1,0 +1,84 @@
+---
+import { CodeIcon } from "@lucide/astro";
+import { SiGithub } from "@icons-pack/react-simple-icons";
+import config from "@/config/constants";
+
+const links = [
+    { label: "Editor", href: config.editorLink },
+    { label: "GitHub", href: config.githubLink, external: true },
+    {
+        label: "Issues",
+        href: `${config.githubLink}/issues`,
+        external: true,
+    },
+];
+---
+
+<footer
+    class="px-6 md:px-20 py-6 sm:py-10 w-full border-t border-foreground/10 text-sm text-muted-foreground">
+    <div class="hidden sm:flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <CodeIcon class="size-4" />
+            <span class="font-semibold text-foreground tracking-normal"
+                >C++ Here</span
+            >
+            <span>·</span>
+            <a
+                class="hover:text-foreground transition-colors"
+                href={`${config.githubLink}/blob/main/LICENSE.txt`}
+                target="_blank"
+                rel="noopener noreferrer">MIT Licensed</a
+            >
+        </div>
+
+        <nav class="flex items-center gap-5">
+            {
+                links.map(({ label, href, external }) => (
+                    <a
+                        href={href}
+                        class="hover:text-foreground transition-colors"
+                        {...(external
+                            ? { target: "_blank", rel: "noopener noreferrer" }
+                            : {})}>
+                        {label}
+                    </a>
+                ))
+            }
+        </nav>
+
+        <a
+            href={config.githubLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hover:text-foreground transition-colors flex items-center gap-1.5">
+            <SiGithub className="size-4" />
+            <span>Dong-Chen-1031</span>
+        </a>
+    </div>
+
+    <div class="flex flex-col items-center gap-5 sm:hidden">
+        <div class="flex items-center gap-2">
+            <CodeIcon class="size-4" />
+            <span class="font-semibold text-foreground tracking-normal"
+                >C++ Here</span
+            >
+        </div>
+
+        <nav class="grid grid-cols-3 gap-x-5 gap-y-3 text-center">
+            {
+                links.map(({ label, href, external }) => (
+                    <a
+                        href={href}
+                        class="hover:text-foreground transition-colors"
+                        {...(external
+                            ? { target: "_blank", rel: "noopener noreferrer" }
+                            : {})}>
+                        {label}
+                    </a>
+                ))
+            }
+        </nav>
+
+        <p>© {new Date().getFullYear()} Dong-Chen-1031 · MIT Licensed</p>
+    </div>
+</footer>

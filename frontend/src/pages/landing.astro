@@ -7,6 +7,7 @@ import Features from "@/components/landing/features.astro";
 import Extension from "@/components/landing/extension.astro";
 import Stats from "@/components/landing/stats.astro";
 import CTA from "@/components/landing/CTA.astro";
+import Footer from "@/components/landing/footer.astro";
 ---
 
 <!-- 
@@ -22,10 +23,16 @@ import CTA from "@/components/landing/CTA.astro";
     (7) open-source and free to use
     (8) TODO: RWD support
 4. extensions V
-5. data
-6. CAT
+5. data V
+6. CAT V
+7. footer V TODO: add status
 -->
 <Layout>
+    <meta
+        slot="head"
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
     <style>
         html,
         body {
@@ -40,5 +47,6 @@ import CTA from "@/components/landing/CTA.astro";
         <Extension />
         <Stats />
         <CTA />
+        <Footer />
     </div>
 </Layout>
