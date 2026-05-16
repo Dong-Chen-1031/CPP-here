@@ -13,10 +13,9 @@ import "@/styles/global.css";
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="preconnect" href="https://font.emtech.cc" crossorigin />
         <meta charset="UTF-8" />
-        <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0"
-        />
+
+        <slot name="head" />
+
         <link
             rel="icon"
             type="image/png"
@@ -38,14 +37,14 @@ import "@/styles/global.css";
             href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@100..700&family=JetBrains+Mono:wght@100..800&family=Noto+Sans+TC:wght@100..900&display=swap"
             rel="stylesheet"
         />
-        <link
+        <!-- <link
             href="https://font.emtech.cc/css/GlowSansTC/400"
             rel="stylesheet"
         />
         <link
             href="https://font.emtech.cc/css/GlowSansTC/700"
             rel="stylesheet"
-        />
+        /> -->
 
         <title>C++ Here</title>
 
