@@ -108,6 +108,8 @@ export function RotatingCircle({
                             className="absolute"
                             style={{
                                 width: LOGO_SIZE,
+                                height: LOGO_SIZE,
+                                objectFit: "contain",
                                 left: `calc(50% + ${RADIUS - LOGO_SIZE / 2}px)`,
                                 top: `calc(50% - ${LOGO_SIZE / 2}px)`,
                                 ...logo.style,
@@ -233,14 +235,15 @@ export function ExtensionAlert({ now }: { now: number }) {
                     className="text-sm text-balance text-muted-foreground md:text-pretty *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground inter">
                     Test case of{" "}
                     <code>
-                        <AnimatePresence mode="wait">
+                        <AnimatePresence mode="popLayout">
                             <motion.span
+                                transition={{ duration: 0.5 }}
                                 style={{ display: "inline-block" }}
                                 key={logos[now % logos.length].pName}
                                 initial={{
                                     opacity: 0,
                                     filter: "blur(8px)",
-                                    scale: 0.92,
+                                    // scale: 0.92,
                                 }}
                                 animate={{
                                     opacity: 1,
