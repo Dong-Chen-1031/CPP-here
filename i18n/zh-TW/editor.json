@@ -32,7 +32,7 @@
         "pasteTip": "從剪貼簿貼上",
         "pasteBtn": "貼上",
         "clearTip": "清除輸入",
-        "placeholder": "從剪貼簿貼上"
+        "placeholder": "在此輸入你的輸入"
     },
     "output": {
         "label": "輸出",
