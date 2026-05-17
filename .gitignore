@@ -1,5 +1,6 @@
 build-chrome
 build-firefox
+package-lock.json
 
 frontend/public/i18n
 
