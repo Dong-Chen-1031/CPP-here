@@ -16,7 +16,7 @@ const links = [
 
 <footer
     class="px-6 md:px-20 py-6 sm:py-10 w-full border-t border-foreground/10 text-sm text-muted-foreground">
-    <div class="hidden sm:flex items-center justify-between">
+    <div class="hidden sm:grid grid-cols-3">
         <div class="flex items-center gap-2">
             <CodeIcon class="size-4" />
             <span class="font-semibold text-foreground tracking-normal"
@@ -31,7 +31,7 @@ const links = [
             >
         </div>
 
-        <nav class="flex items-center gap-5">
+        <nav class="flex justify-center items-center gap-5">
             {
                 links.map(({ label, href, external }) => (
                     <a
@@ -45,15 +45,16 @@ const links = [
                 ))
             }
         </nav>
-
-        <a
-            href={config.githubLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="hover:text-foreground transition-colors flex items-center gap-1.5">
-            <SiGithub className="size-4" />
-            <span>Dong-Chen-1031</span>
-        </a>
+        <div class="flex justify-end items-center">
+            <a
+                href={config.githubLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="hover:text-foreground transition-colors flex items-center gap-1.5">
+                <SiGithub className="size-4" />
+                <span>Dong-Chen-1031</span>
+            </a>
+        </div>
     </div>
 
     <div class="flex flex-col items-center gap-5 sm:hidden">
