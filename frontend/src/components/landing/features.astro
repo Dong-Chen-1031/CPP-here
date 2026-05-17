@@ -36,7 +36,7 @@ const features = [
     {
         icon: LanguagesIcon,
         title: "i18n Ready",
-        desc: "First-class support for English and Traditional Chinese, with more languages on the way.",
+        desc: "First-class support for English and Traditional Chinese, with more languages on the way. You can help translate on <a href='https://crowdin.com/project/cpp-here' class='underline hover:text-foreground transition' target='_blank' rel='noopener noreferrer'>Crowdin</a>!",
     },
     {
         icon: WandSparklesIcon,
@@ -78,8 +78,10 @@ const features = [
                                 {title}
                             </h3>
                         </div>
-                        <p class="text-sm leading-relaxed text-muted-foreground">
-                            {desc}
+                        <p
+                            class="text-sm leading-relaxed text-muted-foreground"
+                            set:html={desc}>
+                            {/* This is a bit dangerous, but I think it's safe in this context */}
                         </p>
                     </div>
                     <div class="spotlight pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

@@ -16,7 +16,7 @@ const mobileImages = await Promise.all(
 
 const desktopImages = await Promise.all(
     formats.flatMap((fmt) =>
-        [800, 1200, 2000].map((w) =>
+        [800, 1200, 2000, heroImg.width].map((w) =>
             getImage({ src: heroImg, format: fmt, width: w }),
         ),
     ),
