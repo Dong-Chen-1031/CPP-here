@@ -268,8 +268,10 @@ export function ExtensionAlert({ now }: { now: number }) {
                             </motion.span>
                         </AnimatePresence>
                     </code>{" "}
-                    has been received. Would you like to overwrite or insert the
-                    new test cases?
+                    has <br className="sm:hidden" />
+                    been received. Would you like to
+                    <br className="sm:hidden" /> overwrite or insert the new
+                    test cases?
                 </p>
             </div>
             <div
