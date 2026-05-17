@@ -62,65 +62,65 @@
             "expectedPlaceholder": "在此輸入預期輸出以進行自動驗證"
         },
         "extension": {
-            "caseName": "{{problemName}} - Test {{index}}",
+            "caseName": "{{problemName}} - 測資 {{index}}",
             "alertDialog": {
-                "title": "Received Test Case from Extension",
-                "description": "Test case {{problemName}} has been received. Would\nyou like to overwrite or insert the new test cases?",
-                "overwrite": "Overwrite",
-                "insert": "Insert",
+                "title": "已收到來自擴充功能的測資",
+                "description": "測資 {{problemName}} 已收到。\n你想要覆寫現有測資或是插入一個新的測資？",
+                "overwrite": "覆寫",
+                "insert": "插入",
                 "cancel": "取消"
             },
             "alert": {
-                "title": "A new test case has been received",
-                "description": "Test case {{problemName}} has been received. It has been added to the test case list."
+                "title": "已收到新的測資",
+                "description": "測資 {{problemName}} 已收到。 已經加入至測資表。"
             }
         }
     },
     "headerActions": {
-        "undo": "Undo",
-        "redo": "Redo",
-        "runCode": "Run Code",
-        "runAllTestCases": "Run all test cases",
-        "runCurrentInput": "Run current input",
-        "verifying": "Verifying",
-        "building": "編譯中",
-        "stop": "Stop",
-        "run": "Run",
-        "runAll": "Run All",
-        "resetEverything": "Reset Everything",
-        "resetBtn": "Reset",
-        "shareCode": "Share Code",
-        "settings": "Settings",
-        "formatCode": "Format",
-        "formatCodeTip": "Format code",
-        "runOptions": "Run options"
+        "undo": "復原",
+        "redo": "重做",
+        "runCode": "運行程式",
+        "runAllTestCases": "測試所有測資",
+        "runCurrentInput": "測試現有輸入",
+        "verifying": "驗證中",
+        "building": "建置中",
+        "stop": "停止",
+        "run": "運行",
+        "runAll": "全部運行",
+        "resetEverything": "重製所有設定",
+        "resetBtn": "重置",
+        "shareCode": "分享程式",
+        "settings": "設定",
+        "formatCode": "格式化",
+        "formatCodeTip": "格式化程式碼",
+        "runOptions": "運行設定"
     },
     "turnstile": {
-        "verificationFailed": "Verification Failed",
-        "verificationFailedDesc": "Failed to verify Turnstile token. Please try again later.",
-        "unsupported": "Turnstile Unsupported",
-        "unsupportedDesc": "Your browser does not support Turnstile. Please use a modern browser.",
-        "error": "Turnstile Error",
-        "errorDesc": "An error occurred during Turnstile verification. Please try reloading the page."
+        "verificationFailed": "驗證失敗",
+        "verificationFailedDesc": "驗證 Turnstile 權杖失敗。請稍後再試。",
+        "unsupported": "Turnstile 不支援",
+        "unsupportedDesc": "你的瀏覽器不支援 Turnstile。請使用其他瀏覽器。",
+        "error": "Turnstile 錯誤",
+        "errorDesc": "驗證 Turnstile 時出現錯誤。請重新載入頁面。"
     },
     "settings": {
-        "title": "Settings",
-        "language": "Language",
-        "selectLanguage": "Select a language",
-        "noLanguage": "No Language found.",
-        "fontSize": "Font Size",
-        "decreaseFontSize": "Decrease font size",
-        "increaseFontSize": "Increase font size",
-        "defaultCode": "Default Code",
-        "defaultCodeDesc": "Set the current code as default.",
-        "defaultCodeBtn": "Set",
-        "resetSettings": "Reset Settings",
-        "resetSettingsDesc": "Reset all settings to default values.",
-        "resetSettingsBtn": "Reset",
-        "codeFormatStyle": "Code Format Style",
-        "codeFormatStyleDesc": "Select a code formatting style."
+        "title": "設定",
+        "language": "語言",
+        "selectLanguage": "選擇語言",
+        "noLanguage": "沒有結果。",
+        "fontSize": "字型大小",
+        "decreaseFontSize": "縮小字體",
+        "increaseFontSize": "放大字體",
+        "defaultCode": "預設程式碼",
+        "defaultCodeDesc": "以現在程式碼作為預設程式碼。",
+        "defaultCodeBtn": "設置",
+        "resetSettings": "重製設定",
+        "resetSettingsDesc": "將所有設定還原為預設值。",
+        "resetSettingsBtn": "重置",
+        "codeFormatStyle": "格式化風格",
+        "codeFormatStyleDesc": "選擇一個程式碼格式化風格。"
     },
     "resize": {
-        "loadingEditor": "Loading Editor"
+        "loadingEditor": "正在載入編輯器"
     }
 }
