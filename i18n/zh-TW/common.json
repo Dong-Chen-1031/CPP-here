@@ -6,6 +6,6 @@
   "cancel": "取消",
   "runStatus": {
     "running": "運行中",
-    "building": "建置中"
+    "building": "編譯中"
   }
 }
