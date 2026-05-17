@@ -1,0 +1,65 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/header.astro";
+
+import { SplitViewEditor } from "@/layouts/Resize";
+import { GlobalPanelDrawer } from "@/components/Drawer";
+import TurnstileWidget from "@/components/turnstile";
+import { AlertDialogGood, Alerts } from "@/components/Alert";
+import { Settings } from "@/components/Settings";
+import { getLanguages } from "@/lib/langList";
+import TestEditDialog from "@/components/panel/TestEditDialog";
+
+const allLangs = getLanguages();
+const lsVersion = {
+    code: "1",
+    cppVersion: "1",
+    input: "1",
+    output: "1",
+    runMode: "1",
+    testCases: "1.1",
+    editorErrors: "1",
+    fontSize: "1",
+    defCode: "1",
+};
+---
+
+<Layout>
+    <meta
+        slot="head"
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <style>
+        html,
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script is:inline define:vars={{ lsVersion }}>
+        const lsKeys = "lsVersion";
+        const cls = JSON.parse(localStorage.getItem(lsKeys));
+        for (const key in lsVersion) {
+            if (!cls || cls[key] !== lsVersion[key]) {
+                localStorage.removeItem(key);
+                console.log(
+                    `Cleared localStorage key: ${key} due to version mismatch.`,
+                );
+            }
+        }
+        localStorage.setItem(lsKeys, JSON.stringify(lsVersion));
+    </script>
+    <div class="w-full h-screen overflow-hidden flex items-center flex-col">
+        <Header />
+
+        <SplitViewEditor client:load />
+        <GlobalPanelDrawer client:load />
+        <TurnstileWidget client:only="react" />
+        <Alerts client:only="react" />
+        <AlertDialogGood client:only="react" />
+        <Settings client:only="react" allLangs={allLangs} />
+        <TestEditDialog client:only="react" />
+    </div>
+</Layout>

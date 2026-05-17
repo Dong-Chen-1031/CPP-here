@@ -8,7 +8,7 @@ export const config = {
 
     githubLink: "https://github.com/Dong-Chen-1031/CPP-here",
 
-    editorLink: "/",
+    editorLink: "/editor",
 } as const;
 
 export default config;

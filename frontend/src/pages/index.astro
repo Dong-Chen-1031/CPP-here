@@ -1,65 +1,52 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import Header from "../components/header.astro";
-
-import { SplitViewEditor } from "@/layouts/Resize";
-import { GlobalPanelDrawer } from "@/components/Drawer";
-import TurnstileWidget from "@/components/turnstile";
-import { AlertDialogGood, Alerts } from "@/components/Alert";
-import { Settings } from "@/components/Settings";
-import { getLanguages } from "@/lib/langList";
-import TestEditDialog from "@/components/panel/TestEditDialog";
-
-const allLangs = getLanguages();
-const lsVersion = {
-    code: "1",
-    cppVersion: "1",
-    input: "1",
-    output: "1",
-    runMode: "1",
-    testCases: "1.1",
-    editorErrors: "1",
-    fontSize: "1",
-    defCode: "1",
-};
+import Layout from "@/layouts/Layout.astro";
+import "@/styles/landing.css";
+import Header from "@/components/landing/header.astro";
+import Hero from "@/components/landing/hero.astro";
+import Features from "@/components/landing/features.astro";
+import Extension from "@/components/landing/extension.astro";
+import Stats from "@/components/landing/stats.astro";
+import CTA from "@/components/landing/CTA.astro";
+import Footer from "@/components/landing/footer.astro";
 ---
 
+<!-- 
+1. header v
+2. hero v
+3. features v
+    (1) C++ to WebAssembly
+    (2) error hinting
+    (3) test case
+    (4) code formatting
+    (5) i18n V
+    (6) built for competitive programming
+    (7) open-source and free to use
+    (8) TODO: RWD support
+4. extensions V
+5. data V
+6. CAT V
+7. footer V
+-->
 <Layout>
     <meta
         slot="head"
         name="viewport"
-        content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0"
+        content="width=device-width, initial-scale=1.0"
     />
     <style>
         html,
         body {
-            margin: 0;
-            width: 100%;
+            overflow-x: hidden;
             height: 100%;
         }
     </style>
-    <script is:inline define:vars={{ lsVersion }}>
-        const lsKeys = "lsVersion";
-        const cls = JSON.parse(localStorage.getItem(lsKeys));
-        for (const key in lsVersion) {
-            if (!cls || cls[key] !== lsVersion[key]) {
-                localStorage.removeItem(key);
-                console.log(
-                    `Cleared localStorage key: ${key} due to version mismatch.`,
-                );
-            }
-        }
-        localStorage.setItem(lsKeys, JSON.stringify(lsVersion));
-    </script>
-    <div class="w-full h-screen overflow-hidden flex items-center flex-col">
+    <div class="mono tracking-tight">
         <Header />
-
-        <SplitViewEditor client:load />
-        <GlobalPanelDrawer client:load />
-        <TurnstileWidget client:only="react" />
-        <Alerts client:only="react" />
-        <AlertDialogGood client:only="react" />
-        <Settings client:only="react" allLangs={allLangs} />
-        <TestEditDialog client:only="react" />
+        <Hero />
+        <Features />
+        <Extension />
+        <Stats />
+        <CTA />
+        <Footer />
     </div>
 </Layout>
