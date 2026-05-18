@@ -33,6 +33,10 @@ services:
         # In production, make sure to set this to a strong, unique value and keep it secret.
         # Default: not set (auto generated at runtime if not provided, but it's recommended to set it explicitly in production).
 
+      - COLUMNS=160
+        # how wide your terminal is.
+        # This is used to format the output of the backend server logs to prevent line breaks in the middle of log lines when running in Docker Compose.
+        
 
     # or use .env to set environment variables:
     # env_file: .env
