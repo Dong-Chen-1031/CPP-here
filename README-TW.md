@@ -54,7 +54,7 @@ C++ Here 是一個輕量、快速的線上 C++ 執行與驗證平台。讓使用
 - **匯入測資**
   透過瀏覽器插件一鍵匯入競賽平台的測試資料，支援超過 100 個主流競賽平台。
 
-## 技術棧
+## 技術棧&依賴套件
 
 - **前端**: Astro, Bun, Motion, React, Shadcn, Tailwind CSS, TypeScript, axios, cloudflare turnstile, codemirror, i18next, Jotai Atom, lucide
 - **瀏覽器擴充**: Bun, TypeScript, esbuild, web-ext
