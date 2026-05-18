@@ -1,8 +1,6 @@
 services:
   backend:
     image: ghcr.io/dong-chen-1031/cpp-here/backend:latest
-    env_file:
-      - .env
     environment:
       - DEV: "false"
         # set to false for production deployment, true for local development
