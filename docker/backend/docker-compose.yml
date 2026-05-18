@@ -2,7 +2,7 @@ services:
   backend:
     image: ghcr.io/dong-chen-1031/cpp-here/backend:latest
     environment:
-      - HOST_CACHE_PATH="${PWD}/cache"
+      - HOST_CACHE_PATH=${PWD}/cache
       # this env tell the backend the cache path on the host machine. 
       # So when it starts sub containers for wasm builds, it can mount the same cache path to speed up builds and share cache between host and containers.
 
