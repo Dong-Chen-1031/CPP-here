@@ -55,6 +55,17 @@ C++ Here 與其他線上 C++ 編輯器的最大不同在於我們使用 [safe-cp
 3. 並發：前端執行 WebAssembly 模組可以利用瀏覽器的多線程能力，實現更高效的並發執行，特別適合競賽程式設計中的大量測試案例。
 4. 無限制：由於執行在前端，使用者不受後端資源限制，可以自由地編寫和測試程式碼，而不必擔心伺服器的負載問題。
 
+## 本地運行及部署
+
+### 使用 Docker compose
+```shell
+curl -sS "https://cpp.doong.me/script/docker-compose.yml" > docker-compose.yml
+docker compose up --pull always
+```
+> [!TIP]
+> 可以在第二行指令加上 -d 讓他在背景長期執行
+
+
 ## Contributing
 
 Any contributions are greatly appreciated. If you have a suggestion that would make this project better, please fork the repo and create a Pull Request. You can also [open an issue](https://github.com/Dong-Chen-1031/Cpp-Here/issues).
