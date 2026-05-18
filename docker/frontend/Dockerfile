@@ -8,7 +8,7 @@ COPY . .
 ENV SKIP_API_FETCH=true
 RUN bun install --production
 
-EXPOSE 80
+EXPOSE 4321
 
 ENTRYPOINT []
 CMD ["/bin/sh", "-c", "bun run build && caddy file-server --root dist --listen :4321"]
