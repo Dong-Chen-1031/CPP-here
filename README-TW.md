@@ -63,11 +63,9 @@ curl -sS "https://cpp.doong.me/script/docker-compose.yml" > docker-compose.yml
 docker compose up --pull always
 ```
 > [!TIP]
-> 可以在第二行指令加上 -d 讓他在背景長期執行
->
-> 可依 docker-compose.yml 內的註釋修改環境變數
->
-> 在 Linux 及 macos 以外的作業系統上可能需要對 docker-compose.yml 做些許修改才能正常執行
+> - 可以在第二行指令加上 -d 讓他在背景長期執行
+> - 可依 docker-compose.yml 內的註釋修改環境變數
+> - 在 Linux 及 macos 以外的作業系統上可能需要對 docker-compose.yml 做些許修改才能正常執行
 
 
 
