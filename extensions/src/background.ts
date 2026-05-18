@@ -11,7 +11,7 @@ declare global {
   const PARSER_NAMES: string[];
 }
 
-const DEFAULT_TARGET_URL = 'https://cpp.doong.me/*';
+const DEFAULT_TARGET_URL = 'https://cpp.doong.me/editor/*';
 let targetPermissionPattern = DEFAULT_TARGET_URL;
 
 function createContextMenu(): void {

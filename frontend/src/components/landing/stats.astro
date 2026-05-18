@@ -58,9 +58,11 @@ try {
         throw new Error("Failed to load stats data");
     }
 } catch (error) {
-    if (config.run_mode === "development" || config.skipApiFetch)
-        console.error("Failed to fetch stats from API", error);
-    else throw new Error(`Failed to fetch stats from API: ${error}`);
+    if (config.run_mode === "development" || config.skipApiFetch) {
+        console.warn(
+            `Failed to fetch stats from API: ${error}\nSkipping API fetch in development mode or due to configuration.`,
+        );
+    } else throw new Error(`Failed to fetch stats from API: ${error}`);
 }
 
 const stats = [
@@ -114,7 +116,7 @@ const stats = [
                         <div class="flex items-center justify-center size-10 rounded-md border border-foreground/15 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-all duration-300 mb-5">
                             <Icon class="size-5 text-foreground/80 group-hover:text-foreground transition-colors" />
                         </div>
-                        <p class="text-3xl md:text-4xl font-bold tracking-tighter tabular-nums">
+                        <p class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter tabular-nums">
                             {value}
                         </p>
                         <p class="text-sm font-semibold mt-2 tracking-tight">
