@@ -2,29 +2,29 @@ services:
   backend:
     image: ghcr.io/dong-chen-1031/cpp-here/backend:latest
     environment:
-      - DEV: "false"
+      - DEV=false
         # set to false for production deployment, true for local development
         # If DEV is false, it will stop auto reloading and turn off api docs.
         # Default: false
 
-      - PORT: "8000"
+      - PORT=8000
         # Port for the backend server to listen on. 
         # Default: 8000
 
-      - FRONTEND_URL: "http://localhost:4321"
+      - FRONTEND_URL=http://localhost:4321
         # Frontend URL for CORS configuration. 
         # Default: "http://localhost:4321"
 
-      - BACKEND_URL: "http://localhost:8000"
+      - BACKEND_URL=http://localhost:8000
         # Backend URL for the frontend to fetch data from.
         # Default: "http://localhost:8000"
 
-      - TURNSTILE_SECRET: "1x0000000000000000000000000000000AA"
+      - TURNSTILE_SECRET=1x0000000000000000000000000000000AA
         # Cloudflare Turnstile secret key for CAPTCHA verification.
         # Get a real secret key from Cloudflare Turnstile dashboard for production use.
         # Default: "1x0000000000000000000000000000000AA" (Always valid for development).
 
-      - JWT_SECRET: ""
+      - JWT_SECRET=
         # A secure random string used for signing JWT tokens.
         # In production, make sure to set this to a strong, unique value and keep it secret.
         # Default: not set (auto generated at runtime if not provided, but it's recommended to set it explicitly in production).

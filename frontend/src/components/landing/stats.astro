@@ -50,7 +50,7 @@ function formatDuration(seconds: number | undefined): string {
 
 let apiData: StatusResponse | null = null;
 try {
-    const res = await fetch(`${config.api_endpoints}/status`);
+    const res = await fetch(`${config.buildTimeAPIEndpoint}/status`);
     if (res.ok) apiData = await res.json();
 
     if (!apiData) {
@@ -62,6 +62,7 @@ try {
         console.warn(
             `Failed to fetch stats from API: ${error}\nSkipping API fetch in development mode or due to configuration.`,
         );
+        apiData = null;
     } else throw new Error(`Failed to fetch stats from API: ${error}`);
 }
 
