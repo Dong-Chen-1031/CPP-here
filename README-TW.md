@@ -77,10 +77,35 @@ curl -sS "https://cpp.doong.me/script/frontend/docker-compose.yml" > docker-comp
 docker compose up --pull always
 ```
 
-### 後端
+#### 後端
 
 ```shell
 curl -sS "https://cpp.doong.me/script/backend/docker-compose.yml" > docker-compose.yml
+docker compose up --pull always
+```
+
+</details>
+
+<details>
+
+<summary>自行 Build Docker 映像</summary>
+
+#### Clone Repo
+
+```shell
+curl -sS "https://cpp.doong.me/script/frontend/docker-compose.yml" > docker-compose.yml
+docker compose up --pull always
+```
+
+#### 前端
+
+```shell
+docker build 
+```
+
+#### 後端
+
+```shell
 docker compose up --pull always
 ```
 
