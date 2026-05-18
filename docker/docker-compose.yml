@@ -37,6 +37,10 @@ services:
 
     ports:
       - "${PORT:-8000}:${PORT:-8000}"
+    
+    networks:
+      - cpp-network
+
     volumes:
       - ./cache:/app/cache
       - ./logs:/app/logs
@@ -44,3 +48,47 @@ services:
       # Mount Docker socket for DinD (Docker-in-Docker) to allow backend to manage Docker containers for wasm builds.
     
     restart: unless-stopped
+  
+  
+  frontend:
+    image: ghcr.io/dong-chen-1031/cpp-here/frontend:latest
+    environment:
+      - PUBLIC_CAPTCHA_SITE_KEY: "1x00000000000000000000BB"
+        # Cloudflare Turnstile site key for CAPTCHA verification.
+        # Get a real site key from Cloudflare Turnstile dashboard for production use.
+        # Default: "1x00000000000000000000BB" (Always valid for development).
+      
+
+      - PUBLIC_API_URL: "http://127.0.0.1:8000"
+        # Backend API URL to fetch data. In development, it points to the local backend server. 
+        # In production, it should point to the deployed backend API.
+        # Default: "http://127.0.0.1:8000".
+
+      - SKIP_API_FETCH: "true"
+        # Set to "true" to skip API fetches for landing page stats data at build time.
+        # If your backend is not ready, you can set this to "true" during development.
+        # Default: "true".
+
+      - PUBLIC_BUILD_TIME_API_URL: "http://backend:8000"
+        # Backend API URL to fetch data at build time. 
+        # If you are using docker, you need to set this to Docker internal host to allow the build process to fetch data from the backend container.
+        # Or you can just set SKIP_API_FETCH to "true" to skip API fetches during build time.
+        # Default: not set (falls back to PUBLIC_API_URL).
+    
+    # or use .env to set environment variables:
+    # env_file: .env
+
+    ports:
+      - "${PORT:-4321}:${PORT:-4321}"
+    
+    restart: unless-stopped
+
+    networks:
+      - cpp-network
+
+    depends_on:
+      - backend
+
+networks:
+  cpp-network:
+    driver: bridge
