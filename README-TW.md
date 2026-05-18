@@ -66,7 +66,25 @@ docker compose up --pull always
 > - 可以在第二行指令加上 -d 讓他在背景長期執行
 > - 可依 docker-compose.yml 內的註釋修改環境變數
 > - 在 Linux 及 macos 以外的作業系統上可能需要對 docker-compose.yml 做些許修改才能正常執行
+<details>
 
+<summary>單獨部署前端或後端</summary>
+
+#### 前端
+
+```shell
+curl -sS "https://cpp.doong.me/script/frontend/docker-compose.yml" > docker-compose.yml
+docker compose up --pull always
+```
+
+### 後端
+
+```shell
+curl -sS "https://cpp.doong.me/script/backend/docker-compose.yml" > docker-compose.yml
+docker compose up --pull always
+```
+
+</details>
 
 
 ## Contributing
