@@ -1,0 +1,8 @@
+services:
+  frontend:
+    image: ghcr.io/dong-chen-1031/cpp-here/frontend:latest
+    env_file:
+      - .env
+    ports:
+      - "${PORT:-80}:${PORT:-80}"
+    restart: unless-stopped

@@ -10,21 +10,24 @@ interface StatusResponse {
     total_duration_seconds: number;
 }
 
-function formatCount(n: number): string {
+function formatCount(n: number | undefined): string {
+    if (n === undefined) return "-";
     if (n >= 1_000_000)
         return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M+";
     if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K+";
     return String(n);
 }
 
-function formatLines(n: number): string {
+function formatLines(n: number | undefined): string {
+    if (n === undefined) return "-";
     if (n >= 1_000_000)
         return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M+";
     if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K+";
     return String(n);
 }
 
-function formatBytes(bytes: number): string {
+function formatBytes(bytes: number | undefined): string {
+    if (bytes === undefined) return "-";
     if (bytes >= 1_073_741_824)
         return (bytes / 1_073_741_824).toFixed(1).replace(/\.0$/, "") + " GB+";
     if (bytes >= 1_048_576)
@@ -34,7 +37,8 @@ function formatBytes(bytes: number): string {
     return bytes + " B";
 }
 
-function formatDuration(seconds: number): string {
+function formatDuration(seconds: number | undefined): string {
+    if (seconds === undefined) return "-";
     if (seconds >= 86_400)
         return (seconds / 86_400).toFixed(1).replace(/\.0$/, "") + " days+";
     if (seconds >= 3_600)
@@ -48,38 +52,39 @@ let apiData: StatusResponse | null = null;
 try {
     const res = await fetch(`${config.api_endpoints}/status`);
     if (res.ok) apiData = await res.json();
+
+    if (!apiData) {
+        console.error("API data is null");
+        throw new Error("Failed to load stats data");
+    }
 } catch (error) {
-    if (config.run_mode !== "development")
-        throw new Error(`Failed to fetch stats from API: ${error}`);
-    console.error("Failed to fetch stats from API", error);
-}
-if (!apiData) {
-    console.error("API data is null");
-    throw new Error("Failed to load stats data");
+    if (config.run_mode === "development" || import.meta.env.SKIP_API_FETCH)
+        console.error("Failed to fetch stats from API", error);
+    else throw new Error(`Failed to fetch stats from API: ${error}`);
 }
 
 const stats = [
     {
         icon: ZapIcon,
-        value: formatCount(apiData.total_count),
+        value: formatCount(apiData?.total_count),
         label: "Compilations",
         desc: "C++ programs compiled and executed directly in the browser.",
     },
     {
         icon: FileTextIcon,
-        value: formatLines(apiData.total_lines),
+        value: formatLines(apiData?.total_lines),
         label: "Lines Compiled",
         desc: "Lines of C++ code processed through the WebAssembly pipeline.",
     },
     {
         icon: DatabaseIcon,
-        value: formatBytes(apiData.total_wasm_size_bytes),
+        value: formatBytes(apiData?.total_wasm_size_bytes),
         label: "Wasm Compiled",
         desc: "Total size of source code submitted and compiled by users.",
     },
     {
         icon: ClockIcon,
-        value: formatDuration(apiData.total_duration_seconds),
+        value: formatDuration(apiData?.total_duration_seconds),
         label: "Total Time Compiled",
         desc: "Cumulative CPU time spent compiling across all users.",
     },
