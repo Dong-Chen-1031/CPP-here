@@ -6,7 +6,7 @@ export const config = {
 
     // API 端點
     api_endpoints: import.meta.env.PUBLIC_API_URL || "http://127.0.0.1:8000",
-    skipApiFetch: import.meta.env.SKIP_API_FETCH === "true",
+    skipApiFetch: (import.meta.env.SKIP_API_FETCH || "true") === "true",
     githubLink: "https://github.com/Dong-Chen-1031/CPP-here",
 
     editorLink: "/editor",

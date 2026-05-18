@@ -14,6 +14,3 @@ services:
     ports:
       - "${PORT:-4321}:${PORT:-4321}"
     restart: unless-stopped
-    depends_on:
-      setup:
-        condition: service_completed_successfully
