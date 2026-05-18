@@ -54,13 +54,7 @@ import { handleRun, handleRunAll } from "@/api/run";
 
 import Tip from "@/components/ui/tips";
 import { useResetEditorAtoms } from "@/store/atom";
-import {
-    cn,
-    commandKeyIcon,
-    optionsKeyIcon,
-    shiftKeyIcon,
-    useIsMobile,
-} from "@/lib/utils";
+import { cn, commandKeyIcon, optionsKeyIcon, shiftKeyIcon } from "@/lib/utils";
 import { Kbd } from "./ui/kbd";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect } from "react";

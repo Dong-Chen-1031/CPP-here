@@ -1,3 +1,7 @@
+if __name__ == "__main__":
+    from utils.logo import print_logo
+
+    print_logo()
 import router
 import router.api
 import router.build
