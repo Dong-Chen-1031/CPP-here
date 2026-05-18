@@ -58,7 +58,7 @@ try {
         throw new Error("Failed to load stats data");
     }
 } catch (error) {
-    if (config.run_mode === "development" || import.meta.env.SKIP_API_FETCH)
+    if (config.run_mode === "development" || config.skipApiFetch)
         console.error("Failed to fetch stats from API", error);
     else throw new Error(`Failed to fetch stats from API: ${error}`);
 }

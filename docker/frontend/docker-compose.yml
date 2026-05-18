@@ -4,5 +4,5 @@ services:
     env_file:
       - .env
     ports:
-      - "${PORT:-80}:${PORT:-80}"
+      - "${PORT:-4321}:${PORT:-4321}"
     restart: unless-stopped

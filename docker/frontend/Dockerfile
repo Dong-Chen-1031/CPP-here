@@ -5,6 +5,6 @@ COPY . .
 ENV SKIP_API_FETCH=true
 RUN bun install --production
 
-EXPOSE 80
+EXPOSE 4321
 
-CMD bun run build && bun run preview
+CMD bun run build && bun astro preview --host
