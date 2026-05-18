@@ -24,7 +24,7 @@ services:
         # Get a real secret key from Cloudflare Turnstile dashboard for production use.
         # Default: "1x0000000000000000000000000000000AA" (Always valid for development).
 
-      - JWT_SECRET=""
+      - JWT_SECRET=
         # A secure random string used for signing JWT tokens.
         # In production, make sure to set this to a strong, unique value and keep it secret.
         # Default: not set (auto generated at runtime if not provided, but it's recommended to set it explicitly in production).
@@ -72,6 +72,9 @@ services:
         # If you are using docker, you need to set this to Docker internal host to allow the build process to fetch data from the backend container.
         # Or you can just set SKIP_API_FETCH to "true" to skip API fetches during build time.
         # Default: not set (falls back to PUBLIC_API_URL).
+
+      - CI=true
+        # Disables interactive/TTY output from Astro and bun to prevent duplicate log lines in Docker Compose.
     
     # or use .env to set environment variables:
     # env_file: .env
