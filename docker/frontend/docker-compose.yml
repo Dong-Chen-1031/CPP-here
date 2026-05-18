@@ -1,8 +1,19 @@
 services:
+  setup:
+    image: busybox
+    command: sh -c "[ -f /workspace/.env ] && echo '.env already exists, skipping' || (wget -O /workspace/.env https://raw.githubusercontent.com/Dong-Chen-1031/CPP-here/refs/heads/main/frontend/.env.example && echo 'Downloaded .env')"
+    volumes:
+      - .:/workspace
+
   frontend:
     image: ghcr.io/dong-chen-1031/cpp-here/frontend:latest
     env_file:
-      - .env
+      - path: .env
+        required: false
+
     ports:
       - "${PORT:-4321}:${PORT:-4321}"
     restart: unless-stopped
+    depends_on:
+      setup:
+        condition: service_completed_successfully
