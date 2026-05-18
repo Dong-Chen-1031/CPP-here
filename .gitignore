@@ -3,6 +3,7 @@ build-firefox
 package-lock.json
 
 frontend/public/i18n
+frontend/public/script
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
