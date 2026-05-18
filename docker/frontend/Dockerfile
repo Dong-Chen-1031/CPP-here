@@ -7,4 +7,5 @@ RUN bun install --production
 
 EXPOSE 4321
 
-CMD ["/bin/sh", "-c", "bun run build 2>&1 && bun astro preview --host 2>&1"]
+ENTRYPOINT []
+CMD ["/bin/sh", "-c", "bun run build && bun astro preview --host"]

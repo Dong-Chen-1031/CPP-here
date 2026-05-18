@@ -11,4 +11,5 @@ RUN mkdir -p cache
 
 EXPOSE 8000
 
-CMD ["/bin/sh", "-c", "python main.py 2>&1"]
+ENTRYPOINT []
+CMD ["python", "main.py"]
