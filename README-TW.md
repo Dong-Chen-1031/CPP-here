@@ -1,9 +1,9 @@
 # C++ Here - Online C++ Editor
 
+C++ Here 是一個新世代的線上 C++ 編輯器，專為競程而生。不但快速、輕量，功能也十分完整。
+
 > [!NOTE]
 > This readme also has a [English version](README.md).
-
-C++ Here 是一個新世代的線上 C++ 編輯器，專為競程而生。不但快速、輕量，功能也十分完整。
 
 > [!TIP]
 > 立即體驗: https://cpp.doong.me
@@ -57,6 +57,59 @@ C++ Here 與其他線上 C++ 編輯器的最大不同在於我們使用 [safe-cp
 
 ## 本地開發
 
+### 前端
+
+需要 Bun，若使用 npm 可能會導致問題。
+
+1. Clone
+```shell
+git clone https://github.com/Dong-Chen-1031/CPP-here.git
+cd CPP-here
+```
+
+2. 安裝依賴項
+```shell
+bun install
+```
+
+3. 執行前端
+```shell
+bun run frontend
+```
+
+### 後端
+推薦使用 Python 3.14 + UV
+需要確保 Docker 在執行
+
+1. Clone
+```shell
+git clone https://github.com/Dong-Chen-1031/CPP-here.git
+cd CPP-here
+```
+
+2. 安裝依賴項
+```shell
+uv venv
+source .venv/bin/activate  # 視作業系統進行調整
+uv pip install -r backend/requirements.txt
+```
+
+3. 拉取 Docker 映像
+```shell
+docker pull ghcr.io/dong-chen-1031/safe-cpp2wasm:latest
+```
+
+4. 執行後端
+```shell
+bun run backend
+```
+
+### 前後端同時執行（推薦）
+1. 依照前敘述完成環境設置
+2. 一鍵同時執行前後端
+```shell
+bun run dev
+```
 
 ## 部署
 
@@ -68,7 +121,10 @@ docker compose up --pull always
 > [!TIP]
 > - 可以在第二行指令加上 -d 讓他在背景長期執行
 > - 可依 docker-compose.yml 內的註釋修改環境變數
-> - 在 Linux 及 macos 以外的作業系統上可能需要對 docker-compose.yml 做些許修改才能正常執行
+
+> [!WARNING]
+> 由於後端需建立一次性容器來建置使用者的程式碼，Docker Compose 會將 Docker Scoket 掛載到容器裡，在 Linux 及 macOS 以外的作業系統上可能需要稍微調整才能運作。
+
 
 <details>
 <summary>自行 Build Docker 映像</summary>
@@ -116,12 +172,12 @@ curl -sS "https://cpp.doong.me/script/backend/docker-compose.yml" > docker-compo
 docker compose up --pull always
 ```
 > [!WARNING]
-> 由於後端需建立一次性容器來建置使用者的程式碼，Docker Compose 會將 Docker Scoket 掛載到容器裡，但在 Linux 及 macOS 以外的作業系統上可能需要稍微調整才能運作。
+> 由於後端需建立一次性容器來建置使用者的程式碼，Docker Compose 會將 Docker Scoket 掛載到容器裡，在 Linux 及 macOS 以外的作業系統上可能需要稍微調整才能運作。
 
-## Contributing
+## 貢獻
 
-Any contributions are greatly appreciated. If you have a suggestion that would make this project better, please fork the repo and create a Pull Request. You can also [open an issue](https://github.com/Dong-Chen-1031/Cpp-Here/issues).
+我們非常感謝您的任何貢獻。如果您有任何改進建議，請 fork 此倉庫並建立 Pull Request。您也可以[提交 issue](https://github.com/Dong-Chen-1031/Cpp-Here/issues)。
 
-## License
+## 許可證
 
-Published under the [MIT License](LICENSE).
+本專案遵循 [MIT LICENSE](LICENSE)。

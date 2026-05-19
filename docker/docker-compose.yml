@@ -97,6 +97,13 @@ services:
 
     depends_on:
       - backend
+  
+  wasm-builder:
+    image: ghcr.io/dong-chen-1031/safe-cpp2wasm:latest
+    entrypoint: ["true"]
+    restart: "no"
+    # This service exists only to pre-pull the wasm builder image onto the host,
+    # so the backend can spawn it as a sub-container for wasm builds.
 
 networks:
   cpp-network:
