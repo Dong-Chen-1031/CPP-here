@@ -57,7 +57,8 @@ C++ Here 與其他線上 C++ 編輯器的最大不同在於我們使用 [safe-cp
 
 ## 本地運行及部署
 
-### 使用 Docker Compose 一鍵部署前後端
+### 使用 Docker Compose 一鍵部署
+自動部署前後端
 ```shell
 curl -sS "https://cpp.doong.me/script/docker-compose.yml" > docker-compose.yml
 docker compose up --pull always
