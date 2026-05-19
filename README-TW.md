@@ -57,7 +57,7 @@ C++ Here 與其他線上 C++ 編輯器的最大不同在於我們使用 [safe-cp
 
 ## 本地運行及部署
 
-### 使用 Docker Compose 一鍵部署
+### 使用 Docker Compose 一鍵部署前後端
 ```shell
 curl -sS "https://cpp.doong.me/script/docker-compose.yml" > docker-compose.yml
 docker compose up --pull always
@@ -117,6 +117,8 @@ docker build \
 
 </details>
 
+### 部署前端
+我們前端使用 Astro SSG 模式，執行 bun run build 後會建置出**純靜態**的網頁，因此可以很輕鬆的將其部署至 Cloudflare Page、Github Page 等服務。由於可提升載入速度、降低後端負擔，因此非常推薦使用次類方式部署。
 
 ## Contributing
 
