@@ -55,7 +55,7 @@ C++ Here 與其他線上 C++ 編輯器的最大不同在於我們使用 [safe-cp
 3. 並發：前端執行 WebAssembly 模組可以利用瀏覽器的多線程能力，實現更高效的並發執行，特別適合競賽程式設計中的大量測試案例。
 4. 無限制：由於執行在前端，使用者不受後端資源限制，可以自由地編寫和測試程式碼，而不必擔心伺服器的負載問題。
 
-## 本地運行及部署
+## 部署
 
 ### 使用 Docker Compose 一鍵部署
 自動部署前後端
@@ -67,24 +67,6 @@ docker compose up --pull always
 > - 可以在第二行指令加上 -d 讓他在背景長期執行
 > - 可依 docker-compose.yml 內的註釋修改環境變數
 > - 在 Linux 及 macos 以外的作業系統上可能需要對 docker-compose.yml 做些許修改才能正常執行
-<details>
-
-<summary>單獨部署前端或後端</summary>
-
-#### 前端
-
-```shell
-curl -sS "https://cpp.doong.me/script/frontend/docker-compose.yml" > docker-compose.yml
-docker compose up --pull always
-```
-
-#### 後端
-
-
-
-</details>
-
-<details>
 
 <summary>自行 Build Docker 映像</summary>
 
@@ -116,15 +98,21 @@ docker build \
 </details>
 
 ### 部署前端
-我們前端使用 Astro SSG 模式，執行 bun run build 後會建置出**純靜態**的網頁，因此可以很輕鬆的將其部署至 Cloudflare Page、Github Page 等服務。由於可提升載入速度、降低後端負擔，因此非常推薦使用此類方式部署。
+- 前端使用 Astro SSG 模式，執行 bun run build 後會建置出**純靜態**的網頁，因此可以很輕鬆的將其部署至 Cloudflare Page、Github Page 等服務。由於可提升載入速度、降低後端負擔，因此非常推薦使用此類方式部署。
+
+- 使用 Docker Compose 一鍵部署前端（映像內部使用 Caddy 作為網頁伺服器）
+```shell
+curl -sS "https://cpp.doong.me/script/frontend/docker-compose.yml" > docker-compose.yml
+docker compose up --pull always
+```
 
 ### 部署後端
-我們推薦使用 Docker Compose 部署後端，此種方式會自動處理依賴項、版本等。
+推薦使用 Docker Compose 部署後端，此種方式會自動處理依賴項、版本等。
 ```shell
 curl -sS "https://cpp.doong.me/script/backend/docker-compose.yml" > docker-compose.yml
 docker compose up --pull always
 ```
-> [!CAUTION]
+> [!WARNING]
 > 由於後端需建立一次性容器來建置使用者的程式碼，Docker Compose 會將 Docker Scoket 掛載到容器裡，但在 Linux 及 macOS 以外的作業系統上可能需要稍微調整才能運作。
 
 ## Contributing
