@@ -55,10 +55,12 @@ C++ Here 與其他線上 C++ 編輯器的最大不同在於我們使用 [safe-cp
 3. 並發：前端執行 WebAssembly 模組可以利用瀏覽器的多線程能力，實現更高效的並發執行，特別適合競賽程式設計中的大量測試案例。
 4. 無限制：由於執行在前端，使用者不受後端資源限制，可以自由地編寫和測試程式碼，而不必擔心伺服器的負載問題。
 
+## 本地開發
+
+
 ## 部署
 
-### 使用 Docker Compose 一鍵部署
-自動部署前後端
+### 使用 Docker Compose 一鍵完整部署
 ```shell
 curl -sS "https://cpp.doong.me/script/docker-compose.yml" > docker-compose.yml
 docker compose up --pull always
@@ -68,16 +70,17 @@ docker compose up --pull always
 > - 可依 docker-compose.yml 內的註釋修改環境變數
 > - 在 Linux 及 macos 以外的作業系統上可能需要對 docker-compose.yml 做些許修改才能正常執行
 
+<details>
 <summary>自行 Build Docker 映像</summary>
 
-#### Clone Repo
+#### Clone
 
 ```shell
 git clone https://github.com/Dong-Chen-1031/CPP-here.git
 cd CPP-here
 ```
 
-#### 前端
+#### 建置前端
 
 ```shell
 docker build \
@@ -86,7 +89,7 @@ docker build \
   .
 ```
 
-#### 後端
+#### 建置後端
 
 ```shell
 docker build \
@@ -107,7 +110,7 @@ docker compose up --pull always
 ```
 
 ### 部署後端
-推薦使用 Docker Compose 部署後端，此種方式會自動處理依賴項、版本等。
+推薦使用 Docker Compose 一鍵部署後端，此種方式會自動處理依賴項、版本等。
 ```shell
 curl -sS "https://cpp.doong.me/script/backend/docker-compose.yml" > docker-compose.yml
 docker compose up --pull always
