@@ -80,10 +80,7 @@ docker compose up --pull always
 
 #### 後端
 
-```shell
-curl -sS "https://cpp.doong.me/script/backend/docker-compose.yml" > docker-compose.yml
-docker compose up --pull always
-```
+
 
 </details>
 
@@ -119,7 +116,16 @@ docker build \
 </details>
 
 ### 部署前端
-我們前端使用 Astro SSG 模式，執行 bun run build 後會建置出**純靜態**的網頁，因此可以很輕鬆的將其部署至 Cloudflare Page、Github Page 等服務。由於可提升載入速度、降低後端負擔，因此非常推薦使用次類方式部署。
+我們前端使用 Astro SSG 模式，執行 bun run build 後會建置出**純靜態**的網頁，因此可以很輕鬆的將其部署至 Cloudflare Page、Github Page 等服務。由於可提升載入速度、降低後端負擔，因此非常推薦使用此類方式部署。
+
+### 部署後端
+我們推薦使用 Docker Compose 部署後端，此種方式會自動處理依賴項、版本等。
+```shell
+curl -sS "https://cpp.doong.me/script/backend/docker-compose.yml" > docker-compose.yml
+docker compose up --pull always
+```
+> [!NOTICE]
+> 由於後端需建立一次性容器來建置使用者的程式碼，Docker Compose 會將 Docker Scoket 掛載到容器裡，但在 Linux 及 macOS 以外的作業系統上可能需要稍微調整才能運作。
 
 ## Contributing
 
