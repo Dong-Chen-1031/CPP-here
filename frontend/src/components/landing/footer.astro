@@ -1,6 +1,4 @@
 ---
-import { CodeIcon } from "@lucide/astro";
-import { SiGithub } from "@icons-pack/react-simple-icons";
 import config from "@/config/constants";
 
 const links = [
@@ -14,72 +12,82 @@ const links = [
 ];
 ---
 
-<footer
-    class="px-6 md:px-20 py-6 sm:py-10 w-full border-t border-foreground/10 text-sm text-muted-foreground">
-    <div class="hidden sm:grid grid-cols-3">
-        <div class="flex items-center gap-2">
-            <CodeIcon class="size-4" />
-            <span class="font-semibold text-foreground tracking-normal"
-                >C++ Here</span
-            >
-            <span>·</span>
-            <a
-                class="hover:text-foreground transition-colors"
-                href={`${config.githubLink}/blob/main/LICENSE.txt`}
-                target="_blank"
-                rel="noopener noreferrer">MIT Licensed</a
-            >
+<footer style="background:#222;color:#ccc;font-family:'Microsoft JhengHei',Arial,Tahoma,sans-serif;border-top:4px solid #000095;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-bottom:1px solid #444;">
+        <!-- 系統簡介 -->
+        <div style="padding:16px 18px;border-right:1px solid #3a3a3a;">
+            <div style="font-size:13px;font-weight:bold;color:#fff;border-bottom:1px solid #444;padding-bottom:6px;margin-bottom:10px;letter-spacing:0.3px;">
+                ◆ 系統簡介
+            </div>
+            <p style="font-size:12px;line-height:1.75;color:#bbb;">
+                「C++ Here」係提供全民免費使用之瀏覽器內建 C++ 程式編輯與編譯e化服務平台，採 MIT 授權條款釋出，無需安裝，隨開即用。
+            </p>
+            <div style="margin-top:10px;font-size:11px;color:#888;">
+                授權：MIT License ｜ 完全免費
+            </div>
         </div>
 
-        <nav class="flex justify-center items-center gap-5">
-            {
-                links.map(({ label, href, external }) => (
-                    <a
-                        href={href}
-                        class="hover:text-foreground transition-colors"
-                        {...(external
-                            ? { target: "_blank", rel: "noopener noreferrer" }
-                            : {})}>
-                        {label}
-                    </a>
-                ))
-            }
-        </nav>
-        <div class="flex justify-end items-center">
-            <a
-                href={config.githubLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="hover:text-foreground transition-colors flex items-center gap-1.5">
-                <SiGithub className="size-4" />
-                <span>Dong-Chen-1031</span>
-            </a>
+        <!-- e化快速連結 -->
+        <div style="padding:16px 18px;border-right:1px solid #3a3a3a;">
+            <div style="font-size:13px;font-weight:bold;color:#fff;border-bottom:1px solid #444;padding-bottom:6px;margin-bottom:10px;letter-spacing:0.3px;">
+                ◆ e化服務快速連結
+            </div>
+            <ul style="list-style:none;padding:0;margin:0;font-size:12px;line-height:2.2;">
+                {links.map(({ label, href, external }) => (
+                    <li>
+                        <a
+                            href={href}
+                            style="color:#88aaff;"
+                            class="roc-footer-link"
+                            {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                        >▸ {label}</a>
+                    </li>
+                ))}
+                <li>
+                    <a href="https://crowdin.com/project/cpp-here" target="_blank" rel="noopener noreferrer" style="color:#88aaff;" class="roc-footer-link">▸ 協助翻譯（Crowdin）</a>
+                </li>
+                <li>
+                    <a href={`${config.githubLink}/blob/main/LICENSE.txt`} target="_blank" rel="noopener noreferrer" style="color:#88aaff;" class="roc-footer-link">▸ MIT 授權條款</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 聯絡資訊 -->
+        <div style="padding:16px 18px;">
+            <div style="font-size:13px;font-weight:bold;color:#fff;border-bottom:1px solid #444;padding-bottom:6px;margin-bottom:10px;letter-spacing:0.3px;">
+                ◆ 聯絡資訊與服務窗口
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                <tr>
+                    <td style="padding:3px 0;color:#999;white-space:nowrap;padding-right:8px;">開發者</td>
+                    <td style="padding:3px 0;color:#ddd;">Dong-Chen-1031</td>
+                </tr>
+                <tr>
+                    <td style="padding:3px 0;color:#999;white-space:nowrap;padding-right:8px;">問題回報</td>
+                    <td style="padding:3px 0;">
+                        <a href={`${config.githubLink}/issues`} target="_blank" rel="noopener noreferrer" style="color:#88aaff;" class="roc-footer-link">GitHub Issues</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:3px 0;color:#999;white-space:nowrap;padding-right:8px;">系統狀態</td>
+                    <td style="padding:3px 0;">
+                        <a href="https://status.doong.me/status/cpp-here" target="_blank" rel="noopener noreferrer" style="color:#88aaff;" class="roc-footer-link">status.doong.me</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:4px 0;color:#999;white-space:nowrap;padding-right:8px;">版本管理</td>
+                    <td style="padding:4px 0;">
+                        <a href={`${config.githubLink}/releases`} target="_blank" rel="noopener noreferrer" style="color:#88aaff;" class="roc-footer-link">GitHub Releases</a>
+                    </td>
+                </tr>
+            </table>
         </div>
     </div>
 
-    <div class="flex flex-col items-center gap-5 sm:hidden">
-        <div class="flex items-center gap-2">
-            <CodeIcon class="size-4" />
-            <span class="font-semibold text-foreground tracking-normal"
-                >C++ Here</span
-            >
-        </div>
-
-        <nav class="grid grid-cols-3 gap-x-5 gap-y-3 text-center">
-            {
-                links.map(({ label, href, external }) => (
-                    <a
-                        href={href}
-                        class="hover:text-foreground transition-colors"
-                        {...(external
-                            ? { target: "_blank", rel: "noopener noreferrer" }
-                            : {})}>
-                        {label}
-                    </a>
-                ))
-            }
-        </nav>
-
-        <p>© {new Date().getFullYear()} Dong-Chen-1031 · MIT Licensed</p>
+    <!-- 版權列 -->
+    <div style="padding:6px 18px;background:#1a1a1a;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#666;">
+        <span>© {new Date().getFullYear()} Dong-Chen-1031 ｜ MIT Licensed ｜ 本系統由 C++ Here 開源專案維護</span>
+        <span style="color:#444;">版本資訊請至 GitHub 查詢</span>
     </div>
 </footer>
+

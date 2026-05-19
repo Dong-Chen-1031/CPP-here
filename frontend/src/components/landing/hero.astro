@@ -1,57 +1,155 @@
 ---
-import { Button } from "@/components/ui/button";
-import { PlayIcon } from "@lucide/astro";
-import { SiGithub } from "@icons-pack/react-simple-icons";
-import "@/styles/landing.css";
 import HeroCard from "@/components/landing/heroCard.astro";
 import config from "@/config/constants";
 ---
 
-<section class="relative flex flex-col items-center w-full justify-center">
-    <div
-        class="pointer-events-none absolute inset-0 opacity-100 -z-10
-                    bg-[linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)]
-                    bg-size-[64px_64px]
-                    mask-[radial-gradient(ellipse_80%_600px_at_center_top,black_20%,transparent_100%)]">
-    </div>
-    <!-- <div
-                class="rounded-full px-3 py-1 flex justify-center items-center bg-accent/40 border-border border mt-25">
-                <p
-                    class="text-center text-xs md:text-sm text-muted-foreground uppercase">
-                    Support 1,000+ competitive programming websites!
-                </p>
-            </div> -->
-    <div class="mt-40">
-        <p
-            class="text-[min(4.5rem,7vw)] leading-none font-bold text-balance text-center tracking-tighter">
-            Next-generation <br />in-browser C++ editor.
-        </p>
-        <p
-            class="text-muted-foreground text-center mt-5 md:text-lg text-balance px-5">
-            An open-source, lightweight yet powerful C++ editor built for
-            competitive programming
-        </p>
-    </div>
-    <div class="flex items-center justify-center mt-13 gap-5 *:text-[0.9rem]">
-        <a href={config.editorLink}>
-            <Button
-                className="hover:bg-primary/80 transition ml-3 "
-                size={"xl"}>
-                <PlayIcon class="size-4" />
-                <p>Start Coding</p>
-            </Button>
-        </a>
-        <a href={config.githubLink} target="_blank" rel="noopener noreferrer">
-            <Button
-                className="hover:bg-primary/80 "
-                variant={"outline"}
-                size="xl">
-                <SiGithub className="size-4" />
-                <p class="ml-1">Star on Github</p>
-            </Button>
-        </a>
+<section style="background:#e8e8e8;padding:12px 14px 0;font-family:'Microsoft JhengHei',Arial,sans-serif;">
+    <!-- 緊急公告帶 -->
+    <div class="roc-notice-strip" style="margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="background:#000095;color:#fff;font-size:11px;font-weight:bold;padding:1px 6px;white-space:nowrap;flex-shrink:0;">系統公告</span>
+        <span style="font-size:12px;">※ 本系統目前正常運作中，開放全民免費使用。如有問題歡迎至 GitHub 回報，本單位將盡快處理。</span>
+        <span style="margin-left:auto;font-size:11px;color:#666;white-space:nowrap;">更新時間：2025年</span>
     </div>
 
-    <HeroCard />
-    <div class="h-4"></div>
+    <!-- 主要兩欄佈局：左側主欄 + 右側側欄 -->
+    <div style="display:grid;grid-template-columns:1fr 256px;gap:10px;align-items:start;">
+
+        <!-- 左欄：主要內容 -->
+        <div>
+            <!-- 系統標題區塊 -->
+            <div class="roc-box" style="padding:14px 16px 16px;margin-bottom:10px;overflow:hidden;">
+                <div class="roc-section-header" style="margin:-14px -16px 12px;">
+                    ◆ 系統簡介與功能說明
+                </div>
+
+                <!-- WordArt 標題 -->
+                <h1 class="roc-wordart" style="margin-bottom:10px;">
+                    <span class="w1">次世代</span><span class="w2">瀏覽器</span><span class="w3">C++</span>
+                    <br />
+                    <span class="w4">程式開發e化服務系統</span>
+                </h1>
+
+                <p style="font-size:13px;color:#333;line-height:1.75;margin-bottom:10px;border-left:3px solid #000095;padding-left:9px;">
+                    本系統提供全民免費使用之瀏覽器內建 C++ 程式編輯與編譯e化服務。<br />
+                    採用 WebAssembly 技術，無須安裝任何軟體，開啟瀏覽器即可立即使用。<br />
+                    誠摯歡迎您的使用，如有不便之處，敬請見諒！
+                </p>
+
+                <div style="background:hsl(52,94%,78%);border:1px solid hsl(52,70%,62%);border-left:3px solid #cc0000;padding:5px 10px;font-size:12px;margin-bottom:14px;line-height:1.6;">
+                    <strong>※ 重要說明：</strong>本系統完全免費，無需登入，無需安裝，請放心使用本單位e化便民服務。<br />
+                    如有操作疑問，請詳閱下方功能說明或至 GitHub 提出問題。
+                </div>
+
+                <!-- CTA 按鈕 -->
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                    <a href={config.editorLink} style="text-decoration:none;">
+                        <button class="roc-btn-blue-lg">▶ 立即啟動e化編輯系統</button>
+                    </a>
+                    <a href={config.githubLink} target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
+                        <button class="roc-btn-gray" style="padding:8px 18px;font-size:13px;">⬇ 查看原始碼下載區</button>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 系統畫面預覽區塊 -->
+            <div class="roc-box" style="margin-bottom:10px;overflow:hidden;">
+                <div class="roc-section-header">◆ 系統畫面預覽（e化作業環境展示）</div>
+                <div style="border:3px inset #aaa;background:#1a1a1a;">
+                    <HeroCard />
+                </div>
+                <div style="padding:5px 14px;background:hsl(220,18%,96%);border-top:1px solid #ccc;font-size:11px;color:#666;">
+                    ◎ 以上為本系統實際操作畫面，所有功能均已完整實作並開放使用。
+                </div>
+            </div>
+        </div>
+
+        <!-- 右欄：側欄 -->
+        <div style="display:flex;flex-direction:column;gap:10px;">
+
+            <!-- 最新公告 -->
+            <div class="roc-box" style="overflow:hidden;">
+                <div class="roc-sidebar-header">【最新公告資訊瀏覽專區】</div>
+                <div style="padding:8px 10px;font-size:12px;">
+                    <ul style="list-style:none;padding:0;margin:0;line-height:1.9;">
+                        <li style="border-bottom:1px dashed #ccc;padding:3px 0;">
+                            <span style="color:#cc0000;font-weight:bold;font-size:10px;">NEW</span>
+                            <a href={config.githubLink} target="_blank" rel="noopener noreferrer" style="color:#0000cc;margin-left:4px;">系統功能持續更新中</a>
+                        </li>
+                        <li style="border-bottom:1px dashed #ccc;padding:3px 0;">
+                            <span style="color:#888;font-size:10px;">[公告]</span>
+                            <span style="margin-left:4px;">歡迎蒞臨本系統使用</span>
+                        </li>
+                        <li style="border-bottom:1px dashed #ccc;padding:3px 0;">
+                            <span style="color:#888;font-size:10px;">[公告]</span>
+                            <span style="margin-left:4px;">支援繁體中文介面</span>
+                        </li>
+                        <li style="padding:3px 0;">
+                            <span style="color:#888;font-size:10px;">[公告]</span>
+                            <span style="margin-left:4px;">MIT 開放授權免費使用</span>
+                        </li>
+                    </ul>
+                    <div style="text-align:right;margin-top:5px;border-top:1px solid #eee;padding-top:4px;">
+                        <a href={config.githubLink} target="_blank" rel="noopener noreferrer" style="font-size:11px;color:#0000cc;">更多公告資訊 →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 快速連結 -->
+            <div class="roc-box" style="overflow:hidden;">
+                <div class="roc-sidebar-header">【e化服務快速連結專區】</div>
+                <div style="padding:8px 10px;font-size:12px;">
+                    <table style="width:100%;border-collapse:collapse;">
+                        <tr>
+                            <td style="border:1px solid #ddd;padding:5px 7px;background:hsl(220,28%,97%);">
+                                <a href={config.editorLink} style="color:#0000cc;">▶ 線上e化編輯器</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border:1px solid #ddd;padding:5px 7px;background:#fff;">
+                                <a href={config.githubLink} target="_blank" rel="noopener noreferrer" style="color:#0000cc;">⬇ 原始碼下載區</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border:1px solid #ddd;padding:4px 7px;background:hsl(220,28%,97%);">
+                                <a href="https://status.doong.me/status/cpp-here" target="_blank" rel="noopener noreferrer" style="color:#0000cc;">◎ 系統狀態查詢</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border:1px solid #ddd;padding:5px 7px;background:#fff;">
+                                <a href="https://crowdin.com/project/cpp-here" target="_blank" rel="noopener noreferrer" style="color:#0000cc;">🌐 協助翻譯專區</a>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 系統基本資訊 -->
+            <div class="roc-box" style="overflow:hidden;">
+                <div style="background:linear-gradient(to right,#555,#333);color:#fff;font-size:12px;font-weight:bold;padding:4px 8px;border-left:3px solid #ffcc00;letter-spacing:0.3px;">
+                    【系統基本資訊說明】
+                </div>
+                <div style="padding:8px 10px;font-size:12px;">
+                    <table style="width:100%;border-collapse:collapse;font-size:11px;">
+                        <tr>
+                            <td style="border:1px solid #ddd;padding:3px 6px;background:hsl(220,18%,96%);font-weight:bold;width:46%;">技術架構</td>
+                            <td style="border:1px solid #ddd;padding:3px 6px;background:#fff;">WebAssembly</td>
+                        </tr>
+                        <tr>
+                            <td style="border:1px solid #ddd;padding:3px 6px;background:hsl(220,18%,96%);font-weight:bold;">授權方式</td>
+                            <td style="border:1px solid #ddd;padding:3px 6px;background:#fff;">MIT License</td>
+                        </tr>
+                        <tr>
+                            <td style="border:1px solid #ddd;padding:3px 6px;background:hsl(220,18%,96%);font-weight:bold;">使用費用</td>
+                            <td style="border:1px solid #ddd;padding:3px 6px;background:#fff;color:#006600;font-weight:bold;">完全免費</td>
+                        </tr>
+                        <tr>
+                            <td style="border:1px solid #ddd;padding:4px 6px;background:hsl(220,18%,96%);font-weight:bold;">語系支援</td>
+                            <td style="border:1px solid #ddd;padding:4px 6px;background:#fff;">繁中 / English</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
 </section>

@@ -94,101 +94,48 @@ const stats = [
 ];
 ---
 
-<section class="px-6 md:px-20 py-24 w-full relative">
-    <Hr />
-    <div class="max-w-2xl mx-auto text-center mb-16">
-        <p
-            class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
-            <span class="mr-1 tracking-widest">//</span>stats
-        </p>
-        <h2
-            class="text-[min(3rem,9vw)] leading-[1.05] font-bold tracking-tighter text-balance">
-            Real numbers.<br />
-            <span class="text-muted-foreground">Real usage.</span>
-        </h2>
-    </div>
+<section id="stats" style="padding:0 14px 14px;font-family:'Microsoft JhengHei',Arial,sans-serif;">
+    <div class="roc-box" style="overflow:hidden;">
+        <div class="roc-section-header">◆ 系統e化作業統計資料查詢專區【即時數據資訊】</div>
 
-    <div
-        class="grid grid-cols-2 lg:grid-cols-4 gap-px bg-foreground/10 border border-foreground/10 rounded-xl overflow-hidden">
-        {
-            stats.map(({ icon: Icon, value, label, desc }) => (
-                <div class="stat-card group relative bg-background sm:p-8 p-5">
-                    <div class="relative z-10">
-                        <div class="flex items-center justify-center size-10 rounded-md border border-foreground/15 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-all duration-300 mb-5">
-                            <Icon class="size-5 text-foreground/80 group-hover:text-foreground transition-colors" />
-                        </div>
-                        <p class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter tabular-nums">
-                            {value}
-                        </p>
-                        <p class="text-sm font-semibold mt-2 tracking-tight">
-                            {label}
-                        </p>
-                        {/* <p class="text-sm leading-relaxed text-muted-foreground mt-1">
-                            {desc}
-                        </p> */}
-                    </div>
-                    <div class="spotlight pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                </div>
-            ))
-        }
+        <div style="padding:10px 12px 12px;">
+            <p style="font-size:12px;color:#555;margin-bottom:10px;border-left:3px solid #000095;padding-left:7px;line-height:1.6;">
+                以下統計資料係由本系統後端API即時彙整提供，數據反映系統自上線以來之累計使用情形，供各界查詢參考。
+            </p>
+
+            <table class="roc-table" style="width:100%;margin-bottom:10px;">
+                <thead>
+                    <tr>
+                        <th style="width:44px;text-align:center;">項次</th>
+                        <th style="width:220px;">統計項目名稱</th>
+                        <th style="width:130px;text-align:right;">累計數量</th>
+                        <th>說明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {stats.map(({ icon: Icon, value, label, desc }, i) => (
+                        <tr class="roc-stat-row">
+                            <td style="text-align:center;font-size:12px;color:#555;">{String(i + 1).padStart(2, "0")}</td>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <span style="color:#000095;"><Icon class="size-4" /></span>
+                                    <span style="font-weight:bold;font-size:13px;">{label}</span>
+                                </div>
+                            </td>
+                            <td style="text-align:right;font-size:16px;font-weight:bold;color:#000095;letter-spacing:0.5px;font-family:Arial,sans-serif;">{value}</td>
+                            <td style="font-size:12px;color:#444;line-height:1.6;">{desc}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #ddd;padding-top:6px;">
+                <span style="font-size:11px;color:#888;">◎ 資料來源：本系統後端API即時統計 ｜ 數據建置時間：{new Date().getFullYear()}年</span>
+                <span style="font-size:11px;color:{apiData ? '#006600' : '#cc6600'};font-weight:bold;">
+                    {apiData ? "● 資料載入正常" : "● 資料暫時無法取得（顯示預設值）"}
+                </span>
+            </div>
+        </div>
     </div>
 </section>
 
-<style>
-    .stat-card {
-        --mx: 50%;
-        --my: 0%;
-    }
-    .spotlight {
-        background: radial-gradient(
-            350px circle at var(--mx) var(--my),
-            color-mix(in srgb, var(--foreground) 22%, transparent),
-            transparent 60%
-        );
-    }
-</style>
-
-<script>
-    class SpotlightStatCard {
-        card: HTMLElement;
-        currentX = 0;
-        currentY = 0;
-        targetX = 0;
-        targetY = 0;
-        hasEntered = false;
-
-        constructor(card: HTMLElement) {
-            this.card = card;
-
-            card.addEventListener("pointerenter", (e) => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                this.currentX = this.targetX = x;
-                this.currentY = this.targetY = y;
-                if (!this.hasEntered) {
-                    this.hasEntered = true;
-                    requestAnimationFrame(this.animate.bind(this));
-                }
-            });
-
-            card.addEventListener("pointermove", (e) => {
-                const rect = card.getBoundingClientRect();
-                this.targetX = e.clientX - rect.left;
-                this.targetY = e.clientY - rect.top;
-            });
-        }
-
-        animate() {
-            this.currentX += (this.targetX - this.currentX) * 0.1;
-            this.currentY += (this.targetY - this.currentY) * 0.1;
-            this.card.style.setProperty("--mx", this.currentX + "px");
-            this.card.style.setProperty("--my", this.currentY + "px");
-            requestAnimationFrame(this.animate.bind(this));
-        }
-    }
-
-    document
-        .querySelectorAll<HTMLElement>(".stat-card")
-        .forEach((card) => new SpotlightStatCard(card));
-</script>

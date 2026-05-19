@@ -1,3 +1,216 @@
 html {
     overflow-x: hidden;
 }
+
+/* ─── ROC 華國美學基礎樣式 ─── */
+.roc-landing {
+    font-family:
+        "Microsoft JhengHei", "Noto Sans TC", Arial, Tahoma, sans-serif;
+    background: #e8e8e8;
+    color: #111;
+    -webkit-font-smoothing: none;
+    font-smooth: never;
+    text-rendering: geometricPrecision;
+    min-height: 100vh;
+}
+
+.roc-landing * {
+    box-sizing: border-box;
+}
+
+.roc-landing a {
+    color: #0000cc;
+    text-decoration: none;
+}
+
+.roc-landing a:hover {
+    color: #cc0000;
+    text-decoration: underline;
+}
+
+/* 按鈕：ROC 藍色（主要行動） */
+.roc-btn-blue {
+    background: linear-gradient(to bottom, #4060c0, #000095);
+    border: 1px solid #000060;
+    border-bottom-width: 2px;
+    border-bottom-color: #000050;
+    color: #fff;
+    font-weight: bold;
+    font-family: "Microsoft JhengHei", Arial, sans-serif;
+    cursor: pointer;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    padding: 5px 13px;
+    font-size: 13px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    white-space: nowrap;
+    display: inline-block;
+}
+.roc-btn-blue:hover {
+    background: linear-gradient(to bottom, #5070d0, #0010a5);
+}
+
+/* 按鈕：ROC 藍色（大型） */
+.roc-btn-blue-lg {
+    background: linear-gradient(to bottom, #4060c0, #000095);
+    border: 1px solid #000060;
+    border-bottom: 2px solid #000050;
+    color: #fff;
+    font-weight: bold;
+    font-family: "Microsoft JhengHei", Arial, sans-serif;
+    cursor: pointer;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    padding: 8px 22px;
+    font-size: 14px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    display: inline-block;
+    white-space: nowrap;
+}
+.roc-btn-blue-lg:hover {
+    background: linear-gradient(to bottom, #5070d0, #0010a5);
+}
+
+/* 按鈕：灰色（次要） */
+.roc-btn-gray {
+    background: linear-gradient(to bottom, #e8e8e8, #c8c8c8);
+    border: 1px solid #888;
+    border-bottom: 2px solid #666;
+    color: #333;
+    font-family: "Microsoft JhengHei", Arial, sans-serif;
+    cursor: pointer;
+    padding: 5px 14px;
+    font-size: 13px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    white-space: nowrap;
+    display: inline-block;
+}
+.roc-btn-gray:hover {
+    background: linear-gradient(to bottom, #f0f0f0, #d8d8d8);
+}
+
+/* 導覽列 hover */
+.roc-nav-link:hover {
+    background: linear-gradient(to bottom, #dde6f5, #c0d0e8) !important;
+    color: #000095 !important;
+}
+
+/* 通用盒子 */
+.roc-box {
+    border: 1px solid #aaa;
+    background: #fff;
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* 公告色帶 */
+.roc-notice-strip {
+    background: hsl(52, 94%, 78%);
+    border: 1px solid hsl(52, 70%, 62%);
+    border-left: 4px solid #c00;
+    padding: 5px 10px;
+    font-family: "Microsoft JhengHei", Arial, sans-serif;
+    font-size: 12px;
+    color: #333;
+}
+
+/* 行政表格 */
+.roc-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-family: "Microsoft JhengHei", Arial, sans-serif;
+    font-size: 13px;
+}
+.roc-table th {
+    background: linear-gradient(to bottom, #4060c0, #000095);
+    color: #fff;
+    border: 1px solid #00006a;
+    padding: 5px 8px;
+    text-align: left;
+    font-weight: bold;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+}
+.roc-table td {
+    border: 1px solid #bbb;
+    padding: 5px 8px;
+    vertical-align: top;
+    background: #fff;
+}
+.roc-table tr:nth-child(even) td {
+    background: hsl(220, 28%, 97%);
+}
+.roc-table tr:hover td {
+    background: hsl(220, 40%, 93%);
+}
+.roc-stat-row:hover td {
+    background: hsl(52, 80%, 88%) !important;
+}
+
+/* WordArt 標題 */
+.roc-wordart {
+    font-family: "Microsoft JhengHei", "Noto Sans TC", Arial, sans-serif;
+    font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    display: block;
+    margin: 0;
+}
+.roc-wordart .w1 {
+    display: inline-block;
+    background: linear-gradient(135deg, #000095, #0050cc, #003090);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    transform: skewX(-5deg) scaleY(1.1);
+}
+.roc-wordart .w2 {
+    display: inline-block;
+    background: linear-gradient(135deg, #cc0000, #ff2200, #880000);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    transform: scaleX(1.06) translateY(1.3px);
+}
+.roc-wordart .w3 {
+    display: inline-block;
+    background: linear-gradient(135deg, #004099, #0055cc, #002870);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    transform: skewX(-3deg) scaleY(1.07);
+}
+.roc-wordart .w4 {
+    display: inline-block;
+    font-size: 0.7em;
+    background: linear-gradient(135deg, #333, #111);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* 區塊標頭 */
+.roc-section-header {
+    background: linear-gradient(to right, #000095, #0030b0);
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 5px 14px;
+    border-left: 4px solid #cc0000;
+    letter-spacing: 0.5px;
+    font-family: "Microsoft JhengHei", Arial, sans-serif;
+}
+
+/* 側欄 */
+.roc-sidebar-header {
+    background: linear-gradient(to right, #000095, #0028a8);
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-left: 3px solid #cc0000;
+    letter-spacing: 0.3px;
+}
+
+/* footer link hover */
+.roc-footer-link:hover {
+    color: #ffaaaa !important;
+    text-decoration: underline !important;
+}

@@ -1,45 +1,74 @@
 ---
-import Hr from "@/components/landing/hr.astro";
 import ExtensionMotion from "@/components/landing/extensionMotion.tsx";
-import { Button } from "@/components/ui/button";
 ---
 
-<section class="px-6 md:px-20 py-24 w-full relative">
-    <Hr />
-    <div class="max-w-2xl mx-auto text-center mb-30 md:mb-16">
-        <p
-            class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
-            <span class="mr-1 tracking-widest">//</span>extensions
-        </p>
-        <h2
-            class="text-[min(3rem,6vw)] leading-[1.05] font-bold tracking-tighter text-balance text-muted-foreground">
-            One click. <br />
-            <span class="text-foreground">All your test cases.</span>
-        </h2>
-    </div>
-    <div
-        class="relative lg:grid lg:grid-cols-2 lg:gap-10 max-[48rem]:flex max-[48rem]:flex-col max-[48rem]:items-center max-[48rem]:justify-center"
-        id="extension-relative">
-        <ExtensionMotion client:only="react" />
-        <div
-            class="relative lg:flex lg:ml-0 lg:flex-col lg:justify-center mt-6 lg:mt-0 max-[48rem]:pl-0! lg:pl-0! max-w-md md:max-w-2xl md:mx-0"
-            id="target">
-            <p class="text-xl font-bold">Skip the copy-paste</p>
-            <p class="text-muted-foreground mt-2 max-w-xl w-fit">
-                Import test cases directly from your browser with our extension.
-                Support over 100 competitive programming platforms.
-            </p>
-            <div class="flex gap-4 mt-6">
-                <!-- <Button className="hover:bg-primary/80" size={"lg"}
-                    >Get for Chrome</Button
-                > -->
-                <Button disabled size={"lg"}>Coming Soon</Button>
-                <!-- <Button
-                    className="hover:bg-primary/80"
-                    size={"lg"}
-                    variant={"outline"}>Get for Firefox</Button
-                > -->
+<section id="extension" style="padding:0 14px 14px;font-family:'Microsoft JhengHei',Arial,sans-serif;">
+    <div class="roc-box" style="overflow:hidden;">
+        <div class="roc-section-header">◆ 延伸功能e化說明專區【瀏覽器擴充功能服務】</div>
+
+        <div style="padding:10px 12px 12px;">
+            <div class="roc-notice-strip" style="margin-bottom:10px;font-size:12px;">
+                <strong>※ 功能狀態說明：</strong>本延伸功能目前正積極開發中，預計完成後將支援逾 100 個競技程式設計平台，敬請期待！
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 280px;gap:10px;align-items:start;">
+                <!-- 左欄：動態展示 -->
+                <div>
+                    <div style="background:#111;border:3px inset #888;border-radius:2px;overflow:hidden;min-height:300px;position:relative;">
+                        <ExtensionMotion client:only="react" />
+                    </div>
+                    <div style="background:hsl(220,18%,96%);border:1px solid #ccc;border-top:none;padding:4px 10px;font-size:11px;color:#666;">
+                        ◎ 以上為擴充功能實際操作展示，畫面僅供示意用途
+                    </div>
+                </div>
+
+                <!-- 右欄：說明表格 -->
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <div class="roc-box" style="overflow:hidden;">
+                        <div class="roc-sidebar-header">【功能開發進度狀況表】</div>
+                        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                            <tr>
+                                <td style="border:1px solid #ddd;padding:4px 7px;background:hsl(220,18%,96%);font-weight:bold;">功能項目</td>
+                                <td style="border:1px solid #ddd;padding:4px 7px;background:hsl(220,18%,96%);font-weight:bold;">開發狀態</td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #ddd;padding:3px 7px;">自動匯入測試資料</td>
+                                <td style="border:1px solid #ddd;padding:3px 7px;color:#cc6600;font-weight:bold;">開發中</td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #ddd;padding:3px 7px;">支援競程平台</td>
+                                <td style="border:1px solid #ddd;padding:3px 7px;color:#cc6600;font-weight:bold;">100+ 個</td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #ddd;padding:3px 7px;">Chrome 版本</td>
+                                <td style="border:1px solid #ddd;padding:3px 7px;color:#555;">即將推出</td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #ddd;padding:3px 7px;">Firefox 版本</td>
+                                <td style="border:1px solid #ddd;padding:3px 7px;color:#555;">規劃中</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="roc-box" style="overflow:hidden;">
+                        <div class="roc-sidebar-header">【功能說明】</div>
+                        <div style="padding:8px 10px;font-size:12px;color:#333;line-height:1.7;">
+                            <p style="margin:0 0 6px;border-left:2px solid #000095;padding-left:6px;">
+                                本擴充功能可讓您一鍵從瀏覽器直接匯入競技程式設計題目之測試案例，<strong>免除繁複之複製貼上作業</strong>。
+                            </p>
+                            <p style="margin:0;color:#666;">
+                                ※ 如需第一時間獲得發布通知，請至 GitHub 追蹤本專案。
+                            </p>
+                        </div>
+                    </div>
+
+                    <div style="background:hsl(52,94%,78%);border:1px solid hsl(52,70%,60%);border-left:3px solid #cc0000;padding:7px 10px;font-size:12px;line-height:1.6;">
+                        <strong>【Coming Soon】</strong><br />
+                        本功能正在積極開發中，敬請見諒！
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </section>
+

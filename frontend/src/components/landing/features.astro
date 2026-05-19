@@ -10,170 +10,104 @@ import {
 
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import config from "@/config/constants";
-import Hr from "@/components/landing/hr.astro";
 
 const features = [
     {
         icon: BinaryIcon,
         title: "C++ to WebAssembly",
+        titleZh: "C++ 轉 WebAssembly 編譯服務",
         desc: "Compiles C++ code into WebAssembly and executes them directly in the browser — fast, no resource limitations.",
+        descZh: "將 C++ 程式碼編譯為 WebAssembly 並直接於瀏覽器執行，快速且無資源限制。",
     },
     {
         icon: CircleAlertIcon,
         title: "Error Highlighting",
+        titleZh: "錯誤標示與診斷e化功能",
         desc: "Compiler errors are parsed and pinned to the exact line they occur — clear, actionable diagnostics without the noise.",
+        descZh: "編譯器錯誤將精確標示於對應行號，提供清晰可操作之診斷資訊。",
     },
     {
         icon: FlaskConicalIcon,
         title: "Built-in Test Cases",
+        titleZh: "內建測試案例管理系統",
         desc: "Define, run, and compare multiple test cases side-by-side. Designed for the way competitive programmers actually work.",
+        descZh: "可定義、執行並並排比較多組測試案例，專為競技程式設計使用者設計。",
     },
     {
         icon: SparklesIcon,
         title: "Code Formatting",
+        titleZh: "程式碼格式化e化服務",
         desc: "Clang-format integrated. One shortcut to keep your style consistent across every snippet you write.",
+        descZh: "整合 Clang-format，一鍵保持程式碼格式一致，提升作業效率。",
     },
     {
         icon: LanguagesIcon,
         title: "i18n Ready",
-        desc: "First-class support for English and Traditional Chinese, with more languages on the way. You can help translate on <a href='https://crowdin.com/project/cpp-here' class='underline hover:text-foreground transition' target='_blank' rel='noopener noreferrer'>Crowdin</a>!",
+        titleZh: "多國語系e化支援",
+        desc: "First-class support for English and Traditional Chinese, with more languages on the way.",
+        descZh: "完整支援英文及繁體中文，更多語系持續開發中，歡迎協助翻譯。",
     },
     {
         icon: WandSparklesIcon,
         title: "Smart Autocomplete",
+        titleZh: "智慧型程式碼自動補全",
         desc: "Context-aware suggestions for STL containers, algorithms, and your own symbols — write C++ faster without leaving the flow.",
+        descZh: "提供 STL 容器、演算法及自訂符號之情境感知建議，大幅提升撰碼效率。",
     },
 ];
 ---
 
-<section class="relative w-full px-6 md:px-20 py-24">
-    <Hr />
-    <div class="max-w-2xl mx-auto text-center mb-16">
-        <p
-            class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
-            <span class="mr-1 tracking-widest">//</span>features
-        </p>
-        <h2
-            class="text-[min(3rem,7vw)] leading-[1.05] font-bold tracking-tighter text-balance">
-            Everything you need.<br />
-            <span class="text-muted-foreground">Nothing you don't.</span>
-        </h2>
-        <p class="text-muted-foreground mt-5 md:text-lg text-balance px-2">
-            A focused toolkit that turns the browser into a powerful C++
-            workspace.
-        </p>
-    </div>
+<section id="features" style="padding:0 14px 14px;font-family:'Microsoft JhengHei',Arial,sans-serif;">
+    <div class="roc-box" style="overflow:hidden;">
+        <div class="roc-section-header">◆ 系統e化功能說明一覽表【共 {features.length} 項核心功能】</div>
 
-    <div
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-foreground/10 border border-foreground/10 rounded-xl overflow-hidden">
-        {
-            features.map(({ icon: Icon, title, desc }) => (
-                <div class="feature-card group relative bg-background p-8">
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-3 mb-5">
-                            <div class="flex items-center justify-center size-10 rounded-md border border-foreground/15 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-all duration-300">
-                                <Icon class="size-5 text-foreground/80 group-hover:text-foreground transition-colors" />
+        <div style="padding:10px 12px 12px;">
+            <p style="font-size:12px;color:#555;margin-bottom:8px;border-left:3px solid #000095;padding-left:7px;line-height:1.6;">
+                以下為本系統所提供之各項e化核心功能說明，請詳細閱讀以充分利用本系統之各項服務。
+            </p>
+
+            <table class="roc-table" style="width:100%;margin-bottom:10px;">
+                <thead>
+                    <tr>
+                        <th style="width:44px;text-align:center;">序號</th>
+                        <th style="width:200px;">功能名稱（中文）</th>
+                        <th>功能說明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {features.map(({ icon: Icon, titleZh, descZh }, i) => (
+                        <tr class="roc-stat-row">
+                            <td style="text-align:center;font-size:12px;color:#555;">{String(i + 1).padStart(2, "0")}</td>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <span style="color:#000095;"><Icon class="size-4" /></span>
+                                    <span style="font-weight:bold;font-size:13px;">{titleZh}</span>
+                                </div>
+                            </td>
+                            <td style="font-size:12px;color:#333;line-height:1.65;" set:html={descZh} />
+                        </tr>
+                    ))}
+                    <!-- 開放原始碼說明列 -->
+                    <tr style="background:hsl(52,94%,88%);">
+                        <td style="text-align:center;font-size:12px;color:#555;">★</td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <span style="color:#333;"><SiGithub className="size-4" /></span>
+                                <span style="font-weight:bold;font-size:13px;">開放原始碼 · MIT 授權</span>
                             </div>
-                            <h3 class="text-lg font-semibold tracking-tight flex-1">
-                                {title}
-                            </h3>
-                        </div>
-                        <p
-                            class="text-sm leading-relaxed text-muted-foreground"
-                            set:html={desc}>
-                            {/* This is a bit dangerous, but I think it's safe in this context */}
-                        </p>
-                    </div>
-                    <div class="spotlight pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                </div>
-            ))
-        }
-    </div>
+                        </td>
+                        <td style="font-size:12px;color:#333;line-height:1.65;">
+                            本系統採 MIT 授權條款釋出，歡迎查閱、派生及部署。原始碼均公開於 GitHub，接受社群回報問題。
+                            <a href={config.githubLink} target="_blank" rel="noopener noreferrer" style="color:#0000cc;margin-left:4px;">前往 GitHub 原始碼下載區 →</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
 
-    <a
-        href={config.githubLink}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="mt-6 flex items-center justify-between gap-4 p-6 md:p-8 border border-foreground/20 rounded-xl hover:bg-foreground/4 hover:border-foreground/25 transition-all duration-300 group">
-        <div class="flex items-center gap-4 md:gap-5">
-            <div
-                class="flex items-center justify-center shrink-0 size-10 rounded-md border border-foreground/20 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-colors">
-                <SiGithub className="size-5 text-foreground/80" />
-            </div>
-            <div>
-                <h3 class="text-lg font-semibold tracking-tight">
-                    Open-source & free
-                </h3>
-                <p class="text-sm text-muted-foreground mt-0.5">
-                    Audit it, fork it, ship it. MIT licensed.
-                </p>
+            <div style="text-align:right;font-size:11px;color:#888;border-top:1px solid #ddd;padding-top:6px;">
+                ◎ 本功能說明表資料更新時間：{new Date().getFullYear()}年 ｜ 如有疑問請至 GitHub 提出
             </div>
         </div>
-        <span
-            class="text-sm text-muted-foreground group-hover:text-foreground transition-colors whitespace-nowrap hidden sm:inline">
-            Star on GitHub →
-        </span>
-    </a>
-
-    <style>
-        .feature-card {
-            --mx: 50%;
-            --my: 0%;
-        }
-        .feature-card .spotlight {
-            background: radial-gradient(
-                350px circle at var(--mx) var(--my),
-                color-mix(in srgb, var(--foreground) 22%, transparent),
-                transparent 60%
-            );
-        }
-    </style>
-
-    <script>
-        class SpotlightFeatureCard {
-            card: HTMLElement;
-            currentX = 0;
-            currentY = 0;
-            targetX = 0;
-            targetY = 0;
-            hasEntered = false;
-            rafId: number = 0;
-
-            constructor(card: HTMLElement) {
-                this.card = card;
-
-                card.addEventListener("pointerenter", (e) => {
-                    const rect = card.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    this.currentX = this.targetX = x;
-                    this.currentY = this.targetY = y;
-                    if (!this.hasEntered) {
-                        this.hasEntered = true;
-                        this.rafId = requestAnimationFrame(
-                            this.animate.bind(this),
-                        );
-                    }
-                });
-
-                card.addEventListener("pointermove", (e) => {
-                    const rect = card.getBoundingClientRect();
-                    this.targetX = e.clientX - rect.left;
-                    this.targetY = e.clientY - rect.top;
-                });
-            }
-
-            animate() {
-                this.currentX += (this.targetX - this.currentX) * 0.1;
-                this.currentY += (this.targetY - this.currentY) * 0.1;
-                this.card.style.setProperty("--mx", this.currentX + "px");
-                this.card.style.setProperty("--my", this.currentY + "px");
-                this.rafId = requestAnimationFrame(this.animate.bind(this));
-            }
-        }
-
-        document
-            .querySelectorAll<HTMLElement>(".feature-card")
-            .forEach((card) => new SpotlightFeatureCard(card));
-    </script>
+    </div>
 </section>
+
