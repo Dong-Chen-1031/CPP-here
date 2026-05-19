@@ -93,8 +93,8 @@ docker compose up --pull always
 #### Clone Repo
 
 ```shell
-curl -sS "https://cpp.doong.me/script/frontend/docker-compose.yml" > docker-compose.yml
-docker compose up --pull always
+git clone https://github.com/Dong-Chen-1031/CPP-here.git
+cd CPP-here
 ```
 
 #### 前端
