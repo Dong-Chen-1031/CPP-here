@@ -124,7 +124,7 @@ docker build \
 curl -sS "https://cpp.doong.me/script/backend/docker-compose.yml" > docker-compose.yml
 docker compose up --pull always
 ```
-> [!NOTICE]
+> [!CAUTION]
 > 由於後端需建立一次性容器來建置使用者的程式碼，Docker Compose 會將 Docker Scoket 掛載到容器裡，但在 Linux 及 macOS 以外的作業系統上可能需要稍微調整才能運作。
 
 ## Contributing
