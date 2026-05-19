@@ -100,13 +100,19 @@ docker compose up --pull always
 #### 前端
 
 ```shell
-docker build 
+docker build \
+  -f ./docker/frontend/Dockerfile \
+  -t cpp-here-frontend:latest \
+  .
 ```
 
 #### 後端
 
 ```shell
-docker compose up --pull always
+docker build \
+  -f ./docker/backend/Dockerfile \
+  -t cpp-here-backend:latest \
+  .
 ```
 
 </details>
