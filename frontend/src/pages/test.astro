@@ -1,9 +1,86 @@
 ---
-import Layout from "../layouts/Layout.astro";
+import Layout from "@/layouts/Layout.astro";
+import "@/styles/landing.css";
+import Header from "@/components/landing/header.astro";
+import Hero from "@/components/landing/hero.astro";
+import Features from "@/components/landing/features.astro";
+import Extension from "@/components/landing/extension.astro";
+import Stats from "@/components/landing/stats.astro";
+import CTA from "@/components/landing/CTA.astro";
+import Footer from "@/components/landing/footer.astro";
+import { Button } from "@/components/ui/button";
+import { PlayIcon } from "@lucide/astro";
+import { SiGithub } from "@icons-pack/react-simple-icons";
+import "@/styles/landing.css";
+import HeroCard from "@/components/landing/heroCard.astro";
+import config from "@/config/constants";
 ---
 
+<!-- 
+1. header v
+2. hero v
+3. features v
+    (1) C++ to WebAssembly
+    (2) error hinting
+    (3) test case
+    (4) code formatting
+    (5) i18n V
+    (6) built for competitive programming
+    (7) open-source and free to use
+    (8) TODO: RWD support
+4. extensions V
+5. data V
+6. CAT V
+7. footer V
+-->
 <Layout>
-  <div class="flex justify-center items-center h-screen gap-10">
-    <div class="output-card loading w-100 h-100 bg-accent rounded-md"></div>
-  </div>
+    <meta
+        slot="head"
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
+    <style>
+        html,
+        body {
+            overflow-x: hidden;
+            height: 100%;
+        }
+    </style>
+    <div class="mono tracking-tight border-2">
+        <!-- <Header /> -->
+        <section
+            class="relative flex flex-col items-center w-full justify-center">
+            <!-- <div
+                class="pointer-events-none absolute inset-0 opacity-100 -z-10
+                    bg-[linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)]
+                    bg-size-[64px_64px]
+                    mask-[radial-gradient(ellipse_80%_600px_at_center_top,black_20%,transparent_100%)]">
+            </div> -->
+            <!-- <div
+                class="rounded-full px-3 py-1 flex justify-center items-center bg-accent/40 border-border border mt-25">
+                <p
+                    class="text-center text-xs md:text-sm text-muted-foreground uppercase">
+                    Support 1,000+ competitive programming websites!
+                </p>
+            </div> -->
+            <!-- <div class="mt-40">
+                <p
+                    class="text-[min(4.5rem,7vw)] leading-22 font-bold text-balance text-center tracking-tighter">
+                    新世代的線上 C++ 編輯器
+                </p>
+                <p
+                    class="text-muted-foreground text-center mt-5 md:text-lg text-balance px-5">
+                    一個開源、輕量卻功能強大的 C++ 編輯器，專為競程而生
+                </p>
+            </div> -->
+
+            <HeroCard />
+            <!-- <div class="h-4"></div> -->
+        </section>
+        <!-- <Features /> -->
+        <!-- <Extension /> -->
+        <!-- <Stats /> -->
+        <!-- <CTA /> -->
+        <!-- <Footer /> -->
+    </div>
 </Layout>
