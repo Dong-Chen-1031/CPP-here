@@ -1,6 +1,6 @@
 # C++ Here - Online C++ Editor
 
-C++ Here is a next-generation online C++ editor built for competitive programming. It is fast, lightweight, and full-featured.
+C++ Here is a next-generation in-browser (online) C++ editor built for competitive programming, engineered to be fast, lightweight, and full-featured.
 
 > [!NOTE]
 > This readme also has a [Traditional Chinese version](README-TW.md).
@@ -120,7 +120,7 @@ bun run dev
 
 ## Deployment
 
-### Full Deployment with Docker Compose
+### Full deployment with Docker Compose
 
 ```shell
 curl -sS "https://cpp.doong.me/script/docker-compose.yml" > docker-compose.yml
@@ -135,7 +135,7 @@ docker compose up --pull always
 > Since the backend needs to create ephemeral containers to build user code, Docker Compose mounts the Docker socket into the container. On operating systems other than Linux and macOS, additional adjustments may be required.
 
 <details>
-<summary>Build Docker Images Manually</summary>
+<summary>Build Docker images manually</summary>
 
 #### Clone
 
@@ -144,7 +144,7 @@ git clone https://github.com/Dong-Chen-1031/CPP-here.git
 cd CPP-here
 ```
 
-#### Build Frontend
+#### Build frontend
 
 ```shell
 docker build \
@@ -153,7 +153,7 @@ docker build \
   .
 ```
 
-#### Build Backend
+#### Build backend
 
 ```shell
 docker build \
@@ -164,7 +164,7 @@ docker build \
 
 </details>
 
-### Deploy Frontend
+### Deploy frontend
 
 - The frontend uses Astro SSG mode. After running `bun run build`, it outputs a **fully static** website that can be easily deployed to services such as Cloudflare Pages and GitHub Pages. This approach is highly recommended because it improves loading speed and reduces backend workload.
 
@@ -174,7 +174,7 @@ curl -sS "https://cpp.doong.me/script/frontend/docker-compose.yml" > docker-comp
 docker compose up --pull always
 ```
 
-### Deploy Backend
+### Deploy backend
 
 Docker Compose is recommended for backend deployment, as it automatically handles dependencies, versions, and environment setup.
 
