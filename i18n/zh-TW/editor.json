@@ -65,14 +65,14 @@
             "caseName": "{{problemName}} - 測資 {{index}}",
             "alertDialog": {
                 "title": "已收到來自擴充功能的測資",
-                "description": "測資 {{problemName}} 已收到。\n你想要覆寫現有測資或是插入一個新的測資？",
+                "description": "{{problemName}} 的測資已收到。\n你想要覆寫現有測資或是插入一個新的測資？",
                 "overwrite": "覆寫",
                 "insert": "插入",
                 "cancel": "取消"
             },
             "alert": {
                 "title": "已收到新的測資",
-                "description": "測資 {{problemName}} 已收到。 已經加入至測資表。"
+                "description": "{{problemName}} 的測資已收到。 已經加入至測資表。"
             }
         }
     },
