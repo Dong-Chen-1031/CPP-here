@@ -1,0 +1,65 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import "@/styles/landing.css";
+import Header from "@/components/landing/header.astro";
+import Hero from "@/components/landing/hero.astro";
+import Features from "@/components/landing/features.astro";
+import Extension from "@/components/landing/extension.astro";
+import Stats from "@/components/landing/stats.astro";
+import CTA from "@/components/landing/CTA.astro";
+import Footer from "@/components/landing/footer.astro";
+import { Button } from "@/components/ui/button";
+import { PlayIcon } from "@lucide/astro";
+import { SiGithub } from "@icons-pack/react-simple-icons";
+import "@/styles/landing.css";
+import HeroCard from "@/components/landing/heroCard.astro";
+import config from "@/config/constants";
+---
+
+<!-- 
+1. header v
+2. hero v
+3. features v
+    (1) C++ to WebAssembly
+    (2) error hinting
+    (3) test case
+    (4) code formatting
+    (5) i18n V
+    (6) built for competitive programming
+    (7) open-source and free to use
+    (8) TODO: RWD support
+4. extensions V
+5. data V
+6. CAT V
+7. footer V
+-->
+<Layout>
+    <meta
+        slot="head"
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
+    <style>
+        html,
+        body {
+            overflow-x: hidden;
+            height: 100%;
+        }
+    </style>
+    <section class="px-6 md:px-20 py-24 pb-40 w-full relative">
+        <div
+            class="relative border border-foreground/10 rounded-xl overflow-hidden px-4 md:px-8 py-20 flex flex-col items-center text-center h-60">
+            <div
+                class="pointer-events-none absolute inset-0 -z-10
+                bg-[linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)]
+                bg-size-[61px_61px]
+                mask-[radial-gradient(ellipse_70%_100%_at_50%_50%,black_30%,transparent_100%)]">
+            </div>
+
+            <div
+                class="pointer-events-none absolute inset-0 -z-10
+                bg-[radial-gradient(ellipse_60%_50%_at_50%_50%,color-mix(in_srgb,var(--primary)_8%,transparent),transparent)]">
+            </div>
+        </div>
+    </section>
+</Layout>
