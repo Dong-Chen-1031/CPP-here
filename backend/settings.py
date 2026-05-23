@@ -35,3 +35,5 @@ TURNSTILE_SECRET = os.getenv("TURNSTILE_SECRET", "")
 JWT_SECRET = os.getenv("JWT_SECRET", "") or secrets.token_urlsafe(32)
 
 JWT_EXPIRY_SECONDS = 3600
+
+DOCKER_POOL_SIZE = 4

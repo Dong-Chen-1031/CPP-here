@@ -2,13 +2,13 @@
 
 C++ Here 是一個新世代的線上 C++ 編輯器，專為競程而生。不但快速、輕量，功能也十分完整。
 
-> [!NOTE]
-> This readme also has a [English version](README.md).
-
 > [!TIP]
 > 立即體驗: https://cpp.doong.me
 
 ![Screenshot](screenshot/image.png)
+
+> [!NOTE]
+> This readme also has a [English version](README.md).
 
 ## 功能亮點
 
