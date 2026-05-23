@@ -127,6 +127,9 @@ async def build(
             # '-sINCOMING_MODULE_JS_API=\'["wasm", "stdin", "print", "printErr"]\' '
             "-fconstexpr-depth=50 ",
             "-fmacro-backtrace-limit=10 ",
+            "-sSTACK_SIZE=8388608 ",  # 8 MB stack
+            "-sINITIAL_MEMORY=33554432 ",  # 初始 32 MB
+            "-sALLOW_MEMORY_GROWTH=1 ",  # 按需成長，上限為瀏覽器可用記憶體
         ]
     )
 
