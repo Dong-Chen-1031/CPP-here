@@ -45,6 +45,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { CppVersionSelect } from "./HeaderActions";
 
 interface SettingsProps {
     allLangs: Record<string, string>;
@@ -98,6 +99,27 @@ export function Settings({ allLangs }: SettingsProps) {
                 </DialogHeader>
                 <FieldSet>
                     <FieldGroup>
+                        <Field
+                            orientation="horizontal"
+                            className="items-center!">
+                            <FieldContent>
+                                <FieldLabel>
+                                    {t("settings.language")}
+                                </FieldLabel>
+                                {/* <FieldDescription></FieldDescription> */}
+                            </FieldContent>
+                            <Field
+                                orientation="horizontal"
+                                className="items-center!">
+                                <FieldContent>
+                                    <FieldLabel>
+                                        {t("settings.language")}
+                                    </FieldLabel>
+                                    {/* <FieldDescription></FieldDescription> */}
+                                </FieldContent>
+                                <CppVersionSelect size={"default"} />
+                            </Field>
+                        </Field>
                         <Field
                             orientation="horizontal"
                             className="items-center!">

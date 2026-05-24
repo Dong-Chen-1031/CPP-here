@@ -62,6 +62,7 @@ import { useEffect } from "react";
 import { Commands } from "./Commands";
 import { ensureFormatterInit, formatCode } from "@/lib/format";
 import config from "@/config/constants";
+import IconMotion from "./IconMotion";
 
 export function UndoRedo({ menu = false }: { menu?: boolean }) {
     const [editorGlobal] = useAtom(editorRefStore);
@@ -442,6 +443,7 @@ export function FormatButton({
     const [code, setCode] = useAtom(codeStore);
     const { t } = useTranslation(["editor"]);
     const [formatting, setFormatting] = React.useState(false);
+    const [formatted, setFormatted] = React.useState(false);
 
     return (
         <ButtonGroup>
@@ -458,17 +460,27 @@ export function FormatButton({
                     variant="outline"
                     className={className}
                     onClick={(e) => {
-                        setFormatting(true);
+                        const toSetFormatting = setTimeout(() => {
+                            setFormatting(true);
+                        }, 80);
                         formatCode(code).then((formatted) => {
+                            clearTimeout(toSetFormatting);
                             setCode(formatted);
                             setFormatting(false);
+                            setFormatted(true);
+                            setTimeout(() => setFormatted(false), 1500);
                         });
                         onClick(e);
                     }}
                     onMouseEnter={() => {
                         ensureFormatterInit();
                     }}>
-                    {formatting ? <Spinner className="size-3" /> : <FormIcon />}
+                    <IconMotion
+                        show={formatted}
+                        HideIcon={formatting ? Spinner : FormIcon}
+                        className="size-3"
+                    />
+
                     {t("headerActions.formatCode")}
                 </Button>
             </Tip>
@@ -491,6 +503,7 @@ export function DownloadButton({
             <Tip label={t("headerActions.downloadCodeTip")}>
                 <Button
                     variant="outline"
+                    // size={"icon-sm"}
                     className={className}
                     aria-label={t("headerActions.downloadCodeTip")}
                     onClick={(e) => {
@@ -504,7 +517,9 @@ export function DownloadButton({
                         onClick(e);
                     }}>
                     <DownloadIcon />
-                    {t("headerActions.downloadCode")}
+                    <span className="hidden lg:inline">
+                        {t("headerActions.downloadCode")}
+                    </span>
                 </Button>
             </Tip>
         </ButtonGroup>
@@ -514,9 +529,11 @@ export function DownloadButton({
 export function CppVersionSelect({
     onSelect,
     className = "",
+    size = "sm",
 }: {
     onSelect?: (version: string) => void;
     className?: string;
+    size?: typeof Button.prototype.props.size;
 }) {
     const [cppVersion, setCppVersion] = useAtom(cppVersionStore);
     const [cppVersionClient, setCppVersionClient] = React.useState("c++17");
@@ -533,7 +550,7 @@ export function CppVersionSelect({
             }}>
             <SelectTrigger
                 className={cn("w-full max-w-48", className)}
-                size="sm"
+                size={size}
                 aria-label="C++ Version">
                 <SelectValue placeholder="C++ Version" />
             </SelectTrigger>
@@ -567,7 +584,7 @@ export function SettingsButton({
                 onClick && onClick?.(e);
                 setSettingsOpen(true);
             }}>
-            <SettingsIcon className="mr-1" />
+            <SettingsIcon />
             {t("headerActions.settings")}
         </Button>
     );
@@ -619,11 +636,11 @@ export default function HeaderActions() {
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}>
                         <UndoRedo />
-                        <FormatButton />
                         <DownloadButton />
-                        <SettingsButton />
+                        <FormatButton />
                         <ResetButton />
-                        <CppVersionSelect />
+                        <SettingsButton />
+                        {/* <CppVersionSelect /> */}
                         <RunButton />
                     </motion.div>
                 )}
