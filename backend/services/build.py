@@ -117,7 +117,7 @@ async def build(
         [
             "-ftemplate-depth=50 ",
             "-sMODULARIZE=1 ",
-            # "-sMINIMAL_RUNTIME=1 "
+            # "-sMINIMAL_RUNTIME=1  "
             '-sEXPORT_NAME="createMyModule" ',
             '-sENVIRONMENT="worker" ',
             "-sEXIT_RUNTIME=1 ",
