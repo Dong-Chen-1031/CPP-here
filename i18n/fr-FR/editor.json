@@ -93,7 +93,9 @@
         "settings": "Settings",
         "formatCode": "Format",
         "formatCodeTip": "Format code",
-        "runOptions": "Run options"
+        "runOptions": "Run options",
+        "downloadCode": "Download",
+        "downloadCodeTip": "Download as .cpp"
     },
     "turnstile": {
         "verificationFailed": "Verification Failed",
