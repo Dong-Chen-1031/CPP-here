@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
     ChevronDownIcon,
+    DownloadIcon,
     FormIcon,
     RotateCcw,
     SettingsIcon,
@@ -475,6 +476,41 @@ export function FormatButton({
     );
 }
 
+export function DownloadButton({
+    className = "",
+    onClick = () => {},
+}: {
+    className?: string;
+    onClick?: (e: React.MouseEvent) => void;
+}) {
+    const [code] = useAtom(codeStore);
+    const { t } = useTranslation(["editor"]);
+
+    return (
+        <ButtonGroup>
+            <Tip label={t("headerActions.downloadCodeTip")}>
+                <Button
+                    variant="outline"
+                    className={className}
+                    aria-label={t("headerActions.downloadCodeTip")}
+                    onClick={(e) => {
+                        const blob = new Blob([code], { type: "text/plain" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "main.cpp";
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        onClick(e);
+                    }}>
+                    <DownloadIcon />
+                    {t("headerActions.downloadCode")}
+                </Button>
+            </Tip>
+        </ButtonGroup>
+    );
+}
+
 export function CppVersionSelect({
     onSelect,
     className = "",
@@ -584,6 +620,7 @@ export default function HeaderActions() {
                         transition={{ duration: 0.3 }}>
                         <UndoRedo />
                         <FormatButton />
+                        <DownloadButton />
                         <SettingsButton />
                         <ResetButton />
                         <CppVersionSelect />
