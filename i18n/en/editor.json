@@ -93,7 +93,9 @@
         "settings": "Settings",
         "formatCode": "Format",
         "formatCodeTip": "Format code",
-        "runOptions": "Run options"
+        "runOptions": "Run options",
+        "downloadCode": "Download",
+        "downloadCodeTip": "Download as .cpp"
     },
     "turnstile": {
         "verificationFailed": "Verification Failed",
@@ -118,7 +120,8 @@
         "resetSettingsDesc": "Reset all settings to default values.",
         "resetSettingsBtn": "Reset",
         "codeFormatStyle": "Code Format Style",
-        "codeFormatStyleDesc": "Select a code formatting style."
+        "codeFormatStyleDesc": "Select a code formatting style.",
+        "cppVersion": "C++ Version"
     },
     "resize": {
         "loadingEditor": "Loading Editor"
