@@ -93,7 +93,9 @@
         "settings": "設定",
         "formatCode": "格式化",
         "formatCodeTip": "格式化程式碼",
-        "runOptions": "運行設定"
+        "runOptions": "運行設定",
+        "downloadCode": "Download",
+        "downloadCodeTip": "Download as .cpp"
     },
     "turnstile": {
         "verificationFailed": "驗證失敗",
