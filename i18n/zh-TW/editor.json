@@ -120,7 +120,8 @@
         "resetSettingsDesc": "將所有設定還原為預設值。",
         "resetSettingsBtn": "重置",
         "codeFormatStyle": "格式化風格",
-        "codeFormatStyleDesc": "選擇一個程式碼格式化風格。"
+        "codeFormatStyleDesc": "選擇一個程式碼格式化風格。",
+        "cppVersion": "C++ Version"
     },
     "resize": {
         "loadingEditor": "正在載入編輯器"
