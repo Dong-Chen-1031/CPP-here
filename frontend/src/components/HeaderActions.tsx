@@ -517,9 +517,9 @@ export function DownloadButton({
                         onClick(e);
                     }}>
                     <DownloadIcon />
-                    <span className="hidden lg:inline">
-                        {t("headerActions.downloadCode")}
-                    </span>
+                    {/* <span className="hidden lg:inline"> */}
+                    {t("headerActions.downloadCode")}
+                    {/* </span> */}
                 </Button>
             </Tip>
         </ButtonGroup>
