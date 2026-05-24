@@ -104,21 +104,12 @@ export function Settings({ allLangs }: SettingsProps) {
                             className="items-center!">
                             <FieldContent>
                                 <FieldLabel>
-                                    {t("settings.language")}
+                                    {t("settings.cppVersion")}
                                 </FieldLabel>
                                 {/* <FieldDescription></FieldDescription> */}
                             </FieldContent>
-                            <Field
-                                orientation="horizontal"
-                                className="items-center!">
-                                <FieldContent>
-                                    <FieldLabel>
-                                        {t("settings.language")}
-                                    </FieldLabel>
-                                    {/* <FieldDescription></FieldDescription> */}
-                                </FieldContent>
-                                <CppVersionSelect size={"default"} />
-                            </Field>
+
+                            <CppVersionSelect size={"default"} />
                         </Field>
                         <Field
                             orientation="horizontal"
