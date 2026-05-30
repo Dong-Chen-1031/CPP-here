@@ -21,6 +21,7 @@ import {
     ResetButton,
     RunButton,
     SettingsButton,
+    ShareButton,
     UndoRedo,
 } from "./HeaderActions";
 import { panelDrawerStore, type PanelDrawerView } from "@/store/atom";
@@ -69,6 +70,8 @@ export function Commands({ className = "" }: { className?: string }) {
                                 />
                             </CommandItem>
                             <CommandItem>
+                                <ShareButton onClick={() => setOpen(false)} />
+
                                 <RunButton
                                     onClick={() => {
                                         setOpen(false);

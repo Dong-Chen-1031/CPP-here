@@ -557,7 +557,9 @@ export function ShareButton({
                         ShowIcon={ClipboardCheckIcon}
                         className="size-3"
                     />
-                    {t("headerActions.shareCode")}
+                    <span className="inline md:hidden lg:inline">
+                        {t("headerActions.shareCode")}
+                    </span>
                 </Button>
             </Tip>
         </ButtonGroup>
@@ -593,9 +595,9 @@ export function DownloadButton({
                         onClick(e);
                     }}>
                     <DownloadIcon />
-                    {/* <span className="hidden lg:inline"> */}
-                    {t("headerActions.downloadCode")}
-                    {/* </span> */}
+                    <span className="inline md:hidden lg:inline">
+                        {t("headerActions.downloadCode")}
+                    </span>
                 </Button>
             </Tip>
         </ButtonGroup>
@@ -661,7 +663,9 @@ export function SettingsButton({
                 setSettingsOpen(true);
             }}>
             <SettingsIcon />
-            {t("headerActions.settings")}
+            <span className="inline md:hidden lg:inline">
+                {t("headerActions.settings")}
+            </span>
         </Button>
     );
 }
@@ -714,9 +718,9 @@ export default function HeaderActions() {
                         <UndoRedo />
                         <DownloadButton />
                         {config.share && <ShareButton />}
+                        <SettingsButton />
                         <FormatButton />
                         <ResetButton />
-                        <SettingsButton />
                         {/* <CppVersionSelect /> */}
                         <RunButton />
                     </motion.div>

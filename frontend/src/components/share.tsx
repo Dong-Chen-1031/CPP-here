@@ -1,5 +1,3 @@
-import { CircleFadingPlusIcon } from "lucide-react";
-
 import {
     AlertDialog,
     AlertDialogAction,
@@ -8,12 +6,9 @@ import {
     AlertDialogDescription,
     AlertDialogFooter,
     AlertDialogHeader,
-    AlertDialogMedia,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/checkbox";
 import { fetchSharedCode } from "@/api/share";
@@ -53,6 +48,7 @@ export function ShareReceiveDialog() {
         if (urlParams.has("shareID")) {
             setShareID(urlParams.get("shareID"));
             setShowDialog(true);
+            history.replaceState(null, "", "/editor");
         }
     }, []);
 
