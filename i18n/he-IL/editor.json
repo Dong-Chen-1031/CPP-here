@@ -126,5 +126,20 @@
     },
     "resize": {
         "loadingEditor": "Loading Editor"
+    },
+    "shareReceive": {
+        "title": "Receive Shared Code",
+        "description": "Please select the parts you want to receive.",
+        "descriptionSub": "They'll replace the current content in your editor.",
+        "code": "Code",
+        "input": "Input",
+        "testCase": "Test Case",
+        "output": "Output",
+        "cancel": "Cancel",
+        "receive": "Receive",
+        "receiveFailed": "Receive Failed",
+        "receiveFailedDesc": "An error occurred while receiving the shared code. Please try again later.",
+        "receiveSuccess": "Receive Successful",
+        "receiveSuccessDesc": "The shared code has been received and applied to your editor."
     }
 }
