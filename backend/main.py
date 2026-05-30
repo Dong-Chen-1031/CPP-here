@@ -52,6 +52,13 @@ app.include_router(router.verify.router)
 app.include_router(router.api.router)
 
 
+if settings.SHARE:
+    import router.share
+
+    app.include_router(router.share.router)
+    logger.info("Share feature is enabled")
+
+
 @app.get("/")
 async def root():
     return RedirectResponse(url=FRONTEND_URL)

@@ -9,6 +9,7 @@ import { AlertDialogGood, Alerts } from "@/components/Alert";
 import { Settings } from "@/components/Settings";
 import { getLanguages } from "@/lib/langList";
 import TestEditDialog from "@/components/panel/TestEditDialog";
+import { ShareReceiveDialog } from "@/components/share";
 
 const allLangs = getLanguages();
 const lsVersion = {
@@ -61,5 +62,6 @@ const lsVersion = {
         <AlertDialogGood client:only="react" />
         <Settings client:only="react" allLangs={allLangs} />
         <TestEditDialog client:only="react" />
+        <ShareReceiveDialog client:only="react" />
     </div>
 </Layout>

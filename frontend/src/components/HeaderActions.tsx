@@ -16,10 +16,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
     ChevronDownIcon,
+    ClipboardCheckIcon,
     DownloadIcon,
     FormIcon,
     RotateCcw,
     SettingsIcon,
+    Share2Icon,
     SquareIcon,
     TestTubes,
 } from "lucide-react";
@@ -37,6 +39,7 @@ import {
 } from "@/components/ui/select";
 import { getDefaultStore, useAtom } from "jotai";
 import {
+    alertStore,
     codeStore,
     codeWorkersStore,
     cppVersionStore,
@@ -63,6 +66,7 @@ import { Commands } from "./Commands";
 import { ensureFormatterInit, formatCode } from "@/lib/format";
 import config from "@/config/constants";
 import IconMotion from "./IconMotion";
+import { shareCode } from "@/api/share";
 
 export function UndoRedo({ menu = false }: { menu?: boolean }) {
     const [editorGlobal] = useAtom(editorRefStore);
@@ -488,6 +492,78 @@ export function FormatButton({
     );
 }
 
+export function ShareButton({
+    className = "",
+    onClick = () => {},
+}: {
+    className?: string;
+    onClick?: (e: React.MouseEvent) => void;
+}) {
+    const { t } = useTranslation(["editor"]);
+    const [sharing, setSharing] = React.useState(false);
+    const [shared, setShared] = React.useState(false);
+    const defaultStore = getDefaultStore();
+
+    return (
+        <ButtonGroup>
+            <Tip label={t("headerActions.shareCodeTip")}>
+                <Button
+                    variant="outline"
+                    // size={"icon-sm"}
+                    className={className}
+                    aria-label={t("headerActions.shareCodeTip")}
+                    onClick={(e) => {
+                        setSharing(true);
+                        shareCode().then(async (result) => {
+                            if (result.ok) {
+                                await navigator.clipboard.writeText(
+                                    `${window.location.origin}/editor?shareID=${result.shareId as string}`,
+                                );
+                                defaultStore.set(alertStore, (p) => [
+                                    ...p,
+                                    {
+                                        title: "Share Successful",
+                                        description:
+                                            "Share URL has been copied to clipboard. You can share it with others now!",
+                                        id: crypto.randomUUID(),
+                                    },
+                                ]);
+                            } else {
+                                console.error(
+                                    "Failed to share code:",
+                                    result.errors,
+                                );
+                                defaultStore.set(alertStore, (p) => [
+                                    ...p,
+                                    {
+                                        title: "Share Failed",
+                                        description:
+                                            "An error occurred while sharing your code. Please try again later.",
+                                        variant: "destructive",
+                                        id: crypto.randomUUID(),
+                                    },
+                                ]);
+                                return;
+                            }
+                            setSharing(false);
+                            setShared(true);
+                            setTimeout(() => setShared(false), 1500);
+                        });
+                        onClick(e);
+                    }}>
+                    <IconMotion
+                        show={shared}
+                        HideIcon={sharing ? Spinner : Share2Icon}
+                        ShowIcon={ClipboardCheckIcon}
+                        className="size-3"
+                    />
+                    {t("headerActions.shareCode")}
+                </Button>
+            </Tip>
+        </ButtonGroup>
+    );
+}
+
 export function DownloadButton({
     className = "",
     onClick = () => {},
@@ -637,6 +713,7 @@ export default function HeaderActions() {
                         transition={{ duration: 0.3 }}>
                         <UndoRedo />
                         <DownloadButton />
+                        {config.share && <ShareButton />}
                         <FormatButton />
                         <ResetButton />
                         <SettingsButton />

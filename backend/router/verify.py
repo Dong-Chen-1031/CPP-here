@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 import jwt
+import settings
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from pyturnstile import Turnstile
@@ -42,6 +43,9 @@ def is_verified(token: str):
 
 
 def need_token(request: Request):
+    if settings.BYPASS_CAPTCHA:
+        logger.warning("Bypassing CAPTCHA verification due to BYPASS_CAPTCHA setting")
+        return True
     token = request.headers.get("Authorization", "").replace("Bearer ", "")
     if not token:
         raise HTTPException(status_code=401, detail="Authorization token missing")

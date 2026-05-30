@@ -15,6 +15,9 @@ export const config = {
     githubLink: "https://github.com/Dong-Chen-1031/CPP-here",
 
     editorLink: "/editor",
+
+    share: import.meta.env.PUBLIC_SHARE == "true",
+    s3BucketUrl: import.meta.env.PUBLIC_S3_BUCKET_URL,
 } as const;
 
 export default config;
