@@ -125,5 +125,20 @@
     },
     "resize": {
         "loadingEditor": "正在載入編輯器"
+    },
+    "shareReceive": {
+        "title": "接收分享的程式碼",
+        "description": "請選擇你想接收的部分。",
+        "descriptionSub": "這些內容將會取代你編輯器中目前的內容。",
+        "code": "程式碼",
+        "input": "輸入",
+        "testCase": "測資",
+        "output": "輸出",
+        "cancel": "取消",
+        "receive": "接收",
+        "receiveFailed": "接收失敗",
+        "receiveFailedDesc": "接收分享程式碼時發生錯誤，請稍後再試。",
+        "receiveSuccess": "接收成功",
+        "receiveSuccessDesc": "已成功接收分享的程式碼並套用至你的編輯器。"
     }
 }

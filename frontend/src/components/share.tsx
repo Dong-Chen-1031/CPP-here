@@ -1,3 +1,4 @@
+import "../lib/i18n";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -9,6 +10,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/checkbox";
 import { fetchSharedCode } from "@/api/share";
@@ -26,6 +28,7 @@ export function ShareReceiveDialog() {
     const [shareID, setShareID] = useState<string | null>(null);
     const checked = useRef(false);
     const defaultStore = getDefaultStore();
+    const { t } = useTranslation(["editor"]);
 
     const [checkedItems, setCheckedItems] = useState({
         code: true,
@@ -35,10 +38,10 @@ export function ShareReceiveDialog() {
     });
 
     const table = {
-        code: "Code",
-        input: "Input",
-        testCase: "Test Case",
-        output: "Output",
+        code: t("shareReceive.code"),
+        input: t("shareReceive.input"),
+        testCase: t("shareReceive.testCase"),
+        output: t("shareReceive.output"),
     };
 
     useEffect(() => {
@@ -56,14 +59,15 @@ export function ShareReceiveDialog() {
         <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Receive Shared Code</AlertDialogTitle>
+                    <AlertDialogTitle>
+                        {t("shareReceive.title")}
+                    </AlertDialogTitle>
                     <AlertDialogDescription asChild>
                         <div>
                             <p className="sans">
-                                Please select the parts you want to receive.
+                                {t("shareReceive.description")}
                                 <br />
-                                They’ll replace the current content in your
-                                editor.
+                                {t("shareReceive.descriptionSub")}
                             </p>
                             <FieldGroup className="gap-1 mt-2">
                                 {Object.entries(table).map(([key, label]) => (
@@ -95,7 +99,9 @@ export function ShareReceiveDialog() {
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>
+                        {t("shareReceive.cancel")}
+                    </AlertDialogCancel>
                     <AlertDialogAction
                         onClick={() =>
                             fetchSharedCode(shareID!).then((res) => {
@@ -103,9 +109,12 @@ export function ShareReceiveDialog() {
                                     defaultStore.set(alertStore, (p) => [
                                         ...p,
                                         {
-                                            title: "Receive Failed",
-                                            description:
-                                                "An error occurred while receiving the shared code. Please try again later.",
+                                            title: t(
+                                                "shareReceive.receiveFailed",
+                                            ),
+                                            description: t(
+                                                "shareReceive.receiveFailedDesc",
+                                            ),
                                             variant: "destructive",
                                             id: crypto.randomUUID(),
                                         },
@@ -137,15 +146,16 @@ export function ShareReceiveDialog() {
                                 defaultStore.set(alertStore, (p) => [
                                     ...p,
                                     {
-                                        title: "Receive Successful",
-                                        description:
-                                            "The shared code has been received and applied to your editor.",
+                                        title: t("shareReceive.receiveSuccess"),
+                                        description: t(
+                                            "shareReceive.receiveSuccessDesc",
+                                        ),
                                         id: crypto.randomUUID(),
                                     },
                                 ]);
                             })
                         }>
-                        Receive
+                        {t("shareReceive.receive")}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
