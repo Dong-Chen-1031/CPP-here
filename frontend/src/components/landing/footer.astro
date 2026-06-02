@@ -3,11 +3,18 @@ import { CodeIcon } from "@lucide/astro";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import config from "@/config/constants";
 
+interface Props {
+    lang?: string;
+    t?: Record<string, any>;
+}
+
+const { t } = Astro.props as Props;
+
 const links = [
-    { label: "Editor", href: config.editorLink },
-    { label: "GitHub", href: config.githubLink, external: true },
+    { label: t?.editor, href: config.editorLink },
+    { label: t?.github, href: config.githubLink, external: true },
     {
-        label: "Status",
+        label: t?.status,
         href: `https://status.doong.me/status/cpp-here`,
         external: true,
     },
@@ -27,7 +34,7 @@ const links = [
                 class="hover:text-foreground transition-colors"
                 href={`${config.githubLink}/blob/main/LICENSE.txt`}
                 target="_blank"
-                rel="noopener noreferrer">MIT Licensed</a
+                rel="noopener noreferrer">{t?.mitLicensed}</a
             >
         </div>
 
@@ -52,7 +59,7 @@ const links = [
                 rel="noopener noreferrer"
                 class="hover:text-foreground transition-colors flex items-center gap-1.5">
                 <SiGithub className="size-4" />
-                <span>Dong-Chen-1031</span>
+                <span>{t?.author}</span>
             </a>
         </div>
     </div>
@@ -80,6 +87,9 @@ const links = [
             }
         </nav>
 
-        <p>© {new Date().getFullYear()} Dong-Chen-1031 · MIT Licensed</p>
+        <p>
+            © {new Date().getFullYear()}
+            {t?.author} · {t?.mitLicensed}
+        </p>
     </div>
 </footer>

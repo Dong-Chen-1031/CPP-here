@@ -3,6 +3,13 @@ import { ZapIcon, FileTextIcon, DatabaseIcon, ClockIcon } from "@lucide/astro";
 import Hr from "@/components/landing/hr.astro";
 import config from "@/config/constants";
 
+interface Props {
+    lang?: string;
+    t?: Record<string, any>;
+}
+
+const { t } = Astro.props as Props;
+
 interface StatusResponse {
     total_count: number;
     total_lines: number;
@@ -72,26 +79,34 @@ const stats = [
     {
         icon: ZapIcon,
         value: formatCount(apiData?.total_count),
-        label: "Compilations",
-        desc: "C++ programs compiled and executed directly in the browser.",
+        label: t?.compilations,
+        desc:
+            t?.compilationsDescription ||
+            "C++ programs compiled and executed directly in the browser.",
     },
     {
         icon: FileTextIcon,
         value: formatLines(apiData?.total_lines),
-        label: "Lines Compiled",
-        desc: "Lines of C++ code processed through the WebAssembly pipeline.",
+        label: t?.linesCompiled,
+        desc:
+            t?.lineCompiledDescription ||
+            "Lines of C++ code processed through the WebAssembly pipeline.",
     },
     {
         icon: DatabaseIcon,
         value: formatBytes(apiData?.total_wasm_size_bytes),
-        label: "Wasm Compiled",
-        desc: "Total size of source code submitted and compiled by users.",
+        label: t?.wasmCompiled,
+        desc:
+            t?.wasmCompiledDescription ||
+            "Total size of source code submitted and compiled by users.",
     },
     {
         icon: ClockIcon,
         value: formatDuration(apiData?.total_duration_seconds),
-        label: "Total Time Compiled",
-        desc: "Cumulative CPU time spent compiling across all users.",
+        label: t?.totalTimeCompiled,
+        desc:
+            t?.totalTimeCompiledDescription ||
+            "Cumulative CPU time spent compiling across all users.",
     },
 ];
 ---

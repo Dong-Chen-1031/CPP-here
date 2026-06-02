@@ -15,53 +15,48 @@ import { SiGithub } from "@icons-pack/react-simple-icons";
 import config from "@/config/constants";
 import Hr from "@/components/landing/hr.astro";
 
-const features = [
-    {
-        icon: BinaryIcon,
-        title: "C++ to WebAssembly",
-        desc: "Compiles C++ code into WebAssembly and executes them directly in the browser — fast, no resource limitations.",
-    },
-    {
-        icon: CircleAlertIcon,
-        title: "Error Highlighting",
-        desc: "Compiler errors are parsed and pinned to the exact line they occur — clear, actionable diagnostics without the noise.",
-    },
-    {
-        icon: FlaskConicalIcon,
-        title: "Built-in Test Cases",
-        desc: "Define, run, and compare multiple test cases side-by-side. Designed for the way competitive programmers actually work.",
-    },
-    {
-        icon: SparklesIcon,
-        title: "Code Formatting",
-        desc: "Clang-format integrated. One shortcut to keep your style consistent — with support for multiple code style presets.",
-    },
-    {
-        icon: LanguagesIcon,
-        title: "i18n Ready",
-        desc: "First-class support for English and Traditional Chinese, with more languages on the way. You can help translate on <a href='https://crowdin.com/project/cpp-here' class='underline hover:text-foreground transition' target='_blank' rel='noopener noreferrer'>Crowdin</a>!",
-    },
-    {
-        icon: WandSparklesIcon,
-        title: "Smart Autocomplete",
-        desc: "Context-aware suggestions for STL containers, algorithms, and your own symbols — write C++ faster without leaving the flow.",
-    },
-    {
-        icon: MonitorSmartphoneIcon,
-        title: "Any Screen, Any Device",
-        desc: "The interface adapts seamlessly to any screen size. Works on any screen, any device. Code comfortably wherever you are.",
-    },
-    {
-        icon: ShieldHalfIcon,
-        title: "Secured by Design",
-        desc: "Cloudflare Turnstile blocks bots. Every compilation runs in an isolated, single-use Docker container — secure by default.",
-    },
-    {
-        icon: Share2Icon,
-        title: "Share in One Click",
-        desc: "Share your code, test cases, input, and results with a single link — instantly, no setup required.",
-    },
+interface Props {
+    lang?: string;
+    t?: Record<string, any>;
+}
+
+interface Feature {
+    icon: any;
+    title: string;
+    desc: string;
+}
+
+interface TranslatedFeature {
+    title: string;
+    description: string;
+}
+
+const { t } = Astro.props as Props;
+
+// Define icons and keys for all features
+const featureIcons = [
+    BinaryIcon,
+    CircleAlertIcon,
+    FlaskConicalIcon,
+    SparklesIcon,
+    LanguagesIcon,
+    WandSparklesIcon,
+    MonitorSmartphoneIcon,
+    ShieldHalfIcon,
+    Share2Icon,
 ];
+
+// Get translated list or use default English titles/descriptions
+const translatedList: TranslatedFeature[] = t?.list;
+
+// Merge icons with translated content
+const features: Feature[] = translatedList.map(
+    (item: TranslatedFeature, index: number) => ({
+        icon: featureIcons[index],
+        title: item.title,
+        desc: item.description,
+    }),
+);
 ---
 
 <section class="relative w-full px-6 md:px-20 py-24">
@@ -73,12 +68,14 @@ const features = [
         </p>
         <h2
             class="text-[min(3rem,7vw)] leading-[1.05] font-bold tracking-tighter text-balance">
-            Everything you need.<br />
-            <span class="text-muted-foreground">Nothing you don't.</span>
+            {t?.heading}<br />
+            <span class="text-muted-foreground">{t?.subheading}</span>
         </h2>
         <p class="text-muted-foreground mt-5 md:text-lg text-balance px-2">
-            A focused toolkit that turns the browser into a powerful C++
-            workspace.
+            {
+                t?.description ||
+                    "A focused toolkit that turns the browser into a powerful C++ workspace."
+            }
         </p>
     </div>
 
@@ -120,16 +117,19 @@ const features = [
             </div>
             <div>
                 <h3 class="text-lg font-semibold tracking-tight">
-                    Open-source & free
+                    {t?.openSourceLabel}
                 </h3>
                 <p class="text-sm text-muted-foreground mt-0.5">
-                    Audit it, fork it, ship it. MIT licensed.
+                    {
+                        t?.openSourceDescription ||
+                            "Audit it, fork it, ship it. MIT licensed."
+                    }
                 </p>
             </div>
         </div>
         <span
             class="text-sm text-muted-foreground group-hover:text-foreground transition-colors whitespace-nowrap hidden sm:inline">
-            Star on GitHub →
+            {t?.starGithub}
         </span>
     </a>
 

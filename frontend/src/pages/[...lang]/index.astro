@@ -9,13 +9,12 @@ import Stats from "@/components/landing/stats.astro";
 import CTA from "@/components/landing/CTA.astro";
 import Footer from "@/components/landing/footer.astro";
 
-import { getStaticLangPaths } from "@/lib/langList";
+import { getStaticLangPaths, getTranslation } from "@/lib/langList";
 
 export { getStaticLangPaths as getStaticPaths };
 
 const { lang } = Astro.params;
-
-// console.log("Language parameter:", lang);
+const t = getTranslation(lang, "landing");
 ---
 
 <!--
@@ -80,12 +79,12 @@ const { lang } = Astro.params;
         }
     </style>
     <div class="mono tracking-tight">
-        <Header />
-        <Hero />
-        <Features />
-        <Extension />
-        <Stats />
-        <CTA />
-        <Footer />
+        <Header lang={lang} t={t.header} />
+        <Hero lang={lang} t={t.hero} />
+        <Features lang={lang} t={t.features} />
+        <Extension lang={lang} t={t.extension} />
+        <Stats lang={lang} t={t.stats} />
+        <CTA lang={lang} t={t.cta} />
+        <Footer lang={lang} t={t.footer} />
     </div>
 </Layout>
