@@ -12,7 +12,8 @@ import config from "@/config/constants";
         class="pointer-events-none absolute inset-0 opacity-100 -z-10
                     bg-[linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)]
                     bg-size-[64px_64px]
-                    mask-[radial-gradient(ellipse_80%_600px_at_center_top,black_20%,transparent_100%)]">
+                    mask-[radial-gradient(ellipse_80%_600px_at_center_top,black_20%,transparent_100%)]"
+    >
     </div>
     <!-- <div
                 class="rounded-full px-3 py-1 flex justify-center items-center bg-accent/40 border-border border mt-25">
@@ -23,12 +24,14 @@ import config from "@/config/constants";
             </div> -->
     <div class="mt-40">
         <p
-            class="text-[min(4.5rem,7vw)] leading-none font-bold text-balance text-center tracking-tighter">
+            class="text-[min(4.5rem,7vw)] leading-none font-bold text-balance text-center tracking-tighter"
+        >
             Next-generation <br />online C++ editor.
         </p>
         <p
-            class="text-muted-foreground text-center mt-5 md:text-lg text-balance px-5">
-            An open-source, lightweight yet powerful C++ editor built for
+            class="text-muted-foreground text-center mt-5 md:text-lg text-balance px-5"
+        >
+            An open-source, lightweight yet powerful online C++ editor built for
             competitive programming
         </p>
     </div>
@@ -36,7 +39,8 @@ import config from "@/config/constants";
         <a href={config.editorLink}>
             <Button
                 className="hover:bg-primary/80 transition ml-3 "
-                size={"xl"}>
+                size={"xl"}
+            >
                 <PlayIcon class="size-4" />
                 <p>Start Coding</p>
             </Button>
@@ -45,7 +49,8 @@ import config from "@/config/constants";
             <Button
                 className="hover:bg-primary/80 "
                 variant={"outline"}
-                size="xl">
+                size="xl"
+            >
                 <SiGithub className="size-4" />
                 <p class="ml-1">Star on Github</p>
             </Button>

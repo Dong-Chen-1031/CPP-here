@@ -6,6 +6,9 @@ import {
     SparklesIcon,
     LanguagesIcon,
     WandSparklesIcon,
+    MonitorSmartphoneIcon,
+    ShieldHalfIcon,
+    Share2Icon,
 } from "@lucide/astro";
 
 import { SiGithub } from "@icons-pack/react-simple-icons";
@@ -43,6 +46,21 @@ const features = [
         title: "Smart Autocomplete",
         desc: "Context-aware suggestions for STL containers, algorithms, and your own symbols — write C++ faster without leaving the flow.",
     },
+    {
+        icon: MonitorSmartphoneIcon,
+        title: "Any Screen. Any Device.",
+        desc: "The interface adapts seamlessly to any screen size. Works on any screen, any device. Code comfortably wherever you are.",
+    },
+    {
+        icon: ShieldHalfIcon,
+        title: "Secured by Design",
+        desc: "Cloudflare Turnstile blocks bots. Every compilation runs in an isolated, single-use Docker container — secure by default.",
+    },
+    {
+        icon: Share2Icon,
+        title: "Share in One Click",
+        desc: "Share your code, test cases, input, and results with a single link — instantly, no setup required.",
+    },
 ];
 ---
 
@@ -50,11 +68,13 @@ const features = [
     <Hr />
     <div class="max-w-2xl mx-auto text-center mb-16">
         <p
-            class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
+            class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4"
+        >
             <span class="mr-1 tracking-widest">//</span>features
         </p>
         <h2
-            class="text-[min(3rem,7vw)] leading-[1.05] font-bold tracking-tighter text-balance">
+            class="text-[min(3rem,7vw)] leading-[1.05] font-bold tracking-tighter text-balance"
+        >
             Everything you need.<br />
             <span class="text-muted-foreground">Nothing you don't.</span>
         </h2>
@@ -65,7 +85,8 @@ const features = [
     </div>
 
     <div
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-foreground/10 border border-foreground/10 rounded-xl overflow-hidden">
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-foreground/10 border border-foreground/10 rounded-xl overflow-hidden"
+    >
         {
             features.map(({ icon: Icon, title, desc }) => (
                 <div class="feature-card group relative bg-background p-8">
@@ -80,7 +101,8 @@ const features = [
                         </div>
                         <p
                             class="text-sm leading-relaxed text-muted-foreground"
-                            set:html={desc}>
+                            set:html={desc}
+                        >
                             {/* This is a bit dangerous, but I think it's safe in this context */}
                         </p>
                     </div>
@@ -94,10 +116,12 @@ const features = [
         href={config.githubLink}
         target="_blank"
         rel="noopener noreferrer"
-        class="mt-6 flex items-center justify-between gap-4 p-6 md:p-8 border border-foreground/20 rounded-xl hover:bg-foreground/4 hover:border-foreground/25 transition-all duration-300 group">
+        class="mt-6 flex items-center justify-between gap-4 p-6 md:p-8 border border-foreground/20 rounded-xl hover:bg-foreground/4 hover:border-foreground/25 transition-all duration-300 group"
+    >
         <div class="flex items-center gap-4 md:gap-5">
             <div
-                class="flex items-center justify-center shrink-0 size-10 rounded-md border border-foreground/20 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-colors">
+                class="flex items-center justify-center shrink-0 size-10 rounded-md border border-foreground/20 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-colors"
+            >
                 <SiGithub className="size-5 text-foreground/80" />
             </div>
             <div>
@@ -110,7 +134,8 @@ const features = [
             </div>
         </div>
         <span
-            class="text-sm text-muted-foreground group-hover:text-foreground transition-colors whitespace-nowrap hidden sm:inline">
+            class="text-sm text-muted-foreground group-hover:text-foreground transition-colors whitespace-nowrap hidden sm:inline"
+        >
             Star on GitHub →
         </span>
     </a>
