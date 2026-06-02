@@ -5,13 +5,15 @@ interface Props {
     title?: string;
     description?: string;
     ogImage?: string;
+    ogImageAlt?: string;
     noindex?: boolean;
 }
 
 const {
     title = "C++ Here - Next-generation online C++ editor.",
     description = "An open-source, lightweight yet powerful online C++ editor built for competitive programming. Compile C++ to WebAssembly, run test cases, and format code — all in your browser.",
-    ogImage = "/web-app-manifest-512x512.png",
+    ogImage = "/og-image.png",
+    ogImageAlt = "C++ Here — next-generation online C++ editor for competitive programming",
     noindex = false,
 } = Astro.props;
 
@@ -59,14 +61,18 @@ const ogImageURL = ogImage.startsWith("http")
         <link rel="canonical" href={canonicalURL} />
         {noindex && <meta name="robots" content="noindex,nofollow" />}
 
+        <!-- Discord / Social theme color -->
+        <meta name="theme-color" content="#0A0A0A" />
+
         <!-- Open Graph -->
         <meta property="og:type" content="website" />
         <meta property="og:url" content={canonicalURL} />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:image" content={ogImageURL} />
-        <meta property="og:image:width" content="512" />
-        <meta property="og:image:height" content="512" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content={ogImageAlt} />
         <meta property="og:site_name" content="C++ Here" />
         <meta property="og:locale" content="en_US" />
 
@@ -75,6 +81,7 @@ const ogImageURL = ogImage.startsWith("http")
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={ogImageURL} />
+        <meta name="twitter:image:alt" content={ogImageAlt} />
 
         <link
             href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@100..700&family=JetBrains+Mono:wght@100..800&family=Noto+Sans+TC:wght@100..900&display=swap"
@@ -143,6 +150,8 @@ const ogImageURL = ogImage.startsWith("http")
     </script> -->
     </head>
     <body>
-        <slot />
+        <main>
+            <slot />
+        </main>
     </body>
 </html>
