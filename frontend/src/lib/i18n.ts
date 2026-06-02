@@ -7,42 +7,41 @@ import enEditor from "../../../i18n/en/editor.json";
 import twCommon from "../../../i18n/zh-TW/common.json";
 import twEditor from "../../../i18n/zh-TW/editor.json";
 
-i18n
-  .use(Backend)
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .init({
-    fallbackLng: "en",
-    supportedLngs: ["en", "zh-TW"],
+i18n.use(Backend)
+    .use(LanguageDetector)
+    .use(initReactI18next)
+    .init({
+        fallbackLng: "en",
+        supportedLngs: ["en", "zh-TW"],
 
-    ns: ["common", "editor"],
-    defaultNS: "common",
+        ns: ["common", "editor"],
+        defaultNS: "common",
 
-    detection: {
-      order: ["localStorage", "navigator"],
-      caches: ["localStorage"],
-    },
+        detection: {
+            order: ["localStorage", "navigator"],
+            caches: ["localStorage"],
+        },
 
-    resources: {
-      en: {
-        common: enCommon,
-        editor: enEditor,
-      },
-      "zh-TW": {
-        common: twCommon,
-        editor: twEditor,
-      },
-    },
+        resources: {
+            en: {
+                common: enCommon,
+                editor: enEditor,
+            },
+            "zh-TW": {
+                common: twCommon,
+                editor: twEditor,
+            },
+        },
 
-    partialBundledLanguages: true,
+        partialBundledLanguages: true,
 
-    backend: {
-      loadPath: "../i18n/{{lng}}/{{ns}}.json",
-    },
+        backend: {
+            loadPath: "../i18n/{{lng}}/{{ns}}.json",
+        },
 
-    interpolation: {
-      escapeValue: false,
-    },
-  });
+        interpolation: {
+            escapeValue: false,
+        },
+    });
 
 export default i18n;

@@ -8,20 +8,28 @@ import Extension from "@/components/landing/extension.astro";
 import Stats from "@/components/landing/stats.astro";
 import CTA from "@/components/landing/CTA.astro";
 import Footer from "@/components/landing/footer.astro";
+
+import { getStaticLangPaths } from "@/lib/langList";
+
+export { getStaticLangPaths as getStaticPaths };
+
+const { lang } = Astro.params;
+
+// console.log("Language parameter:", lang);
 ---
 
-<!-- 
+<!--
 1. header v
 2. hero v
 3. features v
-    (1) C++ to WebAssembly
-    (2) error hinting
-    (3) test case
-    (4) code formatting
+    (1) C++ to WebAssembly V
+    (2) error highlighting V
+    (3) test case V
+    (4) code formatting V
     (5) i18n V
-    (6) built for competitive programming
-    (7) open-source and free to use
-    (8) TODO: RWD support
+    (6) built for competitive programming V
+    (7) open-source and free to use V
+    (8) RWD support V
 4. extensions V
 5. data V
 6. CAT V

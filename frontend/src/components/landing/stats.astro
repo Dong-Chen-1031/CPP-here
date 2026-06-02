@@ -49,21 +49,23 @@ function formatDuration(seconds: number | undefined): string {
 }
 
 let apiData: StatusResponse | null = null;
-try {
-    const res = await fetch(`${config.buildTimeAPIEndpoint}/status`);
-    if (res.ok) apiData = await res.json();
+if (!config.skipApiFetch) {
+    try {
+        const res = await fetch(`${config.buildTimeAPIEndpoint}/status`);
+        if (res.ok) apiData = await res.json();
 
-    if (!apiData) {
-        console.error("API data is null");
-        throw new Error("Failed to load stats data");
+        if (!apiData) {
+            console.error("API data is null");
+            throw new Error("Failed to load stats data");
+        }
+    } catch (error) {
+        if (config.run_mode === "development") {
+            console.warn(
+                `Failed to fetch stats from API: ${error}\nSkipping API fetch in development mode.`,
+            );
+            apiData = null;
+        } else throw new Error(`Failed to fetch stats from API: ${error}`);
     }
-} catch (error) {
-    if (config.run_mode === "development" || config.skipApiFetch) {
-        console.warn(
-            `Failed to fetch stats from API: ${error}\nSkipping API fetch in development mode or due to configuration.`,
-        );
-        apiData = null;
-    } else throw new Error(`Failed to fetch stats from API: ${error}`);
 }
 
 const stats = [

@@ -1,17 +1,21 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import Header from "../components/header.astro";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/header.astro";
 
 import { SplitViewEditor } from "@/layouts/Resize";
 import { GlobalPanelDrawer } from "@/components/Drawer";
 import TurnstileWidget from "@/components/turnstile";
 import { AlertDialogGood, Alerts } from "@/components/Alert";
 import { Settings } from "@/components/Settings";
-import { getLanguages } from "@/lib/langList";
+import { getLanguages, getLanguageCodes } from "@/lib/langList";
 import TestEditDialog from "@/components/panel/TestEditDialog";
 import { ShareReceiveDialog } from "@/components/share";
+import { getStaticLangPaths } from "@/lib/langList";
 
 const allLangs = getLanguages();
+
+export { getStaticLangPaths as getStaticPaths };
+
 const lsVersion = {
     code: "1",
     cppVersion: "1",
