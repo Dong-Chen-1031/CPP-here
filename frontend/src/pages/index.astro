@@ -27,12 +27,43 @@ import Footer from "@/components/landing/footer.astro";
 6. CAT V
 7. footer V
 -->
-<Layout>
+<Layout
+    title="C++ Here - Next-generation online C++ editor."
+    description="An open-source, lightweight yet powerful online C++ editor built for competitive programming. Compile C++ to WebAssembly, run test cases, and format code — all in your browser.">
     <meta
         slot="head"
         name="viewport"
         content="width=device-width, initial-scale=1.0"
     />
+    <script slot="head" type="application/ld+json" is:inline>
+        {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "C++ Here",
+            "url": "https://cpp.doong.me",
+            "description": "An open-source, lightweight yet powerful online C++ editor built for competitive programming.",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Web Browser",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            },
+            "featureList": [
+                "C++ to WebAssembly compilation",
+                "Error highlighting",
+                "Built-in test cases",
+                "Code formatting with Clang-format",
+                "i18n support",
+                "Smart autocomplete",
+                "Responsive design — works on any screen and device",
+                "Secured by Cloudflare Turnstile and isolated Docker containers",
+                "One-click code sharing"
+            ],
+            "codeRepository": "https://github.com/Dong-Chen-1031/CPP-here",
+            "license": "https://github.com/Dong-Chen-1031/CPP-here/blob/main/LICENSE.txt"
+        }
+    </script>
     <style>
         html,
         body {

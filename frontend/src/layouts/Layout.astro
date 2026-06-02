@@ -1,9 +1,29 @@
 ---
 import "@/styles/global.css";
+
+interface Props {
+    title?: string;
+    description?: string;
+    ogImage?: string;
+    noindex?: boolean;
+}
+
+const {
+    title = "C++ Here - Next-generation online C++ editor.",
+    description = "An open-source, lightweight yet powerful online C++ editor built for competitive programming. Compile C++ to WebAssembly, run test cases, and format code — all in your browser.",
+    ogImage = "/web-app-manifest-512x512.png",
+    noindex = false,
+} = Astro.props;
+
+const siteUrl = "https://cpp.doong.me";
+const canonicalURL = new URL(Astro.url.pathname, siteUrl).href;
+const ogImageURL = ogImage.startsWith("http")
+    ? ogImage
+    : `${siteUrl}${ogImage}`;
 ---
 
 <!doctype html>
-<html class="neutral dark bg-background text-foreground">
+<html class="neutral dark bg-background text-foreground" lang="en">
     <head>
         <link
             rel="preconnect"
@@ -33,6 +53,29 @@ import "@/styles/global.css";
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="generator" content={Astro.generator} />
 
+        <!-- Primary SEO -->
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={canonicalURL} />
+        {noindex && <meta name="robots" content="noindex,nofollow" />}
+
+        <!-- Open Graph -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonicalURL} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content={ogImageURL} />
+        <meta property="og:image:width" content="512" />
+        <meta property="og:image:height" content="512" />
+        <meta property="og:site_name" content="C++ Here" />
+        <meta property="og:locale" content="en_US" />
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={ogImageURL} />
+
         <link
             href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@100..700&family=JetBrains+Mono:wght@100..800&family=Noto+Sans+TC:wght@100..900&display=swap"
             rel="stylesheet"
@@ -45,8 +88,6 @@ import "@/styles/global.css";
             href="https://font.emtech.cc/css/GlowSansTC/700"
             rel="stylesheet"
         /> -->
-
-        <title>C++ Here - Next-generation online C++ editor.</title>
 
         <!-- Google tag (gtag.js) -->
         <script
