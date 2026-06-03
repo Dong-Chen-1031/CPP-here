@@ -14,7 +14,9 @@ import { getStaticLangPaths, getTranslation } from "@/lib/langList";
 export { getStaticLangPaths as getStaticPaths };
 
 const { lang } = Astro.params;
-const t = getTranslation(lang, "landing");
+
+const t = getTranslation(lang);
+// console.log(t);
 ---
 
 <!--

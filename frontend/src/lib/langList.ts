@@ -8,31 +8,6 @@ import twCommon from "../../../i18n/zh-TW/common.json";
 import twEditor from "../../../i18n/zh-TW/editor.json";
 import twLanding from "../../../i18n/zh-TW/landing.json";
 
-// Initialize i18next for SSR
-if (!i18next.isInitialized) {
-    i18next.init({
-        fallbackLng: "en",
-        supportedLngs: ["en", "zh-TW"],
-        ns: ["common", "editor", "landing"],
-        defaultNS: "common",
-        resources: {
-            en: {
-                common: enCommon,
-                editor: enEditor,
-                landing: enLanding,
-            },
-            "zh-TW": {
-                common: twCommon,
-                editor: twEditor,
-                landing: twLanding,
-            },
-        },
-        interpolation: {
-            escapeValue: false,
-        },
-    });
-}
-
 export function getLanguageCodes(): readonly string[] {
     const i18nDir = path.resolve("./public/i18n");
 
@@ -54,16 +29,16 @@ export function getLanguages(): Record<string, string> {
 }
 
 export function getStaticLangPaths() {
-    return getLanguageCodes()
-        .map((lang) => ({ params: { lang: lang.toLowerCase() } }))
-        .concat([{ params: { lang: undefined as any } }]);
+    // return getLanguageCodes()
+    //     .map((lang) => ({ params: { lang: lang.toLowerCase() } }))
+    //     .concat([{ params: { lang: undefined as any } }]);
+    return [
+        { params: { lang: undefined } },
+        { params: { lang: "en" } },
+        { params: { lang: "zh-tw" } },
+    ];
 }
 
-export function getTranslation(
-    lang: string | undefined,
-    namespace: string = "common",
-): Record<string, any> {
-    const langCode =
-        lang?.toUpperCase() === "ZH-TW" || lang === "zh-TW" ? "zh-TW" : "en";
-    return i18next.getResourceBundle(langCode, namespace) || {};
+export function getTranslation(lang: string) {
+    return lang === "zh-tw" ? twLanding : enLanding;
 }
