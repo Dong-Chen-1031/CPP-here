@@ -1,3 +1,7 @@
+if __name__ == "__main__":
+    from utils.logo import print_logo
+
+    print_logo()
 import router
 import router.api
 import router.build
@@ -46,6 +50,13 @@ app.add_middleware(
 app.include_router(router.build.router)
 app.include_router(router.verify.router)
 app.include_router(router.api.router)
+
+
+if settings.SHARE:
+    import router.share
+
+    app.include_router(router.share.router)
+    logger.info("Share feature is enabled")
 
 
 @app.get("/")

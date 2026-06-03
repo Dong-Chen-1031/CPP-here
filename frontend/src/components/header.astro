@@ -7,8 +7,12 @@ import HeaderActions, {
 ---
 
 <div class="w-full h-13 flex items-center px-2 md:px-4 shrink-0">
-    <CodeIcon class="w-5 h-5 mr-2 md:w-6 md:h-6 shrink-0" />
-    <h1 class="text-[min(1.25rem,3.5vw)] pr-2 font-bold shrink-0">C++ Here</h1>
+    <a href="/" class="flex items-center">
+        <CodeIcon class="w-5 h-5 mr-2 md:w-6 md:h-6 shrink-0" />
+        <h1 class="text-[min(1.25rem,3.5vw)] pr-2 font-bold shrink-0">
+            C++ Here
+        </h1>
+    </a>
     <GithubLink className="hidden md:flex" size={"xs"} client:load />
     <div class="flex-1 min-w-0"></div>
 

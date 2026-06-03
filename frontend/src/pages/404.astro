@@ -1,0 +1,15 @@
+---
+import Layout from "@/layouts/Layout.astro";
+---
+
+<Layout title="404 - C++ Here" noindex={true}>
+    <meta
+        slot="head"
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
+    <meta http-equiv="refresh" content="0;url=/" />
+    <script is:inline>
+        window.location.replace("/");
+    </script>
+</Layout>

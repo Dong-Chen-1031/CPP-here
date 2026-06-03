@@ -1,0 +1,59 @@
+services:
+  backend:
+    image: ghcr.io/dong-chen-1031/cpp-here/backend:latest
+    environment:
+      - HOST_CACHE_PATH=${PWD}/cache
+      # this env tell the backend the cache path on the host machine. 
+      # So when it starts sub containers for wasm builds, it can mount the same cache path to speed up builds and share cache between host and containers.
+
+      - DEV=false
+        # set to false for production deployment, true for local development
+        # If DEV is false, it will stop auto reloading and turn off api docs.
+        # Default: false
+
+      - PORT=8000
+        # Port for the backend server to listen on. 
+        # Default: 8000
+
+      - FRONTEND_URL=http://localhost:4321
+        # Frontend URL for CORS configuration. 
+        # Default: "http://localhost:4321"
+
+      - BACKEND_URL=http://localhost:8000
+        # Backend URL for the frontend to fetch data from.
+        # Default: "http://localhost:8000"
+
+      - TURNSTILE_SECRET=1x0000000000000000000000000000000AA
+        # Cloudflare Turnstile secret key for CAPTCHA verification.
+        # Get a real secret key from Cloudflare Turnstile dashboard for production use.
+        # Default: "1x0000000000000000000000000000000AA" (Always valid for development).
+
+      - JWT_SECRET=
+        # A secure random string used for signing JWT tokens.
+        # In production, make sure to set this to a strong, unique value and keep it secret.
+        # Default: not set (auto generated at runtime if not provided, but it's recommended to set it explicitly in production).
+
+      - COLUMNS=160
+        # how wide your terminal is.
+        # This is used to format the output of the backend server logs to prevent line breaks in the middle of log lines when running in Docker Compose.
+        
+
+    # or use .env to set environment variables:
+    # env_file: .env
+
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
+    volumes:
+      - ./cache:/app/cache
+      - ./logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount Docker socket for DinD (Docker-in-Docker) to allow backend to manage Docker containers for wasm builds.
+    
+    restart: unless-stopped
+
+  wasm-builder:
+    image: ghcr.io/dong-chen-1031/safe-cpp2wasm:latest
+    entrypoint: ["true"]
+    restart: "no"
+    # This service exists only to pre-pull the wasm builder image onto the host,
+    # so the backend can spawn it as a sub-container for wasm builds.

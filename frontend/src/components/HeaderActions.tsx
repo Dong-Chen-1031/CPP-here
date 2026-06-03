@@ -16,10 +16,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
     ChevronDownIcon,
-    CircleStopIcon,
+    ClipboardCheckIcon,
+    DownloadIcon,
     FormIcon,
     RotateCcw,
     SettingsIcon,
+    Share2Icon,
     SquareIcon,
     TestTubes,
 } from "lucide-react";
@@ -37,6 +39,7 @@ import {
 } from "@/components/ui/select";
 import { getDefaultStore, useAtom } from "jotai";
 import {
+    alertStore,
     codeStore,
     codeWorkersStore,
     cppVersionStore,
@@ -55,19 +58,15 @@ import { handleRun, handleRunAll } from "@/api/run";
 
 import Tip from "@/components/ui/tips";
 import { useResetEditorAtoms } from "@/store/atom";
-import {
-    cn,
-    commandKeyIcon,
-    optionsKeyIcon,
-    shiftKeyIcon,
-    useIsMobile,
-} from "@/lib/utils";
+import { cn, commandKeyIcon, optionsKeyIcon, shiftKeyIcon } from "@/lib/utils";
 import { Kbd } from "./ui/kbd";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect } from "react";
 import { Commands } from "./Commands";
 import { ensureFormatterInit, formatCode } from "@/lib/format";
 import config from "@/config/constants";
+import IconMotion from "./IconMotion";
+import { shareCode } from "@/api/share";
 
 export function UndoRedo({ menu = false }: { menu?: boolean }) {
     const [editorGlobal] = useAtom(editorRefStore);
@@ -448,6 +447,7 @@ export function FormatButton({
     const [code, setCode] = useAtom(codeStore);
     const { t } = useTranslation(["editor"]);
     const [formatting, setFormatting] = React.useState(false);
+    const [formatted, setFormatted] = React.useState(false);
 
     return (
         <ButtonGroup>
@@ -464,18 +464,140 @@ export function FormatButton({
                     variant="outline"
                     className={className}
                     onClick={(e) => {
-                        setFormatting(true);
+                        const toSetFormatting = setTimeout(() => {
+                            setFormatting(true);
+                        }, 80);
                         formatCode(code).then((formatted) => {
+                            clearTimeout(toSetFormatting);
                             setCode(formatted);
                             setFormatting(false);
+                            setFormatted(true);
+                            setTimeout(() => setFormatted(false), 1500);
                         });
                         onClick(e);
                     }}
                     onMouseEnter={() => {
                         ensureFormatterInit();
                     }}>
-                    {formatting ? <Spinner className="size-3" /> : <FormIcon />}
+                    <IconMotion
+                        show={formatted}
+                        HideIcon={formatting ? Spinner : FormIcon}
+                        className="size-3"
+                    />
+
                     {t("headerActions.formatCode")}
+                </Button>
+            </Tip>
+        </ButtonGroup>
+    );
+}
+
+export function ShareButton({
+    className = "",
+    onClick = () => {},
+}: {
+    className?: string;
+    onClick?: (e: React.MouseEvent) => void;
+}) {
+    const { t } = useTranslation(["editor"]);
+    const [sharing, setSharing] = React.useState(false);
+    const [shared, setShared] = React.useState(false);
+    const defaultStore = getDefaultStore();
+
+    return (
+        <ButtonGroup>
+            <Tip label={t("headerActions.shareCodeTip")}>
+                <Button
+                    variant="outline"
+                    // size={"icon-sm"}
+                    className={className}
+                    aria-label={t("headerActions.shareCodeTip")}
+                    onClick={(e) => {
+                        setSharing(true);
+                        shareCode().then(async (result) => {
+                            if (result.ok) {
+                                await navigator.clipboard.writeText(
+                                    `${window.location.origin}/editor?shareID=${result.shareId as string}`,
+                                );
+                                defaultStore.set(alertStore, (p) => [
+                                    ...p,
+                                    {
+                                        title: "Share Successful",
+                                        description:
+                                            "Share URL has been copied to clipboard. You can share it with others now!",
+                                        id: crypto.randomUUID(),
+                                    },
+                                ]);
+                            } else {
+                                console.error(
+                                    "Failed to share code:",
+                                    result.errors,
+                                );
+                                defaultStore.set(alertStore, (p) => [
+                                    ...p,
+                                    {
+                                        title: "Share Failed",
+                                        description:
+                                            "An error occurred while sharing your code. Please try again later.",
+                                        variant: "destructive",
+                                        id: crypto.randomUUID(),
+                                    },
+                                ]);
+                                return;
+                            }
+                            setSharing(false);
+                            setShared(true);
+                            setTimeout(() => setShared(false), 1500);
+                        });
+                        onClick(e);
+                    }}>
+                    <IconMotion
+                        show={shared}
+                        HideIcon={sharing ? Spinner : Share2Icon}
+                        ShowIcon={ClipboardCheckIcon}
+                        className="size-3"
+                    />
+                    <span className="inline md:hidden lg:inline">
+                        {t("headerActions.shareCode")}
+                    </span>
+                </Button>
+            </Tip>
+        </ButtonGroup>
+    );
+}
+
+export function DownloadButton({
+    className = "",
+    onClick = () => {},
+}: {
+    className?: string;
+    onClick?: (e: React.MouseEvent) => void;
+}) {
+    const [code] = useAtom(codeStore);
+    const { t } = useTranslation(["editor"]);
+
+    return (
+        <ButtonGroup>
+            <Tip label={t("headerActions.downloadCodeTip")}>
+                <Button
+                    variant="outline"
+                    // size={"icon-sm"}
+                    className={className}
+                    aria-label={t("headerActions.downloadCodeTip")}
+                    onClick={(e) => {
+                        const blob = new Blob([code], { type: "text/plain" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "main.cpp";
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        onClick(e);
+                    }}>
+                    <DownloadIcon />
+                    <span className="inline md:hidden lg:inline">
+                        {t("headerActions.downloadCode")}
+                    </span>
                 </Button>
             </Tip>
         </ButtonGroup>
@@ -485,9 +607,11 @@ export function FormatButton({
 export function CppVersionSelect({
     onSelect,
     className = "",
+    size = "sm",
 }: {
     onSelect?: (version: string) => void;
     className?: string;
+    size?: typeof Button.prototype.props.size;
 }) {
     const [cppVersion, setCppVersion] = useAtom(cppVersionStore);
     const [cppVersionClient, setCppVersionClient] = React.useState("c++17");
@@ -504,7 +628,7 @@ export function CppVersionSelect({
             }}>
             <SelectTrigger
                 className={cn("w-full max-w-48", className)}
-                size="sm"
+                size={size}
                 aria-label="C++ Version">
                 <SelectValue placeholder="C++ Version" />
             </SelectTrigger>
@@ -538,8 +662,10 @@ export function SettingsButton({
                 onClick && onClick?.(e);
                 setSettingsOpen(true);
             }}>
-            <SettingsIcon className="mr-1" />
-            {t("headerActions.settings")}
+            <SettingsIcon />
+            <span className="inline md:hidden lg:inline">
+                {t("headerActions.settings")}
+            </span>
         </Button>
     );
 }
@@ -590,10 +716,12 @@ export default function HeaderActions() {
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}>
                         <UndoRedo />
-                        <FormatButton />
+                        <DownloadButton />
+                        {config.share && <ShareButton />}
                         <SettingsButton />
+                        <FormatButton />
                         <ResetButton />
-                        <CppVersionSelect />
+                        {/* <CppVersionSelect /> */}
                         <RunButton />
                     </motion.div>
                 )}

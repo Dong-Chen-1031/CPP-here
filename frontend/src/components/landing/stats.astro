@@ -3,6 +3,13 @@ import { ZapIcon, FileTextIcon, DatabaseIcon, ClockIcon } from "@lucide/astro";
 import Hr from "@/components/landing/hr.astro";
 import config from "@/config/constants";
 
+interface Props {
+    lang?: string;
+    t?: Record<string, any>;
+}
+
+const { t } = Astro.props as Props;
+
 interface StatusResponse {
     total_count: number;
     total_lines: number;
@@ -10,21 +17,24 @@ interface StatusResponse {
     total_duration_seconds: number;
 }
 
-function formatCount(n: number): string {
+function formatCount(n: number | undefined): string {
+    if (n === undefined) return "-";
     if (n >= 1_000_000)
         return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M+";
     if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K+";
     return String(n);
 }
 
-function formatLines(n: number): string {
+function formatLines(n: number | undefined): string {
+    if (n === undefined) return "-";
     if (n >= 1_000_000)
         return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M+";
     if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K+";
     return String(n);
 }
 
-function formatBytes(bytes: number): string {
+function formatBytes(bytes: number | undefined): string {
+    if (bytes === undefined) return "-";
     if (bytes >= 1_073_741_824)
         return (bytes / 1_073_741_824).toFixed(1).replace(/\.0$/, "") + " GB+";
     if (bytes >= 1_048_576)
@@ -34,7 +44,8 @@ function formatBytes(bytes: number): string {
     return bytes + " B";
 }
 
-function formatDuration(seconds: number): string {
+function formatDuration(seconds: number | undefined): string {
+    if (seconds === undefined) return "-";
     if (seconds >= 86_400)
         return (seconds / 86_400).toFixed(1).replace(/\.0$/, "") + " days+";
     if (seconds >= 3_600)
@@ -45,43 +56,57 @@ function formatDuration(seconds: number): string {
 }
 
 let apiData: StatusResponse | null = null;
-try {
-    const res = await fetch(`${config.api_endpoints}/status`);
-    if (res.ok) apiData = await res.json();
-} catch (error) {
-    if (config.run_mode !== "development")
-        throw new Error(`Failed to fetch stats from API: ${error}`);
-    console.error("Failed to fetch stats from API", error);
-}
-if (!apiData) {
-    console.error("API data is null");
-    throw new Error("Failed to load stats data");
+if (!config.skipApiFetch) {
+    try {
+        const res = await fetch(`${config.buildTimeAPIEndpoint}/status`);
+        if (res.ok) apiData = await res.json();
+
+        if (!apiData) {
+            console.error("API data is null");
+            throw new Error("Failed to load stats data");
+        }
+    } catch (error) {
+        if (config.run_mode === "development") {
+            console.warn(
+                `Failed to fetch stats from API: ${error}\nSkipping API fetch in development mode.`,
+            );
+            apiData = null;
+        } else throw new Error(`Failed to fetch stats from API: ${error}`);
+    }
 }
 
 const stats = [
     {
         icon: ZapIcon,
-        value: formatCount(apiData.total_count),
-        label: "Compilations",
-        desc: "C++ programs compiled and executed directly in the browser.",
+        value: formatCount(apiData?.total_count),
+        label: t?.compilations,
+        desc:
+            t?.compilationsDescription ||
+            "C++ programs compiled and executed directly in the browser.",
     },
     {
         icon: FileTextIcon,
-        value: formatLines(apiData.total_lines),
-        label: "Lines Compiled",
-        desc: "Lines of C++ code processed through the WebAssembly pipeline.",
+        value: formatLines(apiData?.total_lines),
+        label: t?.linesCompiled,
+        desc:
+            t?.lineCompiledDescription ||
+            "Lines of C++ code processed through the WebAssembly pipeline.",
     },
     {
         icon: DatabaseIcon,
-        value: formatBytes(apiData.total_wasm_size_bytes),
-        label: "Wasm Compiled",
-        desc: "Total size of source code submitted and compiled by users.",
+        value: formatBytes(apiData?.total_wasm_size_bytes),
+        label: t?.wasmCompiled,
+        desc:
+            t?.wasmCompiledDescription ||
+            "Total size of source code submitted and compiled by users.",
     },
     {
         icon: ClockIcon,
-        value: formatDuration(apiData.total_duration_seconds),
-        label: "Total Time Compiled",
-        desc: "Cumulative CPU time spent compiling across all users.",
+        value: formatDuration(apiData?.total_duration_seconds),
+        label: t?.totalTimeCompiled,
+        desc:
+            t?.totalTimeCompiledDescription ||
+            "Cumulative CPU time spent compiling across all users.",
     },
 ];
 ---
@@ -109,7 +134,7 @@ const stats = [
                         <div class="flex items-center justify-center size-10 rounded-md border border-foreground/15 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-all duration-300 mb-5">
                             <Icon class="size-5 text-foreground/80 group-hover:text-foreground transition-colors" />
                         </div>
-                        <p class="text-3xl md:text-4xl font-bold tracking-tighter tabular-nums">
+                        <p class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter tabular-nums">
                             {value}
                         </p>
                         <p class="text-sm font-semibold mt-2 tracking-tight">

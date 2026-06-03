@@ -7,7 +7,7 @@ const requestTimeoutInput = document.querySelector<HTMLInputElement>('#request-t
 const targetUrlInput = document.querySelector<HTMLInputElement>('#target-url');
 const debugModeInput = document.querySelector<HTMLInputElement>('#debug-mode');
 
-const DEFAULT_TARGET_URL = 'https://cpp.doong.me/*';
+const DEFAULT_TARGET_URL = 'https://cpp.doong.me/editor/*';
 
 function updateCustomRules(): void {
   const rows = customRulesContainer.querySelectorAll('.custom-rules-row');

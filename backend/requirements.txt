@@ -12,3 +12,4 @@ apscheduler
 asyncpg
 aiosqlite
 prometheus-fastapi-instrumentator
+boto3

@@ -1,0 +1,110 @@
+services:
+  backend:
+    image: ghcr.io/dong-chen-1031/cpp-here/backend:latest
+    environment:
+      - HOST_CACHE_PATH=${PWD}/cache
+        # this env tell the backend the cache path on the host machine. 
+        # So when it starts sub containers for wasm builds, it can mount the same cache path to speed up builds and share cache between host and containers.
+
+      - DEV=false
+        # set to false for production deployment, true for local development
+        # If DEV is false, it will stop auto reloading and turn off api docs.
+        # Default: false
+
+      - PORT=8000
+        # Port for the backend server to listen on. 
+        # Default: 8000
+
+      - FRONTEND_URL=http://localhost:4321
+        # Frontend URL for CORS configuration. 
+        # Default: "http://localhost:4321"
+
+      - BACKEND_URL=http://localhost:8000
+        # Backend URL for the frontend to fetch data from.
+        # Default: "http://localhost:8000"
+
+      - TURNSTILE_SECRET=1x0000000000000000000000000000000AA
+        # Cloudflare Turnstile secret key for CAPTCHA verification.
+        # Get a real secret key from Cloudflare Turnstile dashboard for production use.
+        # Default: "1x0000000000000000000000000000000AA" (Always valid for development).
+
+      - JWT_SECRET=
+        # A secure random string used for signing JWT tokens.
+        # In production, make sure to set this to a strong, unique value and keep it secret.
+        # Default: not set (auto generated at runtime if not provided, but it's recommended to set it explicitly in production).
+
+      - COLUMNS=160
+        # how wide your terminal is.
+        # This is used to format the output of the backend server logs to prevent line breaks in the middle of log lines when running in Docker Compose.
+        
+
+    # or use .env to set environment variables:
+    # env_file: .env
+
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
+    
+    networks:
+      - cpp-network
+
+    volumes:
+      - ./cache:/app/cache
+      - ./logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount Docker socket for DinD (Docker-in-Docker) to allow backend to manage Docker containers for wasm builds.
+    
+    restart: unless-stopped
+  
+  
+  frontend:
+    image: ghcr.io/dong-chen-1031/cpp-here/frontend:latest
+    environment:
+      - PUBLIC_CAPTCHA_SITE_KEY=1x00000000000000000000BB
+        # Cloudflare Turnstile site key for CAPTCHA verification.
+        # Get a real site key from Cloudflare Turnstile dashboard for production use.
+        # Default: "1x00000000000000000000BB" (Always valid for development).
+      
+
+      - PUBLIC_API_URL=http://127.0.0.1:8000
+        # Backend API URL to fetch data. In development, it points to the local backend server. 
+        # In production, it should point to the deployed backend API.
+        # Default: "http://127.0.0.1:8000".
+
+      - SKIP_API_FETCH=true
+        # Set to "true" to skip API fetches for landing page stats data at build time.
+        # If your backend is not ready, you can set this to "true" during development.
+        # Default: "true".
+
+      - PUBLIC_BUILD_TIME_API_URL=http://backend:8000
+        # Backend API URL to fetch data at build time. 
+        # If you are using docker, you need to set this to Docker internal host to allow the build process to fetch data from the backend container.
+        # Or you can just set SKIP_API_FETCH to "true" to skip API fetches during build time.
+        # Default: not set (falls back to PUBLIC_API_URL).
+
+      - CI=true
+        # Disables interactive/TTY output from Astro and bun to prevent duplicate log lines in Docker Compose.
+    
+    # or use .env to set environment variables:
+    # env_file: .env
+
+    ports:
+      - "${PORT:-4321}:${PORT:-4321}"
+    
+    restart: unless-stopped
+
+    networks:
+      - cpp-network
+
+    depends_on:
+      - backend
+  
+  wasm-builder:
+    image: ghcr.io/dong-chen-1031/safe-cpp2wasm:latest
+    entrypoint: ["true"]
+    restart: "no"
+    # This service exists only to pre-pull the wasm builder image onto the host,
+    # so the backend can spawn it as a sub-container for wasm builds.
+
+networks:
+  cpp-network:
+    driver: bridge

@@ -4,17 +4,20 @@
     "version": "0.0.1",
     "scripts": {
         "copy-i18n": "cp -r ./i18n ./frontend/public/",
-        "frontend": "bun copy-i18n && cd frontend && astro dev --host",
+        "copy-docker": "mkdir -p ./frontend/public/script && cp -r ./docker/* ./frontend/public/script",
+        "frontend": "bun copy-i18n && cd frontend && bun run logo && astro dev --host",
         "backend": "cd backend && python main.py",
-        "dev": "concurrently \"bun run frontend\" \"bun run backend\"",
-        "build": "bun copy-i18n && cd frontend && astro build",
-        "preview": "bun copy-i18n && cd frontend && astro preview",
-        "astro": "bun copy-i18n && cd frontend && astro",
+        "dev": "NO_LOGO=true concurrently \"bun run frontend\" \"bun run backend\"",
+        "build": "bun copy-i18n && bun copy-docker && bun run logo && cd frontend && astro build",
+        "preview": "bun copy-i18n && cd frontend && bun run logo && astro preview",
+        "astro": "bun copy-i18n && bun run logo && cd frontend && astro",
         "ext:chrome": "cd extensions && bun dev:chrome",
-        "ext:firefox": "cd extensions && bun dev:firefox"
+        "ext:firefox": "cd extensions && bun dev:firefox",
+        "logo": "bun run frontend/src/lib/printLogo.ts"
     },
     "dependencies": {
         "@astrojs/react": "^4.4.2",
+        "@astrojs/sitemap": "^3.7.3",
         "@base-ui/react": "^1.4.1",
         "@codemirror/autocomplete": "^6.20.2",
         "@codemirror/lang-cpp": "^6.0.3",

@@ -72,7 +72,7 @@
             },
             "alert": {
                 "title": "已收到新的測資",
-                "description": "測資 {{problemName}} 已收到。 已經加入至測資表。"
+                "description": "{{problemName}} 的測資已收到。 已經加入至測資表。"
             }
         }
     },
@@ -89,14 +89,14 @@
         "runAll": "全部運行",
         "resetEverything": "重置所有設定",
         "resetBtn": "重置",
-        "shareCode": "Share",
-        "shareCodeTip": "Share your code, input/output, and test cases with others",
+        "shareCode": "分享",
+        "shareCodeTip": "分享你的程式碼、輸入輸出、及測資給其他人",
         "settings": "設定",
         "formatCode": "格式化",
         "formatCodeTip": "格式化程式碼",
         "runOptions": "運行設定",
-        "downloadCode": "Download",
-        "downloadCodeTip": "Download as .cpp"
+        "downloadCode": "下載",
+        "downloadCodeTip": "下載為 .cpp"
     },
     "turnstile": {
         "verificationFailed": "驗證失敗",
@@ -128,18 +128,18 @@
         "loadingEditor": "正在載入編輯器"
     },
     "shareReceive": {
-        "title": "Receive Shared Code",
-        "description": "Please select the parts you want to receive.",
-        "descriptionSub": "They'll replace the current content in your editor.",
-        "code": "Code",
+        "title": "接收分享的程式碼",
+        "description": "請選擇你想接收的部分。",
+        "descriptionSub": "這些內容將會取代你編輯器中目前的內容。",
+        "code": "程式碼",
         "input": "輸入",
         "testCase": "測資",
         "output": "輸出",
         "cancel": "取消",
-        "receive": "Receive",
-        "receiveFailed": "Receive Failed",
-        "receiveFailedDesc": "An error occurred while receiving the shared code. Please try again later.",
-        "receiveSuccess": "Receive Successful",
-        "receiveSuccessDesc": "The shared code has been received and applied to your editor."
+        "receive": "接收",
+        "receiveFailed": "接收失敗",
+        "receiveFailedDesc": "接收分享程式碼時發生錯誤，請稍後再試。",
+        "receiveSuccess": "接收成功",
+        "receiveSuccessDesc": "已成功接收分享的程式碼並套用至你的編輯器。"
     }
 }

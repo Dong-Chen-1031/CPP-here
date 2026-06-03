@@ -1,3 +1,4 @@
+import asyncio
 from typing import AsyncContextManager
 
 import aiodocker
@@ -37,5 +38,14 @@ async def lifespan(app: FastAPI):
     await init_db()
     scheduler.start()
 
-    yield
-    await resource_manager.close_all()
+    from services.build import container_pool
+
+    await container_pool.startup()
+
+    try:
+        yield
+    except asyncio.CancelledError:
+        pass  # normal SIGINT shutdown — suppress so cleanup can run
+    finally:
+        await container_pool.shutdown()
+        await resource_manager.close_all()

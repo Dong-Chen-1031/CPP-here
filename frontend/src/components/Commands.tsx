@@ -15,11 +15,13 @@ import { KeyboardIcon, SquareTerminalIcon, TestTubes } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
     CppVersionSelect,
+    DownloadButton,
     FormatButton,
     GithubLink,
     ResetButton,
     RunButton,
     SettingsButton,
+    ShareButton,
     UndoRedo,
 } from "./HeaderActions";
 import { panelDrawerStore, type PanelDrawerView } from "@/store/atom";
@@ -45,8 +47,8 @@ export function Commands({ className = "" }: { className?: string }) {
                 {t("commands.menuBtn")}
             </Button>
             <CommandDialog open={open} onOpenChange={setOpen}>
-                <Command>
-                    <CommandList>
+                <Command className="max-h-100">
+                    <CommandList className="max-h-100">
                         <CommandEmpty>{t("commands.noResults")}</CommandEmpty>
                         <CommandGroup heading={t("commands.actionsGroup")}>
                             <CommandItem>
@@ -59,10 +61,17 @@ export function Commands({ className = "" }: { className?: string }) {
                             </CommandItem>
                             <CommandItem>
                                 <FormatButton onClick={() => setOpen(false)} />
+                                <DownloadButton
+                                    onClick={() => setOpen(false)}
+                                />
                                 <CppVersionSelect
                                     className="w-25"
                                     // onSelect={() => setOpen(false)}
                                 />
+                            </CommandItem>
+                            <CommandItem>
+                                <ShareButton onClick={() => setOpen(false)} />
+
                                 <RunButton
                                     onClick={() => {
                                         setOpen(false);

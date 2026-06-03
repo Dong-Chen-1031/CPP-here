@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /editor
+Disallow: /test
+Disallow: /test2
+
+Sitemap: https://cpp.doong.me/sitemap-index.xml

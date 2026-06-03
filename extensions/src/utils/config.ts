@@ -14,7 +14,7 @@ class Config {
     customRules: [],
     requestTimeout: 500,
     debugMode: false,
-    targetUrl: 'https://cpp.doong.me/*',
+    targetUrl: 'https://cpp.doong.me/editor/*',
   };
 
   public async get<T extends keyof ConfigItems>(key: T): Promise<ConfigItems[T]> {

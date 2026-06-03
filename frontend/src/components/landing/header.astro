@@ -3,6 +3,13 @@ import { Button } from "@/components/ui/button";
 import config from "@/config/constants";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import { CodeIcon } from "@lucide/astro";
+
+interface Props {
+    lang?: string;
+    t?: Record<string, string>;
+}
+
+const { t } = Astro.props as Props;
 ---
 
 <header
@@ -24,7 +31,7 @@ import { CodeIcon } from "@lucide/astro";
     </a>
     <a href={config.editorLink}>
         <Button className="hover:bg-primary/80 transition ml-3">
-            Open Editor
+            {t?.openEditor}
         </Button>
     </a>
 </header>

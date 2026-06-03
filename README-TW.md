@@ -1,60 +1,46 @@
 # C++ Here - Online C++ Editor
 
-> [!NOTE]
-> This readme also has a [English version](README.md).
-
-C++ Here 是一個輕量、快速的線上 C++ 執行與驗證平台。讓使用者可以在網頁端直接輸入、編譯並測試 C++ 程式碼。
+C++ Here 是一個新世代的線上 C++ 編輯器，專為競程而生。不但快速、輕量，功能也十分完整。
 
 > [!TIP]
 > 立即體驗: https://cpp.doong.me
 
 ![Screenshot](screenshot/image.png)
 
+> [!NOTE]
+> This readme also has a [English version](README.md).
+
 ## 功能亮點
 
+- **錯誤高亮提示**
+  > 在程式發生錯誤時，編輯器會自動對錯誤進行分析，並在對應的行高亮提示錯誤，並提供充分的錯誤訊息，讓使用者一眼就能看出錯誤的原因並快速進行修復。
+- **內建測資支援**
+  > 透過內建的測資系統，支援輸入測資並一鍵執行所有測資，所有的測資會在瀏覽器 worker 內被並行執行，並透過清楚的顏色標示讓使用者一眼看出測資執行結果，不再需要重複的手動貼上測資。
+- **自動程式碼格式化（Formatting）**
+  > 透過整合 Clang-format WASM，可以一鍵格式化程式碼，並提供多種風格可供選擇。
+- **本地化與在地化 (i18n)**
+  > 目前已支援英文和繁體中文，會根據瀏覽器語言自動切換。已規劃支援更多語言，也歡迎在 [Crowdin](https://crowdin.com/project/cpp-here)上協助我們進行翻譯。
+- **自動補全**
+  > 對 C++ 語法進行自動補全，已針對競程進行優化。
+- **響應式設計（RWD）**
+  > 良好的響應式設計讓手機及電腦都可以輕鬆地使用 C++ Here。
+
 - **線上編譯與即時執行**
-  將 C++ 程式碼編譯成 WebAssembly 模組，直接在前端執行，無任和資源限制，且無需每次測試都進行後端編譯，大幅提升執行速度。
-
-- **Test Case 支援**
-  使用者可以為程式碼添加多組測試案例，系統會自動執行並顯示每個測試案例的結果，幫助使用者驗證程式碼的正確性。
-
-- **專為競程設計**
-  C++ Here 的功能和介面設計特別適合競賽程式設計（Competitive Programming）的需求，讓使用者能夠快速測試和驗證他們的解法。
-
-- **即時錯誤提示**
-  編譯過程中若發生錯誤，系統會高亮顯示錯誤位置並提供詳細的錯誤訊息，幫助使用者快速定位問題並修正程式碼。
-
-- **多平台支援**
-  無論是在桌面瀏覽器還是行動裝置上，C++ Here 都能提供流暢的使用體驗，讓使用者隨時隨地都能編寫與測試 C++ 程式碼。
+  > 將 C++ 程式碼編譯成 WebAssembly 模組，直接在前端執行，無任和資源限制，且無需每次測試都進行後端編譯，大幅提升執行速度。
 
 - **簡潔但強大的編輯器**
-  前端使用了簡潔的介面，但功能完整，提供良好的使用者體驗。
+  > 前端使用了簡潔的介面，但功能完整，採用 Astro 框架結合 React 元件打造，確保極致的頁面載入速度與順暢的互動體驗。
 
 - **智慧編譯快取 (Catch)**
-  後端實作了編譯結果快取功能。當使用者提交與過去相同的程式碼時，系統會自動比對雜湊值並直接返回快取的執行結果，大幅減少重複編譯的時間與伺服器運算負載。
+  > 後端實作了編譯結果快取功能。當使用者提交與過去相同的程式碼時，系統會自動比對雜湊值並直接返回快取的執行結果，大幅減少重複編譯的時間與伺服器運算負載。
 
-- **現代化且流暢的使用者介面**
-  前端採用 Astro 框架結合 React 元件打造，確保極致的頁面載入速度與順暢的互動體驗。
+- **一鍵匯入測資**
+  > 透過瀏覽器插件一鍵匯入競賽平台的測試資料，支援超過 100 個主流競賽平台。
 
-- **i18n**
-  支援多語言介面，使用者可以根據自己的語言偏好切換界面語言，提升使用體驗。
+- **開源及免費**
+  > C++ Here 的原始碼完全開放，歡迎社群參與貢獻，讓這個專案持續成長與改進。且完全免費的線上 C++ 編輯與執行服務，能讓每個人都能輕鬆學習與使用 C++。
 
-- **安全性**
-  後端使用沙箱技術隔離執行環境，確保使用者提交的程式碼不會對伺服器造成安全威脅。
-
-- **開放原始碼**
-  C++ Here 的原始碼完全開放，歡迎社群參與貢獻，讓這個專案持續成長與改進。
-
-- **免費使用**
-  C++ Here 提供完全免費的線上 C++ 編輯與執行服務，讓每個人都能輕鬆學習與使用 C++。
-
-- **簡潔優雅，不失強大**
-  雖然功能豐富，但 C++ Here 的使用者介面保持簡潔優雅，讓使用者能夠專注於程式碼本身，而不會被過多的功能選項分散注意力。
-
-- **匯入測資**
-  透過瀏覽器插件一鍵匯入競賽平台的測試資料，支援超過 100 個主流競賽平台。
-
-## 技術棧
+## 技術棧&依賴套件
 
 - **前端**: Astro, Bun, Motion, React, Shadcn, Tailwind CSS, TypeScript, axios, cloudflare turnstile, codemirror, i18next, Jotai Atom, lucide
 - **瀏覽器擴充**: Bun, TypeScript, esbuild, web-ext
@@ -69,10 +55,129 @@ C++ Here 與其他線上 C++ 編輯器的最大不同在於我們使用 [safe-cp
 3. 並發：前端執行 WebAssembly 模組可以利用瀏覽器的多線程能力，實現更高效的並發執行，特別適合競賽程式設計中的大量測試案例。
 4. 無限制：由於執行在前端，使用者不受後端資源限制，可以自由地編寫和測試程式碼，而不必擔心伺服器的負載問題。
 
-## Contributing
+## 本地開發
 
-Any contributions are greatly appreciated. If you have a suggestion that would make this project better, please fork the repo and create a Pull Request. You can also [open an issue](https://github.com/Dong-Chen-1031/Cpp-Here/issues).
+### 前端
 
-## License
+需要 Bun，若使用 npm 可能會導致問題。
 
-Published under the [MIT License](LICENSE).
+1. Clone
+```shell
+git clone https://github.com/Dong-Chen-1031/CPP-here.git
+cd CPP-here
+```
+
+2. 安裝依賴項
+```shell
+bun install
+```
+
+3. 執行前端
+```shell
+bun run frontend
+```
+
+### 後端
+推薦使用 Python 3.14 + UV
+需要確保 Docker 在執行
+
+1. Clone
+```shell
+git clone https://github.com/Dong-Chen-1031/CPP-here.git
+cd CPP-here
+```
+
+2. 安裝依賴項
+```shell
+uv venv
+source .venv/bin/activate  # 視作業系統進行調整
+uv pip install -r backend/requirements.txt
+```
+
+3. 拉取 Docker 映像
+```shell
+docker pull ghcr.io/dong-chen-1031/safe-cpp2wasm:latest
+```
+
+4. 執行後端
+```shell
+bun run backend
+```
+
+### 前後端同時執行（推薦）
+1. 依照前敘述完成環境設置
+2. 一鍵同時執行前後端
+```shell
+bun run dev
+```
+
+## 部署
+
+### 使用 Docker Compose 一鍵完整部署
+```shell
+curl -sS "https://cpp.doong.me/script/docker-compose.yml" > docker-compose.yml
+docker compose up --pull always
+```
+> [!TIP]
+> - 可以在第二行指令加上 -d 讓他在背景長期執行
+> - 可依 docker-compose.yml 內的註釋修改環境變數
+
+> [!WARNING]
+> 由於後端需建立一次性容器來建置使用者的程式碼，Docker Compose 會將 Docker Scoket 掛載到容器裡，在 Linux 及 macOS 以外的作業系統上可能需要稍微調整才能運作。
+
+
+<details>
+<summary>自行 Build Docker 映像</summary>
+
+#### Clone
+
+```shell
+git clone https://github.com/Dong-Chen-1031/CPP-here.git
+cd CPP-here
+```
+
+#### 建置前端
+
+```shell
+docker build \
+  -f ./docker/frontend/Dockerfile \
+  -t cpp-here-frontend:latest \
+  .
+```
+
+#### 建置後端
+
+```shell
+docker build \
+  -f ./docker/backend/Dockerfile \
+  -t cpp-here-backend:latest \
+  .
+```
+
+</details>
+
+### 部署前端
+- 前端使用 Astro SSG 模式，執行 bun run build 後會建置出**純靜態**的網頁，因此可以很輕鬆的將其部署至 Cloudflare Page、Github Page 等服務。由於可提升載入速度、降低後端負擔，因此非常推薦使用此類方式部署。
+
+- 使用 Docker Compose 一鍵部署前端（映像內部使用 Caddy 作為網頁伺服器）
+```shell
+curl -sS "https://cpp.doong.me/script/frontend/docker-compose.yml" > docker-compose.yml
+docker compose up --pull always
+```
+
+### 部署後端
+推薦使用 Docker Compose 一鍵部署後端，此種方式會自動處理依賴項、版本等。
+```shell
+curl -sS "https://cpp.doong.me/script/backend/docker-compose.yml" > docker-compose.yml
+docker compose up --pull always
+```
+> [!WARNING]
+> 由於後端需建立一次性容器來建置使用者的程式碼，Docker Compose 會將 Docker Scoket 掛載到容器裡，在 Linux 及 macOS 以外的作業系統上可能需要稍微調整才能運作。
+
+## 貢獻
+
+我們非常感謝您的任何貢獻。如果您有任何改進建議，請 fork 此倉庫並建立 Pull Request。您也可以[提交 issue](https://github.com/Dong-Chen-1031/Cpp-Here/issues)。
+
+## 許可證
+
+本專案遵循 [MIT LICENSE](LICENSE)。
