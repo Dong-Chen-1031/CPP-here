@@ -8,7 +8,7 @@ export const config = {
 
     // API 端點
     api_endpoints: api_endpoints,
-    skipApiFetch: (import.meta.env.SKIP_API_FETCH || "true") === "true",
+    skipApiFetch: (import.meta.env.PUBLIC_SKIP_API_FETCH || "true") === "true",
     buildTimeAPIEndpoint:
         import.meta.env.PUBLIC_BUILD_TIME_API_URL || api_endpoints,
 
