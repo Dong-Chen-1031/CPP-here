@@ -1,0 +1,93 @@
+{
+    "header": {
+        "openEditor": "Open Editor"
+    },
+    "hero": {
+        "title": "Next-generation",
+        "title2": "online C++ editor.",
+        "description": "An open-source, lightweight yet powerful online C++ editor built for competitive programming",
+        "startCoding": "Start Coding",
+        "starOnGithub": "Star on Github"
+    },
+    "features": {
+        "heading": "Everything you need.",
+        "subheading": "Nothing you don't.",
+        "description": "A focused toolkit that turns the browser into a powerful C++ workspace.",
+        "list": [
+            {
+                "title": "C++ to WebAssembly",
+                "description": "Compiles C++ code into WebAssembly and executes them directly in the browser — fast, no resource limitations."
+            },
+            {
+                "title": "Error Highlighting",
+                "description": "Compiler errors are parsed and pinned to the exact line they occur — clear, actionable diagnostics without the noise."
+            },
+            {
+                "title": "Built-in Test Cases",
+                "description": "Define, run, and compare multiple test cases side-by-side. Designed for the way competitive programmers actually work."
+            },
+            {
+                "title": "Code Formatting",
+                "description": "Clang-format integrated. One shortcut to keep your style consistent — with support for multiple code style presets."
+            },
+            {
+                "title": "i18n Ready",
+                "description": "First-class support for English and Traditional Chinese, with more languages on the way. You can help translate on <a href='https://crowdin.com/project/cpp-here' class='underline hover:text-foreground transition' target='_blank' rel='noopener noreferrer'>Crowdin</a>!"
+            },
+            {
+                "title": "Smart Autocomplete",
+                "description": "Context-aware suggestions for STL containers, algorithms, and your own symbols — write C++ faster without leaving the flow."
+            },
+            {
+                "title": "Any Screen, Any Device",
+                "description": "The interface adapts seamlessly to any screen size. Works on any screen, any device. Code comfortably wherever you are."
+            },
+            {
+                "title": "Secured by Design",
+                "description": "Cloudflare Turnstile blocks bots. Every compilation runs in an isolated, single-use Docker container — secure by default."
+            },
+            {
+                "title": "Share in One Click",
+                "description": "Share your code, test cases, input, and results with a single link — instantly, no setup required."
+            }
+        ],
+        "openSourceLabel": "Open-source & free",
+        "openSourceDescription": "Audit it, fork it, ship it. MIT licensed.",
+        "starGithub": "Star on GitHub →"
+    },
+    "extension": {
+        "label": "extensions",
+        "heading1": "One click.",
+        "heading2": "All your test cases.",
+        "title": "Skip the copy-paste",
+        "description": "Import test cases directly from your browser with our extension. Support over 100 competitive programming platforms.",
+        "comingSoon": "Coming Soon",
+        "sourceCode": "Source Code"
+    },
+    "stats": {
+        "compilations": "Compilations",
+        "compilationsDescription": "C++ programs compiled and executed directly in the browser.",
+        "linesCompiled": "Lines Compiled",
+        "lineCompiledDescription": "Lines of C++ code processed through the WebAssembly pipeline.",
+        "wasmCompiled": "Wasm Compiled",
+        "wasmCompiledDescription": "Total size of source code submitted and compiled by users.",
+        "totalTimeCompiled": "Total Time Compiled",
+        "totalTimeCompiledDescription": "Cumulative CPU time spent compiling across all users."
+    },
+    "cta": {
+        "label": "get started",
+        "heading": "Stop switching tools.",
+        "subheading": "Everything you need is already here.",
+        "description1": "No install. No login.",
+        "description2": "Just open a tab and get your AC.",
+        "startCoding": "Start Coding",
+        "starOnGithub": "Star on GitHub"
+    },
+    "footer": {
+        "mitLicensed": "MIT Licensed",
+        "editor": "Editor",
+        "github": "GitHub",
+        "status": "Status",
+        "author": "Dong-Chen-1031"
+    }
+}
