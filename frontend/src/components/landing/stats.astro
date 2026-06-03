@@ -58,7 +58,7 @@ function formatDuration(seconds: number | undefined): string {
 let apiData: StatusResponse | null = null;
 if (!config.skipApiFetch) {
     try {
-        console.log("Fetching stats from API...");
+        console.log(`Fetching stats from ${config.buildTimeAPIEndpoint}`);
         const res = await fetch(`${config.buildTimeAPIEndpoint}/status`);
         if (res.ok) apiData = await res.json();
 
@@ -75,6 +75,8 @@ if (!config.skipApiFetch) {
             apiData = null;
         } else throw new Error(`Failed to fetch stats from API: ${error}`);
     }
+} else {
+    console.log("Skipping API fetch for stats due to configuration.");
 }
 
 const stats = [
