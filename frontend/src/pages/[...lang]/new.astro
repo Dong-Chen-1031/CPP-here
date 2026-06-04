@@ -1,0 +1,151 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import "@/styles/landing.css";
+import Header from "@/components/landing/header.astro";
+import Hero from "@/components/landing/hero.astro";
+import Features from "@/components/landing/features.astro";
+import Extension from "@/components/landing/extension.astro";
+import Stats from "@/components/landing/stats.astro";
+import CTA from "@/components/landing/CTA.astro";
+import Footer from "@/components/landing/footer.astro";
+
+import { getStaticLangPaths, getTranslation } from "@/lib/langList";
+
+export { getStaticLangPaths as getStaticPaths };
+
+const { lang } = Astro.params;
+
+const t = getTranslation(lang);
+// console.log(t);
+---
+
+<!--
+1. header v
+2. hero v
+3. features v
+    (1) C++ to WebAssembly V
+    (2) error highlighting V
+    (3) test case V
+    (4) code formatting V
+    (5) i18n V
+    (6) built for competitive programming V
+    (7) open-source and free to use V
+    (8) RWD support V
+4. extensions V
+5. data V
+6. CAT V
+7. footer V
+-->
+<Layout
+    title="C++ Here - Next-generation online C++ editor."
+    description="An open-source, lightweight yet powerful online C++ editor built for competitive programming. Compile C++ to WebAssembly, run test cases, and format code — all in your browser."
+>
+    <meta
+        slot="head"
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
+    <script slot="head" type="application/ld+json" is:inline>
+        {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "C++ Here",
+            "url": "https://cpp.doong.me",
+            "description": "An open-source, lightweight yet powerful online C++ editor built for competitive programming.",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Web Browser",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            },
+            "featureList": [
+                "C++ to WebAssembly compilation",
+                "Error highlighting",
+                "Built-in test cases",
+                "Code formatting with Clang-format",
+                "i18n support",
+                "Smart autocomplete",
+                "Responsive design — works on any screen and device",
+                "Secured by Cloudflare Turnstile and isolated Docker containers",
+                "One-click code sharing"
+            ],
+            "codeRepository": "https://github.com/Dong-Chen-1031/CPP-here",
+            "license": "https://github.com/Dong-Chen-1031/CPP-here/blob/main/LICENSE.txt"
+        }
+    </script>
+    <style>
+        html,
+        body {
+            overflow-x: hidden;
+            height: 100%;
+        }
+    </style>
+    <div class="mono tracking-tight">
+        <Header lang={lang} t={t.header} />
+        <Hero lang={lang} t={t.hero} />
+        <div id="f1">
+            <h2 class="text-2xl font-bold">C++ to WebAssembly</h2>
+        </div>
+        <Features lang={lang} t={t.features} />
+        <Extension lang={lang} t={t.extension} />
+        <Stats lang={lang} t={t.stats} />
+        <CTA lang={lang} t={t.cta} />
+        <Footer lang={lang} t={t.footer} />
+    </div>
+    <script>
+        import { gsap } from "gsap";
+
+        import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+        gsap.registerPlugin(ScrollTrigger);
+
+        const card: HTMLElement = document.querySelector(
+            "#hero-img",
+        ) as HTMLElement;
+        const cardWidth = card.offsetWidth;
+        const cardHeight = card.offsetHeight;
+
+        const scaleX = window.innerWidth / cardWidth;
+        const scaleY = window.innerHeight / cardHeight;
+        console.log(scaleX, scaleY);
+        const targetScale = Math.min(scaleX, scaleY) * 0.95;
+
+        const showAnim = gsap
+            .from("#header", {
+                delay: 0.5,
+                opacity: 0,
+                yPercent: -100,
+                paused: true,
+                duration: 0.5,
+            })
+            .progress(1);
+
+        ScrollTrigger.create({
+            start: "top top",
+            end: "max",
+            // markers: true,
+            onUpdate: (self) => {
+                self.direction === -1 ? showAnim.play() : showAnim.reverse();
+            },
+        });
+
+        gsap.to("#hero-img", {
+            scrollTrigger: {
+                trigger: "#hero-img",
+                start: "top 70%",
+                end: "top top",
+                scrub: 1,
+                // pin: true,
+            },
+            scale: targetScale,
+        });
+
+        ScrollTrigger.create({
+            trigger: "#hero-img",
+            start: "top 0%",
+            end: "+=500",
+            pin: true,
+        });
+    </script>
+</Layout>
