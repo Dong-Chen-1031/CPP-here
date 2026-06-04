@@ -154,51 +154,55 @@ const fallback = await getImage({
 </style>
 
 <div class="px-6 py-20 md:px-20 w-full" id="hero-card">
-    <picture>
-        {/* 手機：AVIF（僅 prod） */}
-        {
-            isProd && (
+    <div class="w-full h-180 rounded-lg relative z-10" id="hero-img">
+        <div class="overflow-hidden w-full h-full relative">
+            <picture>
+                {/* 手機：AVIF（僅 prod） */}
+                {
+                    isProd && (
+                        <source
+                            media="(max-width: 500px)"
+                            type="image/avif"
+                            srcset={toSrcset(mobileImages, "avif")}
+                        />
+                    )
+                }
+                {/* 手機：WebP */}
                 <source
                     media="(max-width: 500px)"
-                    type="image/avif"
-                    srcset={toSrcset(mobileImages, "avif")}
+                    type="image/webp"
+                    srcset={toSrcset(mobileImages, "webp")}
                 />
-            )
-        }
-        {/* 手機：WebP */}
-        <source
-            media="(max-width: 500px)"
-            type="image/webp"
-            srcset={toSrcset(mobileImages, "webp")}
-        />
 
-        {/* 桌機：AVIF（僅 prod） */}
-        {
-            isProd && (
+                {/* 桌機：AVIF（僅 prod） */}
+                {
+                    isProd && (
+                        <source
+                            media="(min-width: 501px)"
+                            type="image/avif"
+                            srcset={toSrcset(desktopImages, "avif")}
+                        />
+                    )
+                }
+                {/* 桌機：WebP */}
                 <source
                     media="(min-width: 501px)"
-                    type="image/avif"
-                    srcset={toSrcset(desktopImages, "avif")}
+                    type="image/webp"
+                    srcset={toSrcset(desktopImages, "webp")}
                 />
-            )
-        }
-        {/* 桌機：WebP */}
-        <source
-            media="(min-width: 501px)"
-            type="image/webp"
-            srcset={toSrcset(desktopImages, "webp")}
-        />
 
-        {/* fallback */}
-        <img
-            src={fallback.src}
-            alt="Hero"
-            width={heroImg.width}
-            height={heroImg.height}
-            loading="eager"
-            fetchpriority="high"
-            id="hero-img"
-            class="w-full rounded-lg relative z-10"
-        />
-    </picture>
+                {/* fallback */}
+                <img
+                    src={fallback.src}
+                    alt="Hero"
+                    width={heroImg.width}
+                    height={heroImg.height}
+                    loading="eager"
+                    fetchpriority="high"
+                    class="w-full h-full rounded-lg absolute inset-0 object-contain"
+                    id="hero-img-real"
+                />
+            </picture>
+        </div>
+    </div>
 </div>

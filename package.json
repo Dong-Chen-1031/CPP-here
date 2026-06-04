@@ -36,6 +36,7 @@
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
         "concurrently": "^9.2.1",
+        "gsap": "^3.15.0",
         "i18next": "^26.2.0",
         "i18next-browser-languagedetector": "^8.2.1",
         "i18next-http-backend": "^3.0.6",
