@@ -13,19 +13,16 @@ import {
 } from "@/components/ui/command";
 import { KeyboardIcon, SquareTerminalIcon, TestTubes } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-    CppVersionSelect,
-    DownloadButton,
-    FormatButton,
-    GithubLink,
-    ResetButton,
-    RunButton,
-    SettingsButton,
-    ShareButton,
-    UndoRedo,
-} from "./HeaderActions";
 import { panelDrawerStore, type PanelDrawerView } from "@/store/atom";
 import { SiGithub } from "@icons-pack/react-simple-icons";
+import { CppVersionSelect } from "@/components/header/cppVersionSelect";
+import { DownloadButton } from "@/components/header/downloadBtn";
+import { FormatButton } from "@/components/header/formatBtn";
+import { ResetButton } from "@/components/header/resetBtn";
+import { RunButton } from "@/components/header/runBtn";
+import { ShareButton } from "@/components/header/shareBtn";
+import { UndoRedo } from "@/components/header/undoRedo";
+import { SettingsButton } from "@/components/HeaderActions";
 
 export function Commands({ className = "" }: { className?: string }) {
     const [open, setOpen] = React.useState(false);
