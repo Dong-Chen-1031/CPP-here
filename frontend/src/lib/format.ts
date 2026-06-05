@@ -1,4 +1,4 @@
-import { codeFormatStyle } from "@/store/configStore";
+import { codeFormatStyle, editorTabSizeStore } from "@/store/configStore";
 import init, { format, type Style } from "@wasm-fmt/clang-format/vite";
 import { getDefaultStore } from "jotai";
 
@@ -33,7 +33,7 @@ export async function formatCode(
     if (style === "Default") {
         style = {
             BasedOnStyle: defaultStore.get(codeFormatStyle),
-            IndentWidth: 4,
+            IndentWidth: defaultStore.get(editorTabSizeStore),
             ColumnLimit: 0,
         };
     }

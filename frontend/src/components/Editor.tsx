@@ -26,7 +26,7 @@ import { handleRun, handleRunAll } from "@/api/run";
 import { addErrorEffect, clearErrorsEffect, errorField } from "./Error";
 import { commandKeyPress } from "@/lib/utils";
 import { formatCode } from "@/lib/format";
-import { editorFontSizeStore } from "@/store/configStore";
+import { editorFontSizeStore, editorTabSizeStore } from "@/store/configStore";
 
 type CppEditorProps = Omit<ReactCodeMirrorProps, "value" | "onChange"> & {
     defaultValue?: string;
@@ -52,7 +52,8 @@ function CppEditor({
 }: CppEditorProps) {
     const [EditorGlobal, setEditorGlobal] = useAtom(editorRefStore);
     const [code, setCode] = useAtom(codeStore);
-    const [fontSize, setFontSize] = useAtom(editorFontSizeStore);
+    const [fontSize] = useAtom(editorFontSizeStore);
+    const [tabSize] = useAtom(editorTabSizeStore);
     const editorError = useAtomValue(editorErrorStore);
     const editorRef = useRef<
         import("@uiw/react-codemirror").ReactCodeMirrorRef | null
@@ -157,7 +158,7 @@ function CppEditor({
     return (
         <div className="relative h-full w-full">
             {/* <div className="absolute bottom-5 right-5 z-10">
-        
+
       </div> */}
 
             <div className="absolute inset-0">
@@ -199,6 +200,7 @@ function CppEditor({
                         lineNumbers: true,
                         foldGutter: true,
                         highlightActiveLine: true,
+                        tabSize: tabSize,
                         ...(typeof basicSetup === "object" ? basicSetup : {}),
                     }}
                     {...rest}

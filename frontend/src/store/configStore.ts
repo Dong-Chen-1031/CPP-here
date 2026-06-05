@@ -7,6 +7,7 @@ export const codeFormatStyle = atomWithStorage<Style>(
 );
 
 export const editorFontSizeStore = atomWithStorage<number>("fontSize", 13);
+export const editorTabSizeStore = atomWithStorage<number>("tabSize", 4);
 
 export const defCodeStore = atomWithStorage<string>(
     "defCode",
@@ -17,8 +18,10 @@ export function useResetSettingsAtoms() {
     const resetEditorFontSize = useResetAtom(editorFontSizeStore);
     const resetDefCode = useResetAtom(defCodeStore);
     const resetCodeFormatStyle = useResetAtom(codeFormatStyle);
+    const resetEditorTabSize = useResetAtom(editorTabSizeStore);
 
     return () => {
+        resetEditorTabSize();
         resetEditorFontSize();
         resetDefCode();
         resetCodeFormatStyle();
