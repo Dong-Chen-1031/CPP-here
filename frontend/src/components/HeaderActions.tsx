@@ -4,17 +4,10 @@ import "@/lib/i18n";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 
 import { Button } from "@/components/ui/button";
-import { useTranslation } from "react-i18next";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { SettingsIcon } from "lucide-react";
-
 import { useAtom } from "jotai";
-import {
-    loadedCountStore,
-    loadedStore,
-    settingsPanelStore,
-} from "@/store/atom";
+import { loadedCountStore, loadedStore } from "@/store/atom";
 
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect } from "react";
@@ -26,50 +19,7 @@ import { ResetButton } from "@/components/header/resetBtn";
 import { FormatButton } from "@/components/header/formatBtn";
 import { ShareButton } from "@/components/header/shareBtn";
 import { DownloadButton } from "@/components/header/downloadBtn";
-
-export function SettingsButton({
-    onClick,
-}: {
-    onClick?: (e: React.MouseEvent) => void;
-}) {
-    const [, setSettingsOpen] = useAtom(settingsPanelStore);
-    const { t } = useTranslation(["editor"]);
-
-    return (
-        <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-                onClick && onClick?.(e);
-                setSettingsOpen(true);
-            }}>
-            <SettingsIcon />
-            <span className="inline md:hidden lg:inline">
-                {t("headerActions.settings")}
-            </span>
-        </Button>
-    );
-}
-
-export function GithubLink({
-    className = "",
-    size = "sm",
-}: {
-    className?: string;
-    size?: typeof Button.prototype.props.size;
-}) {
-    return (
-        <Button variant={"outline"} size={size} asChild className={className}>
-            <a
-                href={config.githubLink}
-                target="_blank"
-                rel="noopener noreferrer">
-                <SiGithub className="w-5 h-5 mr-1" />
-                Star
-            </a>
-        </Button>
-    );
-}
+import { SettingsButton } from "@/components/header/SettingsBtn";
 
 export default function HeaderActions() {
     const [loaded] = useAtom(loadedStore);

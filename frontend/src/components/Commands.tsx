@@ -22,7 +22,7 @@ import { ResetButton } from "@/components/header/resetBtn";
 import { RunButton } from "@/components/header/runBtn";
 import { ShareButton } from "@/components/header/shareBtn";
 import { UndoRedo } from "@/components/header/undoRedo";
-import { SettingsButton } from "@/components/HeaderActions";
+import { SettingsButton } from "@/components/header/SettingsBtn";
 
 export function Commands({ className = "" }: { className?: string }) {
     const [open, setOpen] = React.useState(false);
