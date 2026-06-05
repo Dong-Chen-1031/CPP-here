@@ -104,7 +104,10 @@ container_pool = ContainerPool()
 
 
 async def build(
-    code: str, name: str = "output.js", output_dir: Path | None = None
+    code: str,
+    name: str = "output.js",
+    output_dir: Path | None = None,
+    cpp_version: str = "c++17",
 ) -> str:
     if output_dir is None:
         output_dir = Path.cwd() / "output"
@@ -115,6 +118,7 @@ async def build(
         f"timeout 30s emcc /tmp/source.cpp -o /tmp/out/{shlex.quote(name)} "
     ) + " ".join(
         [
+            f"-std={cpp_version} ",
             "-ftemplate-depth=50 ",
             "-sMODULARIZE=1 ",
             # "-sMINIMAL_RUNTIME=1  "

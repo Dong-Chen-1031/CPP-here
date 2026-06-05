@@ -162,7 +162,12 @@ async def build_cpp(
     _in_flight[case_id] = event
     try:
         try:
-            await build(request.code, name=js_name, output_dir=output_path)
+            await build(
+                request.code,
+                name=js_name,
+                output_dir=output_path,
+                cpp_version=request.cpp_version,
+            )
             logger.info("Build succeeded")
         except BuildError as e:
             return BuildResponse(
