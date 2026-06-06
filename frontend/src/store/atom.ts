@@ -54,7 +54,9 @@ export const editorErrorStore = atomWithStorage<
     }[]
 >("editorErrors", []);
 
-const baseCodeAtom = atomWithStorage<string | null>("code", null);
+const baseCodeAtom = atomWithStorage<string | null>("code", null, undefined, {
+    getOnInit: true,
+});
 export const codeStore = atom(
     (get) => get(baseCodeAtom) ?? get(defCodeStore),
     (get, set, update: string | typeof RESET | ((prev: string) => string)) => {
@@ -69,8 +71,15 @@ export const codeStore = atom(
         }
     },
 );
-export const cppVersionStore = atomWithStorage<string>("cppVersion", "c++17");
-export const inputStore = atomWithStorage<string>("input", "");
+export const cppVersionStore = atomWithStorage<string>(
+    "cppVersion",
+    "c++17",
+    undefined,
+    { getOnInit: true },
+);
+export const inputStore = atomWithStorage<string>("input", "", undefined, {
+    getOnInit: true,
+});
 export const outputStore = atomWithStorage<OutputCase[]>("output", []);
 export const runModeStore = atomWithStorage<"single" | "all">(
     "runMode",

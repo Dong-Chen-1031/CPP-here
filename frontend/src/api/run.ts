@@ -304,6 +304,7 @@ export async function handleRun({
     code = code ?? store.get(codeStore);
     input = input ?? store.get(inputStore);
     const cppVersion = store.get(cppVersionStore);
+    console.log(`Running code with C++ version: ${cppVersion}`);
 
     store.set(runStatusStore, "building");
     store.set(editorErrorStore, []);
@@ -389,6 +390,8 @@ export async function handleRunAll() {
     const testCases = store.get(testCasesStore);
     const code = store.get(codeStore);
     const cppVersion = store.get(cppVersionStore);
+    console.log(`Running code with C++ version: ${cppVersion}`);
+
     // let exitCount = 0;
 
     if (testCases.length === 0) {
