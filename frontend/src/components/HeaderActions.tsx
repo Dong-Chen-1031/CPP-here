@@ -19,6 +19,7 @@ import { ResetButton } from "@/components/header/resetBtn";
 import { FormatButton } from "@/components/header/formatBtn";
 import { ShareButton } from "@/components/header/shareBtn";
 import { DownloadButton } from "@/components/header/downloadBtn";
+import { UploadButton } from "@/components/header/uploadBtn";
 import { SettingsButton } from "@/components/header/SettingsBtn";
 
 export default function HeaderActions() {
@@ -47,6 +48,7 @@ export default function HeaderActions() {
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}>
                         <UndoRedo />
+                        <UploadButton />
                         <DownloadButton />
                         {config.share && <ShareButton />}
                         <SettingsButton />

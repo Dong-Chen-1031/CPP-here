@@ -17,6 +17,7 @@ import { panelDrawerStore, type PanelDrawerView } from "@/store/atom";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import { CppVersionSelect } from "@/components/header/cppVersionSelect";
 import { DownloadButton } from "@/components/header/downloadBtn";
+import { UploadButton } from "@/components/header/uploadBtn";
 import { FormatButton } from "@/components/header/formatBtn";
 import { ResetButton } from "@/components/header/resetBtn";
 import { RunButton } from "@/components/header/runBtn";
@@ -58,17 +59,17 @@ export function Commands({ className = "" }: { className?: string }) {
                             </CommandItem>
                             <CommandItem>
                                 <FormatButton onClick={() => setOpen(false)} />
+                                <UploadButton onClick={() => setOpen(false)} />
                                 <DownloadButton
                                     onClick={() => setOpen(false)}
-                                />
-                                <CppVersionSelect
-                                    className="w-25"
-                                    // onSelect={() => setOpen(false)}
                                 />
                             </CommandItem>
                             <CommandItem>
                                 <ShareButton onClick={() => setOpen(false)} />
-
+                                <CppVersionSelect
+                                    className="w-25"
+                                    // onSelect={() => setOpen(false)}
+                                />
                                 <RunButton
                                     onClick={() => {
                                         setOpen(false);
