@@ -1,84 +1,84 @@
 {
     "header": {
-        "openEditor": "Open Editor"
+        "openEditor": "立即開啟"
     },
     "hero": {
-        "title": "Next-generation",
-        "title2": "online C++ editor.",
-        "description": "An open-source, lightweight yet powerful online C++ editor built for competitive programming",
+        "title": "新世代的",
+        "title2": "線上 C++ 編輯器。",
+        "description": "一個開源、輕量但強大的線上 C++ 編輯器，專為競賽程式設計而生",
         "startCoding": "Start Coding",
-        "starOnGithub": "Star on Github"
+        "starOnGithub": "在 GitHub 上 Star"
     },
     "features": {
-        "heading": "Everything you need.",
-        "subheading": "Nothing you don't.",
-        "description": "A focused toolkit that turns the browser into a powerful C++ workspace.",
+        "heading": "功能齊全。",
+        "subheading": "卻不臃腫。",
+        "description": "瀏覽器，就是你的開發環境。",
         "list": [
             {
-                "title": "C++ to WebAssembly",
+                "title": "WebAssembly 技術",
                 "description": "Compiles C++ code into WebAssembly and executes them directly in the browser — fast, no resource limitations."
             },
             {
-                "title": "Error Highlighting",
+                "title": "錯誤高亮提示",
                 "description": "Compiler errors are parsed and pinned to the exact line they occur — clear, actionable diagnostics without the noise."
             },
             {
-                "title": "Built-in Test Cases",
+                "title": "內建測資系統",
                 "description": "Define, run, and compare multiple test cases side-by-side. Designed for the way competitive programmers actually work."
             },
             {
-                "title": "Code Formatting",
+                "title": "自動程式碼格式化",
                 "description": "Clang-format integrated. One shortcut to keep your style consistent — with support for multiple code style presets."
             },
             {
-                "title": "i18n Ready",
+                "title": "多語言支援",
                 "description": "First-class support for English and Traditional Chinese, with more languages on the way. You can help translate on <a href='https://crowdin.com/project/cpp-here' class='underline hover:text-foreground transition' target='_blank' rel='noopener noreferrer'>Crowdin</a>!"
             },
             {
-                "title": "Smart Autocomplete",
+                "title": "程式碼補全",
                 "description": "Context-aware suggestions for STL containers, algorithms, and your own symbols — write C++ faster without leaving the flow."
             },
             {
-                "title": "Any Screen, Any Device",
+                "title": "任何螢幕, 任何裝置",
                 "description": "The interface adapts seamlessly to any screen size. Works on any screen, any device. Code comfortably wherever you are."
             },
             {
-                "title": "Secured by Design",
+                "title": "安全，從設計開始",
                 "description": "Cloudflare Turnstile blocks bots. Every compilation runs in an isolated, single-use Docker container — secure by default."
             },
             {
-                "title": "Share in One Click",
+                "title": "一鍵分享",
                 "description": "Share your code, test cases, input, and results with a single link — instantly, no setup required."
             }
         ],
-        "openSourceLabel": "Open-source & free",
+        "openSourceLabel": "開源、免費",
         "openSourceDescription": "Audit it, fork it, ship it. MIT licensed.",
-        "starGithub": "Star on GitHub →"
+        "starGithub": "在 Github 上 Star →"
     },
     "extension": {
-        "label": "extensions",
-        "heading1": "One click.",
-        "heading2": "All your test cases.",
-        "title": "Skip the copy-paste",
+        "label": "瀏覽器擴充",
+        "heading1": "一鍵匯入。",
+        "heading2": "所有測資。",
+        "title": "不再複製貼上",
         "description": "Import test cases directly from your browser with our extension. Support over 100 competitive programming platforms.",
-        "comingSoon": "Coming Soon",
-        "sourceCode": "Source Code"
+        "comingSoon": "即將推出",
+        "sourceCode": "原始碼"
     },
     "stats": {
-        "compilations": "Compilations",
+        "compilations": "總編譯次數",
         "compilationsDescription": "C++ programs compiled and executed directly in the browser.",
-        "linesCompiled": "Lines Compiled",
+        "linesCompiled": "編譯總行數",
         "lineCompiledDescription": "Lines of C++ code processed through the WebAssembly pipeline.",
-        "wasmCompiled": "Wasm Compiled",
+        "wasmCompiled": "總編譯大小",
         "wasmCompiledDescription": "Total size of source code submitted and compiled by users.",
-        "totalTimeCompiled": "Total Time Compiled",
+        "totalTimeCompiled": "編譯總時長",
         "totalTimeCompiledDescription": "Cumulative CPU time spent compiling across all users."
     },
     "cta": {
-        "label": "get started",
-        "heading": "Stop switching tools.",
-        "subheading": "Everything you need is already here.",
-        "description1": "No install. No login.",
+        "label": "讓我們開始吧",
+        "heading": "不再切換工具。",
+        "subheading": "你需要的，都在這裡。",
+        "description1": "無需安裝、無需登入。",
         "description2": "Just open a tab and get your AC.",
         "startCoding": "Start Coding",
         "starOnGithub": "Star on GitHub"
