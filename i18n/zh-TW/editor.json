@@ -96,7 +96,9 @@
         "formatCodeTip": "格式化程式碼",
         "runOptions": "運行設定",
         "downloadCode": "下載",
-        "downloadCodeTip": "下載為 .cpp"
+        "downloadCodeTip": "下載為 .cpp",
+        "uploadCode": "Upload",
+        "uploadCodeTip": "Upload a .cpp file"
     },
     "turnstile": {
         "verificationFailed": "驗證失敗",
