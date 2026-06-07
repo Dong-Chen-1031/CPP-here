@@ -96,7 +96,9 @@
         "formatCodeTip": "Format code",
         "runOptions": "Run options",
         "downloadCode": "Download",
-        "downloadCodeTip": "Download as .cpp"
+        "downloadCodeTip": "Download as .cpp",
+        "uploadCode": "Upload",
+        "uploadCodeTip": "Upload a .cpp file"
     },
     "turnstile": {
         "verificationFailed": "Verification Failed",
