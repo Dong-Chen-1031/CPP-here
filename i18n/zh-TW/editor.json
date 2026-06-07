@@ -72,7 +72,7 @@
             },
             "alert": {
                 "title": "已收到新的測資",
-                "description": "{{problemName}} 的測資已收到。 已經加入至測資表。"
+                "description": "測資 {{problemName}} 已收到。 已經加入至測資表。"
             }
         }
     },
@@ -114,8 +114,11 @@
         "selectLanguage": "選擇語言",
         "noLanguage": "沒有結果。",
         "fontSize": "字型大小",
+        "tabSize": "Tab 寬度",
         "decreaseFontSize": "縮小字體",
         "increaseFontSize": "放大字體",
+        "decreaseTabSize": "縮小 tab 寬度",
+        "increaseTabSize": "放大 tab 寬度",
         "defaultCode": "預設程式碼",
         "defaultCodeDesc": "以現在程式碼作為預設程式碼。",
         "defaultCodeBtn": "設置",
@@ -124,7 +127,7 @@
         "resetSettingsBtn": "重置",
         "codeFormatStyle": "格式化風格",
         "codeFormatStyleDesc": "選擇一個程式碼格式化風格。",
-        "cppVersion": "C++ Version"
+        "cppVersion": "C++ 版本"
     },
     "resize": {
         "loadingEditor": "正在載入編輯器"
