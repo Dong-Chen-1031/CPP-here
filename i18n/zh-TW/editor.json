@@ -97,8 +97,8 @@
         "runOptions": "運行設定",
         "downloadCode": "下載",
         "downloadCodeTip": "下載為 .cpp",
-        "uploadCode": "Upload",
-        "uploadCodeTip": "Upload a .cpp file"
+        "uploadCode": "上傳",
+        "uploadCodeTip": "上傳 .cpp 檔案"
     },
     "turnstile": {
         "verificationFailed": "驗證失敗",
@@ -114,11 +114,11 @@
         "selectLanguage": "選擇語言",
         "noLanguage": "沒有結果。",
         "fontSize": "字型大小",
-        "tabSize": "Tab Size",
+        "tabSize": "Tab 寬度",
         "decreaseFontSize": "縮小字體",
         "increaseFontSize": "放大字體",
-        "decreaseTabSize": "Decrease tab size",
-        "increaseTabSize": "Increase tab size",
+        "decreaseTabSize": "縮小 tab 寬度",
+        "increaseTabSize": "放大 tab 寬度",
         "defaultCode": "預設程式碼",
         "defaultCodeDesc": "以現在程式碼作為預設程式碼。",
         "defaultCodeBtn": "設置",
