@@ -1,1 +1,0 @@
-pake "https://cpp.doong.me/editor?desktop=true" --name "CPP Here" --icon "https://cpp.doong.me/web-app-manifest-512x512.png" --maximize --user-agent "C++ Here Desktop" --hide-title-bar

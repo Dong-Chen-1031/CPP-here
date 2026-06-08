@@ -13,7 +13,8 @@
         "astro": "bun copy-i18n && bun run logo && cd frontend && astro",
         "ext:chrome": "cd extensions && bun dev:chrome",
         "ext:firefox": "cd extensions && bun dev:firefox",
-        "logo": "bun run frontend/src/lib/printLogo.ts"
+        "logo": "bun run frontend/src/lib/printLogo.ts",
+        "build:mac": "pake \"https://cpp.doong.me/editor?desktop=true\" --name \"CPP Here\" --icon \"https://cpp.doong.me/web-app-manifest-512x512.png\" --maximize --user-agent \"C++ Here Desktop\" --hide-title-bar"
     },
     "dependencies": {
         "@astrojs/react": "^4.4.2",
