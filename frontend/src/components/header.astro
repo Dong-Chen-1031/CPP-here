@@ -4,7 +4,23 @@ import HeaderActions, { HeaderActionsMobile } from "@/components/HeaderActions";
 import { GithubLink } from "./header/githubLink";
 ---
 
-<div class="w-full h-13 flex items-center px-2 md:px-4 shrink-0">
+<style is:global>
+    .desktop #header {
+        margin-top: 1rem !important;
+    }
+</style>
+
+<div class="w-full h-13 flex items-center px-2 md:px-4 shrink-0" id="header">
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const desktop = urlParams.get("desktop");
+        console.log("desktop:", desktop);
+        console.log("urlParams:", urlParams.toString());
+        if (desktop === "true") {
+            document.documentElement.classList.add("desktop");
+        }
+    </script>
+
     <a href="/" class="flex items-center">
         <CodeIcon class="w-5 h-5 mr-2 md:w-6 md:h-6 shrink-0" />
         <h1 class="text-[min(1.25rem,3.5vw)] pr-2 font-bold shrink-0">
