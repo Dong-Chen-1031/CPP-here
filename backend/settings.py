@@ -38,8 +38,7 @@ JWT_SECRET = os.getenv("JWT_SECRET", "") or secrets.token_urlsafe(32)
 
 JWT_EXPIRY_SECONDS = 3600
 
-DOCKER_POOL_SIZE = 4
-
+DOCKER_POOL_SIZE = 15
 
 S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL", "")
 
@@ -59,3 +58,5 @@ SHARE = os.getenv("SHARE", "false").lower() in _yes and all(
 )
 
 BYPASS_CAPTCHA = os.getenv("BYPASS_CAPTCHA", "false").lower() in _yes
+
+CAPTCHA_TEST_TOKEN = os.getenv("CAPTCHA_TEST_TOKEN")

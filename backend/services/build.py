@@ -70,18 +70,20 @@ class ContainerPool:
     async def acquire(self):
         try:
             container = self.pool.get_nowait()
+            task = asyncio.create_task(self._replenish())
+            self._replenish_tasks.add(task)
+            task.add_done_callback(self._replenish_tasks.discard)
         except asyncio.QueueEmpty:
             container = await self._create_container()
         try:
             yield container
         finally:
-            task = asyncio.create_task(self._replenish())
-            self._replenish_tasks.add(task)
-            task.add_done_callback(self._replenish_tasks.discard)
             try:
                 await container.delete(force=True)
             except Exception:
-                pass
+                logger.warning(
+                    "Failed to delete container, it may have already been removed."
+                )
 
     async def shutdown(self):
         for task in list(self._replenish_tasks):
@@ -94,7 +96,9 @@ class ContainerPool:
                 try:
                     await container.delete(force=True)
                 except Exception:
-                    pass
+                    logger.warning(
+                        "Failed to delete container, it may have already been removed."
+                    )
             except asyncio.QueueEmpty:
                 break
         logger.info("Container pool shutdown complete")

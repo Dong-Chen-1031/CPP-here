@@ -1,3 +1,4 @@
+import hmac
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -49,6 +50,12 @@ def need_token(request: Request):
     token = request.headers.get("Authorization", "").replace("Bearer ", "")
     if not token:
         raise HTTPException(status_code=401, detail="Authorization token missing")
+
+    if settings.CAPTCHA_TEST_TOKEN and hmac.compare_digest(
+        token, settings.CAPTCHA_TEST_TOKEN
+    ):
+        logger.warning("Using CAPTCHA test token, bypassing verification")
+        return True
 
     token_decoded = is_verified(token)
     if not token_decoded:
