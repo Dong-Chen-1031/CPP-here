@@ -38,7 +38,7 @@ export const options = {
     scenarios: {
         ramp_up: {
             executor: "constant-arrival-rate",
-            rate: 2,
+            rate: 1,
             timeUnit: "1s",
             duration: "1m",
             preAllocatedVUs: 50, // 預先分配
