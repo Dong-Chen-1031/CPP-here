@@ -1,4 +1,8 @@
 {
+    "private": true,
+    "workspaces": [
+        "frontend"
+    ],
     "scripts": {
         "copy-i18n": "cp -r ./i18n ./frontend/public/",
         "copy-docker": "mkdir -p ./frontend/public/script && cp -r ./docker/* ./frontend/public/script",
