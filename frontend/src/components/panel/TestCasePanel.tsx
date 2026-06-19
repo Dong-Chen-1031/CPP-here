@@ -23,7 +23,7 @@ import {
     type TestCase,
 } from "@/store/atom";
 import { cn, useIsMobile } from "@/lib/utils";
-import { handleRun } from "@/api/run";
+import { handleRun } from "@/service/run";
 import { useTranslation } from "react-i18next";
 import TestEditDialog from "./TestEditDialog";
 

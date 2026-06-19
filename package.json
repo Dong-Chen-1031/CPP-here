@@ -17,6 +17,7 @@
         "build:mac": "pake \"https://cpp.doong.me/editor?desktop=true\" --name \"CPP Here\" --icon \"https://cpp.doong.me/web-app-manifest-512x512.png\" --maximize --user-agent \"C++ Here Desktop\" --hide-title-bar"
     },
     "dependencies": {
+        "@astrojs/cloudflare": "^13.7.0",
         "@astrojs/react": "^4.4.2",
         "@astrojs/sitemap": "^3.7.3",
         "@base-ui/react": "^1.5.0",
@@ -37,6 +38,7 @@
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
         "concurrently": "^9.2.1",
+        "hono": "^4.12.26",
         "i18next": "^26.3.1",
         "i18next-browser-languagedetector": "^8.2.1",
         "i18next-http-backend": "^3.0.6",

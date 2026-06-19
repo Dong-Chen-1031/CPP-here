@@ -13,7 +13,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/checkbox";
-import { fetchSharedCode } from "@/api/share";
+import { fetchSharedCode } from "@/service/share";
 import { getDefaultStore } from "jotai";
 import {
     alertStore,

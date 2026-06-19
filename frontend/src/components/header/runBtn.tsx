@@ -22,7 +22,7 @@ import {
     verifyJwtStore,
 } from "@/store/atom";
 
-import { handleRun, handleRunAll } from "@/api/run";
+import { handleRun, handleRunAll } from "@/service/run";
 
 import Tip from "@/components/ui/tips";
 import { cn, commandKeyIcon } from "@/lib/utils";

@@ -13,7 +13,7 @@ import { alertStore } from "@/store/atom";
 
 import Tip from "@/components/ui/tips";
 import IconMotion from "@/components/IconMotion";
-import { shareCode } from "@/api/share";
+import { shareCode } from "@/service/share";
 
 export function ShareButton({
     className = "",

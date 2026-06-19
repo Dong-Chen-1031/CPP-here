@@ -3,7 +3,7 @@ import { atomWithStorage, RESET, useResetAtom } from "jotai/utils";
 import { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import type { RefObject } from "react";
 import type { TurnstileInstance } from "@marsidev/react-turnstile";
-import type { CodeWorker } from "@/api/run";
+import type { CodeWorker } from "@/service/run";
 import type { AlertDialogOptions } from "@/components/Alert";
 import type { EditDialogOptions } from "@/components/panel/TestEditDialog";
 import { defCodeStore } from "./configStore";
