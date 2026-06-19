@@ -9,7 +9,11 @@ import cloudflare from "@astrojs/cloudflare";
 
 // https://astro.build/config
 export default defineConfig({
-    adapter: cloudflare(),
+    output: "static",
+    adapter: cloudflare({
+        imageService: "compile",
+        prerenderEnvironment: "node",
+    }),
     site: "https://cpp.doong.me",
     integrations: [
         react(),

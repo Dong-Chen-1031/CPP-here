@@ -1,0 +1,20 @@
+{
+    "scripts": {
+        "copy-i18n": "cp -r ./i18n ./frontend/public/",
+        "copy-docker": "mkdir -p ./frontend/public/script && cp -r ./docker/* ./frontend/public/script",
+        "frontend": "bun copy-i18n && bun run logo && cd frontend && bun dev",
+        "backend": "cd backend && python main.py",
+        "dev": "NO_LOGO=true concurrently \"bun run frontend\" \"bun run backend\"",
+        "build": "bun copy-i18n && bun copy-docker && bun run logo && cd frontend && bun run build",
+        "preview": "bun copy-i18n && cd frontend && bun run logo && bun run preview",
+        "deploy": "cd frontend && bun run deploy",
+        "astro": "bun copy-i18n && bun run logo && cd frontend && bun run astro",
+        "ext:chrome": "cd extensions && bun run dev:chrome",
+        "ext:firefox": "cd extensions && bun run dev:firefox",
+        "logo": "bun run frontend/src/lib/printLogo.js",
+        "build:mac": "pake \"https://cpp.doong.me/editor?desktop=true\" --name \"CPP Here\" --icon \"https://cpp.doong.me/web-app-manifest-512x512.png\" --maximize --user-agent \"C++ Here Desktop\" --hide-title-bar"
+    },
+    "dependencies": {
+        "concurrently": "^10.0.3"
+    }
+}

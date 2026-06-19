@@ -4,9 +4,10 @@
     "version": "0.0.1",
     "scripts": {
         "dev": "astro dev --host",
-        "build": "bun copy-docker && astro build",
+        "build": "astro build",
         "preview": "astro preview",
-        "astro": "astro"
+        "astro": "astro",
+        "deploy": "bun run build && wrangler deploy"
     },
     "dependencies": {
         "@astrojs/cloudflare": "^13.7.0",
