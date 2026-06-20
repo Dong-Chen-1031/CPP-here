@@ -1,8 +1,8 @@
 ---
 import { Button } from "@/components/ui/button";
-import config from "@/config/constants";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import { CodeIcon } from "@lucide/astro";
+import { PUBLIC_GITHUB_LINK } from "astro:env/client";
 
 interface Props {
     lang?: string;
@@ -23,13 +23,13 @@ const { t } = Astro.props as Props;
             > -->
     <div class="flex-1"></div>
 
-    <a href={config.githubLink} target="_blank" rel="noopener noreferrer">
+    <a href={PUBLIC_GITHUB_LINK} target="_blank" rel="noopener noreferrer">
         <Button className="hover:bg-primary/80 " variant={"outline"}>
             <SiGithub />
             <p class="ml-1">Github</p>
         </Button>
     </a>
-    <a href={config.editorLink}>
+    <a href="/editor">
         <Button className="hover:bg-primary/80 transition ml-3">
             {t?.openEditor}
         </Button>

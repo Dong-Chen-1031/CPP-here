@@ -11,8 +11,8 @@ import cloudflare from "@astrojs/cloudflare";
 export default defineConfig({
     output: "static",
     adapter: cloudflare({
-        imageService: "compile",
         prerenderEnvironment: "node",
+        imageService: "passthrough",
     }),
     site: "https://cpp.doong.me",
     integrations: [
@@ -30,6 +30,9 @@ export default defineConfig({
     vite: {
         // @ts-ignore I don't know why tailwindcss types are not working. But it works fine.
         plugins: [tailwindcss()],
+        optimizeDeps: {
+            include: ["react-dom/client"],
+        },
         ssr: {
             noExternal: ["@wasm-fmt/clang-format"],
         },
@@ -39,6 +42,13 @@ export default defineConfig({
     },
     env: {
         schema: {
+            PUBLIC_FRONTEND_URL: envField.string({
+                context: "client",
+                access: "public",
+                optional: true,
+                url: true,
+                default: "http://localhost:3000",
+            }),
             PUBLIC_TURNSTILE_SITE_KEY: envField.string({
                 context: "client",
                 access: "public",
@@ -92,6 +102,57 @@ export default defineConfig({
                 access: "public",
                 optional: true,
                 url: true,
+                default: "",
+            }),
+            PRIVATE_JWT_SECRET: envField.string({
+                context: "server",
+                access: "secret",
+                optional: true,
+                default: Buffer.from(
+                    crypto.getRandomValues(new Uint8Array(32)),
+                ).toString("hex"),
+            }),
+            PRIVATE_JWT_EXPIRATION_SECONDS: envField.number({
+                context: "server",
+                access: "secret",
+                optional: true,
+                default: 60 * 60, // 1 hour
+            }),
+            PUBLIC_BYPASS_CAPTCHA: envField.boolean({
+                context: "client",
+                access: "public",
+                optional: true,
+                default: false,
+            }),
+            PRIVATE_TEST_JWT: envField.string({
+                context: "server",
+                access: "secret",
+                optional: true,
+                default: "",
+            }),
+            PRIVATE_S3_ENDPOINT_URL: envField.string({
+                context: "server",
+                access: "secret",
+                optional: true,
+                url: true,
+                default: "",
+            }),
+            PRIVATE_S3_KEY_ID: envField.string({
+                context: "server",
+                access: "secret",
+                optional: true,
+                default: "",
+            }),
+            PRIVATE_S3_ACCESS_KEY: envField.string({
+                context: "server",
+                access: "secret",
+                optional: true,
+                default: "",
+            }),
+            PRIVATE_S3_BUCKET_NAME: envField.string({
+                context: "server",
+                access: "secret",
+                optional: true,
                 default: "",
             }),
         },

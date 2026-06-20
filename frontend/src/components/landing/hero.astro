@@ -4,7 +4,7 @@ import { PlayIcon } from "@lucide/astro";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import "@/styles/landing.css";
 import HeroCard from "@/components/landing/heroCard.astro";
-import config from "@/config/constants";
+import { PUBLIC_GITHUB_LINK } from "astro:env/client";
 
 interface Props {
     lang?: string;
@@ -43,7 +43,7 @@ const { t } = Astro.props as Props;
         </p>
     </div>
     <div class="flex items-center justify-center mt-13 gap-5 *:text-[0.9rem]">
-        <a href={config.editorLink}>
+        <a href={"/editor"}>
             <Button
                 className="hover:bg-primary/80 transition ml-3 "
                 size={"xl"}>
@@ -51,7 +51,7 @@ const { t } = Astro.props as Props;
                 <p>{t?.startCoding}</p>
             </Button>
         </a>
-        <a href={config.githubLink} target="_blank" rel="noopener noreferrer">
+        <a href={PUBLIC_GITHUB_LINK} target="_blank" rel="noopener noreferrer">
             <Button
                 className="hover:bg-primary/80 "
                 variant={"outline"}

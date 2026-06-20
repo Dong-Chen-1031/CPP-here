@@ -2,9 +2,8 @@
 import { getImage } from "astro:assets";
 import heroImg from "@/assets/hero.png";
 import heroPhone from "@/assets/hero-phone.png";
-import config from "@/config/constants";
-
-const isProd = config.run_mode === "production";
+``;
+const isProd = import.meta.env.PROD;
 const formats = isProd ? (["avif", "webp"] as const) : (["webp"] as const);
 
 const mobileImages = await Promise.all(

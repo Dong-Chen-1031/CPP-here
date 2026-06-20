@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { PlayIcon } from "@lucide/astro";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import Hr from "@/components/landing/hr.astro";
-import config from "@/config/constants";
+import { PUBLIC_GITHUB_LINK } from "astro:env/client";
 
 interface Props {
     lang?: string;
@@ -45,14 +45,14 @@ const { t } = Astro.props as Props;
         </p>
         <div
             class="flex items-center justify-center mt-10 gap-4 *:text-[0.9rem] flex-wrap">
-            <a href={config.editorLink}>
+            <a href="/editor">
                 <Button className="w-44" size={"xl"}>
                     <PlayIcon class="size-4" />
                     <p>{t?.startCoding}</p>
                 </Button>
             </a>
             <a
-                href={config.githubLink}
+                href={PUBLIC_GITHUB_LINK}
                 target="_blank"
                 rel="noopener noreferrer">
                 <Button className="w-44" variant={"outline"} size="xl">
