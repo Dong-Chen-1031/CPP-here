@@ -24,20 +24,18 @@ export const onRequest = defineMiddleware(async (context, next) => {
         console.warn("No JWT token provided in Authorization header");
         return new Response("Unauthorized", { status: 401 });
     }
-    if (
-        PRIVATE_TEST_JWT &&
-        crypto.timingSafeEqual(
-            Buffer.from(token || ""),
-            Buffer.from(PRIVATE_TEST_JWT),
-        )
-    ) {
-        console.warn("Using test JWT token, bypassing verification");
-        return next();
+    if (PRIVATE_TEST_JWT) {
+        const a = Buffer.from(token);
+        const b = Buffer.from(PRIVATE_TEST_JWT);
+        if (a.length === b.length && crypto.timingSafeEqual(a, b)) {
+            console.warn("Using test JWT token, bypassing verification");
+            return next();
+        }
     }
     const isValid = await verifyJWT(token);
     if (!isValid) {
         console.warn("JWT verification failed");
-        return new Response("Unauthorized", { status: 401 });
+        return new Response("Forbidden", { status: 403 });
     }
     return next();
 });

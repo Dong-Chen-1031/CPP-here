@@ -124,6 +124,12 @@ export default defineConfig({
                 optional: true,
                 default: false,
             }),
+            PRIVATE_TURNSTILE_SECRET_KEY: envField.string({
+                context: "server",
+                access: "secret",
+                optional: true,
+                default: "1x0000000000000000000000000000000AA",
+            }),
             PRIVATE_TEST_JWT: envField.string({
                 context: "server",
                 access: "secret",
