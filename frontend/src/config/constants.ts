@@ -20,4 +20,4 @@ export const config = {
     s3BucketUrl: import.meta.env.PUBLIC_S3_BUCKET_URL,
 } as const;
 
-export default config;
+// export default config;

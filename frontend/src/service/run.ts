@@ -1,4 +1,3 @@
-import config from "@/config/constants";
 import {
     alertStore,
     codeStore,
@@ -14,6 +13,7 @@ import {
     verifyJwtStore,
     type OutputCase,
 } from "@/store/atom";
+import { PUBLIC_API_URL } from "astro:env/client";
 import axios from "axios";
 import { getDefaultStore } from "jotai";
 
@@ -33,7 +33,7 @@ export async function buildCode(code: string, cppVersion: string) {
         // console.log("JWT for build request:", jwt);
 
         const respond = await axios.post(
-            `${config.api_endpoints}/build`,
+            `${PUBLIC_API_URL}/build`,
             {
                 code: code,
                 cpp_version: cppVersion,

@@ -1,4 +1,3 @@
-import config from "@/config/constants";
 import {
     alertStore,
     codeStore,
@@ -8,6 +7,7 @@ import {
     turnstileRefStore,
     verifyJwtStore,
 } from "@/store/atom";
+import { PUBLIC_API_URL, PUBLIC_S3_BUCKET_URL } from "astro:env/client";
 import axios from "axios";
 import { getDefaultStore } from "jotai";
 
@@ -35,7 +35,7 @@ export async function shareCode() {
             outputData,
         } as ShareObject);
         const respond = await axios.post(
-            `${config.api_endpoints}/share`,
+            `${PUBLIC_API_URL}/share`,
             {
                 code: fullCode,
             },
@@ -76,7 +76,7 @@ export async function shareCode() {
 }
 
 export async function fetchSharedCode(shareId: string) {
-    if (!config.s3BucketUrl) {
+    if (!PUBLIC_S3_BUCKET_URL) {
         console.error(
             "S3 bucket URL is not configured. Cannot fetch shared code.",
         );
@@ -84,7 +84,7 @@ export async function fetchSharedCode(shareId: string) {
     }
     try {
         const respond = await axios.get(
-            `${config.s3BucketUrl}/share/${shareId}`,
+            `${PUBLIC_S3_BUCKET_URL}/share/${shareId}`,
         );
 
         return { ok: true, data: respond.data as ShareObject };
