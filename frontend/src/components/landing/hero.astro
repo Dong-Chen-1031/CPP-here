@@ -43,7 +43,7 @@ const { t } = Astro.props as Props;
         </p>
     </div>
     <div class="flex items-center justify-center mt-13 gap-5 *:text-[0.9rem]">
-        <a href={config.editorLink}>
+        <a href={config.editorLink} id="hero-start-coding-btn">
             <Button
                 className="hover:bg-primary/80 transition ml-3 "
                 size={"xl"}>
@@ -65,3 +65,9 @@ const { t } = Astro.props as Props;
     <HeroCard />
     <div class="h-4"></div>
 </section>
+
+<script is:inline>
+  document.getElementById('hero-start-coding-btn')?.addEventListener('click', function() {
+    window.posthog?.capture('start_coding_clicked', { location: 'hero' });
+  });
+</script>

@@ -314,6 +314,10 @@ export async function handleRun({
     const response = await buildCode(code, cppVersion);
 
     if (!response.ok || !response.js_code) {
+        window.posthog?.capture("code_build_failed", {
+            cpp_version: cppVersion,
+            mode: "single",
+        });
         showError("Build failed with errors:\n" + response.errors[0], {
             title: "Build Failed",
             description:
@@ -323,6 +327,10 @@ export async function handleRun({
         store.set(runStatusStore, "idle");
         return;
     }
+
+    window.posthog?.capture("code_run", {
+        cpp_version: cppVersion,
+    });
 
     runCode(response.js_code, input, {
         wasmUrl: response.wasm_url,
@@ -414,6 +422,11 @@ export async function handleRunAll() {
 
     const response = await buildCode(code, cppVersion);
     if (!response.ok || !response.js_code || !response.wasm_url) {
+        window.posthog?.capture("code_build_failed", {
+            cpp_version: cppVersion,
+            mode: "all",
+            test_case_count: testCases.length,
+        });
         showError("Build failed with errors:\n" + response.errors[0], {
             title: "Build Failed",
             description:
@@ -423,6 +436,12 @@ export async function handleRunAll() {
         store.set(runStatusStore, "idle");
         return;
     }
+
+    window.posthog?.capture("code_run_all", {
+        cpp_version: cppVersion,
+        test_case_count: testCases.length,
+    });
+
     const wasmModule = await url2WasmModule(response.wasm_url);
 
     // exitCount = 0;

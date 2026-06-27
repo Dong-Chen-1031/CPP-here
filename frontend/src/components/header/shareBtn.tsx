@@ -75,6 +75,10 @@ export function ShareButton({
 
                                 const copied = await clipboardWritePromise;
 
+                                window.posthog?.capture("code_shared", {
+                                    clipboard_copied: copied,
+                                });
+
                                 defaultStore.set(alertStore, (p) => [
                                     ...p,
                                     {

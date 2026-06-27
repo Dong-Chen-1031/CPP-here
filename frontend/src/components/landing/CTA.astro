@@ -45,7 +45,7 @@ const { t } = Astro.props as Props;
         </p>
         <div
             class="flex items-center justify-center mt-10 gap-4 *:text-[0.9rem] flex-wrap">
-            <a href={config.editorLink}>
+            <a href={config.editorLink} id="cta-start-coding-btn">
                 <Button className="w-44" size={"xl"}>
                     <PlayIcon class="size-4" />
                     <p>{t?.startCoding}</p>
@@ -63,3 +63,9 @@ const { t } = Astro.props as Props;
         </div>
     </div>
 </section>
+
+<script is:inline>
+  document.getElementById('cta-start-coding-btn')?.addEventListener('click', function() {
+    window.posthog?.capture('cta_start_coding_clicked', { location: 'cta' });
+  });
+</script>

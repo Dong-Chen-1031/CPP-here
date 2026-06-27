@@ -43,6 +43,7 @@
         "jotai": "^2.20.0",
         "lucide-react": "^0.576.0",
         "motion": "^12.40.0",
+        "posthog-js": "^1.394.0",
         "radix-ui": "^1.5.0",
         "react": "^19.2.7",
         "react-dom": "^19.2.7",

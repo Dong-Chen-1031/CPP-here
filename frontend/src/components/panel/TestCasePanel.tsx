@@ -123,6 +123,11 @@ export default function TestCasePanel({
             // console.log(testCases);
             if (testCases.length === 0) {
                 setTestCases(testCasesFromExtension);
+                window.posthog?.capture("extension_test_cases_imported", {
+                    test_case_count: testCasesFromExtension.length,
+                    problem_name: testCaseData.name,
+                    mode: "overwrite",
+                });
                 setAlert((p) => [
                     ...p,
                     {
@@ -153,6 +158,11 @@ export default function TestCasePanel({
                         text: t("testCase.extension.alertDialog.overwrite"),
                         onClick: () => {
                             setTestCases(testCasesFromExtension);
+                            window.posthog?.capture("extension_test_cases_imported", {
+                                test_case_count: testCasesFromExtension.length,
+                                problem_name: testCaseData.name,
+                                mode: "overwrite",
+                            });
                             if (isMobile) {
                                 setPanel("testCases");
                             }
@@ -166,6 +176,11 @@ export default function TestCasePanel({
                                 ...testCasesFromExtension,
                                 ...prev,
                             ]);
+                            window.posthog?.capture("extension_test_cases_imported", {
+                                test_case_count: testCasesFromExtension.length,
+                                problem_name: testCaseData.name,
+                                mode: "insert",
+                            });
                             if (isMobile) {
                                 setPanel("testCases");
                             }
@@ -193,6 +208,9 @@ export default function TestCasePanel({
             expectedOutput: expected,
         };
         setTestCases((prev) => [...prev, newTestCase]);
+        window.posthog?.capture("test_case_added", {
+            has_expected_output: !!expected,
+        });
     }
     const cantRun = runStatus !== "idle" || !jwt;
 
@@ -329,6 +347,7 @@ export default function TestCasePanel({
                                                             testCase.id,
                                                     ),
                                                 );
+                                                window.posthog?.capture("test_case_deleted");
                                             }}>
                                             <Trash className="w-4 h-4" />
                                         </Button>
