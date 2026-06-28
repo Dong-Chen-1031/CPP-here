@@ -2,7 +2,13 @@
 // components/PostHog.astro
 ---
 
-<script is:inline>
+<script
+    is:inline
+    define:vars={{
+        token: import.meta.env.PUBLIC_POSTHOG_PROJECT_TOKEN,
+        host: import.meta.env.PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
+    }}
+>
     !(function (t, e) {
         var o, n, p, r;
         e.__SV ||
@@ -41,6 +47,8 @@
             }),
             (e.__SV = 1));
     })(document, window.posthog || []);
+
+    posthog.init(token, { api_host: host });
 </script>
 
 <script>
@@ -53,6 +61,5 @@
         ui_host: "https://us.posthog.com",
     });
 
-    // @ts-ignore TODO: Fix this type error later.
-    window.posthog = posthog;
+    (window as any).posthog = posthog;
 </script>
