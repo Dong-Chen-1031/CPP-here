@@ -1,5 +1,4 @@
 import {
-    alertStore,
     codeStore,
     inputStore,
     outputStore,
@@ -8,7 +7,8 @@ import {
     verifyJwtStore,
 } from "@/store/atom";
 import { PUBLIC_API_URL, PUBLIC_S3_BUCKET_URL } from "astro:env/client";
-import axios from "axios";
+import { axios, apiAxios } from "@/lib/axiosInstance";
+import { addAlert } from "@/lib/alert";
 import { getDefaultStore } from "jotai";
 
 const defaultStore = getDefaultStore();
@@ -34,8 +34,8 @@ export async function shareCode() {
             inputData,
             outputData,
         } as ShareObject);
-        const respond = await axios.post(
-            `${PUBLIC_API_URL}/share`,
+        const respond = await apiAxios.post(
+            `/share`,
             {
                 code: fullCode,
             },
@@ -50,16 +50,12 @@ export async function shareCode() {
         console.error("Error during share request:", error);
         if (axios.isAxiosError(error) && error.status === 401) {
             defaultStore.set(verifyJwtStore, null);
-            defaultStore.set(alertStore, (p) => [
-                ...p,
-                {
-                    title: "Unauthorized",
-                    description:
-                        "Your verification has expired and will be automatically renewed. Please try running your code again.",
-                    variant: "destructive",
-                    id: crypto.randomUUID(),
-                },
-            ]);
+            addAlert({
+                title: "Unauthorized",
+                description:
+                    "Your verification has expired and will be automatically renewed. Please try running your code again.",
+                variant: "destructive",
+            });
             const turnstileRef = defaultStore.get(turnstileRefStore);
             turnstileRef?.current?.reset();
 

@@ -25,16 +25,16 @@ export interface OutputCase {
 
 export type PanelDrawerView = "input" | "testCases" | "output";
 
-export const alertStore = atom<
-    {
-        title: string;
-        description: string;
-        variant?: "default" | "destructive";
-        className?: string;
-        id: string;
-        icon?: React.ReactNode;
-    }[]
->([]);
+export type Alert = {
+    title: string;
+    description: string;
+    variant?: "default" | "destructive";
+    className?: string;
+    id: string;
+    icon?: React.ReactNode;
+};
+
+export const alertStore = atom<Alert[]>([]);
 
 export const loadedCountStore = atom(0);
 

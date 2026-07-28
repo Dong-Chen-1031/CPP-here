@@ -80,6 +80,9 @@ export function Settings({ allLangs }: SettingsProps) {
             setLocalLang(newLang);
             i18n.changeLanguage(allLangs[newLang]);
             setComboOpen(false);
+            window.posthog?.capture("settings_language_changed", {
+                language: allLangs[newLang],
+            });
         }
     };
 

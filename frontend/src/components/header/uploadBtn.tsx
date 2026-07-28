@@ -32,6 +32,10 @@ export function UploadButton({
             const content = e.target?.result;
             if (typeof content === "string") {
                 setCode(content);
+                window.posthog?.capture("code_uploaded", {
+                    file_name: file.name,
+                    file_size: file.size,
+                });
             }
         };
         reader.readAsText(file);

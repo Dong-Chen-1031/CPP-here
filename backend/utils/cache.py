@@ -2,7 +2,7 @@ import asyncio
 import shutil
 import time
 
-from settings import CACHE_EXPIRY, CACHE_LIMIT, CACHE_PATH, CACHE_SQLITE_PATH
+from settings import settings
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -18,7 +18,7 @@ class Catch(
     version: str = Field(default="0.1.0")
     timestamp: int = Field(default_factory=lambda: int(time.time()))
     delete_at: int = Field(
-        default_factory=lambda: int(time.time()) + CACHE_EXPIRY
+        default_factory=lambda: int(time.time()) + settings.CACHE_EXPIRY
     )  # default to delete after 7 days
     use_time: int = Field(default=1)
 
@@ -31,7 +31,7 @@ class BuildStats(SQLModel, table=True):
     total_duration_seconds: float = Field(default=0.0)
 
 
-engine = create_async_engine(CACHE_SQLITE_PATH)
+engine = create_async_engine(settings.CACHE_SQLITE_PATH)
 
 async_session = async_sessionmaker(engine, expire_on_commit=False)
 
@@ -71,7 +71,7 @@ async def get_cache(hash_id: str) -> Catch | None:
                 if result.delete_at > int(time.time()):
                     result.use_time += 1
                     result.delete_at = (
-                        int(time.time()) + CACHE_EXPIRY
+                        int(time.time()) + settings.CACHE_EXPIRY
                     )  # extend expiry on access
                     await session.commit()
                     return result
@@ -92,7 +92,9 @@ async def del_oldest_cache(num: int):
 
             for cache in oldest_caches:
                 await asyncio.to_thread(
-                    shutil.rmtree, f"{CACHE_PATH}/{cache.hash_id}", ignore_errors=True
+                    shutil.rmtree,
+                    f"{settings.CACHE_PATH}/{cache.hash_id}",
+                    ignore_errors=True,
                 )
                 await session.delete(cache)
             await session.commit()
@@ -110,7 +112,9 @@ async def delete_expired_caches():
 
             for cache in expired_caches:
                 await asyncio.to_thread(
-                    shutil.rmtree, f"{CACHE_PATH}/{cache.hash_id}", ignore_errors=True
+                    shutil.rmtree,
+                    f"{settings.CACHE_PATH}/{cache.hash_id}",
+                    ignore_errors=True,
                 )
                 await session.delete(cache)
 
@@ -125,8 +129,8 @@ async def cleanup_caches():
             count = (
                 await session.execute(select(func.count()).select_from(Catch))
             ).scalar() or 0
-            if count > CACHE_LIMIT:
-                await del_oldest_cache(count - CACHE_LIMIT)
+            if count > settings.CACHE_LIMIT:
+                await del_oldest_cache(count - settings.CACHE_LIMIT)
         except Exception as e:
             logger.error(f"Error cleaning up caches: {e}")
 

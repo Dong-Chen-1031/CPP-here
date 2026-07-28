@@ -6,11 +6,12 @@ import axios from "axios";
 import { useAtom } from "jotai";
 import { alertStore, turnstileRefStore, verifyJwtStore } from "@/store/atom";
 import { PUBLIC_API_URL, PUBLIC_TURNSTILE_SITE_KEY } from "astro:env/client";
+import { addAlert } from "@/lib/alert";
+import { apiAxios } from "@/lib/axiosInstance";
 
 export default function TurnstileWidget() {
     const turnstileRef = useRef<TurnstileInstance | null>(null);
     const [jwt, setJwt] = useAtom(verifyJwtStore);
-    const [alerts, setAlert] = useAtom(alertStore);
     const [, setTurnstileRefGlobal] = useAtom(turnstileRefStore);
     const { t } = useTranslation(["editor"]);
     useEffect(() => {
@@ -24,7 +25,7 @@ export default function TurnstileWidget() {
             options={{ retryInterval: 1000 }}
             onSuccess={async (token) => {
                 try {
-                    const res = await axios.post(`${PUBLIC_API_URL}/verify`, {
+                    const res = await apiAxios.post(`/verify`, {
                         token: token,
                     });
                     setJwt(res.data.token);
@@ -37,44 +38,31 @@ export default function TurnstileWidget() {
                     );
                 } catch (err) {
                     console.error("Verification error:", err);
-                    setAlert((p) => [
-                        ...p,
-                        {
-                            title: t("turnstile.verificationFailed"),
-                            description: t("turnstile.verificationFailedDesc"),
-                            variant: "destructive",
-                            id: crypto.randomUUID(),
-                        },
-                    ]);
-                    console.log(alerts);
+                    addAlert({
+                        title: t("turnstile.verificationFailed"),
+                        description: t("turnstile.verificationFailedDesc"),
+                        variant: "destructive",
+                    });
                     // turnstileRef.current?.reset();
                 }
             }}
             onUnsupported={() => {
-                setAlert((p) => [
-                    ...p,
-                    {
-                        title: t("turnstile.unsupported"),
-                        description: t("turnstile.unsupportedDesc"),
-                        variant: "destructive",
-                        id: crypto.randomUUID(),
-                    },
-                ]);
+                addAlert({
+                    title: t("turnstile.unsupported"),
+                    description: t("turnstile.unsupportedDesc"),
+                    variant: "destructive",
+                });
             }}
             onTimeout={() => {
                 console.log("Turnstile timed out.");
             }}
             onError={(err) => {
                 console.error("Turnstile error:", err);
-                setAlert((p) => [
-                    ...p,
-                    {
-                        title: t("turnstile.error"),
-                        description: t("turnstile.errorDesc"),
-                        variant: "destructive",
-                        id: crypto.randomUUID(),
-                    },
-                ]);
+                addAlert({
+                    title: t("turnstile.error"),
+                    description: t("turnstile.errorDesc"),
+                    variant: "destructive",
+                });
                 // turnstileRef.current?.reset();
             }}
         />

@@ -1,5 +1,4 @@
 import {
-    alertStore,
     codeStore,
     codeWorkersStore,
     cppVersionStore,
@@ -14,9 +13,9 @@ import {
     type OutputCase,
 } from "@/store/atom";
 import { PUBLIC_API_URL } from "astro:env/client";
-import axios from "axios";
+import { apiAxios, axios } from "@/lib/axiosInstance";
+import { addAlert } from "@/lib/alert";
 import { getDefaultStore } from "jotai";
-
 interface BuildResponse {
     ok: boolean;
     js_url?: string;
@@ -32,8 +31,8 @@ export async function buildCode(code: string, cppVersion: string) {
         const jwt = defaultStore.get(verifyJwtStore) || "";
         // console.log("JWT for build request:", jwt);
 
-        const respond = await axios.post(
-            `${PUBLIC_API_URL}/build`,
+        const respond = await apiAxios.post(
+            `/build`,
             {
                 code: code,
                 cpp_version: cppVersion,
@@ -49,16 +48,12 @@ export async function buildCode(code: string, cppVersion: string) {
         console.error("Error during build request:", error);
         if (axios.isAxiosError(error) && error.status === 401) {
             defaultStore.set(verifyJwtStore, null);
-            defaultStore.set(alertStore, (p) => [
-                ...p,
-                {
-                    title: "Unauthorized",
-                    description:
-                        "Your verification has expired and will be automatically renewed. Please try running your code again.",
-                    variant: "destructive",
-                    id: crypto.randomUUID(),
-                },
-            ]);
+            addAlert({
+                title: "Unauthorized",
+                description:
+                    "Your verification has expired and will be automatically renewed. Please try running your code again.",
+                variant: "destructive",
+            });
             const turnstileRef = defaultStore.get(turnstileRefStore);
             turnstileRef?.current?.reset();
 
@@ -86,7 +81,7 @@ async function url2BlobUrl(
     url: string,
     type: string = "application/javascript",
 ) {
-    const response = await axios.get(url);
+    const response = await apiAxios.get(url);
     const code = response.data;
     return text2BlobUrl(code, type);
 }
@@ -270,15 +265,11 @@ export function showError(err: string, options?: ShowErrorOptions) {
         options?.description ||
         "An error occurred. Please check output for details.";
 
-    store.set(alertStore, (p) => [
-        ...p,
-        {
-            title,
-            description,
-            variant: "destructive",
-            id: crypto.randomUUID(),
-        },
-    ]);
+    addAlert({
+        title,
+        description,
+        variant: "destructive",
+    });
 
     const outputItem: OutputCase = {
         type: "err",
@@ -314,6 +305,10 @@ export async function handleRun({
     const response = await buildCode(code, cppVersion);
 
     if (!response.ok || !response.js_code) {
+        window.posthog?.capture("code_build_failed", {
+            cpp_version: cppVersion,
+            mode: "single",
+        });
         showError("Build failed with errors:\n" + response.errors[0], {
             title: "Build Failed",
             description:
@@ -323,6 +318,10 @@ export async function handleRun({
         store.set(runStatusStore, "idle");
         return;
     }
+
+    window.posthog?.capture("code_run", {
+        cpp_version: cppVersion,
+    });
 
     runCode(response.js_code, input, {
         wasmUrl: response.wasm_url,
@@ -395,16 +394,12 @@ export async function handleRunAll() {
     // let exitCount = 0;
 
     if (testCases.length === 0) {
-        store.set(alertStore, (p) => [
-            ...p,
-            {
-                title: "No Test Cases",
-                description:
-                    "There are no test cases to run. Please add some test cases first.",
-                variant: "destructive",
-                id: crypto.randomUUID(),
-            },
-        ]);
+        addAlert({
+            title: "No Test Cases",
+            description:
+                "There are no test cases to run. Please add some test cases first.",
+            variant: "destructive",
+        });
         return;
     }
     store.set(runStatusStore, "building");
@@ -414,6 +409,11 @@ export async function handleRunAll() {
 
     const response = await buildCode(code, cppVersion);
     if (!response.ok || !response.js_code || !response.wasm_url) {
+        window.posthog?.capture("code_build_failed", {
+            cpp_version: cppVersion,
+            mode: "all",
+            test_case_count: testCases.length,
+        });
         showError("Build failed with errors:\n" + response.errors[0], {
             title: "Build Failed",
             description:
@@ -423,6 +423,12 @@ export async function handleRunAll() {
         store.set(runStatusStore, "idle");
         return;
     }
+
+    window.posthog?.capture("code_run_all", {
+        cpp_version: cppVersion,
+        test_case_count: testCases.length,
+    });
+
     const wasmModule = await url2WasmModule(response.wasm_url);
 
     // exitCount = 0;

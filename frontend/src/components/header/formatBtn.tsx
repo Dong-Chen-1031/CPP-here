@@ -52,6 +52,7 @@ export function FormatButton({
                             setFormatting(false);
                             setFormatted(true);
                             setTimeout(() => setFormatted(false), 1500);
+                            window.posthog?.capture("code_formatted");
                         });
                         onClick(e);
                     }}

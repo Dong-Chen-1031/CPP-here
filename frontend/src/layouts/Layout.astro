@@ -1,5 +1,6 @@
 ---
 import "@/styles/global.css";
+import PostHog from "@/components/posthog.astro";
 
 interface Props {
     title?: string;
@@ -95,6 +96,9 @@ const ogImageURL = ogImage.startsWith("http")
             href="https://font.emtech.cc/css/GlowSansTC/700"
             rel="stylesheet"
         /> -->
+
+        <!-- PostHog analytics -->
+        <PostHog />
 
         <!-- Google tag (gtag.js) -->
         <script

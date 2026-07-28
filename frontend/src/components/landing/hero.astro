@@ -65,3 +65,13 @@ const { t } = Astro.props as Props;
     <HeroCard />
     <div class="h-4"></div>
 </section>
+
+<script is:inline>
+    document
+        .getElementById("hero-start-coding-btn")
+        ?.addEventListener("click", function () {
+            window.posthog?.capture("start_coding_clicked", {
+                location: "hero",
+            });
+        });
+</script>

@@ -1,0 +1,67 @@
+[
+  {
+    "event_name": "code_run",
+    "event_description": "User clicks Run to compile and execute their C++ code against the current input.",
+    "file": "frontend/src/api/run.ts"
+  },
+  {
+    "event_name": "code_run_all",
+    "event_description": "User clicks Run All to compile and execute their C++ code against all test cases.",
+    "file": "frontend/src/api/run.ts"
+  },
+  {
+    "event_name": "code_build_failed",
+    "event_description": "The compile step fails with errors before execution begins.",
+    "file": "frontend/src/api/run.ts"
+  },
+  {
+    "event_name": "code_shared",
+    "event_description": "User successfully creates a shareable link for their code.",
+    "file": "frontend/src/components/header/shareBtn.tsx"
+  },
+  {
+    "event_name": "code_downloaded",
+    "event_description": "User downloads the current editor code as a .cpp file.",
+    "file": "frontend/src/components/header/downloadBtn.tsx"
+  },
+  {
+    "event_name": "code_uploaded",
+    "event_description": "User uploads a local source file and replaces the editor contents.",
+    "file": "frontend/src/components/header/uploadBtn.tsx"
+  },
+  {
+    "event_name": "code_formatted",
+    "event_description": "User triggers Clang-format to reformat the editor code.",
+    "file": "frontend/src/components/header/formatBtn.tsx"
+  },
+  {
+    "event_name": "test_case_added",
+    "event_description": "User adds a new test case to the test case panel.",
+    "file": "frontend/src/components/panel/TestCasePanel.tsx"
+  },
+  {
+    "event_name": "test_case_deleted",
+    "event_description": "User deletes an existing test case from the test case panel.",
+    "file": "frontend/src/components/panel/TestCasePanel.tsx"
+  },
+  {
+    "event_name": "extension_test_cases_imported",
+    "event_description": "User imports test cases from the browser extension.",
+    "file": "frontend/src/components/panel/TestCasePanel.tsx"
+  },
+  {
+    "event_name": "start_coding_clicked",
+    "event_description": "Visitor clicks the primary Start Coding CTA on the landing page.",
+    "file": "frontend/src/components/landing/hero.astro"
+  },
+  {
+    "event_name": "cta_start_coding_clicked",
+    "event_description": "Visitor clicks the Start Coding button in the bottom CTA section.",
+    "file": "frontend/src/components/landing/CTA.astro"
+  },
+  {
+    "event_name": "settings_language_changed",
+    "event_description": "User changes the interface language in the settings dialog.",
+    "file": "frontend/src/components/Settings.tsx"
+  }
+]

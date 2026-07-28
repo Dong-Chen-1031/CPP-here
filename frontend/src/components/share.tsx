@@ -16,15 +16,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { fetchSharedCode } from "@/service/share";
 import { getDefaultStore } from "jotai";
 import {
-    alertStore,
     codeStore,
     inputStore,
     outputStore,
     testCasesStore,
 } from "@/store/atom";
+import { Spinner } from "./ui/spinner";
+import { addAlert } from "@/lib/alert";
 
 export function ShareReceiveDialog() {
     const [showDialog, setShowDialog] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [shareID, setShareID] = useState<string | null>(null);
     const checked = useRef(false);
     const defaultStore = getDefaultStore();
@@ -103,22 +105,20 @@ export function ShareReceiveDialog() {
                         {t("shareReceive.cancel")}
                     </AlertDialogCancel>
                     <AlertDialogAction
-                        onClick={() =>
+                        disabled={loading}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setLoading(true);
                             fetchSharedCode(shareID!).then((res) => {
                                 if (!res.ok) {
-                                    defaultStore.set(alertStore, (p) => [
-                                        ...p,
-                                        {
-                                            title: t(
-                                                "shareReceive.receiveFailed",
-                                            ),
-                                            description: t(
-                                                "shareReceive.receiveFailedDesc",
-                                            ),
-                                            variant: "destructive",
-                                            id: crypto.randomUUID(),
-                                        },
-                                    ]);
+                                    setLoading(false);
+                                    addAlert({
+                                        title: t("shareReceive.receiveFailed"),
+                                        description: t(
+                                            "shareReceive.receiveFailedDesc",
+                                        ),
+                                        variant: "destructive",
+                                    });
                                     return;
                                 }
                                 const data = res.data!;
@@ -143,19 +143,17 @@ export function ShareReceiveDialog() {
                                         data.outputData,
                                     );
                                 }
-                                defaultStore.set(alertStore, (p) => [
-                                    ...p,
-                                    {
-                                        title: t("shareReceive.receiveSuccess"),
-                                        description: t(
-                                            "shareReceive.receiveSuccessDesc",
-                                        ),
-                                        id: crypto.randomUUID(),
-                                    },
-                                ]);
-                            })
-                        }>
-                        {t("shareReceive.receive")}
+                                addAlert({
+                                    title: t("shareReceive.receiveSuccess"),
+                                    description: t(
+                                        "shareReceive.receiveSuccessDesc",
+                                    ),
+                                });
+                                setLoading(false);
+                                setShowDialog(false);
+                            });
+                        }}>
+                        {loading && <Spinner />} {t("shareReceive.receive")}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

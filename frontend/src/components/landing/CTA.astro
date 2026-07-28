@@ -63,3 +63,13 @@ const { t } = Astro.props as Props;
         </div>
     </div>
 </section>
+
+<script is:inline>
+    document
+        .getElementById("cta-start-coding-btn")
+        ?.addEventListener("click", function () {
+            window.posthog?.capture("cta_start_coding_clicked", {
+                location: "cta",
+            });
+        });
+</script>

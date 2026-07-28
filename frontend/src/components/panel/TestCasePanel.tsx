@@ -13,7 +13,6 @@ import Tip from "../ui/tips";
 import { getDefaultStore, useAtom } from "jotai";
 import {
     alertDialogStore,
-    alertStore,
     inputStore,
     panelDrawerStore,
     runStatusStore,
@@ -26,6 +25,7 @@ import { cn, useIsMobile } from "@/lib/utils";
 import { handleRun } from "@/service/run";
 import { useTranslation } from "react-i18next";
 import TestEditDialog from "./TestEditDialog";
+import { addAlert } from "@/lib/alert";
 
 interface Test {
     input: string;
@@ -93,7 +93,6 @@ export default function TestCasePanel({
     const [jwt] = useAtom(verifyJwtStore);
     const { t } = useTranslation(["editor", "common"]);
     const defaultStore = getDefaultStore();
-    const [, setAlert] = useAtom(alertStore);
 
     const [runStatus] = useAtom(runStatusStore);
     const [, setTestCaseEditArgs] = useAtom(testCaseEditStore);
@@ -123,17 +122,18 @@ export default function TestCasePanel({
             // console.log(testCases);
             if (testCases.length === 0) {
                 setTestCases(testCasesFromExtension);
-                setAlert((p) => [
-                    ...p,
-                    {
-                        id: crypto.randomUUID(),
-                        title: t("testCase.extension.alert.title"),
-                        description: t("testCase.extension.alert.description", {
-                            problemName: testCaseData.name,
-                        }),
-                        icon: <CircleCheckBig className="w-4 h-4" />,
-                    },
-                ]);
+                window.posthog?.capture("extension_test_cases_imported", {
+                    test_case_count: testCasesFromExtension.length,
+                    problem_name: testCaseData.name,
+                    mode: "overwrite",
+                });
+                addAlert({
+                    title: t("testCase.extension.alert.title"),
+                    description: t("testCase.extension.alert.description", {
+                        problemName: testCaseData.name,
+                    }),
+                    icon: <CircleCheckBig className="w-4 h-4" />,
+                });
                 if (isMobile) {
                     setPanel("testCases");
                 }
@@ -153,6 +153,11 @@ export default function TestCasePanel({
                         text: t("testCase.extension.alertDialog.overwrite"),
                         onClick: () => {
                             setTestCases(testCasesFromExtension);
+                            window.posthog?.capture("extension_test_cases_imported", {
+                                test_case_count: testCasesFromExtension.length,
+                                problem_name: testCaseData.name,
+                                mode: "overwrite",
+                            });
                             if (isMobile) {
                                 setPanel("testCases");
                             }
@@ -166,6 +171,11 @@ export default function TestCasePanel({
                                 ...testCasesFromExtension,
                                 ...prev,
                             ]);
+                            window.posthog?.capture("extension_test_cases_imported", {
+                                test_case_count: testCasesFromExtension.length,
+                                problem_name: testCaseData.name,
+                                mode: "insert",
+                            });
                             if (isMobile) {
                                 setPanel("testCases");
                             }
@@ -193,6 +203,9 @@ export default function TestCasePanel({
             expectedOutput: expected,
         };
         setTestCases((prev) => [...prev, newTestCase]);
+        window.posthog?.capture("test_case_added", {
+            has_expected_output: !!expected,
+        });
     }
     const cantRun = runStatus !== "idle" || !jwt;
 
@@ -329,6 +342,7 @@ export default function TestCasePanel({
                                                             testCase.id,
                                                     ),
                                                 );
+                                                window.posthog?.capture("test_case_deleted");
                                             }}>
                                             <Trash className="w-4 h-4" />
                                         </Button>

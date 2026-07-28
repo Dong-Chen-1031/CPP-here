@@ -13,3 +13,7 @@ asyncpg
 aiosqlite
 prometheus-fastapi-instrumentator
 boto3
+posthog
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-exporter-otlp

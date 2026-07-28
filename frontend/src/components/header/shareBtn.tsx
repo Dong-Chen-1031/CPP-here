@@ -8,8 +8,7 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import { ClipboardCheckIcon, Share2Icon } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
-import { getDefaultStore } from "jotai";
-import { alertStore } from "@/store/atom";
+import { addAlert } from "@/lib/alert";
 
 import Tip from "@/components/ui/tips";
 import IconMotion from "@/components/IconMotion";
@@ -25,7 +24,6 @@ export function ShareButton({
     const { t } = useTranslation(["editor"]);
     const [sharing, setSharing] = React.useState(false);
     const [shared, setShared] = React.useState(false);
-    const defaultStore = getDefaultStore();
 
     return (
         <ButtonGroup>
@@ -75,27 +73,23 @@ export function ShareButton({
 
                                 const copied = await clipboardWritePromise;
 
-                                defaultStore.set(alertStore, (p) => [
-                                    ...p,
-                                    {
-                                        title: copied
-                                            ? t(
-                                                  "headerActions.shareSuccessTitle",
-                                              )
-                                            : t(
-                                                  "headerActions.shareLinkReadyTitle",
-                                              ),
-                                        description: copied
-                                            ? t(
-                                                  "headerActions.shareSuccessDescription",
-                                              )
-                                            : t(
-                                                  "headerActions.shareLinkReadyDescription",
-                                                  { shareUrl },
-                                              ),
-                                        id: crypto.randomUUID(),
-                                    },
-                                ]);
+                                window.posthog?.capture("code_shared", {
+                                    clipboard_copied: copied,
+                                });
+
+                                addAlert({
+                                    title: copied
+                                        ? t("headerActions.shareSuccessTitle")
+                                        : t("headerActions.shareLinkReadyTitle"),
+                                    description: copied
+                                        ? t(
+                                              "headerActions.shareSuccessDescription",
+                                          )
+                                        : t(
+                                              "headerActions.shareLinkReadyDescription",
+                                              { shareUrl },
+                                          ),
+                                });
 
                                 setShared(true);
                                 setTimeout(() => setShared(false), 1500);
@@ -105,19 +99,13 @@ export function ShareButton({
                                     "Failed to share code:",
                                     result.errors,
                                 );
-                                defaultStore.set(alertStore, (p) => [
-                                    ...p,
-                                    {
-                                        title: t(
-                                            "headerActions.shareFailedTitle",
-                                        ),
-                                        description: t(
-                                            "headerActions.shareFailedDescription",
-                                        ),
-                                        variant: "destructive",
-                                        id: crypto.randomUUID(),
-                                    },
-                                ]);
+                                addAlert({
+                                    title: t("headerActions.shareFailedTitle"),
+                                    description: t(
+                                        "headerActions.shareFailedDescription",
+                                    ),
+                                    variant: "destructive",
+                                });
                             }
                         } catch (error) {
                             rejectUrl(error);
@@ -125,17 +113,13 @@ export function ShareButton({
                                 "Unexpected error while sharing code:",
                                 error,
                             );
-                            defaultStore.set(alertStore, (p) => [
-                                ...p,
-                                {
-                                    title: t("headerActions.shareFailedTitle"),
-                                    description: t(
-                                        "headerActions.shareFailedUnexpectedDescription",
-                                    ),
-                                    variant: "destructive",
-                                    id: crypto.randomUUID(),
-                                },
-                            ]);
+                            addAlert({
+                                title: t("headerActions.shareFailedTitle"),
+                                description: t(
+                                    "headerActions.shareFailedUnexpectedDescription",
+                                ),
+                                variant: "destructive",
+                            });
                         } finally {
                             setSharing(false);
                         }

@@ -38,6 +38,9 @@ export function DownloadButton({
                         a.download = "main.cpp";
                         a.click();
                         URL.revokeObjectURL(url);
+                        window.posthog?.capture("code_downloaded", {
+                            code_length: code.length,
+                        });
                         onClick(e);
                     }}>
                     <DownloadIcon />

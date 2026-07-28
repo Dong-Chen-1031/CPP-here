@@ -13,7 +13,7 @@ from prometheus_client import Counter, Histogram
 from pydantic import BaseModel, Field
 from router.verify import need_token
 from services.build import BuildError, build
-from settings import BACKEND_URL, BUILD_VERSION, CACHE_PATH
+from settings import settings
 from utils import cache
 from utils.cache import add_build_stats
 from utils.log import logger
@@ -62,7 +62,9 @@ class BuildRequest(BaseModel):
     cpp_version: Literal["c++98", "c++11", "c++14", "c++17", "c++20", "c++23"]
 
     def hash(self) -> str:
-        return sha256((str(self.model_dump()) + BUILD_VERSION).encode()).hexdigest()
+        return sha256(
+            (str(self.model_dump()) + settings.BUILD_VERSION).encode()
+        ).hexdigest()
 
 
 class BuildResponse(BaseModel):
@@ -136,14 +138,14 @@ async def build_cpp(
 
     cache_entry = await cache.get_cache(case_id)
     if cache_entry:
-        js_path = pathlib.Path(CACHE_PATH) / case_id / "build.js"
-        wasm_path = pathlib.Path(CACHE_PATH) / case_id / "build.wasm"
+        js_path = pathlib.Path(settings.CACHE_PATH) / case_id / "build.js"
+        wasm_path = pathlib.Path(settings.CACHE_PATH) / case_id / "build.wasm"
         if js_path.exists() and wasm_path.exists():
             logger.info(f"Cache hit for code {case_id}")
             return BuildResponse(
                 ok=True,
-                js_url=f"{BACKEND_URL}/{CACHE_PATH}/{case_id}/build.js",
-                wasm_url=f"{BACKEND_URL}/{CACHE_PATH}/{case_id}/build.wasm",
+                js_url=f"{settings.BACKEND_URL}/{settings.CACHE_PATH}/{case_id}/build.js",
+                wasm_url=f"{settings.BACKEND_URL}/{settings.CACHE_PATH}/{case_id}/build.wasm",
                 js_code=(await read_file(str(js_path))),
                 metric_status="cache",
                 wasm_size_bytes=get_size(wasm_path),
@@ -151,12 +153,13 @@ async def build_cpp(
         logger.warning(
             f"Cache files missing for {case_id}, invalidating and rebuilding"
         )
+
         await cache.del_cache(case_id)
 
-    logger.info(f"Received build request {case_id}")
+    logger.info(f"Start build request {case_id}")
     js_name = "build.js"
     wasm_name = "build.wasm"
-    output_path = pathlib.Path(CACHE_PATH) / case_id
+    output_path = pathlib.Path(settings.CACHE_PATH) / case_id
 
     event = asyncio.Event()
     _in_flight[case_id] = event
@@ -201,8 +204,8 @@ async def build_cpp(
 
         return BuildResponse(
             ok=True,
-            js_url=f"{BACKEND_URL}/{output_path}/{js_name}",
-            wasm_url=f"{BACKEND_URL}/{output_path}/{wasm_name}",
+            js_url=f"{settings.BACKEND_URL}/{output_path}/{js_name}",
+            wasm_url=f"{settings.BACKEND_URL}/{output_path}/{wasm_name}",
             js_code=js_code,
             wasm_size_bytes=get_size(f"{output_path}/{wasm_name}"),
             metric_status="success",

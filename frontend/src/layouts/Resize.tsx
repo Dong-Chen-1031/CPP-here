@@ -12,7 +12,8 @@ import { InputPanel, OutputPanel, TestCasePanel } from "@/components/Panels";
 import Editor from "@/components/Editor";
 import { cn, useIsMobile } from "@/lib/utils";
 import { useAtom } from "jotai";
-import { alertStore, loadedCountStore, loadedStore } from "@/store/atom";
+import { loadedCountStore, loadedStore } from "@/store/atom";
+import { addAlert } from "@/lib/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { AnimatePresence, motion } from "motion/react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -160,7 +161,6 @@ Loading.displayName = "Loading";
 
 export function SplitViewEditor() {
   const isMobile = useIsMobile();
-  const [, setAlert] = useAtom(alertStore);
   const [loaded] = useAtom(loadedStore);
   const [, setLoadedCount] = useAtom(loadedCountStore);
 
@@ -168,15 +168,11 @@ export function SplitViewEditor() {
     setLoadedCount((c) => c + 1);
     // console.log("SplitViewEditor loaded");
     if (document.location.origin === "https://cpp-here.pages.dev") {
-      setAlert((p) => [
-        ...p,
-        {
-          title: "We have moved!",
-          description: "Please use the new url cpp.doong.me",
-          variant: "default",
-          id: crypto.randomUUID(),
-        },
-      ]);
+      addAlert({
+        title: "We have moved!",
+        description: "Please use the new url cpp.doong.me",
+        variant: "default",
+      });
     }
   }, []);
 
