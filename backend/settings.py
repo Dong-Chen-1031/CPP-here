@@ -1,3 +1,4 @@
+import logging
 import os
 import secrets
 
@@ -6,6 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 _yes = ("true", "1", "t", "yes", "y")
+
+LOG_LEVEL = logging.INFO
 
 DEV_MODE = os.getenv("DEV", "false").lower() in _yes
 
@@ -60,3 +63,7 @@ SHARE = os.getenv("SHARE", "false").lower() in _yes and all(
 BYPASS_CAPTCHA = os.getenv("BYPASS_CAPTCHA", "false").lower() in _yes
 
 CAPTCHA_TEST_TOKEN = os.getenv("CAPTCHA_TEST_TOKEN")
+
+POSTHOG_API_KEY = os.getenv("POSTHOG_API_KEY")
+
+POSTHOG_BASE_URL = os.getenv("POSTHOG_BASE_URL", "https://us.i.posthog.com")

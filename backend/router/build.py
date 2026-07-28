@@ -151,9 +151,10 @@ async def build_cpp(
         logger.warning(
             f"Cache files missing for {case_id}, invalidating and rebuilding"
         )
+
         await cache.del_cache(case_id)
 
-    logger.info(f"Received build request {case_id}")
+    logger.info(f"Start build request {case_id}")
     js_name = "build.js"
     wasm_name = "build.wasm"
     output_path = pathlib.Path(CACHE_PATH) / case_id

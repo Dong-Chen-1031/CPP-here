@@ -170,7 +170,17 @@ async def build(
             output = "".join(log_parts)
 
             if exit_code != 0:
-                logger.info(f"Build failed (exit {exit_code})\n{output}")
+                logger.warning(
+                    f"Build failed (exit {exit_code})",
+                    extra={
+                        "code": code,
+                        "cpp_version": cpp_version,
+                        "output": output,
+                        "exit_code": exit_code,
+                        "command": cmd,
+                    },
+                )
+                logger.debug(output)
                 shutil.rmtree(output_dir, ignore_errors=True)
                 raise BuildError(f"Build failed (exit {exit_code})", build_logs=output)
 

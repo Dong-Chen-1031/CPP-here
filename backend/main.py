@@ -10,16 +10,16 @@ import settings
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from prometheus_fastapi_instrumentator import Instrumentator
 from services.resource_manager import lifespan
 from settings import DEV_MODE, FRONTEND_URL, PORT
+from utils import posthog
 from utils.log import logger
 
 if DEV_MODE:
     logger.info("Running in development mode")
-
 
 app = FastAPI(
     lifespan=lifespan,
@@ -62,6 +62,12 @@ if settings.SHARE:
 @app.get("/")
 async def root():
     return RedirectResponse(url=FRONTEND_URL)
+
+
+@app.exception_handler(Exception)
+async def http_exception_handler(request, exc):
+    posthog.capture_exception(exc)
+    return JSONResponse(status_code=500, content={"message": str(exc)})
 
 
 if __name__ == "__main__":

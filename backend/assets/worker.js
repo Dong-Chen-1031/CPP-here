@@ -1,59 +1,49 @@
 self.onmessage = async (e) => {
-  const { taskId, inputData, module_ } = e.data;
+    const { taskId, inputData, module_ } = e.data;
 
-  // 1. 將輸入字串轉為 Uint8Array 緩衝區
-  // 記得加上 \n，否則 C++ 的 std::cin 或 scanf 可能會一直等待換行
-  const encoder = new TextEncoder();
-  const inputBuffer = encoder.encode(inputData + "\n");
-  let inputIndex = 0;
+    const encoder = new TextEncoder();
+    const inputBuffer = encoder.encode(inputData + "\n");
+    let inputIndex = 0;
 
-  // 2. 定義 Module 配置物件
-  const wasmConfig = {
-    // 使用 instantiateWasm 攔截實例化過程，直接使用我們傳入的 module_
-    instantiateWasm: function (imports, successCallback) {
-      WebAssembly.instantiate(module_, imports)
-        .then((instance) => {
-          successCallback(instance, module_);
-        })
-        .catch((err) => {
-          self.postMessage({ type: "error", taskId, content: err.message });
-        });
-      return {}; // 回傳空物件，告訴 Emscripten 我們會非同步地呼叫 successCallback
-    },
-    // 攔截 stdout (printf / std::cout)
-    print: function (text) {
-      // console.log(text);
-      self.postMessage({ type: "stdout", taskId, content: text });
-    },
+    const wasmConfig = {
+        instantiateWasm: function (imports, successCallback) {
+            WebAssembly.instantiate(module_, imports)
+                .then((instance) => {
+                    successCallback(instance, module_);
+                })
+                .catch((err) => {
+                    self.postMessage({
+                        type: "error",
+                        taskId,
+                        content: err.message,
+                    });
+                });
+            return {};
+        },
+        print: function (text) {
+            self.postMessage({ type: "stdout", taskId, content: text });
+        },
 
-    // 攔截 stderr (fprintf(stderr, ...) / std::cerr)
-    printErr: function (text) {
-      // console.error(text);
-      self.postMessage({ type: "stderr", taskId, content: text });
-    },
+        printErr: function (text) {
+            // console.error(text);
+            self.postMessage({ type: "stderr", taskId, content: text });
+        },
 
-    // 關鍵：直接實作 stdin 讀取邏輯 (不需 FS)
-    stdin: function () {
-      if (inputIndex < inputBuffer.length) {
-        return inputBuffer[inputIndex++];
-      }
-      return null; // 回傳 null 代表 EOF (End of File)
-    },
+        stdin: function () {
+            if (inputIndex < inputBuffer.length) {
+                return inputBuffer[inputIndex++];
+            }
+            return null;
+        },
+        onRuntimeInitialized: function () {
+            self.postMessage({ type: "status", taskId, content: "Running" });
+        },
+    };
 
-    // 初始化完成後的回調
-    onRuntimeInitialized: function () {
-      self.postMessage({ type: "status", taskId, content: "Running" });
-    },
-  };
-
-  try {
-    // 3. 執行工廠函式
-    // 這會載入 .wasm 並自動呼叫 C++ 的 main()
-    const instance = await createMyModule(wasmConfig);
-
-    // 執行完畢
-    self.postMessage({ type: "status", taskId, content: "exit" });
-  } catch (err) {
-    self.postMessage({ type: "error", taskId, content: err.message });
-  }
+    try {
+        const instance = await createMyModule(wasmConfig);
+        self.postMessage({ type: "status", taskId, content: "exit" });
+    } catch (err) {
+        self.postMessage({ type: "error", taskId, content: err.message });
+    }
 };

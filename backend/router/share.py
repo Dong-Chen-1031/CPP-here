@@ -3,7 +3,7 @@ from venv import logger
 
 import boto3
 import settings
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from router.verify import need_token
 
@@ -32,8 +32,14 @@ async def share(
     token: dict = Depends(need_token),
 ) -> ShareResponse:
     if not settings.SHARE:
-        raise Exception("Sharing is disabled")
-    logger.info(f"Sharing code with content length {len(request.code)}")
+        logger.warning("Someone want to share but sharing is disabled")
+        raise HTTPException(
+            status_code=501,
+            detail="The 'share' feature is not enabled on this server.",
+            headers={"Cache-Control": "no-store"},
+        )
+
+    logger.info(f"Sharing code with content length {len(request.code)}", extra={})
 
     share_id = uuid.uuid7().hex
     s3.put_object(
