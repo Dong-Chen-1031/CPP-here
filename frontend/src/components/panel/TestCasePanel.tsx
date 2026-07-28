@@ -13,7 +13,6 @@ import Tip from "../ui/tips";
 import { getDefaultStore, useAtom } from "jotai";
 import {
     alertDialogStore,
-    alertStore,
     inputStore,
     panelDrawerStore,
     runStatusStore,
@@ -26,6 +25,7 @@ import { cn, useIsMobile } from "@/lib/utils";
 import { handleRun } from "@/api/run";
 import { useTranslation } from "react-i18next";
 import TestEditDialog from "./TestEditDialog";
+import { addAlert } from "@/lib/alert";
 
 interface Test {
     input: string;
@@ -93,7 +93,6 @@ export default function TestCasePanel({
     const [jwt] = useAtom(verifyJwtStore);
     const { t } = useTranslation(["editor", "common"]);
     const defaultStore = getDefaultStore();
-    const [, setAlert] = useAtom(alertStore);
 
     const [runStatus] = useAtom(runStatusStore);
     const [, setTestCaseEditArgs] = useAtom(testCaseEditStore);
@@ -128,17 +127,13 @@ export default function TestCasePanel({
                     problem_name: testCaseData.name,
                     mode: "overwrite",
                 });
-                setAlert((p) => [
-                    ...p,
-                    {
-                        id: crypto.randomUUID(),
-                        title: t("testCase.extension.alert.title"),
-                        description: t("testCase.extension.alert.description", {
-                            problemName: testCaseData.name,
-                        }),
-                        icon: <CircleCheckBig className="w-4 h-4" />,
-                    },
-                ]);
+                addAlert({
+                    title: t("testCase.extension.alert.title"),
+                    description: t("testCase.extension.alert.description", {
+                        problemName: testCaseData.name,
+                    }),
+                    icon: <CircleCheckBig className="w-4 h-4" />,
+                });
                 if (isMobile) {
                     setPanel("testCases");
                 }

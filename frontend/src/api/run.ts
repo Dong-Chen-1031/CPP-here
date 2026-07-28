@@ -1,6 +1,5 @@
 import config from "@/config/constants";
 import {
-    alertStore,
     codeStore,
     codeWorkersStore,
     cppVersionStore,
@@ -15,6 +14,7 @@ import {
     type OutputCase,
 } from "@/store/atom";
 import { apiAxios, axios } from "@/lib/axiosInstance";
+import { addAlert } from "@/lib/alert";
 import { getDefaultStore } from "jotai";
 interface BuildResponse {
     ok: boolean;
@@ -48,16 +48,12 @@ export async function buildCode(code: string, cppVersion: string) {
         console.error("Error during build request:", error);
         if (axios.isAxiosError(error) && error.status === 401) {
             defaultStore.set(verifyJwtStore, null);
-            defaultStore.set(alertStore, (p) => [
-                ...p,
-                {
-                    title: "Unauthorized",
-                    description:
-                        "Your verification has expired and will be automatically renewed. Please try running your code again.",
-                    variant: "destructive",
-                    id: crypto.randomUUID(),
-                },
-            ]);
+            addAlert({
+                title: "Unauthorized",
+                description:
+                    "Your verification has expired and will be automatically renewed. Please try running your code again.",
+                variant: "destructive",
+            });
             const turnstileRef = defaultStore.get(turnstileRefStore);
             turnstileRef?.current?.reset();
 
@@ -269,15 +265,11 @@ export function showError(err: string, options?: ShowErrorOptions) {
         options?.description ||
         "An error occurred. Please check output for details.";
 
-    store.set(alertStore, (p) => [
-        ...p,
-        {
-            title,
-            description,
-            variant: "destructive",
-            id: crypto.randomUUID(),
-        },
-    ]);
+    addAlert({
+        title,
+        description,
+        variant: "destructive",
+    });
 
     const outputItem: OutputCase = {
         type: "err",
@@ -402,16 +394,12 @@ export async function handleRunAll() {
     // let exitCount = 0;
 
     if (testCases.length === 0) {
-        store.set(alertStore, (p) => [
-            ...p,
-            {
-                title: "No Test Cases",
-                description:
-                    "There are no test cases to run. Please add some test cases first.",
-                variant: "destructive",
-                id: crypto.randomUUID(),
-            },
-        ]);
+        addAlert({
+            title: "No Test Cases",
+            description:
+                "There are no test cases to run. Please add some test cases first.",
+            variant: "destructive",
+        });
         return;
     }
     store.set(runStatusStore, "building");

@@ -16,7 +16,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { fetchSharedCode } from "@/api/share";
 import { getDefaultStore } from "jotai";
 import {
-    alertStore,
     codeStore,
     inputStore,
     outputStore,
@@ -113,19 +112,13 @@ export function ShareReceiveDialog() {
                             fetchSharedCode(shareID!).then((res) => {
                                 if (!res.ok) {
                                     setLoading(false);
-                                    defaultStore.set(alertStore, (p) => [
-                                        ...p,
-                                        {
-                                            title: t(
-                                                "shareReceive.receiveFailed",
-                                            ),
-                                            description: t(
-                                                "shareReceive.receiveFailedDesc",
-                                            ),
-                                            variant: "destructive",
-                                            id: crypto.randomUUID(),
-                                        },
-                                    ]);
+                                    addAlert({
+                                        title: t("shareReceive.receiveFailed"),
+                                        description: t(
+                                            "shareReceive.receiveFailedDesc",
+                                        ),
+                                        variant: "destructive",
+                                    });
                                     return;
                                 }
                                 const data = res.data!;
