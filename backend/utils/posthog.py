@@ -1,4 +1,4 @@
-import settings
+from settings import settings
 from posthog import Posthog
 
 if settings.POSTHOG_API_KEY:

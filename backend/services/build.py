@@ -7,7 +7,7 @@ from pathlib import Path
 
 from aiodocker import DockerError
 from services.resource_manager import resource_manager
-from settings import DOCKER_POOL_SIZE
+from settings import settings
 from utils.log import logger
 
 
@@ -53,7 +53,7 @@ class ContainerPool:
         return container
 
     async def _replenish(self):
-        if self.pool.qsize() >= DOCKER_POOL_SIZE:
+        if self.pool.qsize() >= settings.DOCKER_POOL_SIZE:
             return
         try:
             container = await self._create_container()
@@ -62,7 +62,7 @@ class ContainerPool:
             logger.error(f"Failed to replenish container pool: {e}")
 
     async def startup(self):
-        needed = max(0, DOCKER_POOL_SIZE - self.pool.qsize())
+        needed = max(0, settings.DOCKER_POOL_SIZE - self.pool.qsize())
         if needed > 0:
             await asyncio.gather(*[self._replenish() for _ in range(needed)])
 

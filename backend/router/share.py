@@ -2,7 +2,7 @@ import uuid
 from venv import logger
 
 import boto3
-import settings
+from settings import settings
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from router.verify import need_token

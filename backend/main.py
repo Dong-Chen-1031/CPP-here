@@ -2,11 +2,12 @@ if __name__ == "__main__":
     from utils.logo import print_logo
 
     print_logo()
+if True:  # don't that Ruff sort this import
+    from settings import settings
 import router
 import router.api
 import router.build
 import router.verify
-import settings
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,19 +15,18 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from prometheus_fastapi_instrumentator import Instrumentator
 from services.resource_manager import lifespan
-from settings import DEV_MODE, FRONTEND_URL, PORT
-from utils import posthog
 from utils.log import logger
+from utils.posthog import posthog
 
-if DEV_MODE:
+if settings.DEV_MODE:
     logger.info("Running in development mode")
 
 app = FastAPI(
     lifespan=lifespan,
-    # root_path="/api/v1" if not DEV_MODE else "",
-    docs_url="/docs" if DEV_MODE else None,
-    redoc_url="/redoc" if DEV_MODE else None,
-    openapi_url="/openapi.json" if DEV_MODE else None,
+    # root_path="/api/v1" if not settings.DEV_MODE else "",
+    docs_url="/docs" if settings.DEV_MODE else None,
+    redoc_url="/redoc" if settings.DEV_MODE else None,
+    openapi_url="/openapi.json" if settings.DEV_MODE else None,
 )
 
 
@@ -61,7 +61,7 @@ if settings.SHARE:
 
 @app.get("/")
 async def root():
-    return RedirectResponse(url=FRONTEND_URL)
+    return RedirectResponse(url=settings.FRONTEND_URL)
 
 
 @app.exception_handler(Exception)
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=PORT,
+        port=settings.PORT,
         log_config=None,
-        reload=DEV_MODE,
+        reload=settings.DEV_MODE,
     )
