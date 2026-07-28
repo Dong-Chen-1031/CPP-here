@@ -8,6 +8,10 @@ load_dotenv()
 
 _yes = ("true", "1", "t", "yes", "y")
 
+VERSION = "0.8.0"
+
+SERVICE_NAME = os.getenv("SERVICE_NAME", "C++ Here Backend")
+
 LOG_LEVEL = logging.INFO
 
 DEV_MODE = os.getenv("DEV", "false").lower() in _yes
