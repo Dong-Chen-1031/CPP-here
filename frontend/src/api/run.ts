@@ -14,9 +14,8 @@ import {
     verifyJwtStore,
     type OutputCase,
 } from "@/store/atom";
-import axios from "axios";
+import { apiAxios, axios } from "@/lib/axiosInstance";
 import { getDefaultStore } from "jotai";
-
 interface BuildResponse {
     ok: boolean;
     js_url?: string;
@@ -32,8 +31,8 @@ export async function buildCode(code: string, cppVersion: string) {
         const jwt = defaultStore.get(verifyJwtStore) || "";
         // console.log("JWT for build request:", jwt);
 
-        const respond = await axios.post(
-            `${config.api_endpoints}/build`,
+        const respond = await apiAxios.post(
+            `/build`,
             {
                 code: code,
                 cpp_version: cppVersion,
@@ -86,7 +85,7 @@ async function url2BlobUrl(
     url: string,
     type: string = "application/javascript",
 ) {
-    const response = await axios.get(url);
+    const response = await apiAxios.get(url);
     const code = response.data;
     return text2BlobUrl(code, type);
 }

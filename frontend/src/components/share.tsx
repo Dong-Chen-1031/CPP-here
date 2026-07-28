@@ -22,9 +22,12 @@ import {
     outputStore,
     testCasesStore,
 } from "@/store/atom";
+import { Spinner } from "./ui/spinner";
+import { addAlert } from "@/lib/alert";
 
 export function ShareReceiveDialog() {
     const [showDialog, setShowDialog] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [shareID, setShareID] = useState<string | null>(null);
     const checked = useRef(false);
     const defaultStore = getDefaultStore();
@@ -103,9 +106,13 @@ export function ShareReceiveDialog() {
                         {t("shareReceive.cancel")}
                     </AlertDialogCancel>
                     <AlertDialogAction
-                        onClick={() =>
+                        disabled={loading}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setLoading(true);
                             fetchSharedCode(shareID!).then((res) => {
                                 if (!res.ok) {
+                                    setLoading(false);
                                     defaultStore.set(alertStore, (p) => [
                                         ...p,
                                         {
@@ -143,19 +150,17 @@ export function ShareReceiveDialog() {
                                         data.outputData,
                                     );
                                 }
-                                defaultStore.set(alertStore, (p) => [
-                                    ...p,
-                                    {
-                                        title: t("shareReceive.receiveSuccess"),
-                                        description: t(
-                                            "shareReceive.receiveSuccessDesc",
-                                        ),
-                                        id: crypto.randomUUID(),
-                                    },
-                                ]);
-                            })
-                        }>
-                        {t("shareReceive.receive")}
+                                addAlert({
+                                    title: t("shareReceive.receiveSuccess"),
+                                    description: t(
+                                        "shareReceive.receiveSuccessDesc",
+                                    ),
+                                });
+                                setLoading(false);
+                                setShowDialog(false);
+                            });
+                        }}>
+                        {loading && <Spinner />} {t("shareReceive.receive")}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

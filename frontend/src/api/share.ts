@@ -8,7 +8,7 @@ import {
     turnstileRefStore,
     verifyJwtStore,
 } from "@/store/atom";
-import axios from "axios";
+import { axios, apiAxios } from "@/lib/axiosInstance";
 import { getDefaultStore } from "jotai";
 
 const defaultStore = getDefaultStore();
@@ -34,8 +34,8 @@ export async function shareCode() {
             inputData,
             outputData,
         } as ShareObject);
-        const respond = await axios.post(
-            `${config.api_endpoints}/share`,
+        const respond = await apiAxios.post(
+            `/share`,
             {
                 code: fullCode,
             },
