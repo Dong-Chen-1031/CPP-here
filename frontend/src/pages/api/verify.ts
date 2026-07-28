@@ -1,13 +1,9 @@
 import type { APIContext } from "astro";
 import {
     PRIVATE_JWT_EXPIRATION_SECONDS,
-    PRIVATE_JWT_SECRET,
     PRIVATE_TURNSTILE_SECRET_KEY,
 } from "astro:env/server";
-import { jwtVerify, SignJWT } from "jose";
-
-const secret = new TextEncoder().encode(PRIVATE_JWT_SECRET);
-const algorithm = "HS256";
+import { createJWT } from "@/lib/server/jwt";
 
 async function validateTurnstile(token: string, remoteip: string) {
     try {
@@ -33,26 +29,6 @@ async function validateTurnstile(token: string, remoteip: string) {
         return { success: false, "error-codes": ["internal-error"] };
     }
 }
-function createJWT(payload: Record<string, any>) {
-    return new SignJWT(payload)
-        .setProtectedHeader({ alg: algorithm })
-        .setIssuedAt()
-        .setExpirationTime(`${PRIVATE_JWT_EXPIRATION_SECONDS}s`)
-        .sign(secret);
-}
-
-export async function verifyJWT(token: string) {
-    try {
-        const { payload } = await jwtVerify(token, secret, {
-            algorithms: [algorithm],
-        });
-        return payload.verified === true;
-    } catch (e) {
-        console.error("JWT verification failed:", e);
-        return false;
-    }
-}
-
 export const prerender = false;
 
 export async function POST({ request }: APIContext) {

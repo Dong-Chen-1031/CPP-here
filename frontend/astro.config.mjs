@@ -107,7 +107,7 @@ export default defineConfig({
             PRIVATE_JWT_SECRET: envField.string({
                 context: "server",
                 access: "secret",
-                optional: true,
+                optional: false,
                 default: Buffer.from(
                     crypto.getRandomValues(new Uint8Array(32)),
                 ).toString("hex"),
@@ -121,7 +121,7 @@ export default defineConfig({
             PUBLIC_BYPASS_CAPTCHA: envField.boolean({
                 context: "client",
                 access: "public",
-                optional: true,
+                optional: false,
                 default: false,
             }),
             PRIVATE_TURNSTILE_SECRET_KEY: envField.string({

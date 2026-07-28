@@ -2,15 +2,15 @@ import { PUBLIC_BYPASS_CAPTCHA } from "astro:env/client";
 import { PRIVATE_TEST_JWT } from "astro:env/server";
 import { defineMiddleware } from "astro:middleware";
 import crypto from "node:crypto";
-import { verifyJWT } from "@/pages/api/verify";
+import { verifyJWT } from "@/lib/server/jwt";
 
 export const onRequest = defineMiddleware(async (context, next) => {
     // console.log("Middleware triggered for:", context);
-    if (
-        !context.url.pathname.startsWith("/api") ||
-        context.url.pathname.startsWith("/api/verify")
-    )
-        return next();
+    const pathname = context.url.pathname;
+    const isApiPath = pathname.startsWith("/api/");
+    const isVerifyPath =
+        pathname === "/api/verify" || pathname.startsWith("/api/verify/");
+    if (!isApiPath || isVerifyPath) return next();
     if (PUBLIC_BYPASS_CAPTCHA) {
         console.warn(
             "Bypassing CAPTCHA verification due to PUBLIC_BYPASS_CAPTCHA being true",
