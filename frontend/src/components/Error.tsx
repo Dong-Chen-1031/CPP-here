@@ -1,4 +1,4 @@
-import { EditorView } from "codemirror";
+import { EditorView } from "@codemirror/view";
 import { StateField, StateEffect } from "@codemirror/state";
 import { Decoration, type DecorationSet, WidgetType } from "@codemirror/view";
 import { getDefaultStore } from "jotai";
