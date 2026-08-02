@@ -1,0 +1,2 @@
+# Lockfiles — collapse in diffs, exclude from language stats
+*.lock linguist-generated=true
