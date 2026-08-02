@@ -66,7 +66,8 @@ async def root():
 
 @app.exception_handler(Exception)
 async def http_exception_handler(request, exc):
-    posthog.capture_exception(exc)
+    if posthog:
+        posthog.capture_exception(exc)
     return JSONResponse(status_code=500, content={"message": str(exc)})
 
 

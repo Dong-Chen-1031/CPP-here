@@ -35,7 +35,7 @@
 
 ## 🔴 Critical
 
-### C1. 沒設 PostHog API key，後端根本起不來
+### [x] C1. 沒設 PostHog API key，後端根本起不來 (已修復)
 
 **檔案**：`backend/utils/posthog.py` + `backend/main.py:19`
 
@@ -85,7 +85,7 @@ posthog = (
 
 ---
 
-### C2. 出貨的 docker-compose 直接帶 Turnstile「永遠通過」測試金鑰
+### C2. 出貨的 docker-compose 直接帶 Turnstile「永遠通過」測試金鑰 (略過)
 
 **檔案**：`docker/docker-compose.yml:26`、`docker/backend/docker-compose.yml:26`
 
@@ -113,7 +113,7 @@ def _reject_test_secrets(self) -> "Settings":
 
 ---
 
-### C3. Docker socket 掛進後端容器 = 後端被打穿就等於拿到宿主機 root
+### C3. Docker socket 掛進後端容器 = 後端被打穿就等於拿到宿主機 root (TODO:暫緩修復)
 
 **檔案**：`docker/docker-compose.yml:53`、`docker/backend/docker-compose.yml:49`
 
@@ -139,7 +139,7 @@ docker run -v /:/host --privileged ... → 拿到宿主機 root
 
 ---
 
-### C4. 錯誤處理路徑本身會拋 `UnboundLocalError`
+### C4. 錯誤處理路徑本身會拋 `UnboundLocalError` (TODO:優先修復)
 
 **檔案**：`backend/services/build.py:199-205`
 
@@ -192,7 +192,7 @@ async def startup(self):
 
 ---
 
-### C5. 全域例外處理器把內部錯誤原文回給使用者
+### C5. 全域例外處理器把內部錯誤原文回給使用者 (TODO:優先修復，改為紀錄 log +  回傳 "Internal server error" 及 trace id)
 
 **檔案**：`backend/main.py:67-71`
 
@@ -221,7 +221,7 @@ async def http_exception_handler(request, exc):
 
 ## 🟠 High
 
-### H1. 完全沒有 rate limiting
+### H1. 完全沒有 rate limiting (略過)
 
 **範圍**：整個 `backend/`（已全域 grep 確認：無 `slowapi`、無 `limiter`、無任何速率限制）
 
@@ -256,7 +256,7 @@ JWT payload 只有 `{"verified": True}`，**沒有 `jti`、沒有使用者識別
 
 ---
 
-### H2. Cache 清理排程實際上從未執行
+### H2. Cache 清理排程實際上從未執行 (略過)
 
 **檔案**：`backend/utils/cache.py:138-139`
 
@@ -290,7 +290,7 @@ scheduler.add_job(cleanup_caches, "interval", hours=1, next_run_time=datetime.no
 
 ---
 
-### H3. `share` 端點在 async 函式裡做阻塞 I/O
+### H3. `share` 端點在 async 函式裡做阻塞 I/O (略過)
 
 **檔案**：`backend/router/share.py:45-49`
 
@@ -324,7 +324,7 @@ await asyncio.to_thread(
 
 ---
 
-### H4. `/build` 的去重機制有 race condition
+### H4. `/build` 的去重機制有 race condition (TODO:優先修復)
 
 **檔案**：`backend/router/build.py:136-165`
 
@@ -369,7 +369,7 @@ if existing is not event:
 
 ---
 
-### H5. `Error.tsx` 每顯示一個編譯錯誤就洩漏一個訂閱
+### H5. `Error.tsx` 每顯示一個編譯錯誤就洩漏一個訂閱 (TODO:優先修復)
 
 **檔案**：`frontend/src/components/Error.tsx:41-48`
 
@@ -412,7 +412,7 @@ class ErrorWidget extends WidgetType {
 
 ### 後端
 
-#### M1. Center Console 設定抓取沒有 timeout
+#### M1. Center Console 設定抓取沒有 timeout (TODO:優先修復)
 
 **`backend/settings.py:57-60`**
 
@@ -429,7 +429,7 @@ self.center_json = httpx.get(
 
 ---
 
-#### M2. `reload_settings()` 會讓所有 JWT 失效
+#### M2. `reload_settings()` 會讓所有 JWT 失效 (略過)
 
 **`backend/settings.py:139-142, 188-193`**
 
@@ -453,7 +453,7 @@ def reload_settings():
 
 ---
 
-#### M3. `share.py` 寫死 bucket 名稱，忽略設定
+#### M3. `share.py` 寫死 bucket 名稱，忽略設定 (TODO:優先修復)
 
 **`backend/router/share.py:46`**
 
@@ -474,7 +474,7 @@ self.SHARE = self.SHARE and all([..., self.S3_BUCKET_NAME])
 
 ---
 
-#### M4. `from venv import logger`
+#### M4. `from venv import logger` (TODO:優先修復)
 
 **`backend/router/share.py:2`**
 
@@ -487,7 +487,7 @@ from venv import logger      # ← 標準函式庫的 venv 模組
 
 ---
 
-#### M5. `/metrics` 無認證公開
+#### M5. `/metrics` 無認證公開 (略過)
 
 **`backend/main.py:33`**
 
@@ -501,7 +501,7 @@ Prometheus 端點對外完全開放，洩漏總編譯次數、程式碼行數分
 
 ---
 
-#### M6. Root logger 吸收所有第三方 log 並轉送到 PostHog
+#### M6. Root logger 吸收所有第三方 log 並轉送到 PostHog (略過)
 
 **`backend/utils/log.py:25-26, 46-65`**
 
@@ -523,7 +523,7 @@ for noisy in ("botocore", "boto3", "urllib3", "httpx", "apscheduler"):
 
 ---
 
-#### M7. `shutil.rmtree` 在 async 函式裡阻塞
+#### M7. `shutil.rmtree` 在 async 函式裡阻塞 (TODO:優先修復)
 
 **`backend/services/build.py:184`**
 
@@ -537,7 +537,7 @@ shutil.rmtree(output_dir, ignore_errors=True)
 
 ### 前端
 
-#### M8. `Alert.tsx` 違反 Rules of Hooks + 計時器沒清理
+#### M8. `Alert.tsx` 違反 Rules of Hooks + 計時器沒清理 (TODO:優先修復)
 
 **`frontend/src/components/Alert.tsx:24-33`**
 
@@ -576,7 +576,7 @@ useEffect(() => {
 
 ---
 
-#### M9. 檔案上傳沒有大小限制
+#### M9. 檔案上傳沒有大小限制 (暫緩修復)
 
 **`frontend/src/components/header/uploadBtn.tsx:26-47`**
 
@@ -617,7 +617,7 @@ if (file.size > MAX_UPLOAD_BYTES) {
 
 ---
 
-#### M10. 遠端 share 資料未經驗證就寫入 store
+#### M10. 遠端 share 資料未經驗證就寫入 store (TODO:優先修復)
 
 **`frontend/src/components/share.tsx:112-145`**
 
@@ -654,7 +654,7 @@ if (!parsed.success) return { ok: false, errors: ["Malformed share payload"] };
 
 ---
 
-#### M11. 「複製輸出」只複製第一筆
+#### M11. 「複製輸出」只複製第一筆 (TODO:優先修復)
 
 **`frontend/src/components/panel/OutputPanel.tsx:40`**
 
@@ -679,7 +679,7 @@ navigator.clipboard.writeText(
 
 ---
 
-#### M12. `runBtn.tsx` 在 render 期間讀 DOM 並改動 ref
+#### M12. `runBtn.tsx` 在 render 期間讀 DOM 並改動 ref (TODO:優先修復)
 
 **`frontend/src/components/header/runBtn.tsx:47-59`**
 
@@ -710,7 +710,7 @@ function MotionButtonLabel({ children, lastWidthRef, ... }, ref) {
 
 ---
 
-#### M13. `ext` 事件的 payload 沒有任何驗證
+#### M13. `ext` 事件的 payload 沒有任何驗證 (TODO:優先修復)
 
 **`frontend/src/components/panel/TestCasePanel.tsx:109-120, 188`**
 
@@ -739,7 +739,7 @@ if (!detail || !Array.isArray(detail.tests) || typeof detail.name !== "string") 
 
 ### 基礎設施
 
-#### M14. docker-compose 的環境變數名稱和程式碼對不上
+#### M14. docker-compose 的環境變數名稱和程式碼對不上 (TODO:優先修復)
 
 出貨的 compose 檔裡有 **3 個變數名稱是錯的**，設定它們完全沒有效果：
 
@@ -755,7 +755,7 @@ if (!detail || !Array.isArray(detail.tests) || typeof detail.name !== "string") 
 
 ---
 
-#### M15. 前後端共用同一個 `${PORT}` 變數
+#### M15. 前後端共用同一個 `${PORT}` 變數 (TODO:優先修復)
 
 **`docker/docker-compose.yml:45, 91`**
 
@@ -777,7 +777,7 @@ frontend:
 
 ---
 
-#### M16. 前端 Dockerfile 在容器啟動時才 build
+#### M16. 前端 Dockerfile 在容器啟動時才 build (暫緩修復)
 
 **`docker/frontend/Dockerfile:9, 14`**
 
@@ -805,7 +805,7 @@ COPY --from=builder /app/dist /srv
 
 ---
 
-#### M17. 完全沒有測試，CI 也不做 lint / typecheck
+#### M17. 完全沒有測試，CI 也不做 lint / typecheck (TODO:優先修復)
 
 **測試現況**：
 
@@ -831,7 +831,7 @@ COPY --from=builder /app/dist /srv
 
 ---
 
-#### M18. CI secret 直接內插進 shell 指令
+#### M18. CI secret 直接內插進 shell 指令 (TODO:優先修復)
 
 **`.github/workflows/scheduled-deploy.yml:11`**
 
@@ -855,7 +855,7 @@ COPY --from=builder /app/dist /srv
 
 ---
 
-#### M19. 編譯容器可以再收緊
+#### M19. 編譯容器可以再收緊 (暫緩修復)
 
 **`backend/services/build.py:36-46`**
 
@@ -876,16 +876,16 @@ COPY --from=builder /app/dist /srv
 
 ## 🔵 Low
 
-| # | 檔案 | 說明 |
-|---|---|---|
-| L1 | `backend/router/verify.py:30` | `datetime.utcnow()` 自 Python 3.12 起已 deprecated（Dockerfile 用的是 3.14），且回傳 naive datetime。改用 `datetime.now(timezone.utc)` |
-| L2 | `backend/utils/cache.py:17` | `hash_id: str = Field(default=None, ...)` — 型別標注是 `str` 但預設 `None`。目前都有顯式賦值所以沒事，但型別是假的 |
-| L3 | `backend/router/verify.py:45` | `need_token` 的型別標注是 `dict`（`Depends(need_token)` 處），實際回傳 `bool` |
-| L4 | `backend/router/build.py:136` | `_in_flight` 是無界 dict。正常路徑會 pop，但 [H4](#h4-build-的去重機制有-race-condition) 的 race 會讓項目遺留 |
-| L5 | `frontend/src/layouts/Layout.astro:29` | `lang="en"` 寫死在所有頁面上，包含 zh-TW 版。螢幕閱讀器會用錯語音，SEO 也會誤判。應該用 `Astro.currentLocale` |
-| L6 | `frontend/src/pages/404.astro:11-14` | 用 `<meta http-equiv="refresh">` + `location.replace()` 把所有 404 導回首頁。破壞深層連結的錯誤訊息，且 meta refresh 是無障礙反模式 |
-| L7 | `frontend/src/layouts/Layout.astro:100-117` | Google Analytics 與 PostHog 都無條件載入，沒有 consent gate。若有歐盟流量會有 GDPR 問題 |
-| L8 | `frontend/src/components/share.tsx:56` | `history.replaceState(null, "", "/editor")` 寫死路徑，會把使用者的語言前綴（`/zh-tw/editor`）洗掉 |
+| # | 檔案 | 說明 | 修復規劃 |
+|---|---|---|---|
+| L1 | `backend/router/verify.py:30` | `datetime.utcnow()` 自 Python 3.12 起已 deprecated（Dockerfile 用的是 3.14），且回傳 naive datetime。改用 `datetime.now(timezone.utc)` | TODO: 優先修復 |
+| L2 | `backend/utils/cache.py:17` | `hash_id: str = Field(default=None, ...)` — 型別標注是 `str` 但預設 `None`。目前都有顯式賦值所以沒事，但型別是假的 | TODO: 優先修復 |
+| L3 | `backend/router/verify.py:45` | `need_token` 的型別標注是 `dict`（`Depends(need_token)` 處），實際回傳 `bool` |TODO: 優先修復 |
+| L4 | `backend/router/build.py:136` | `_in_flight` 是無界 dict。正常路徑會 pop，但 [H4](#h4-build-的去重機制有-race-condition) 的 race 會讓項目遺留 | TODO: 優先修復 |
+| L5 | `frontend/src/layouts/Layout.astro:29` | `lang="en"` 寫死在所有頁面上，包含 zh-TW 版。螢幕閱讀器會用錯語音，SEO 也會誤判。應該用 `Astro.currentLocale` | TODO: 優先修復 |
+| L6 | `frontend/src/pages/404.astro:11-14` | 用 `<meta http-equiv="refresh">` + `location.replace()` 把所有 404 導回首頁。破壞深層連結的錯誤訊息，且 meta refresh 是無障礙反模式 | TODO: 優先修復 |
+| L7 | `frontend/src/layouts/Layout.astro:100-117` | Google Analytics 與 PostHog 都無條件載入，沒有 consent gate。若有歐盟流量會有 GDPR 問題 | 暫緩修復 |
+| L8 | `frontend/src/components/share.tsx:56` | `history.replaceState(null, "", "/editor")` 寫死路徑，會把使用者的語言前綴（`/zh-tw/editor`）洗掉 | 暫緩修復 |
 
 ---
 
