@@ -64,7 +64,7 @@ The main difference between C++ Here and other online C++ editors is that we use
 
 ### Frontend
 
-Bun is required. Using npm may lead to issues.
+Bun (recommended) or npm both work — the repo is a workspace monorepo, so run every command below from the repository root.
 
 1. Clone
 ```shell

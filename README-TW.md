@@ -59,7 +59,7 @@ C++ Here 與其他線上 C++ 編輯器的最大不同在於我們使用 [safe-cp
 
 ### 前端
 
-需要 Bun，若使用 npm 可能會導致問題。
+Bun（推薦）與 npm 皆可使用；本專案採用 workspaces 單一儲存庫，以下指令請都在專案根目錄執行。
 
 1. Clone
 ```shell
