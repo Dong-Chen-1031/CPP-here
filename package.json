@@ -22,7 +22,6 @@
     },
     "workspaces": [
         "frontend",
-        "extensions",
-        "docs"
+        "extensions"
     ]
 }
