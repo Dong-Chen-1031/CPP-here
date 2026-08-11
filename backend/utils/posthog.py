@@ -1,4 +1,5 @@
 from posthog import Posthog
+
 from settings import settings
 
 posthog = (

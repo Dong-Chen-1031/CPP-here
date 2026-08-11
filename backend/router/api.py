@@ -2,6 +2,7 @@ import time
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+
 from utils.cache import get_build_stats
 from utils.log import logger
 
@@ -29,7 +30,9 @@ async def status() -> StatusResponse:
 
     except Exception as e:
         logger.error(f"Failed to get build stats: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get build stats")
+        raise HTTPException(
+            status_code=500, detail="Failed to get build stats"
+        ) from e
 
 
 @router.get("/health")

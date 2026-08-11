@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 import secrets
-from typing import Any
+from typing import Any, ClassVar
 
 import httpx
 from dotenv import load_dotenv
@@ -43,7 +43,7 @@ else:
 
 
 class CenterConsoleSettingsSource(PydanticBaseSettingsSource):
-    center_json: dict[str, Any] = {}
+    center_json: ClassVar[dict[str, Any]] = {}
 
     def get_field_value(
         self, field: FieldInfo, field_name: str

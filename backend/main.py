@@ -6,16 +6,17 @@ if True:  # don't that Ruff sort this import
     from settings import settings
 import uuid
 
-import router
-import router.api
-import router.build
-import router.verify
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from prometheus_fastapi_instrumentator import Instrumentator
+
+import router
+import router.api
+import router.build
+import router.verify
 from services.resource_manager import lifespan
 from utils.log import logger
 from utils.posthog import posthog

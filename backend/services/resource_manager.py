@@ -1,9 +1,10 @@
 import asyncio
-from typing import AsyncContextManager
+from contextlib import AbstractAsyncContextManager
 
 import aiodocker
 from fastapi import FastAPI
 from fastapi.concurrency import asynccontextmanager
+
 from utils.cache import init_db
 from utils.log import logger
 from utils.scheduler import scheduler
@@ -14,7 +15,7 @@ class AsyncResourceManager:
         self.resources = []
         self.docker: aiodocker.Docker
 
-    async def track(self, resource_cm: AsyncContextManager):
+    async def track(self, resource_cm: AbstractAsyncContextManager):
         obj = await resource_cm.__aenter__()
         self.resources.append(resource_cm)
         return obj

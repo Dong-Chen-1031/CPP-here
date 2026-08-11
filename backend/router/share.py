@@ -1,10 +1,11 @@
 import uuid
 
 import boto3
-from settings import settings
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+
 from router.verify import need_token
+from settings import settings
 from utils.log import logger
 
 router = APIRouter()

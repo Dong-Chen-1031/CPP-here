@@ -6,10 +6,10 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from aiodocker import DockerError
+
 from services.resource_manager import resource_manager
 from settings import settings
 from utils.log import logger
-
 
 BUILDER_IMAGE = "ghcr.io/dong-chen-1031/safe-cpp2wasm:latest"
 
@@ -188,9 +188,9 @@ async def build(
 
             try:
                 await asyncio.wait_for(_drain(), timeout=60)
-            except asyncio.TimeoutError:
+            except TimeoutError as e:
                 logger.warning("Container exec timeout")
-                raise BuildError("Build timed out")
+                raise BuildError("Build timed out") from e
 
             exec_info = await execute.inspect()
             exit_code = exec_info["ExitCode"]

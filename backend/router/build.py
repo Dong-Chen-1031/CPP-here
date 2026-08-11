@@ -4,13 +4,14 @@ import pathlib
 import re
 import time
 from hashlib import sha256
-from typing import Literal, Optional
+from typing import Literal
 
 import aiofiles
 from aiofiles import open
 from fastapi import APIRouter, Depends
 from prometheus_client import Counter, Histogram
 from pydantic import BaseModel, Field
+
 from router.verify import need_token
 from services.build import BuildError, build
 from settings import settings
@@ -77,7 +78,7 @@ class BuildResponse(BaseModel):
     metric_status: Literal["success", "failure", "cache"] = Field(
         "success", exclude=True
     )
-    wasm_size_bytes: Optional[int] = Field(default=0, exclude=True)
+    wasm_size_bytes: int | None = Field(default=0, exclude=True)
 
 
 WORKER_CODE = ""
@@ -215,11 +216,11 @@ async def build_cpp(
             )
 
         if not WORKER_CODE:
-            async with aiofiles.open("assets/worker.js", mode="r") as f:
+            async with aiofiles.open("assets/worker.js") as f:
                 WORKER_CODE = await f.read()
 
         worker_code = f"\n\n// Worker code\n{WORKER_CODE}"
-        async with aiofiles.open(f"{output_path}/{js_name}", mode="r") as f:
+        async with aiofiles.open(f"{output_path}/{js_name}") as f:
             js_code = await f.read()
         async with aiofiles.open(f"{output_path}/{js_name}", mode="a") as f:
             await f.write(worker_code)
