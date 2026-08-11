@@ -14,7 +14,7 @@ from utils.scheduler import scheduler
 class Catch(
     SQLModel, table=True
 ):  # TODO: rename to Cache, but my db already has a table named Catch, so I have to keep this name for now
-    hash_id: str = Field(default=None, primary_key=True)
+    hash_id: str = Field(primary_key=True)
     version: str = Field(default="0.1.0")
     timestamp: int = Field(default_factory=lambda: int(time.time()))
     delete_at: int = Field(

@@ -44,30 +44,34 @@ const MotionButtonLabel = React.forwardRef(function MotionButtonLabel(
     },
     ref: React.Ref<HTMLDivElement>,
 ) {
-    const el =
-        typeof window !== "undefined"
-            ? window.document.getElementById("runBtnText")
-            : null;
+    const innerRef = React.useRef<HTMLDivElement>(null);
+    React.useImperativeHandle(ref, () => innerRef.current as HTMLDivElement);
 
-    if (el) {
+    // Measure after commit, never during render: reading the DOM while
+    // rendering breaks under StrictMode / concurrent rendering, and a global
+    // getElementById would pick up the label that is currently animating out.
+    // Each label records its own width while mounted, so the next label to
+    // enter starts from the width of the one it replaced.
+    React.useLayoutEffect(() => {
+        const el = innerRef.current?.querySelector<HTMLElement>(
+            "[data-run-btn-text]",
+        );
+        if (!el) return;
+
         const len = el.offsetWidth;
-        if (len != lastWidthRef.current[lastWidthRef.current.length - 1]) {
-            lastWidthRef.current.push(len);
-            lastWidthRef.current = lastWidthRef.current.slice(-2);
-            // console.log("Measured width:", lastWidthRef.current);
+        if (len !== lastWidthRef.current[lastWidthRef.current.length - 1]) {
+            lastWidthRef.current = [...lastWidthRef.current, len].slice(-2);
         }
-    }
+    });
 
-    // console.log(
-    //   "Rendering MotionButtonLabel with children:",
-    //   lastWidthRef.current[0],
-    // );
+    const enterWidth = lastWidthRef.current[lastWidthRef.current.length - 1];
+
     return (
         <motion.div
-            ref={ref}
+            ref={innerRef}
             initial={
                 initial && {
-                    width: `calc(${lastWidthRef.current[1]}px + 1.125rem)`,
+                    width: `calc(${enterWidth}px + 1.125rem)`,
                     opacity: 0,
                 }
             }
@@ -107,7 +111,6 @@ export function RunButton({
     const runBtnGroupRef = React.useRef<HTMLDivElement>(
         undefined,
     ) as React.RefObject<HTMLDivElement>;
-    const btnTextRef = React.useRef<HTMLSpanElement>(null);
     const cantPress = !jwt || (runStatus !== "idle" && runStatus !== "running");
     const { t } = useTranslation(["editor"]);
     const [hasLoaded, setHasLoaded] = React.useState(false);
@@ -167,8 +170,7 @@ export function RunButton({
                                 <Spinner className="size-3" />
                                 <span
                                     className="text-xs"
-                                    id="runBtnText"
-                                    ref={btnTextRef}>
+                                    data-run-btn-text>
                                     {t("headerActions.verifying")}
                                 </span>
                             </MotionButtonLabel>
@@ -179,8 +181,7 @@ export function RunButton({
                                 <Spinner className="size-3" />
                                 <span
                                     className="text-xs"
-                                    id="runBtnText"
-                                    ref={btnTextRef}>
+                                    data-run-btn-text>
                                     {t("headerActions.building")}
                                 </span>
                             </MotionButtonLabel>
@@ -193,8 +194,7 @@ export function RunButton({
                                 <SquareIcon className="" />
                                 <span
                                     className="text-xs"
-                                    id="runBtnText"
-                                    ref={btnTextRef}>
+                                    data-run-btn-text>
                                     {t("headerActions.stop")}
                                 </span>
                             </MotionButtonLabel>
@@ -203,7 +203,7 @@ export function RunButton({
                                 key="run"
                                 lastWidthRef={lastWidthRef}>
                                 <Play />
-                                <span id="runBtnText" ref={btnTextRef}>
+                                <span data-run-btn-text>
                                     {t("headerActions.run")}
                                 </span>
                             </MotionButtonLabel>
@@ -212,7 +212,7 @@ export function RunButton({
                                 key="run-all"
                                 lastWidthRef={lastWidthRef}>
                                 <TestTubes />
-                                <span id="runBtnText" ref={btnTextRef}>
+                                <span data-run-btn-text>
                                     {t("headerActions.runAll")}
                                 </span>
                             </MotionButtonLabel>

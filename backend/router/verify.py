@@ -1,5 +1,5 @@
 import hmac
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import jwt
@@ -27,7 +27,7 @@ turnstile = Turnstile(settings.TURNSTILE_SECRET)
 
 def create_jwt(data: dict, expires_in: int = 3600):
     payload = data.copy()
-    payload["exp"] = datetime.utcnow() + timedelta(seconds=expires_in)
+    payload["exp"] = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
     token = jwt.encode(payload, settings.JWT_SECRET, algorithm="HS256")
     return token
 
@@ -42,7 +42,7 @@ def is_verified(token: str):
         raise HTTPException(status_code=400, detail="Invalid token")
 
 
-def need_token(request: Request):
+def need_token(request: Request) -> bool:
     if settings.BYPASS_CAPTCHA:
         logger.warning("Bypassing CAPTCHA verification due to BYPASS_CAPTCHA setting")
         return True

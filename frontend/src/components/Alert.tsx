@@ -21,15 +21,15 @@ import {
 export function Alerts() {
   const [alerts, setAlerts] = useAtom(alertStore);
   const isMobile = useIsMobile();
-  if (!alerts) {
-    return null;
-  }
+  // No early return before this hook: alertStore always holds an array, and an
+  // early return would make the hook order conditional.
   useEffect(() => {
     if (alerts.length === 0) return;
     const uuid = alerts[alerts.length - 1].id;
     const timer = setTimeout(() => {
       setAlerts((prev) => prev.filter((a) => a.id !== uuid));
     }, 5000);
+    return () => clearTimeout(timer);
   }, [alerts]);
 
   return (

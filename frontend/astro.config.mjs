@@ -104,6 +104,14 @@ export default defineConfig({
                 url: true,
                 default: "",
             }),
+            PUBLIC_S3_BUCKET_NAME: envField.string({
+                context: "client",
+                access: "public",
+                optional: true,
+                // Must match the backend's S3_BUCKET_NAME: shared code is read
+                // from `${PUBLIC_S3_BUCKET_URL}/${PUBLIC_S3_BUCKET_NAME}/<id>`.
+                default: "share",
+            }),
             PRIVATE_JWT_SECRET: envField.string({
                 context: "server",
                 access: "secret",

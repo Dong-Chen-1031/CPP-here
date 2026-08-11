@@ -4,6 +4,8 @@ if __name__ == "__main__":
     print_logo()
 if True:  # don't that Ruff sort this import
     from settings import settings
+import uuid
+
 import router
 import router.api
 import router.build
@@ -66,9 +68,21 @@ async def root():
 
 @app.exception_handler(Exception)
 async def http_exception_handler(request, exc):
+    # Never leak str(exc) to the client: it carries absolute paths, bucket names
+    # and other internals. The trace id is the bridge to the server-side log.
+    trace_id = uuid.uuid4().hex
+    logger.error(
+        f"Unhandled exception (trace_id={trace_id})",
+        exc_info=exc,
+        extra={"trace_id": trace_id, "path": str(request.url)},
+    )
     if posthog:
-        posthog.capture_exception(exc)
-    return JSONResponse(status_code=500, content={"message": str(exc)})
+        posthog.capture_exception(exc, properties={"trace_id": trace_id})
+
+    message = str(exc) if settings.DEV_MODE else "Internal server error"
+    return JSONResponse(
+        status_code=500, content={"message": message, "trace_id": trace_id}
+    )
 
 
 if __name__ == "__main__":

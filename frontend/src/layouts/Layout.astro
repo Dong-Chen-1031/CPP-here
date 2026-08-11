@@ -8,6 +8,7 @@ interface Props {
     ogImage?: string;
     ogImageAlt?: string;
     noindex?: boolean;
+    lang?: string;
 }
 
 const {
@@ -16,6 +17,7 @@ const {
     ogImage = "/og-image.png",
     ogImageAlt = "C++ Here — next-generation online C++ editor for competitive programming",
     noindex = false,
+    lang,
 } = Astro.props;
 
 const siteUrl = "https://cpp.doong.me";
@@ -23,10 +25,18 @@ const canonicalURL = new URL(Astro.url.pathname, siteUrl).href;
 const ogImageURL = ogImage.startsWith("http")
     ? ogImage
     : `${siteUrl}${ogImage}`;
+
+// The locale lives in the route (`/zh-tw/...`), not in an Astro i18n config, so
+// derive it from the path instead of hardcoding "en" on every page. Pages whose
+// language is chosen client-side (the editor) get corrected by lib/i18n.ts.
+const LOCALES: Record<string, string> = { en: "en", "zh-tw": "zh-TW" };
+const localeSegment =
+    Astro.url.pathname.split("/").filter(Boolean)[0]?.toLowerCase() ?? "";
+const htmlLang = lang ?? LOCALES[localeSegment] ?? Astro.currentLocale ?? "en";
 ---
 
 <!doctype html>
-<html class="neutral dark bg-background text-foreground" lang="en">
+<html class="neutral dark bg-background text-foreground" lang={htmlLang}>
     <head>
         <link
             rel="preconnect"

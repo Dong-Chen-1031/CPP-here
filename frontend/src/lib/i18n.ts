@@ -44,4 +44,14 @@ i18n.use(Backend)
         },
     });
 
+// Keep <html lang> in sync with the detected language: the editor page is
+// served as one static document, so its language is only known client-side.
+if (typeof document !== "undefined") {
+    const syncHtmlLang = () => {
+        document.documentElement.lang = i18n.resolvedLanguage ?? "en";
+    };
+    i18n.on("languageChanged", syncHtmlLang);
+    syncHtmlLang();
+}
+
 export default i18n;

@@ -1,11 +1,11 @@
 import uuid
-from venv import logger
 
 import boto3
 from settings import settings
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from router.verify import need_token
+from utils.log import logger
 
 router = APIRouter()
 
@@ -29,7 +29,7 @@ class ShareResponse(BaseModel):
 @router.post("/share")
 async def share(
     request: ShareRequest,
-    token: dict = Depends(need_token),
+    token: bool = Depends(need_token),
 ) -> ShareResponse:
     if not settings.SHARE:
         logger.warning("Someone want to share but sharing is disabled")
@@ -43,7 +43,7 @@ async def share(
 
     share_id = uuid.uuid7().hex
     s3.put_object(
-        Bucket="share",
+        Bucket=settings.S3_BUCKET_NAME,
         Key=f"{share_id}",
         Body=request.code.encode(),
     )

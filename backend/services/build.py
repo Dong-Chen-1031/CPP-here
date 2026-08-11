@@ -11,6 +11,9 @@ from settings import settings
 from utils.log import logger
 
 
+BUILDER_IMAGE = "ghcr.io/dong-chen-1031/safe-cpp2wasm:latest"
+
+
 class BuildError(Exception):
     def __init__(self, msg: str, build_logs: str = ""):
         super().__init__(msg)
@@ -28,7 +31,7 @@ class ContainerPool:
 
     async def _create_container(self):
         config = {
-            "Image": "ghcr.io/dong-chen-1031/safe-cpp2wasm:latest",
+            "Image": BUILDER_IMAGE,
             "Cmd": ["sleep", "infinity"],
             "AttachStdout": True,
             "AttachStderr": True,
@@ -61,7 +64,25 @@ class ContainerPool:
         except Exception as e:
             logger.error(f"Failed to replenish container pool: {e}")
 
+    async def _ensure_image(self):
+        """Pull the builder image once at startup instead of on the failure path.
+
+        The per-request 404 recovery could never run: the image is resolved in
+        _create_container(), which is called outside the build()'s try block.
+        """
+        try:
+            await self.docker.images.inspect(BUILDER_IMAGE)
+        except DockerError:
+            logger.info(f"Builder image {BUILDER_IMAGE} not found locally, pulling...")
+            await self.docker.images.pull(BUILDER_IMAGE)
+
     async def startup(self):
+        try:
+            await self._ensure_image()
+        except Exception as e:
+            # Don't block startup: builds will fail loudly with a BuildError instead.
+            logger.error(f"Failed to ensure builder image {BUILDER_IMAGE}: {e}")
+
         needed = max(0, settings.DOCKER_POOL_SIZE - self.pool.qsize())
         if needed > 0:
             await asyncio.gather(*[self._replenish() for _ in range(needed)])
@@ -141,8 +162,14 @@ async def build(
         ]
     )
 
-    async with container_pool.acquire() as container:
-        try:
+    # Initialised up front: the DockerError handler below reports it even when
+    # the failure happens before the build logs are collected.
+    output = ""
+
+    try:
+        # acquire() itself can raise DockerError (it creates a container when the
+        # pool is empty), so the try block has to wrap it too.
+        async with container_pool.acquire() as container:
             execute = await container.exec(
                 ["sh", "-c", cmd],
                 stdout=True,
@@ -181,7 +208,7 @@ async def build(
                     },
                 )
                 logger.debug(output)
-                shutil.rmtree(output_dir, ignore_errors=True)
+                await asyncio.to_thread(shutil.rmtree, output_dir, ignore_errors=True)
                 raise BuildError(f"Build failed (exit {exit_code})", build_logs=output)
 
             tar = await container.get_archive("/tmp/out")
@@ -196,10 +223,8 @@ async def build(
 
             return output
 
-        except DockerError as e:
-            if e.status == 404:
-                logger.error("Docker image not found. Auto-pulling image.")
-                await resource_manager.docker.images.pull(
-                    "ghcr.io/dong-chen-1031/safe-cpp2wasm:latest"
-                )
-            raise BuildError("Build failed due to Docker error.", build_logs=output)
+    except DockerError as e:
+        logger.error(f"Docker error during build (status {e.status}): {e}")
+        raise BuildError(
+            "Build failed due to Docker error.", build_logs=output
+        ) from e

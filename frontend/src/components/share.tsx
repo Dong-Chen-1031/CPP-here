@@ -121,7 +121,7 @@ export function ShareReceiveDialog() {
                                     });
                                     return;
                                 }
-                                const data = res.data!;
+                                const data = res.data;
                                 if (checkedItems.code) {
                                     defaultStore.set(codeStore, data.code);
                                 }

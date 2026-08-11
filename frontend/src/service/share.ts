@@ -6,10 +6,15 @@ import {
     turnstileRefStore,
     verifyJwtStore,
 } from "@/store/atom";
-import { PUBLIC_API_URL, PUBLIC_S3_BUCKET_URL } from "astro:env/client";
+import {
+    PUBLIC_API_URL,
+    PUBLIC_S3_BUCKET_NAME,
+    PUBLIC_S3_BUCKET_URL,
+} from "astro:env/client";
 import { axios, apiAxios } from "@/lib/axiosInstance";
 import { addAlert } from "@/lib/alert";
 import { getDefaultStore } from "jotai";
+import { z } from "zod";
 
 const defaultStore = getDefaultStore();
 
@@ -19,6 +24,34 @@ interface ShareObject {
     inputData: ReturnType<typeof inputStore.read>;
     outputData: ReturnType<typeof outputStore.read>;
 }
+
+/**
+ * A shared payload is arbitrary JSON from object storage, and it ends up in
+ * `atomWithStorage` atoms — a malformed one would persist into localStorage and
+ * keep breaking the editor across reloads. So validate it before it gets in.
+ */
+const TestCaseSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    input: z.string(),
+    expectedOutput: z.string().optional(),
+});
+
+const OutputCaseSchema = z.object({
+    type: z.enum(["stdout", "err"]).optional(),
+    testCaseId: z.string().optional(),
+    testCaseName: z.string().optional(),
+    expectedOutput: z.string().optional(),
+    content: z.string(),
+    status: z.enum(["running", "ac", "error", "wa", "finished"]).optional(),
+});
+
+const ShareObjectSchema = z.object({
+    code: z.string(),
+    testCase: z.array(TestCaseSchema),
+    inputData: z.string(),
+    outputData: z.array(OutputCaseSchema),
+});
 
 const JWT_RENEW_TIMEOUT_MS = 60_000;
 
@@ -119,7 +152,13 @@ export async function shareCode(allowRetry = true): Promise<ShareResult> {
     }
 }
 
-export async function fetchSharedCode(shareId: string) {
+type FetchShareResult =
+    | { ok: true; data: ShareObject }
+    | { ok: false; errors: string[] };
+
+export async function fetchSharedCode(
+    shareId: string,
+): Promise<FetchShareResult> {
     if (!PUBLIC_S3_BUCKET_URL) {
         console.error(
             "S3 bucket URL is not configured. Cannot fetch shared code.",
@@ -128,10 +167,16 @@ export async function fetchSharedCode(shareId: string) {
     }
     try {
         const respond = await axios.get(
-            `${PUBLIC_S3_BUCKET_URL}/share/${shareId}`,
+            `${PUBLIC_S3_BUCKET_URL}/${PUBLIC_S3_BUCKET_NAME}/${shareId}`,
         );
 
-        return { ok: true, data: respond.data as ShareObject };
+        const parsed = ShareObjectSchema.safeParse(respond.data);
+        if (!parsed.success) {
+            console.error("Malformed share payload:", parsed.error.issues);
+            return { ok: false, errors: ["Malformed share payload."] };
+        }
+
+        return { ok: true, data: parsed.data };
     } catch (error) {
         console.error("Error during fetch shared code request:", error);
         return { ok: false, errors: [String(error)] };

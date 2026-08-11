@@ -6,6 +6,7 @@ from typing import Any
 
 import httpx
 from dotenv import load_dotenv
+from prometheus_client import Counter
 from pydantic import Field, model_validator
 from pydantic.fields import FieldInfo
 from pydantic_settings import (
@@ -23,6 +24,14 @@ CENTER_URL = os.getenv("CENTER_URL", "")
 CENTER_TOKEN = os.getenv("CENTER_TOKEN", "")
 ENABLE_CENTER_CONSOLE = os.getenv("ENABLE_CENTER_CONSOLE") and bool(
     CENTER_URL and CENTER_TOKEN
+)
+
+# Startup (and every reload_settings()) blocks on this request, so keep it short.
+CENTER_CONSOLE_TIMEOUT = float(os.getenv("CENTER_CONSOLE_TIMEOUT", "3.0"))
+
+CENTER_CONSOLE_FETCH_FAILURES = Counter(
+    "center_console_fetch_failures_total",
+    "Number of failed Center Console configuration fetches",
 )
 
 if ENABLE_CENTER_CONSOLE:
@@ -57,10 +66,13 @@ class CenterConsoleSettingsSource(PydanticBaseSettingsSource):
             self.center_json = httpx.get(
                 f"{CENTER_URL}/center-api/v1/config",
                 headers={"Authorization": f"Bearer {CENTER_TOKEN}"},
+                timeout=CENTER_CONSOLE_TIMEOUT,
             ).json()
-        except Exception:
+        except Exception as e:
+            CENTER_CONSOLE_FETCH_FAILURES.inc()
             print(
-                "[red]Failed to fetch settings from Center Console, using env / .env instead"
+                f"[red]Failed to fetch settings from Center Console ({e!r}), "
+                "using env / .env instead"
             )
             return d
 

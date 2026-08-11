@@ -18,6 +18,11 @@ export const clearErrorsEffect = StateEffect.define<void>();
 export const clearErrorAtLineEffect = StateEffect.define<number>();
 
 class ErrorWidget extends WidgetType {
+    // toDOM() runs on every render of the widget, so the font-size subscription
+    // it registers has to be released in destroy() — otherwise every compile
+    // error leaks a subscription that keeps its detached DOM node alive.
+    private unsubFontSize?: () => void;
+
     constructor(
         readonly message: string,
         readonly severity: Severity = "error",
@@ -38,7 +43,8 @@ class ErrorWidget extends WidgetType {
 
         wrap.className = `flex items-center gap-2.5 py-0 px-2 rounded-r-md border-l-[3px] ml-1.5 shadow-sm animate-in fade-in zoom-in-95 duration-200 `;
         wrap.style.transitionProperty = "opacity, box-shadow, scale";
-        getDefaultStore().sub(editorFontSizeStore, () => {
+        this.unsubFontSize?.();
+        this.unsubFontSize = getDefaultStore().sub(editorFontSizeStore, () => {
             const fontSize = getDefaultStore().get(editorFontSizeStore);
             wrap.style.fontSize = `${fontSize}px`;
             wrap.querySelectorAll("svg").forEach((icon) => {
@@ -183,6 +189,11 @@ class ErrorWidget extends WidgetType {
             // icon.style.height = `${fontSize * 2}px`;
         });
         return wrap;
+    }
+
+    destroy() {
+        this.unsubFontSize?.();
+        this.unsubFontSize = undefined;
     }
 
     get estimatedHeight() {

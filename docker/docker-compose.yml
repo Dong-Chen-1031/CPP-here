@@ -6,9 +6,9 @@ services:
         # this env tell the backend the cache path on the host machine. 
         # So when it starts sub containers for wasm builds, it can mount the same cache path to speed up builds and share cache between host and containers.
 
-      - DEV=false
+      - DEV_MODE=false
         # set to false for production deployment, true for local development
-        # If DEV is false, it will stop auto reloading and turn off api docs.
+        # If DEV_MODE is false, it will stop auto reloading and turn off api docs.
         # Default: false
 
       - PORT=8000
@@ -42,7 +42,10 @@ services:
     # env_file: .env
 
     ports:
-      - "${PORT:-8000}:${PORT:-8000}"
+      - "${BACKEND_PORT:-8000}:8000"
+      # Host port for the backend. The container always listens on 8000 (see PORT above),
+      # so set BACKEND_PORT to change the port on your machine.
+      # Backend and frontend must not share one variable, or both would try to bind it.
     
     networks:
       - cpp-network
@@ -59,7 +62,7 @@ services:
   frontend:
     image: ghcr.io/dong-chen-1031/cpp-here/frontend:latest
     environment:
-      - PUBLIC_CAPTCHA_SITE_KEY=1x00000000000000000000BB
+      - PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000BB
         # Cloudflare Turnstile site key for CAPTCHA verification.
         # Get a real site key from Cloudflare Turnstile dashboard for production use.
         # Default: "1x00000000000000000000BB" (Always valid for development).
@@ -70,7 +73,7 @@ services:
         # In production, it should point to the deployed backend API.
         # Default: "http://127.0.0.1:8000".
 
-      - SKIP_API_FETCH=true
+      - PUBLIC_SKIP_API_FETCH=true
         # Set to "true" to skip API fetches for landing page stats data at build time.
         # If your backend is not ready, you can set this to "true" during development.
         # Default: "true".
@@ -78,7 +81,7 @@ services:
       - PUBLIC_BUILD_TIME_API_URL=http://backend:8000
         # Backend API URL to fetch data at build time. 
         # If you are using docker, you need to set this to Docker internal host to allow the build process to fetch data from the backend container.
-        # Or you can just set SKIP_API_FETCH to "true" to skip API fetches during build time.
+        # Or you can just set PUBLIC_SKIP_API_FETCH to "true" to skip API fetches during build time.
         # Default: not set (falls back to PUBLIC_API_URL).
 
       - CI=true
@@ -88,7 +91,9 @@ services:
     # env_file: .env
 
     ports:
-      - "${PORT:-4321}:${PORT:-4321}"
+      - "${FRONTEND_PORT:-4321}:4321"
+      # Host port for the frontend. Caddy inside the container always serves on 4321,
+      # so set FRONTEND_PORT to change the port on your machine.
     
     restart: unless-stopped
 
