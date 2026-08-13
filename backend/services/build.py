@@ -36,11 +36,18 @@ class ContainerPool:
             "AttachStdout": True,
             "AttachStderr": True,
             "Tty": False,
+            # nproc inside the container still reports every host core — NanoCpus is
+            # a CFS quota, not an affinity mask — so emcc would size its thread pools
+            # for a machine it doesn't get to use. Pin it to the 1 CPU we grant.
+            "Env": ["EMCC_CORES=1"],
             "HostConfig": {
                 "NetworkMode": "none",  # --network none
                 "NanoCpus": 1_000_000_000,  # --cpus="1.0"
                 "Memory": 1_073_741_824,  # --memory="1G"
-                "PidsLimit": 50,  # --pids-limit 50
+                # Threads count against the pids cgroup too, and a link step can hold
+                # dozens at once; 50 sat close enough to the ceiling that concurrent
+                # builds failed with "thread constructor failed" (pthread_create EAGAIN).
+                "PidsLimit": 256,  # --pids-limit 256
                 "Ulimits": [
                     {"Name": "fsize", "Soft": 50_000_000, "Hard": 50_000_000}
                 ],  # --ulimit fsize=50000000:50000000
@@ -145,6 +152,9 @@ async def build(
         [
             f"-std={cpp_version} ",
             "-ftemplate-depth=50 ",
+            # EMCC_CORES doesn't reach wasm-ld's own thread pool, which is what
+            # actually blew up under load; cap it to match the container's 1 CPU.
+            "-Wl,--threads=1 ",
             "-sMODULARIZE=1 ",
             # "-sMINIMAL_RUNTIME=1  "
             '-sEXPORT_NAME="createMyModule" ',
