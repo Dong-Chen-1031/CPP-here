@@ -15,7 +15,7 @@
         "ext:firefox": "cd extensions && npm run dev:firefox",
         "docs": "cd docs && npm run dev",
         "docs:build": "cd docs && npm run build",
-        "build:mac": "pake \"https://cpp.doong.me/editor?desktop=true\" --name \"CPP Here\" --icon \"https://cpp.doong.me/web-app-manifest-512x512.png\" --maximize --user-agent \"C++ Here Desktop\" --hide-title-bar"
+        "build:mac": "npx --yes pake-cli@3.15.6 \"https://cpp.doong.me/editor?desktop=true\" --name \"CPP Here\" --icon \"https://cpp.doong.me/web-app-manifest-512x512.png\" --maximize --user-agent \"C++ Here Desktop\" --hide-title-bar"
     },
     "dependencies": {
         "concurrently": "^10.0.3"
