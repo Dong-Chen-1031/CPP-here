@@ -50,7 +50,7 @@ export async function POST({ request }: APIContext) {
         );
     }
 
-    const jwt = createJWT({ verified: true });
+    const jwt = await createJWT({ verified: true });
     return new Response(
         JSON.stringify({
             success: true,

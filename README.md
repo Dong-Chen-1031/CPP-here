@@ -75,11 +75,15 @@ cd CPP-here
 2. Install dependencies
 ```shell
 bun install
+# or
+npm install
 ```
 
 3. Run frontend
 ```shell
 bun run frontend
+# or
+npm run frontend
 ```
 
 ### Backend
@@ -108,6 +112,8 @@ docker pull ghcr.io/dong-chen-1031/safe-cpp2wasm:latest
 4. Run backend
 ```shell
 bun run backend
+# or
+npm run backend
 ```
 
 ### Run Frontend and Backend Together (Recommended)
@@ -116,6 +122,8 @@ bun run backend
 2. Start both frontend and backend with one command:
 ```shell
 bun run dev
+# or
+npm run dev
 ```
 
 ## Deployment

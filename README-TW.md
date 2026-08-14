@@ -70,11 +70,15 @@ cd CPP-here
 2. 安裝依賴項
 ```shell
 bun install
+# 或
+npm install
 ```
 
 3. 執行前端
 ```shell
 bun run frontend
+# 或
+npm run frontend
 ```
 
 ### 後端
@@ -102,6 +106,8 @@ docker pull ghcr.io/dong-chen-1031/safe-cpp2wasm:latest
 4. 執行後端
 ```shell
 bun run backend
+# 或
+npm run backend
 ```
 
 ### 前後端同時執行（推薦）
@@ -109,6 +115,8 @@ bun run backend
 2. 一鍵同時執行前後端
 ```shell
 bun run dev
+# 或
+npm run dev
 ```
 
 ## 部署

@@ -167,7 +167,7 @@ export async function fetchSharedCode(
     }
     try {
         const respond = await axios.get(
-            `${PUBLIC_S3_BUCKET_URL}/${PUBLIC_S3_BUCKET_NAME}/${shareId}`,
+            `${PUBLIC_S3_BUCKET_URL}/${PUBLIC_S3_BUCKET_NAME}/${encodeURIComponent(shareId)}`,
         );
 
         const parsed = ShareObjectSchema.safeParse(respond.data);
