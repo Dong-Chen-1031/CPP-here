@@ -63,11 +63,14 @@ class CenterConsoleSettingsSource(PydanticBaseSettingsSource):
             return d
 
         try:
-            self.center_json = httpx.get(
+            _ = httpx.get(
                 f"{CENTER_URL}/center-api/v1/config",
                 headers={"Authorization": f"Bearer {CENTER_TOKEN}"},
                 timeout=CENTER_CONSOLE_TIMEOUT,
             ).json()
+            if not isinstance(_, dict):
+                raise ValueError(f"Center Console returned non-dict JSON: {_!r}")
+            self.__class__.center_json = _
         except Exception as e:
             CENTER_CONSOLE_FETCH_FAILURES.inc()
             print(
@@ -129,6 +132,10 @@ class Settings(BaseSettings):
     JWT_EXPIRY_SECONDS: int = Field(default=3600)
 
     DOCKER_POOL_SIZE: int = Field(default=15)
+
+    DOCKER_WORKER_TTL: int = Field(default=1800)
+
+    DOCKER_ORPHAN_SWEEP: bool = Field(default=True)
 
     S3_ENDPOINT_URL: str = Field(default="")
 

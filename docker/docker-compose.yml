@@ -36,7 +36,19 @@ services:
       - COLUMNS=160
         # how wide your terminal is.
         # This is used to format the output of the backend server logs to prevent line breaks in the middle of log lines when running in Docker Compose.
-        
+
+      - DOCKER_WORKER_TTL=1800
+        # Seconds a build worker container lives before killing itself.
+        # This is the backstop for ungraceful shutdowns (SIGKILL / OOM / host reboot):
+        # workers left behind by a dead backend disappear on their own within this window.
+        # Default: 1800
+
+      - DOCKER_ORPHAN_SWEEP=true
+        # Delete leftover workers from a previous run when the backend starts.
+        # Set to false if several backends share one Docker daemon, since the sweep
+        # cannot tell a dead instance's workers from a live sibling's.
+        # Default: true
+
 
     # or use .env to set environment variables:
     # env_file: .env
@@ -55,7 +67,11 @@ services:
       - ./logs:/app/logs
       - /var/run/docker.sock:/var/run/docker.sock
       # Mount Docker socket for DinD (Docker-in-Docker) to allow backend to manage Docker containers for wasm builds.
-    
+
+    stop_grace_period: 30s
+    # The default 10s can expire while the backend is still removing its worker
+    # containers, turning a normal `docker compose down` into a SIGKILL that leaks them.
+
     restart: unless-stopped
   
   
