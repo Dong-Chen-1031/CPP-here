@@ -5,7 +5,11 @@ import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { useAtom } from "jotai";
 import { alertStore, turnstileRefStore, verifyJwtStore } from "@/store/atom";
-import { PUBLIC_API_URL, PUBLIC_TURNSTILE_SITE_KEY } from "astro:env/client";
+import {
+    PUBLIC_API_URL,
+    PUBLIC_TURNSTILE_SITE_KEY,
+    PUBLIC_BYPASS_CAPTCHA,
+} from "astro:env/client";
 import { addAlert } from "@/lib/alert";
 import { apiAxios } from "@/lib/axiosInstance";
 
@@ -13,6 +17,11 @@ import { apiAxios } from "@/lib/axiosInstance";
 const RESET_BUFFER_MS = 10000;
 
 export default function TurnstileWidget() {
+    if (PUBLIC_BYPASS_CAPTCHA) {
+        const [, setJwt] = useAtom(verifyJwtStore);
+        setJwt("bypass-captcha");
+        return null;
+    }
     const turnstileRef = useRef<TurnstileInstance | null>(null);
     const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [jwt, setJwt] = useAtom(verifyJwtStore);

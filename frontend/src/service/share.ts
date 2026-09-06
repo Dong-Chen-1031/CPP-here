@@ -14,54 +14,14 @@ import {
 import { axios, apiAxios } from "@/lib/axiosInstance";
 import { addAlert } from "@/lib/alert";
 import { getDefaultStore } from "jotai";
-import { z } from "zod";
+import { ShareObjectSchema, type ShareObject } from "@/types/share";
 
 const defaultStore = getDefaultStore();
-
-interface ShareObject {
-    code: ReturnType<typeof codeStore.read>;
-    testCase: ReturnType<typeof testCasesStore.read>;
-    inputData: ReturnType<typeof inputStore.read>;
-    outputData: ReturnType<typeof outputStore.read>;
-}
-
-/**
- * A shared payload is arbitrary JSON from object storage, and it ends up in
- * `atomWithStorage` atoms — a malformed one would persist into localStorage and
- * keep breaking the editor across reloads. So validate it before it gets in.
- */
-const TestCaseSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    input: z.string(),
-    expectedOutput: z.string().optional(),
-});
-
-const OutputCaseSchema = z.object({
-    type: z.enum(["stdout", "err"]).optional(),
-    testCaseId: z.string().optional(),
-    testCaseName: z.string().optional(),
-    expectedOutput: z.string().optional(),
-    content: z.string(),
-    status: z.enum(["running", "ac", "error", "wa", "finished"]).optional(),
-});
-
-const ShareObjectSchema = z.object({
-    code: z.string(),
-    testCase: z.array(TestCaseSchema),
-    inputData: z.string(),
-    outputData: z.array(OutputCaseSchema),
-});
 
 const JWT_RENEW_TIMEOUT_MS = 60_000;
 
 let jwtRenewPromise: Promise<string | null> | null = null;
 
-/**
- * Resets the Turnstile widget and waits for a fresh JWT. Concurrent callers
- * share a single renewal so one 401 storm only triggers one reset.
- * Resolves to null if no token arrives before the timeout.
- */
 function renewJwt() {
     if (jwtRenewPromise) return jwtRenewPromise;
 

@@ -138,6 +138,12 @@ export default defineConfig({
                 optional: true,
                 default: "1x0000000000000000000000000000000AA",
             }),
+            PRIVATE_TURNSTILE_CHECK_IP: envField.boolean({
+                context: "server",
+                access: "secret",
+                optional: true,
+                default: true,
+            }),
             PRIVATE_TEST_JWT: envField.string({
                 context: "server",
                 access: "secret",

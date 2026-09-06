@@ -1,9 +1,13 @@
-import type { APIContext } from "astro";
+import * as z from "zod";
 import {
     PRIVATE_JWT_EXPIRATION_SECONDS,
     PRIVATE_TURNSTILE_SECRET_KEY,
+    PRIVATE_TURNSTILE_CHECK_IP,
 } from "astro:env/server";
 import { createJWT } from "@/lib/server/jwt";
+import { makeAPI } from "@/lib/server/api";
+
+export const prerender = false;
 
 async function validateTurnstile(token: string, remoteip: string) {
     try {
@@ -17,7 +21,7 @@ async function validateTurnstile(token: string, remoteip: string) {
                 body: JSON.stringify({
                     secret: PRIVATE_TURNSTILE_SECRET_KEY,
                     response: token,
-                    remoteip: remoteip,
+                    remoteip: PRIVATE_TURNSTILE_CHECK_IP ? remoteip : undefined,
                 }),
             },
         );
@@ -29,37 +33,24 @@ async function validateTurnstile(token: string, remoteip: string) {
         return { success: false, "error-codes": ["internal-error"] };
     }
 }
-export const prerender = false;
 
-export async function POST({ request }: APIContext) {
-    const { token, remoteip } = (await request.json()) as {
-        token: string;
-        remoteip: string;
-    };
-    const turnstileResult = await validateTurnstile(token, remoteip);
+export const POST = makeAPI({
+    body: z.object({ token: z.string() }),
+    handler: async ({ clientAddress }, { token }) => {
+        const turnstileResult = await validateTurnstile(token, clientAddress);
 
-    if (!turnstileResult.success) {
-        return new Response(
-            JSON.stringify({
-                success: false,
-            }),
+        if (!turnstileResult.success) {
+            return Response.json({ success: false }, { status: 400 });
+        }
+
+        const jwt = await createJWT({ verified: true });
+        return Response.json(
             {
-                status: 400,
-                headers: { "Content-Type": "application/json" },
+                success: true,
+                token: jwt,
+                expires_in: PRIVATE_JWT_EXPIRATION_SECONDS,
             },
+            { status: 200 },
         );
-    }
-
-    const jwt = await createJWT({ verified: true });
-    return new Response(
-        JSON.stringify({
-            success: true,
-            token: jwt,
-            expires_in: PRIVATE_JWT_EXPIRATION_SECONDS,
-        }),
-        {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-        },
-    );
-}
+    },
+});

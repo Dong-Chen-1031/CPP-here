@@ -22,7 +22,7 @@ from utils.log import logger
 from utils.posthog import posthog
 
 if settings.DEV_MODE:
-    logger.info("Running in development mode")
+    logger.info("🚧 Running in development mode")
 
 app = FastAPI(
     lifespan=lifespan,
@@ -59,7 +59,7 @@ if settings.SHARE:
     import router.share
 
     app.include_router(router.share.router)
-    logger.info("Share feature is enabled")
+    logger.info("🔗 Share feature is enabled")
 
 
 @app.get("/")

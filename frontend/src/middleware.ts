@@ -8,9 +8,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
     // console.log("Middleware triggered for:", context);
     const pathname = context.url.pathname;
     const isApiPath = pathname.startsWith("/api/");
-    const isVerifyPath =
-        pathname === "/api/verify" || pathname.startsWith("/api/verify/");
-    if (!isApiPath || isVerifyPath) return next();
+    const allowedPaths = ["/api/health", "/api/verify"];
+    const isAllowedPath =
+        allowedPaths.includes(pathname) ||
+        allowedPaths.some((path) => pathname.startsWith(path + "/"));
+    if (!isApiPath || isAllowedPath) return next();
     if (PUBLIC_BYPASS_CAPTCHA) {
         console.warn(
             "Bypassing CAPTCHA verification due to PUBLIC_BYPASS_CAPTCHA being true",
