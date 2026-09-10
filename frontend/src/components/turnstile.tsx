@@ -2,16 +2,15 @@ import "../lib/i18n";
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import axios from "axios";
 import { useAtom } from "jotai";
-import { alertStore, turnstileRefStore, verifyJwtStore } from "@/store/atom";
+import { turnstileRefStore, verifyJwtStore } from "@/store/atom";
 import {
-    PUBLIC_API_URL,
     PUBLIC_TURNSTILE_SITE_KEY,
     PUBLIC_BYPASS_CAPTCHA,
 } from "astro:env/client";
 import { addAlert } from "@/lib/alert";
-import { apiAxios } from "@/lib/axiosInstance";
+import { callAPI } from "@/lib/axiosInstance";
+import type { verifyAPI } from "@/pages/api/verify";
 
 /** How long before the JWT expires we refresh the Turnstile token. */
 const RESET_BUFFER_MS = 10000;
@@ -24,7 +23,7 @@ export default function TurnstileWidget() {
     }
     const turnstileRef = useRef<TurnstileInstance | null>(null);
     const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const [jwt, setJwt] = useAtom(verifyJwtStore);
+    const [, setJwt] = useAtom(verifyJwtStore);
     const [, setTurnstileRefGlobal] = useAtom(turnstileRefStore);
     const { t } = useTranslation(["editor"]);
     useEffect(() => {
@@ -44,13 +43,17 @@ export default function TurnstileWidget() {
             options={{ retryInterval: 1000 }}
             onSuccess={async (token) => {
                 try {
-                    const res = await apiAxios.post(`/verify`, {
-                        token: token,
+                    const {
+                        success,
+                        token: newJwt,
+                        error,
+                        expires_in,
+                    } = await callAPI<verifyAPI>("/api/verify", {
+                        token,
                     });
 
-                    const { success, token: newJwt, expires_in } = res.data;
                     if (!success || !newJwt) {
-                        console.error("Verification rejected:", res.data);
+                        console.error("Verification rejected:", error);
                         addAlert({
                             title: t("turnstile.verificationFailed"),
                             description: t("turnstile.verificationFailedDesc"),

@@ -1,13 +1,14 @@
 {
     "private": true,
     "scripts": {
-        "copy-i18n": "cp -r ./i18n ./frontend/public/",
+        "copy-i18n": "shx cp -r ./i18n ./frontend/public/",
         "copy-docker": "mkdir -p ./frontend/public/script && cp -r ./docker/* ./frontend/public/script",
         "logo": "node frontend/src/lib/printLogo.js",
         "frontend": "npm run copy-i18n && npm run logo && cd frontend && npm run dev",
         "backend": "cd backend && python main.py",
         "dev": "NO_LOGO=true concurrently \"npm:frontend\" \"npm:backend\"",
         "build": "npm run copy-i18n && npm run copy-docker && npm run logo && cd frontend && npm run build",
+        "build:static": "npm run copy-i18n && npm run copy-docker && npm run logo && cd frontend && npm run build:static",
         "preview": "npm run copy-i18n && npm run logo && cd frontend && npm run preview",
         "deploy": "cd frontend && npm run deploy",
         "astro": "npm run copy-i18n && npm run logo && cd frontend && npm run astro --",
@@ -23,5 +24,8 @@
     "workspaces": [
         "frontend",
         "extensions"
-    ]
+    ],
+    "devDependencies": {
+        "shx": "^0.4.0"
+    }
 }

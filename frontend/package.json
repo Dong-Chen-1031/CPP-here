@@ -5,6 +5,7 @@
     "scripts": {
         "dev": "wrangler types && astro dev --host",
         "build": "wrangler types && astro build",
+        "build:static": "wrangler types && astro build && shx rm -rf .dist-tmp && shx mv dist/client .dist-tmp && shx rm -rf dist && shx mv .dist-tmp dist",
         "preview": "astro preview",
         "astro": "astro",
         "cf-typegen": "wrangler types",

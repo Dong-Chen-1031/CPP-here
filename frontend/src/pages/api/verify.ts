@@ -34,19 +34,28 @@ async function validateTurnstile(token: string, remoteip: string) {
     }
 }
 
-export const POST = makeAPI({
-    body: z.object({ token: z.string() }),
-    handler: async ({ clientAddress }, { token }) => {
+export const verifyAPI = makeAPI({
+    url: "/api/verify",
+    payloadSchema: z.object({ token: z.string() }),
+    responseSchema: z.object({
+        token: z.string().optional(),
+        expires_in: z.number().optional(),
+        error: z.string().optional(),
+    }),
+
+    handler: async ({ clientAddress }, { token }, reply) => {
         const turnstileResult = await validateTurnstile(token, clientAddress);
 
         if (!turnstileResult.success) {
-            return Response.json({ success: false }, { status: 400 });
+            return reply(
+                { error: "Verification failed" },
+                { success: false, status: 400 },
+            );
         }
 
         const jwt = await createJWT({ verified: true });
-        return Response.json(
+        return reply(
             {
-                success: true,
                 token: jwt,
                 expires_in: PRIVATE_JWT_EXPIRATION_SECONDS,
             },
@@ -54,3 +63,6 @@ export const POST = makeAPI({
         );
     },
 });
+
+export type verifyAPI = typeof verifyAPI;
+export const POST = verifyAPI.POST;

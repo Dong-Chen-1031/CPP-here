@@ -6,15 +6,12 @@ import {
     turnstileRefStore,
     verifyJwtStore,
 } from "@/store/atom";
-import {
-    PUBLIC_API_URL,
-    PUBLIC_S3_BUCKET_NAME,
-    PUBLIC_S3_BUCKET_URL,
-} from "astro:env/client";
-import { axios, apiAxios } from "@/lib/axiosInstance";
+import { PUBLIC_S3_BUCKET_NAME, PUBLIC_S3_BUCKET_URL } from "astro:env/client";
+import { axios, callAPI } from "@/lib/axiosInstance";
 import { addAlert } from "@/lib/alert";
 import { getDefaultStore } from "jotai";
 import { ShareObjectSchema, type ShareObject } from "@/types/share";
+import type { shareAPI } from "@/pages/api/share";
 
 const defaultStore = getDefaultStore();
 
@@ -69,24 +66,19 @@ export async function shareCode(allowRetry = true): Promise<ShareResult> {
         const inputData = defaultStore.get(inputStore);
         const outputData = defaultStore.get(outputStore);
 
-        const fullCode = JSON.stringify({
+        const { share_id, success } = await callAPI<shareAPI>(`/api/share`, {
             code,
             testCase,
             inputData,
             outputData,
-        } as ShareObject);
-        const respond = await apiAxios.post(
-            `/share`,
-            {
-                code: fullCode,
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${jwt}`,
-                },
-            },
-        );
-        return { ok: true, shareId: respond.data["share_id"] as string };
+        });
+        if (!success || !share_id) {
+            return {
+                ok: false,
+                errors: ["Failed to share code. Please try again."],
+            };
+        }
+        return { ok: true, shareId: share_id };
     } catch (error) {
         console.error("Error during share request:", error);
         if (axios.isAxiosError(error) && error.status === 401) {

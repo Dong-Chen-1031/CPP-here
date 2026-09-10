@@ -28,7 +28,6 @@ export default defineConfig({
         // }),
     ],
     vite: {
-        // @ts-ignore I don't know why tailwindcss types are not working. But it works fine.
         plugins: [tailwindcss()],
         optimizeDeps: {
             include: ["react-dom/client"],
@@ -47,7 +46,7 @@ export default defineConfig({
                 access: "public",
                 optional: true,
                 url: true,
-                default: "http://localhost:3000",
+                default: "http://localhost:4321",
             }),
             PUBLIC_TURNSTILE_SITE_KEY: envField.string({
                 context: "client",
@@ -60,7 +59,7 @@ export default defineConfig({
                 access: "public",
                 optional: true,
                 url: true,
-                default: "http://127.0.0.1:8000",
+                default: "",
             }),
             PUBLIC_SKIP_API_FETCH: envField.boolean({
                 context: "client",
