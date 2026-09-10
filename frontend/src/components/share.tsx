@@ -27,7 +27,7 @@ import { addAlert } from "@/lib/alert";
 export function ShareReceiveDialog() {
     const [showDialog, setShowDialog] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [shareID, setShareID] = useState<string | null>(null);
+    const [shareId, setShareId] = useState<string | null>(null);
     const checked = useRef(false);
     const defaultStore = getDefaultStore();
     const { t } = useTranslation(["editor"]);
@@ -50,8 +50,8 @@ export function ShareReceiveDialog() {
         if (checked.current) return;
         checked.current = true;
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has("shareID")) {
-            setShareID(urlParams.get("shareID"));
+        if (urlParams.has("shareId")) {
+            setShareId(urlParams.get("shareId"));
             setShowDialog(true);
             history.replaceState(null, "", "/editor");
         }
@@ -109,7 +109,7 @@ export function ShareReceiveDialog() {
                         onClick={(e) => {
                             e.preventDefault();
                             setLoading(true);
-                            fetchSharedCode(shareID!).then((res) => {
+                            fetchSharedCode(shareId!).then((res) => {
                                 if (!res.ok) {
                                     setLoading(false);
                                     addAlert({

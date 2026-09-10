@@ -37,6 +37,7 @@ i18n.use(Backend)
 
         backend: {
             loadPath: "../i18n/{{lng}}/{{ns}}.json",
+            reloadInterval: false,
         },
 
         interpolation: {

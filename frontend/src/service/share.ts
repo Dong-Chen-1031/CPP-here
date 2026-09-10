@@ -60,25 +60,24 @@ type ShareResult =
 
 export async function shareCode(allowRetry = true): Promise<ShareResult> {
     try {
-        const jwt = defaultStore.get(verifyJwtStore) || "";
         const code = defaultStore.get(codeStore);
         const testCase = defaultStore.get(testCasesStore);
         const inputData = defaultStore.get(inputStore);
         const outputData = defaultStore.get(outputStore);
 
-        const { share_id, success } = await callAPI<shareAPI>(`/api/share`, {
+        const { shareId, success } = await callAPI<shareAPI>(`/api/share`, {
             code,
             testCase,
             inputData,
             outputData,
         });
-        if (!success || !share_id) {
+        if (!success || !shareId) {
             return {
                 ok: false,
                 errors: ["Failed to share code. Please try again."],
             };
         }
-        return { ok: true, shareId: share_id };
+        return { ok: true, shareId: shareId };
     } catch (error) {
         console.error("Error during share request:", error);
         if (axios.isAxiosError(error) && error.status === 401) {

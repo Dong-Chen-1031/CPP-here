@@ -300,7 +300,7 @@ async def share(request: ShareRequest, token: dict = Depends(need_token)) -> Sha
     ...
     s3.put_object(              # ← 同步 boto3 呼叫，卡在 async def 裡
         Bucket="share",
-        Key=f"{share_id}",
+        Key=f"{shareId}",
         Body=request.code.encode(),
     )
 ```
@@ -315,7 +315,7 @@ async def share(request: ShareRequest, token: dict = Depends(need_token)) -> Sha
 await asyncio.to_thread(
     s3.put_object,
     Bucket=settings.S3_BUCKET_NAME,   # 順便修掉 M4
-    Key=share_id,
+    Key=shareId,
     Body=request.code.encode(),
 )
 ```

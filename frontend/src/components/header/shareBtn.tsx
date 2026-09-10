@@ -68,7 +68,7 @@ export function ShareButton({
                             const result = await shareCode();
 
                             if (result.ok) {
-                                const shareUrl = `${window.location.origin}/editor?shareID=${result.shareId as string}`;
+                                const shareUrl = `${window.location.origin}/share/${result.shareId as string}`;
                                 resolveUrl(shareUrl);
 
                                 const copied = await clipboardWritePromise;
@@ -80,7 +80,9 @@ export function ShareButton({
                                 addAlert({
                                     title: copied
                                         ? t("headerActions.shareSuccessTitle")
-                                        : t("headerActions.shareLinkReadyTitle"),
+                                        : t(
+                                              "headerActions.shareLinkReadyTitle",
+                                          ),
                                     description: copied
                                         ? t(
                                               "headerActions.shareSuccessDescription",

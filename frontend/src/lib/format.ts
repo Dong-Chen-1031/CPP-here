@@ -1,5 +1,5 @@
 import { codeFormatStyle, editorTabSizeStore } from "@/store/configStore";
-import init, { format, type Style } from "@wasm-fmt/clang-format/web";
+import init, { format, type Style } from "@wasm-fmt/clang-format/vite";
 import { getDefaultStore } from "jotai";
 
 let initPromise: Promise<unknown> | null = null;

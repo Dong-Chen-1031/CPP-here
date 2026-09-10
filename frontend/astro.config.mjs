@@ -11,7 +11,7 @@ import cloudflare from "@astrojs/cloudflare";
 export default defineConfig({
     output: "static",
     adapter: cloudflare({
-        prerenderEnvironment: "node",
+        // prerenderEnvironment: "node",
         imageService: "passthrough",
     }),
     site: "https://cpp.doong.me",
@@ -31,6 +31,9 @@ export default defineConfig({
         plugins: [tailwindcss()],
         optimizeDeps: {
             include: ["react-dom/client"],
+            // The `/vite` entry resolves clang-format.wasm via `?url`, which the
+            // esbuild pre-bundler cannot rewrite; prebundling it 404s the wasm.
+            exclude: ["@wasm-fmt/clang-format"],
         },
         ssr: {
             noExternal: ["@wasm-fmt/clang-format"],
