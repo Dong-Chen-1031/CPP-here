@@ -1,3 +1,5 @@
+> 以下使用 Claude 進行之程式碼審查報告，未使用其生成程式碼，單純進行詢問並作為參考
+
 # Code Review — 全專案
 
 - **範圍**：`backend/` + `frontend/` + `docker/` + `.github/`（依要求略過 `extensions/`）

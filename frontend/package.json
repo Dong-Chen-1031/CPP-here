@@ -34,6 +34,7 @@
         "@wasm-fmt/clang-format": "^22.1.6",
         "astro": "^6.4.8",
         "axios": "1.16.1",
+        "bs58": "^6.0.0",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",

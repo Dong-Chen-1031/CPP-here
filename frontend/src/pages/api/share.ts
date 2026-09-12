@@ -4,13 +4,14 @@ import z from "zod";
 import { env } from "cloudflare:workers";
 import { createHash } from "node:crypto";
 
+import bs58 from "bs58";
 export const prerender = false;
 
 async function hashShareObject(
     shareObject: z.infer<typeof ShareObjectSchema>,
 ): Promise<string> {
-    const jsonString = `v2.0.0;${shareObject.code};${shareObject.inputData};${shareObject.outputData};${shareObject.testCase}`;
-    return createHash("sha256").update(jsonString).digest("base64url");
+    const jsonString = `v2.0.0;${JSON.stringify(shareObject)}`;
+    return bs58.encode(createHash("sha256").update(jsonString).digest());
 }
 
 const shareAPI = makeAPI({
@@ -30,7 +31,7 @@ const shareAPI = makeAPI({
         while (true) {
             shareId = fullShareId.slice(0, len);
 
-            const old = await env.R2_BUCKET.head(shareId);
+            const old = await env.R2_BUCKET.head(`share/${shareId}`);
 
             if (!old) break;
             else if (old.customMetadata?.fullHash === fullShareId) {
@@ -40,7 +41,15 @@ const shareAPI = makeAPI({
             } else len += 1;
         }
 
-        env.R2_BUCKET.put(`share/${shareId}`, JSON.stringify(shareObject));
+        await env.R2_BUCKET.put(
+            `share/${shareId}`,
+            JSON.stringify(shareObject),
+            {
+                customMetadata: {
+                    fullHash: fullShareId,
+                },
+            },
+        );
 
         return reply({
             shareId: shareId,
