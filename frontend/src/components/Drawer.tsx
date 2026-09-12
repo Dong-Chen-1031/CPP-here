@@ -55,31 +55,6 @@ export function DrawerDemo({
     );
 }
 
-const panelDrawerContent: Record<
-    PanelDrawerView,
-    {
-        title: string;
-        subTitle: string;
-        children: React.ReactNode;
-    }
-> = {
-    input: {
-        title: "Input Panel",
-        subTitle: "Type your custom input here.",
-        children: <InputPanel drawer />,
-    },
-    testCases: {
-        title: "Test Cases",
-        subTitle: "Click to set the test case to the input.",
-        children: <TestCasePanel drawer />,
-    },
-    output: {
-        title: "Output",
-        subTitle: "View the output of your code here.",
-        children: <OutputPanel drawer />,
-    },
-};
-
 export function GlobalPanelDrawer() {
     const [panel, setPanel] = useAtom(panelDrawerStore);
     const [activePanel, setActivePanel] =
@@ -92,7 +67,7 @@ export function GlobalPanelDrawer() {
         }
     }, [panel]);
 
-    // Build content with translations
+
     const panelDrawerContentLocalized: Record<
         PanelDrawerView,
         {

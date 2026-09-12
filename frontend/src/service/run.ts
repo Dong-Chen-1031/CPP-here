@@ -300,7 +300,7 @@ export async function handleRun({
     store.set(runStatusStore, "building");
     store.set(editorErrorStore, []);
     store.set(outputStore, []);
-    window.screen.width < 768 && store.set(panelDrawerStore, "output");
+    window.innerWidth < 768 && store.set(panelDrawerStore, "output");
 
     const response = await buildCode(code, cppVersion);
 
@@ -405,7 +405,7 @@ export async function handleRunAll() {
     store.set(runStatusStore, "building");
     store.set(editorErrorStore, []);
     store.set(outputStore, []);
-    window.screen.width < 768 && store.set(panelDrawerStore, "output");
+    window.innerWidth < 768 && store.set(panelDrawerStore, "output");
 
     const response = await buildCode(code, cppVersion);
     if (!response.ok || !response.js_code || !response.wasm_url) {
