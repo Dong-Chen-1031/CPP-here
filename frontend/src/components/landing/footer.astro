@@ -1,7 +1,7 @@
 ---
 import { CodeIcon } from "@lucide/astro";
 import { SiGithub } from "@icons-pack/react-simple-icons";
-import config from "@/config/constants";
+import { PUBLIC_GITHUB_LINK, PUBLIC_STATUS_PAGE } from "astro:env/client";
 
 interface Props {
     lang?: string;
@@ -11,11 +11,11 @@ interface Props {
 const { t } = Astro.props as Props;
 
 const links = [
-    { label: t?.editor, href: config.editorLink },
-    { label: t?.github, href: config.githubLink, external: true },
+    { label: t?.editor, href: "/editor" },
+    { label: t?.github, href: PUBLIC_GITHUB_LINK, external: true },
     {
         label: t?.status,
-        href: `https://status.doong.me/status/cpp-here`,
+        href: PUBLIC_STATUS_PAGE,
         external: true,
     },
 ];
@@ -32,7 +32,7 @@ const links = [
             <span>·</span>
             <a
                 class="hover:text-foreground transition-colors"
-                href={`${config.githubLink}/blob/main/LICENSE.txt`}
+                href={`${PUBLIC_GITHUB_LINK}/blob/main/LICENSE.txt`}
                 target="_blank"
                 rel="noopener noreferrer">{t?.mitLicensed}</a
             >
@@ -54,7 +54,7 @@ const links = [
         </nav>
         <div class="flex justify-end items-center">
             <a
-                href={config.githubLink}
+                href={PUBLIC_GITHUB_LINK}
                 target="_blank"
                 rel="noopener noreferrer"
                 class="hover:text-foreground transition-colors flex items-center gap-1.5">

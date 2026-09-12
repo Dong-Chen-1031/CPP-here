@@ -12,7 +12,7 @@ import { addAlert } from "@/lib/alert";
 
 import Tip from "@/components/ui/tips";
 import IconMotion from "@/components/IconMotion";
-import { shareCode } from "@/api/share";
+import { shareCode } from "@/service/share";
 
 export function ShareButton({
     className = "",
@@ -68,7 +68,7 @@ export function ShareButton({
                             const result = await shareCode();
 
                             if (result.ok) {
-                                const shareUrl = `${window.location.origin}/editor?shareID=${result.shareId as string}`;
+                                const shareUrl = `${window.location.origin}/share/${result.shareId as string}`;
                                 resolveUrl(shareUrl);
 
                                 const copied = await clipboardWritePromise;
@@ -80,7 +80,9 @@ export function ShareButton({
                                 addAlert({
                                     title: copied
                                         ? t("headerActions.shareSuccessTitle")
-                                        : t("headerActions.shareLinkReadyTitle"),
+                                        : t(
+                                              "headerActions.shareLinkReadyTitle",
+                                          ),
                                     description: copied
                                         ? t(
                                               "headerActions.shareSuccessDescription",

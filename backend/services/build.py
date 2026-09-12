@@ -1,14 +1,25 @@
 import asyncio
 import shlex
 import shutil
+import time
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from aiodocker import DockerError
+
 from services.resource_manager import resource_manager
 from settings import settings
 from utils.log import logger
+from utils.scheduler import scheduler
+
+BUILDER_IMAGE = "ghcr.io/dong-chen-1031/safe-cpp2wasm:latest"
+WORKER_NAME_PREFIX = "cpp-here-worker-"
+
+INSTANCE_ID = uuid.uuid4().hex
+
+TTL_SAFETY_MARGIN = 120
+MAINTENANCE_INTERVAL = 60
 
 
 class BuildError(Exception):
@@ -21,6 +32,11 @@ class ContainerPool:
     def __init__(self):
         self.pool: asyncio.Queue = asyncio.Queue()
         self._replenish_tasks: set[asyncio.Task] = set()
+        # Container id -> monotonic creation time, so expiry is checked locally
+        # instead of costing an inspect call on every acquire.
+        self._born: dict[str, float] = {}
+        self._closing = False
+        self._maintenance_job = None
 
     @property
     def docker(self):
@@ -28,64 +44,188 @@ class ContainerPool:
 
     async def _create_container(self):
         config = {
-            "Image": "ghcr.io/dong-chen-1031/safe-cpp2wasm:latest",
-            "Cmd": ["sleep", "infinity"],
+            "Image": BUILDER_IMAGE,
+            "Cmd": ["sleep", str(settings.DOCKER_WORKER_TTL)],
             "AttachStdout": True,
             "AttachStderr": True,
             "Tty": False,
+            "Labels": {
+                "app": "cpp-here",
+                "component": "builder",
+                "owner": INSTANCE_ID,
+            },
+            "Env": ["EMCC_CORES=1"],
             "HostConfig": {
-                "NetworkMode": "none",  # --network none
-                "NanoCpus": 1_000_000_000,  # --cpus="1.0"
-                "Memory": 1_073_741_824,  # --memory="1G"
-                "PidsLimit": 50,  # --pids-limit 50
-                "Ulimits": [
-                    {"Name": "fsize", "Soft": 50_000_000, "Hard": 50_000_000}
-                ],  # --ulimit fsize=50000000:50000000
-                "CapDrop": ["ALL"],  # --cap-drop ALL
+                "AutoRemove": True,
+                "NetworkMode": "none",
+                "NanoCpus": 1_000_000_000,
+                "Memory": 1_073_741_824,
+                "PidsLimit": 256,
+                "Ulimits": [{"Name": "fsize", "Soft": 50_000_000, "Hard": 50_000_000}],
+                "CapDrop": ["ALL"],
                 "SecurityOpt": ["no-new-privileges:true"],
             },
         }
         container = await self.docker.containers.create(
             config=config,
-            name=f"cpp-here-worker-{str(uuid.uuid4())[:12].replace('-', '')}",
+            name=f"{WORKER_NAME_PREFIX}{str(uuid.uuid4())[:12].replace('-', '')}",
         )
         await container.start()
+        self._born[container.id] = time.monotonic()
         return container
 
+    async def _destroy(self, container):
+        self._born.pop(container.id, None)
+        try:
+            await container.delete(force=True)
+        except DockerError as e:
+            if e.status not in (404, 409):
+                logger.warning(f"Failed to delete worker {container.id[:12]}: {e}")
+        except Exception as e:
+            logger.warning(f"Failed to delete worker {container.id[:12]}: {e}")
+
+    def _is_usable(self, container) -> bool:
+        """Whether the worker will outlive a build that starts right now."""
+        born = self._born.get(container.id)
+        if born is None:
+            return False
+        age = time.monotonic() - born
+        return age < settings.DOCKER_WORKER_TTL - TTL_SAFETY_MARGIN
+
     async def _replenish(self):
-        if self.pool.qsize() >= settings.DOCKER_POOL_SIZE:
+        if self._closing or self.pool.qsize() >= settings.DOCKER_POOL_SIZE:
             return
         try:
             container = await self._create_container()
+            if self._closing:
+                await self._destroy(container)
+                return
             await self.pool.put(container)
         except Exception as e:
             logger.error(f"Failed to replenish container pool: {e}")
 
-    async def startup(self):
+    def _spawn_replenish(self):
+        task = asyncio.create_task(self._replenish())
+        self._replenish_tasks.add(task)
+        task.add_done_callback(self._replenish_tasks.discard)
+
+    async def _sweep_orphans(self):
+        """Delete workers left running by a previous process that died uncleanly.
+
+        Matching is by name prefix rather than label so workers created before
+        labelling existed are cleaned up too; the owner label then protects the
+        containers this process is currently using.
+        """
+        try:
+            containers = await self.docker.containers.list(all=True)
+        except Exception as e:
+            logger.error(f"Failed to list containers for orphan sweep: {e}")
+            return
+
+        orphans = []
+        for container in containers:
+            info = container._container
+            names = info.get("Names") or []
+            if not any(n.lstrip("/").startswith(WORKER_NAME_PREFIX) for n in names):
+                continue
+            if (info.get("Labels") or {}).get("owner") == INSTANCE_ID:
+                continue
+            orphans.append(container)
+
+        if not orphans:
+            return
+        logger.warning(f"Sweeping {len(orphans)} orphaned worker container(s)")
+        await asyncio.gather(*[self._destroy(c) for c in orphans])
+
+    async def _maintain(self):
+        """Drop expired workers from the pool and top it back up.
+
+        Without this the pool would bleed out during quiet periods: workers now
+        expire on their own, and acquire() only replenishes when it takes one.
+        """
+        if self._closing:
+            return
+        keep = []
+        while True:
+            try:
+                container = self.pool.get_nowait()
+            except asyncio.QueueEmpty:
+                break
+            if self._is_usable(container):
+                keep.append(container)
+            else:
+                await self._destroy(container)
+        for container in keep:
+            self.pool.put_nowait(container)
+
         needed = max(0, settings.DOCKER_POOL_SIZE - self.pool.qsize())
         if needed > 0:
             await asyncio.gather(*[self._replenish() for _ in range(needed)])
 
+    async def _ensure_image(self):
+        """Pull the builder image once at startup instead of on the failure path.
+
+        The per-request 404 recovery could never run: the image is resolved in
+        _create_container(), which is called outside the build()'s try block.
+        """
+        try:
+            await self.docker.images.inspect(BUILDER_IMAGE)
+        except DockerError:
+            logger.info(f"Builder image {BUILDER_IMAGE} not found locally, pulling...")
+            await self.docker.images.pull(BUILDER_IMAGE)
+
+    async def startup(self):
+        try:
+            await self._ensure_image()
+        except Exception as e:
+            # Don't block startup: builds will fail loudly with a BuildError instead.
+            logger.error(f"Failed to ensure builder image {BUILDER_IMAGE}: {e}")
+
+        if settings.DOCKER_ORPHAN_SWEEP:
+            await self._sweep_orphans()
+
+        needed = max(0, settings.DOCKER_POOL_SIZE - self.pool.qsize())
+        if needed > 0:
+            await asyncio.gather(*[self._replenish() for _ in range(needed)])
+
+        self._maintenance_job = scheduler.add_job(
+            self._maintain,
+            "interval",
+            seconds=MAINTENANCE_INTERVAL,
+            id="container-pool-maintenance",
+            replace_existing=True,
+            max_instances=1,
+            coalesce=True,
+        )
+
     @asynccontextmanager
     async def acquire(self):
-        try:
-            container = self.pool.get_nowait()
-            task = asyncio.create_task(self._replenish())
-            self._replenish_tasks.add(task)
-            task.add_done_callback(self._replenish_tasks.discard)
-        except asyncio.QueueEmpty:
-            container = await self._create_container()
+        container = None
+        while container is None:
+            try:
+                candidate = self.pool.get_nowait()
+            except asyncio.QueueEmpty:
+                container = await self._create_container()
+                break
+            self._spawn_replenish()
+            if self._is_usable(candidate):
+                container = candidate
+            else:
+                await self._destroy(candidate)
         try:
             yield container
         finally:
-            try:
-                await container.delete(force=True)
-            except Exception:
-                logger.warning(
-                    "Failed to delete container, it may have already been removed."
-                )
+            await self._destroy(container)
 
     async def shutdown(self):
+        self._closing = True
+        if self._maintenance_job is not None:
+            try:
+                self._maintenance_job.remove()
+            except Exception:
+                pass
+            self._maintenance_job = None
+
         for task in list(self._replenish_tasks):
             task.cancel()
         if self._replenish_tasks:
@@ -93,14 +233,9 @@ class ContainerPool:
         while True:
             try:
                 container = self.pool.get_nowait()
-                try:
-                    await container.delete(force=True)
-                except Exception:
-                    logger.warning(
-                        "Failed to delete container, it may have already been removed."
-                    )
             except asyncio.QueueEmpty:
                 break
+            await self._destroy(container)
         logger.info("Container pool shutdown complete")
 
 
@@ -124,6 +259,9 @@ async def build(
         [
             f"-std={cpp_version} ",
             "-ftemplate-depth=50 ",
+            # EMCC_CORES doesn't reach wasm-ld's own thread pool, which is what
+            # actually blew up under load; cap it to match the container's 1 CPU.
+            "-Wl,--threads=1 ",
             "-sMODULARIZE=1 ",
             # "-sMINIMAL_RUNTIME=1  "
             '-sEXPORT_NAME="createMyModule" ',
@@ -141,8 +279,14 @@ async def build(
         ]
     )
 
-    async with container_pool.acquire() as container:
-        try:
+    # Initialised up front: the DockerError handler below reports it even when
+    # the failure happens before the build logs are collected.
+    output = ""
+
+    try:
+        # acquire() itself can raise DockerError (it creates a container when the
+        # pool is empty), so the try block has to wrap it too.
+        async with container_pool.acquire() as container:
             execute = await container.exec(
                 ["sh", "-c", cmd],
                 stdout=True,
@@ -161,9 +305,9 @@ async def build(
 
             try:
                 await asyncio.wait_for(_drain(), timeout=60)
-            except asyncio.TimeoutError:
+            except TimeoutError as e:
                 logger.warning("Container exec timeout")
-                raise BuildError("Build timed out")
+                raise BuildError("Build timed out") from e
 
             exec_info = await execute.inspect()
             exit_code = exec_info["ExitCode"]
@@ -181,7 +325,7 @@ async def build(
                     },
                 )
                 logger.debug(output)
-                shutil.rmtree(output_dir, ignore_errors=True)
+                await asyncio.to_thread(shutil.rmtree, output_dir, ignore_errors=True)
                 raise BuildError(f"Build failed (exit {exit_code})", build_logs=output)
 
             tar = await container.get_archive("/tmp/out")
@@ -196,10 +340,6 @@ async def build(
 
             return output
 
-        except DockerError as e:
-            if e.status == 404:
-                logger.error("Docker image not found. Auto-pulling image.")
-                await resource_manager.docker.images.pull(
-                    "ghcr.io/dong-chen-1031/safe-cpp2wasm:latest"
-                )
-            raise BuildError("Build failed due to Docker error.", build_logs=output)
+    except DockerError as e:
+        logger.error(f"Docker error during build (status {e.status}): {e}")
+        raise BuildError("Build failed due to Docker error.", build_logs=output) from e

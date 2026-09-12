@@ -22,7 +22,7 @@ import {
     runStatusStore,
 } from "@/store/atom";
 import { getDefaultStore, useAtom, useAtomValue } from "jotai";
-import { handleRun, handleRunAll } from "@/api/run";
+import { handleRun, handleRunAll } from "@/service/run";
 import { addErrorEffect, clearErrorsEffect, errorField } from "./Error";
 import { commandKeyPress } from "@/lib/utils";
 import { formatCode } from "@/lib/format";

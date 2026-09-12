@@ -24,6 +24,7 @@ import { RunButton } from "@/components/header/runBtn";
 import { ShareButton } from "@/components/header/shareBtn";
 import { UndoRedo } from "@/components/header/undoRedo";
 import { SettingsButton } from "@/components/header/SettingsBtn";
+import { PUBLIC_SHARE } from "astro:env/client";
 
 export function Commands({ className = "" }: { className?: string }) {
     const [open, setOpen] = React.useState(false);
@@ -65,7 +66,11 @@ export function Commands({ className = "" }: { className?: string }) {
                                 />
                             </CommandItem>
                             <CommandItem>
-                                <ShareButton onClick={() => setOpen(false)} />
+                                {PUBLIC_SHARE && (
+                                    <ShareButton
+                                        onClick={() => setOpen(false)}
+                                    />
+                                )}
                                 <CppVersionSelect
                                     className="w-25"
                                     // onSelect={() => setOpen(false)}

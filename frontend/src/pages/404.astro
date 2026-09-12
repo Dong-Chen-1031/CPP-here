@@ -2,14 +2,30 @@
 import Layout from "@/layouts/Layout.astro";
 ---
 
-<Layout title="404 - C++ Here" noindex={true}>
+<Layout title="404 - Page not found | C++ Here" noindex={true}>
     <meta
         slot="head"
         name="viewport"
         content="width=device-width, initial-scale=1.0"
     />
-    <meta http-equiv="refresh" content="0;url=/" />
-    <script is:inline>
-        window.location.replace("/");
-    </script>
+    <div
+        class="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <p class="text-6xl font-semibold tracking-tight">404</p>
+        <h1 class="text-xl font-medium">Page not found</h1>
+        <p class="text-sm text-muted-foreground max-w-md">
+            The page you are looking for does not exist or has been moved.
+        </p>
+        <div class="flex gap-3 mt-2">
+            <a
+                href="/"
+                class="text-sm underline underline-offset-4 hover:opacity-80">
+                Go to home page
+            </a>
+            <a
+                href="/editor"
+                class="text-sm underline underline-offset-4 hover:opacity-80">
+                Open the editor
+            </a>
+        </div>
+    </div>
 </Layout>

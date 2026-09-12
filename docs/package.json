@@ -1,8 +1,11 @@
 {
   "name": "docs",
+  "version": "0.0.1",
+  "private": true,
   "scripts": {
     "dev": "nuxt dev",
-    "build": "nuxt build"
+    "build": "nuxt build",
+    "preview": "nuxt preview"
   },
   "dependencies": {
     "docus": "latest",

@@ -4,13 +4,14 @@ import pathlib
 import re
 import time
 from hashlib import sha256
-from typing import Literal, Optional
+from typing import Literal
 
 import aiofiles
 from aiofiles import open
 from fastapi import APIRouter, Depends
 from prometheus_client import Counter, Histogram
 from pydantic import BaseModel, Field
+
 from router.verify import need_token
 from services.build import BuildError, build
 from settings import settings
@@ -77,11 +78,15 @@ class BuildResponse(BaseModel):
     metric_status: Literal["success", "failure", "cache"] = Field(
         "success", exclude=True
     )
-    wasm_size_bytes: Optional[int] = Field(default=0, exclude=True)
+    wasm_size_bytes: int | None = Field(default=0, exclude=True)
 
 
 WORKER_CODE = ""
 _in_flight: dict[str, asyncio.Event] = {}
+
+# How many times a request may wait on someone else's in-flight build before it
+# gives up and builds the code itself. Bounds the retry loop in build_cpp().
+_DEDUP_MAX_WAITS = 2
 
 
 async def read_file(path: str) -> str:
@@ -91,7 +96,7 @@ async def read_file(path: str) -> str:
 
 def log_build_request(func):
     @functools.wraps(func)
-    async def wrapper(request: BuildRequest, token: dict = Depends(need_token)):
+    async def wrapper(request: BuildRequest, token: bool = Depends(need_token)):
         start_time = time.perf_counter()
 
         result: BuildResponse = await func(request, token)
@@ -125,44 +130,66 @@ def get_size(path: str | pathlib.Path) -> int:
     return path.stat().st_size
 
 
+async def lookup_cache(case_id: str) -> BuildResponse | None:
+    """Return a cached build, or None if there is no usable cache entry."""
+    cache_entry = await cache.get_cache(case_id)
+    if not cache_entry:
+        return None
+
+    js_path = pathlib.Path(settings.CACHE_PATH) / case_id / "build.js"
+    wasm_path = pathlib.Path(settings.CACHE_PATH) / case_id / "build.wasm"
+    if js_path.exists() and wasm_path.exists():
+        logger.info(f"Cache hit for code {case_id}")
+        return BuildResponse(
+            ok=True,
+            js_url=f"{settings.BACKEND_URL}/{settings.CACHE_PATH}/{case_id}/build.js",
+            wasm_url=f"{settings.BACKEND_URL}/{settings.CACHE_PATH}/{case_id}/build.wasm",
+            js_code=(await read_file(str(js_path))),
+            metric_status="cache",
+            wasm_size_bytes=get_size(wasm_path),
+        )
+
+    logger.warning(f"Cache files missing for {case_id}, invalidating and rebuilding")
+    await cache.del_cache(case_id)
+    return None
+
+
 @router.post("/build")
 @log_build_request
 async def build_cpp(
-    request: BuildRequest, token: dict = Depends(need_token)
+    request: BuildRequest, token: bool = Depends(need_token)
 ) -> BuildResponse:
     global WORKER_CODE
     case_id = request.hash()
 
-    if case_id in _in_flight:
-        await _in_flight[case_id].wait()
+    # Claiming the build must be atomic: an `if case_id in _in_flight` check
+    # followed by an await lets two identical requests both start compiling and
+    # write over each other's output. setdefault() checks and registers in one
+    # step, so exactly one caller becomes the owner.
+    event = asyncio.Event()
+    owns_build = False
+    for _ in range(_DEDUP_MAX_WAITS + 1):
+        cached = await lookup_cache(case_id)
+        if cached:
+            return cached
 
-    cache_entry = await cache.get_cache(case_id)
-    if cache_entry:
-        js_path = pathlib.Path(settings.CACHE_PATH) / case_id / "build.js"
-        wasm_path = pathlib.Path(settings.CACHE_PATH) / case_id / "build.wasm"
-        if js_path.exists() and wasm_path.exists():
-            logger.info(f"Cache hit for code {case_id}")
-            return BuildResponse(
-                ok=True,
-                js_url=f"{settings.BACKEND_URL}/{settings.CACHE_PATH}/{case_id}/build.js",
-                wasm_url=f"{settings.BACKEND_URL}/{settings.CACHE_PATH}/{case_id}/build.wasm",
-                js_code=(await read_file(str(js_path))),
-                metric_status="cache",
-                wasm_size_bytes=get_size(wasm_path),
-            )
+        owner = _in_flight.setdefault(case_id, event)
+        if owner is event:
+            owns_build = True
+            break
+        # Someone else is building the same code — wait, then re-check the cache.
+        await owner.wait()
+
+    if not owns_build:
         logger.warning(
-            f"Cache files missing for {case_id}, invalidating and rebuilding"
+            f"Gave up waiting on in-flight builds for {case_id}, building directly"
         )
-
-        await cache.del_cache(case_id)
 
     logger.info(f"Start build request {case_id}")
     js_name = "build.js"
     wasm_name = "build.wasm"
     output_path = pathlib.Path(settings.CACHE_PATH) / case_id
 
-    event = asyncio.Event()
-    _in_flight[case_id] = event
     try:
         try:
             await build(
@@ -189,11 +216,11 @@ async def build_cpp(
             )
 
         if not WORKER_CODE:
-            async with aiofiles.open("assets/worker.js", mode="r") as f:
+            async with aiofiles.open("assets/worker.js") as f:
                 WORKER_CODE = await f.read()
 
         worker_code = f"\n\n// Worker code\n{WORKER_CODE}"
-        async with aiofiles.open(f"{output_path}/{js_name}", mode="r") as f:
+        async with aiofiles.open(f"{output_path}/{js_name}") as f:
             js_code = await f.read()
         async with aiofiles.open(f"{output_path}/{js_name}", mode="a") as f:
             await f.write(worker_code)
@@ -211,5 +238,9 @@ async def build_cpp(
             metric_status="success",
         )
     finally:
-        event.set()
-        _in_flight.pop(case_id, None)
+        # Only the owner releases the waiters, and only its own entry is removed
+        # so a later build's event is never dropped by an earlier request.
+        if owns_build:
+            event.set()
+            if _in_flight.get(case_id) is event:
+                del _in_flight[case_id]

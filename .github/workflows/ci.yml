@@ -1,0 +1,70 @@
+name: CI
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+    workflow_dispatch:
+
+jobs:
+    backend:
+        name: Backend lint & import smoke test
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.14"
+                  cache: pip
+                  cache-dependency-path: backend/requirements.txt
+
+            - name: Install dependencies
+              working-directory: backend
+              run: |
+                  python -m pip install --upgrade pip
+                  # Pinned: an unpinned Ruff means a new release can enable new
+                  # default rules and fail CI on code that did not change.
+                  pip install -r requirements.txt 'ruff==0.14.13'
+
+            - name: Lint
+              working-directory: backend
+              run: ruff check .
+
+            - name: Import smoke test
+              working-directory: backend
+              # Catches "the app can't even start" regressions, such as a module
+              # level name that only exists when an optional setting is present.
+              run: |
+                  mkdir -p cache logs
+                  python -c "import main"
+
+    frontend:
+        name: Frontend type check
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Set up Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: latest
+
+            - name: Install dependencies
+              # No --frozen-lockfile: bun.lock is gitignored in this repo.
+              run: bun install
+
+            - name: Copy i18n resources
+              run: bun run copy-i18n
+
+            - name: Type check
+              working-directory: frontend
+              # `wrangler types` first, same as the build script: it generates
+              # worker-configuration.d.ts, which is not committed.
+              run: |
+                  bunx wrangler types
+                  bunx astro check

@@ -37,7 +37,17 @@ export default function OutputPanel({ drawer = false }: { drawer?: boolean }) {
           <Button
             variant="outline"
             onClick={() => {
-              navigator.clipboard.writeText(output[0].content);
+              // Copy every case, not just the first one: in run-all mode there
+              // is one entry per test case.
+              navigator.clipboard.writeText(
+                output
+                  .map((o) =>
+                    o.testCaseName
+                      ? `# ${o.testCaseName}\n${o.content}`
+                      : o.content,
+                  )
+                  .join("\n"),
+              );
               setCopied(true);
               setTimeout(() => setCopied(false), 1500);
             }}

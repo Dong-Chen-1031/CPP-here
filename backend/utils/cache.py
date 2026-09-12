@@ -2,11 +2,12 @@ import asyncio
 import shutil
 import time
 
-from settings import settings
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlmodel import Field, SQLModel, col, select
+
+from settings import settings
 from utils.log import logger
 from utils.scheduler import scheduler
 
@@ -14,7 +15,7 @@ from utils.scheduler import scheduler
 class Catch(
     SQLModel, table=True
 ):  # TODO: rename to Cache, but my db already has a table named Catch, so I have to keep this name for now
-    hash_id: str = Field(default=None, primary_key=True)
+    hash_id: str = Field(primary_key=True)
     version: str = Field(default="0.1.0")
     timestamp: int = Field(default_factory=lambda: int(time.time()))
     delete_at: int = Field(

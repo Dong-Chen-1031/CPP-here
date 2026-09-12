@@ -1,12 +1,12 @@
 import hmac
-from datetime import datetime, timedelta
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
 import jwt
-from settings import settings
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from pyturnstile import Turnstile
+
+from settings import settings
 from utils.log import logger
 
 router = APIRouter()
@@ -17,8 +17,8 @@ class VerifyRequest(BaseModel):
 
 
 class VerifyRespond(BaseModel):
-    token: Optional[str]
-    expires_in: Optional[int]
+    token: str | None
+    expires_in: int | None
     success: bool
 
 
@@ -27,7 +27,7 @@ turnstile = Turnstile(settings.TURNSTILE_SECRET)
 
 def create_jwt(data: dict, expires_in: int = 3600):
     payload = data.copy()
-    payload["exp"] = datetime.utcnow() + timedelta(seconds=expires_in)
+    payload["exp"] = datetime.now(UTC) + timedelta(seconds=expires_in)
     token = jwt.encode(payload, settings.JWT_SECRET, algorithm="HS256")
     return token
 
@@ -36,13 +36,13 @@ def is_verified(token: str):
     try:
         payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
         return payload.get("verified", False)
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=400, detail="Token has expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=400, detail="Invalid token")
+    except jwt.ExpiredSignatureError as e:
+        raise HTTPException(status_code=400, detail="Token has expired") from e
+    except jwt.InvalidTokenError as e:
+        raise HTTPException(status_code=400, detail="Invalid token") from e
 
 
-def need_token(request: Request):
+def need_token(request: Request) -> bool:
     if settings.BYPASS_CAPTCHA:
         logger.warning("Bypassing CAPTCHA verification due to BYPASS_CAPTCHA setting")
         return True
@@ -75,4 +75,6 @@ async def verify(request: VerifyRequest):
         )
     except Exception as e:
         logger.warning(f"Turnstile verification failed: {e}")
-        raise HTTPException(status_code=400, detail="Turnstile verification failed")
+        raise HTTPException(
+            status_code=400, detail="Turnstile verification failed"
+        ) from e

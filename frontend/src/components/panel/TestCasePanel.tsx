@@ -22,10 +22,11 @@ import {
     type TestCase,
 } from "@/store/atom";
 import { cn, useIsMobile } from "@/lib/utils";
-import { handleRun } from "@/api/run";
+import { handleRun } from "@/service/run";
 import { useTranslation } from "react-i18next";
 import TestEditDialog from "./TestEditDialog";
 import { addAlert } from "@/lib/alert";
+import { z } from "zod";
 
 interface Test {
     input: string;
@@ -80,6 +81,20 @@ interface extTestCase {
     batch: Batch;
 }
 
+/**
+ * The "ext" event can be dispatched by anything running on the page, so only
+ * the fields we actually consume are trusted — and only after validation.
+ */
+const ExtEventSchema = z.object({
+    name: z.string(),
+    tests: z.array(
+        z.object({
+            input: z.string(),
+            output: z.string(),
+        }),
+    ),
+});
+
 export default function TestCasePanel({
     drawer = false,
 }: {
@@ -106,7 +121,17 @@ export default function TestCasePanel({
                     problemName: "||||",
                 },
             ).split("||||");
-            const testCaseData = (event as CustomEvent<extTestCase>).detail;
+            const parsed = ExtEventSchema.safeParse(
+                (event as CustomEvent<extTestCase>).detail,
+            );
+            if (!parsed.success) {
+                console.warn(
+                    "Ignoring malformed ext event",
+                    parsed.error.issues,
+                );
+                return;
+            }
+            const testCaseData = parsed.data;
             const testCasesFromExtension: TestCase[] = testCaseData.tests.map(
                 (test, index) => ({
                     id: crypto.randomUUID(),

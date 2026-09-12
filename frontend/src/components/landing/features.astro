@@ -12,8 +12,8 @@ import {
 } from "@lucide/astro";
 
 import { SiGithub } from "@icons-pack/react-simple-icons";
-import config from "@/config/constants";
 import Hr from "@/components/landing/hr.astro";
+import { PUBLIC_GITHUB_LINK } from "astro:env/client";
 
 interface Props {
     lang?: string;
@@ -106,7 +106,7 @@ const features: Feature[] = translatedList.map(
     </div>
 
     <a
-        href={config.githubLink}
+        href={PUBLIC_GITHUB_LINK}
         target="_blank"
         rel="noopener noreferrer"
         class="mt-6 flex items-center justify-between gap-4 p-6 md:p-8 border border-foreground/20 rounded-xl hover:bg-foreground/4 hover:border-foreground/25 transition-all duration-300 group">

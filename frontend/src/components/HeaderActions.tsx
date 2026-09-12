@@ -1,9 +1,4 @@
-import * as React from "react";
 import "@/lib/i18n";
-
-import { SiGithub } from "@icons-pack/react-simple-icons";
-
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { useAtom } from "jotai";
@@ -12,7 +7,6 @@ import { loadedCountStore, loadedStore } from "@/store/atom";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect } from "react";
 import { Commands } from "@/components/Commands";
-import config from "@/config/constants";
 import { RunButton } from "@/components/header/runBtn";
 import { UndoRedo } from "@/components/header/undoRedo";
 import { ResetButton } from "@/components/header/resetBtn";
@@ -21,6 +15,7 @@ import { ShareButton } from "@/components/header/shareBtn";
 import { DownloadButton } from "@/components/header/downloadBtn";
 import { UploadButton } from "@/components/header/uploadBtn";
 import { SettingsButton } from "@/components/header/SettingsBtn";
+import { PUBLIC_SHARE } from "astro:env/client";
 
 export default function HeaderActions() {
     const [loaded] = useAtom(loadedStore);
@@ -50,7 +45,7 @@ export default function HeaderActions() {
                         <UndoRedo />
                         <UploadButton />
                         <DownloadButton />
-                        {config.share && <ShareButton />}
+                        {PUBLIC_SHARE && <ShareButton />}
                         <SettingsButton />
                         <FormatButton />
                         <ResetButton />

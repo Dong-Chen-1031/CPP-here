@@ -1,0 +1,27 @@
+{
+    "$schema": "./node_modules/wrangler/config-schema.json",
+    "name": "cpp-here",
+    "compatibility_date": "2026-06-19",
+    "compatibility_flags": ["nodejs_compat"],
+    "r2_buckets": [
+        {
+            "binding": "R2_BUCKET",
+            "bucket_name": "cpp-here",
+        },
+    ],
+    "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "logs": {
+            "enabled": true,
+            "head_sampling_rate": 1,
+            "persist": true,
+            "invocation_logs": true,
+        },
+        "traces": {
+            "enabled": true,
+            "persist": true,
+            "head_sampling_rate": 1,
+        },
+    },
+}

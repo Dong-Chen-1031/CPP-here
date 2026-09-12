@@ -59,7 +59,7 @@ C++ Here 與其他線上 C++ 編輯器的最大不同在於我們使用 [safe-cp
 
 ### 前端
 
-需要 Bun，若使用 npm 可能會導致問題。
+Bun（推薦）與 npm 皆可使用；本專案採用 workspaces 單一儲存庫，以下指令請都在專案根目錄執行。
 
 1. Clone
 ```shell
@@ -70,11 +70,15 @@ cd CPP-here
 2. 安裝依賴項
 ```shell
 bun install
+# 或
+npm install
 ```
 
 3. 執行前端
 ```shell
 bun run frontend
+# 或
+npm run frontend
 ```
 
 ### 後端
@@ -102,6 +106,8 @@ docker pull ghcr.io/dong-chen-1031/safe-cpp2wasm:latest
 4. 執行後端
 ```shell
 bun run backend
+# 或
+npm run backend
 ```
 
 ### 前後端同時執行（推薦）
@@ -109,6 +115,8 @@ bun run backend
 2. 一鍵同時執行前後端
 ```shell
 bun run dev
+# 或
+npm run dev
 ```
 
 ## 部署

@@ -1,0 +1,30 @@
+# Explicit lint config so CI does not inherit whatever rules a new Ruff
+# release decides to turn on by default.
+target-version = "py313"
+
+# Makes `settings`, `router`, `services` and `utils` resolve as first-party
+# for import sorting, since the backend package root is this directory.
+src = ["."]
+
+[lint]
+select = [
+    "E4",  # pycodestyle: imports
+    "E7",  # pycodestyle: statements
+    "E9",  # pycodestyle: runtime errors
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "RUF", # ruff-specific
+]
+
+ignore = [
+    # Catch-all `except Exception` around logging is deliberate here: the API
+    # and the background tasks must not die because one operation failed.
+    "BLE001",
+    # Comments and strings are written in Chinese, so full-width punctuation is
+    # intentional, not a typo for the ASCII equivalent.
+    "RUF001",
+    "RUF002",
+    "RUF003",
+]

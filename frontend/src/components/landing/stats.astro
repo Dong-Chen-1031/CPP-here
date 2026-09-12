@@ -1,7 +1,10 @@
 ---
 import { ZapIcon, FileTextIcon, DatabaseIcon, ClockIcon } from "@lucide/astro";
 import Hr from "@/components/landing/hr.astro";
-import config from "@/config/constants";
+import {
+    PUBLIC_BUILD_TIME_API_URL,
+    PUBLIC_SKIP_API_FETCH,
+} from "astro:env/client";
 
 interface Props {
     lang?: string;
@@ -56,10 +59,10 @@ function formatDuration(seconds: number | undefined): string {
 }
 
 let apiData: StatusResponse | null = null;
-if (!config.skipApiFetch) {
+if (!PUBLIC_SKIP_API_FETCH) {
     try {
-        console.log(`Fetching stats from ${config.buildTimeAPIEndpoint}`);
-        const res = await fetch(`${config.buildTimeAPIEndpoint}/status`);
+        console.log(`Fetching stats from ${PUBLIC_BUILD_TIME_API_URL}/status`);
+        const res = await fetch(`${PUBLIC_BUILD_TIME_API_URL}/status`);
         if (res.ok) apiData = await res.json();
 
         if (!apiData) {
@@ -68,7 +71,7 @@ if (!config.skipApiFetch) {
         }
     } catch (error) {
         console.error(`Error fetching stats from API: ${error}`);
-        if (config.run_mode === "development") {
+        if (import.meta.env.MODE === "development") {
             console.warn(
                 `Failed to fetch stats from API: ${error}\nSkipping API fetch in development mode.`,
             );
