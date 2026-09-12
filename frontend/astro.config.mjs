@@ -4,6 +4,7 @@ import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import cloudflare from "@astrojs/cloudflare";
+import { DEV_JWT_SECRET } from "./env.defaults.mjs";
 
 // import starlight from "@astrojs/starlight";
 
@@ -31,8 +32,6 @@ export default defineConfig({
         plugins: [tailwindcss()],
         optimizeDeps: {
             include: ["react-dom/client"],
-            // The `/vite` entry resolves clang-format.wasm via `?url`, which the
-            // esbuild pre-bundler cannot rewrite; prebundling it 404s the wasm.
             exclude: ["@wasm-fmt/clang-format"],
         },
         ssr: {
@@ -117,10 +116,7 @@ export default defineConfig({
             PRIVATE_JWT_SECRET: envField.string({
                 context: "server",
                 access: "secret",
-                optional: false,
-                default: Buffer.from(
-                    crypto.getRandomValues(new Uint8Array(32)),
-                ).toString("hex"),
+                default: DEV_JWT_SECRET,
             }),
             PRIVATE_JWT_EXPIRATION_SECONDS: envField.number({
                 context: "server",

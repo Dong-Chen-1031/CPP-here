@@ -4,5 +4,7 @@ export const prerender = false;
 
 export const GET = (async ({ url, params, redirect }) => {
     const { shareId } = params;
-    return redirect(`${url.origin}/editor?shareId=${shareId}`);
+    return redirect(
+        `${url.origin}/editor?shareId=${encodeURIComponent(shareId ?? "")}`,
+    );
 }) satisfies APIRoute;
