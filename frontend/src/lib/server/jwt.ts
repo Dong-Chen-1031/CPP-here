@@ -6,8 +6,13 @@ import { jwtVerify, SignJWT } from "jose";
 import { DEV_JWT_SECRET } from "../../../env.defaults.mjs";
 
 if (PRIVATE_JWT_SECRET === DEV_JWT_SECRET) {
+    if (import.meta.env.PROD) {
+        throw new Error(
+            'PRIVATE_JWT_SECRET is unset — refusing to start in production with the public dev secret. You can use "openssl rand -base64 32" to generate it.',
+        );
+    }
     console.warn(
-        'You are using the development JWT SECRET, which is insecure. Please set the "PRIVATE_JWT_SECRET" environment variable.Y sou can use "openssl rand -base64 32" to generate it.',
+        "Using the development JWT secret; do not use this in production.",
     );
 }
 

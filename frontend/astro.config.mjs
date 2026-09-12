@@ -6,6 +6,8 @@ import tailwindcss from "@tailwindcss/vite";
 import cloudflare from "@astrojs/cloudflare";
 import { DEV_JWT_SECRET } from "./env.defaults.mjs";
 
+const isProd = process.env.NODE_ENV === "production";
+
 // import starlight from "@astrojs/starlight";
 
 // https://astro.build/config
@@ -116,7 +118,8 @@ export default defineConfig({
             PRIVATE_JWT_SECRET: envField.string({
                 context: "server",
                 access: "secret",
-                default: DEV_JWT_SECRET,
+                optional: !isProd,
+                ...(isProd ? {} : { default: DEV_JWT_SECRET }),
             }),
             PRIVATE_JWT_EXPIRATION_SECONDS: envField.number({
                 context: "server",
