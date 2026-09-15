@@ -14,7 +14,6 @@ import { cn, useIsMobile } from "@/lib/utils";
 import { useAtom } from "jotai";
 import { loadedCountStore, loadedStore } from "@/store/atom";
 import { addAlert } from "@/lib/alert";
-import { Spinner } from "@/components/ui/spinner";
 import { AnimatePresence, motion } from "motion/react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -29,7 +28,7 @@ function LoadingPanel({
   children: React.ReactNode;
   className?: string;
 }) {
-  const [Loaded, setLoaded] = useAtom(loadedStore);
+  const [Loaded,] = useAtom(loadedStore);
 
   return (
     <div className={cn("relative", className)}>

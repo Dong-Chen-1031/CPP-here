@@ -335,14 +335,14 @@ export default function TestCasePanel({
                                                         setTestCases((prev) =>
                                                             prev.map((tc) =>
                                                                 tc.id ===
-                                                                testCase.id
+                                                                    testCase.id
                                                                     ? {
-                                                                          ...tc,
-                                                                          name,
-                                                                          input,
-                                                                          expectedOutput:
-                                                                              expected,
-                                                                      }
+                                                                        ...tc,
+                                                                        name,
+                                                                        input,
+                                                                        expectedOutput:
+                                                                            expected,
+                                                                    }
                                                                     : tc,
                                                             ),
                                                         );

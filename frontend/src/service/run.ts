@@ -106,11 +106,11 @@ export async function url2WasmModule(url: string) {
 export class CodeWorker extends (typeof Worker !== "undefined"
     ? Worker
     : (class {
-          constructor() {}
-          postMessage() {}
-          addEventListener() {}
-          removeEventListener() {}
-      } as typeof Worker)) {
+        constructor() { }
+        postMessage() { }
+        addEventListener() { }
+        removeEventListener() { }
+    } as typeof Worker)) {
     running: boolean = false;
 
     constructor({ jsCode }: { jsCode: string }) {
@@ -273,7 +273,7 @@ export function showError(err: string, options?: ShowErrorOptions) {
 
     const outputItem: OutputCase = {
         type: "err",
-        content: err,
+        content: [{ type: "stdout", content: err }],
         testCaseId: options?.testCaseId,
         testCaseName: options?.testCaseName,
     };
@@ -328,8 +328,7 @@ export async function handleRun({
         onStdout: (output) => {
             store.set(outputStore, (prev) => [
                 {
-                    content:
-                        (prev[prev.length - 1]?.content || "") + output + "\n",
+                    content: [...prev[0].content, { type: "stdout", content: output + "\n" }]
                 },
             ]);
         },
@@ -347,7 +346,7 @@ export async function handleRun({
     store.set(runStatusStore, "running");
 }
 
-function insertInOrder(prev: OutputCase[], item: OutputCase) {
+function insertInOrder(prev: OutputCase[], item: OutputCase): OutputCase[] {
     // console.log("Inserting output item:", item);
     const testCases = store.get(testCasesStore);
 
