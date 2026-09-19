@@ -113,7 +113,9 @@ class Settings(BaseSettings):
 
     ALLOW_ORIGINS: list[str] = Field(default_factory=list)
 
-    BUILD_VERSION: str = Field(default="0.1.0")
+    # Part of the build cache key: bump it whenever the emcc flags or
+    # assets/worker.js change so stale cached builds aren't served.
+    BUILD_VERSION: str = Field(default="0.2.0")
 
     CACHE_LIMIT: int = Field(default=100)
 

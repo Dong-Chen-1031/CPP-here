@@ -11,8 +11,11 @@ import {
     defCodeStore,
     editorFontSizeStore,
     editorTabSizeStore,
+    timeLimitStore,
     useResetSettingsAtoms,
 } from "@/store/configStore";
+import { Input } from "@/components/ui/input";
+import { parseTimeLimit } from "@/config/runLimits";
 import { useAtom } from "jotai";
 import {
     Field,
@@ -59,6 +62,23 @@ export function Settings({ allLangs }: SettingsProps) {
     const [defCode, setDefCode] = useAtom(defCodeStore);
     const [code, setCode] = useAtom(codeStore);
     const [tabSize, setTabSize] = useAtom(editorTabSizeStore);
+    const [timeLimit, setTimeLimit] = useAtom(timeLimitStore);
+    // Edited as free text and only committed when valid, so typing "-" on the
+    // way to "-1" doesn't get rejected mid-edit.
+    const [timeLimitDraft, setTimeLimitDraft] = React.useState(
+        String(timeLimit),
+    );
+    useEffect(() => {
+        setTimeLimitDraft(String(timeLimit));
+    }, [timeLimit]);
+    const commitTimeLimit = () => {
+        const value = parseTimeLimit(timeLimitDraft);
+        if (value === null) {
+            setTimeLimitDraft(String(timeLimit));
+            return;
+        }
+        setTimeLimit(value);
+    };
     const resetSettingsAtoms = useResetSettingsAtoms();
 
     const matchedLang =
@@ -253,6 +273,35 @@ export function Settings({ allLangs }: SettingsProps) {
                                     <PlusIcon />
                                 </Button>
                             </ButtonGroup>
+                        </Field>
+                        <Field
+                            orientation="horizontal"
+                            className="items-center!"
+                        >
+                            <FieldContent>
+                                <FieldLabel htmlFor="settings-time-limit">
+                                    {t("settings.timeLimit")}
+                                </FieldLabel>
+                                <FieldDescription className="text-xs">
+                                    {t("settings.timeLimitDesc")}
+                                </FieldDescription>
+                            </FieldContent>
+                            <Input
+                                id="settings-time-limit"
+                                type="number"
+                                inputMode="numeric"
+                                min={-1}
+                                step={1}
+                                className="w-20 shrink-0"
+                                value={timeLimitDraft}
+                                onChange={(e) =>
+                                    setTimeLimitDraft(e.target.value)
+                                }
+                                onBlur={commitTimeLimit}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") commitTimeLimit();
+                                }}
+                            />
                         </Field>
                         <Field
                             orientation="horizontal"

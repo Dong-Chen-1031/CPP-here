@@ -7,7 +7,7 @@ import type { CodeWorker } from "@/service/run";
 import type { AlertDialogOptions } from "@/components/Alert";
 import type { EditDialogOptions } from "@/components/panel/TestEditDialog";
 import { defCodeStore } from "./configStore";
-import { clearOutputBuffer } from "./outputStore";
+import { clearOutputBuffer, outputStore } from "./outputStore";
 export interface TestCase {
     id: string;
     name: string;
@@ -99,6 +99,7 @@ export function useResetEditorAtoms() {
     const resetCode = useResetAtom(codeStore);
     const resetCppVersion = useResetAtom(cppVersionStore);
     const resetInput = useResetAtom(inputStore);
+    const resetOutput = useResetAtom(outputStore);
     const resetRunMode = useResetAtom(runModeStore);
     const resetTestCases = useResetAtom(testCasesStore);
     const resetEditorErrors = useResetAtom(editorErrorStore);
@@ -107,6 +108,7 @@ export function useResetEditorAtoms() {
         resetCode();
         resetCppVersion();
         resetInput();
+        resetOutput();
         clearOutputBuffer();
         resetRunMode();
         resetTestCases();

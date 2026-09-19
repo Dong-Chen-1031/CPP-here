@@ -269,13 +269,20 @@ async def build(
             "-sEXIT_RUNTIME=1 ",
             "-sFILESYSTEM=0 ",
             "--js-library /tmp/stdin_lib.js ",
+            # 取代逐位元組的 stdout 緩衝並限制輸出量（OLE），檔案在
+            # safe-cpp2wasm 映像的 docker/js_lib/stdout_lib.js
+            "--js-library /tmp/stdout_lib.js ",
             # '-sINCOMING_MODULE_JS_API=\'["print","printErr","stdin","instantiateWasm","onRuntimeInitialized"]\' '
             # '-sINCOMING_MODULE_JS_API=\'["wasm", "stdin", "print", "printErr"]\' '
             "-fconstexpr-depth=50 ",
             "-fmacro-backtrace-limit=10 ",
             "-sSTACK_SIZE=8388608 ",  # 8 MB stack
             "-sINITIAL_MEMORY=33554432 ",  # 初始 32 MB
-            "-sALLOW_MEMORY_GROWTH=1 ",  # 按需成長，上限為瀏覽器可用記憶體
+            "-sALLOW_MEMORY_GROWTH=1 ",  # 按需成長
+            "-sMAXIMUM_MEMORY=536870912 ",  # 上限 512 MB（MLE）
+            # 超過上限時直接 abort 並回報 OOM，而不是讓 malloc 回傳 NULL；
+            # 開啟記憶體成長時預設是關閉的，所以要明確設定
+            "-sABORTING_MALLOC=1 ",
         ]
     )
 

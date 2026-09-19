@@ -15,12 +15,8 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/checkbox";
 import { fetchSharedCode } from "@/service/share";
 import { getDefaultStore } from "jotai";
-import {
-    codeStore,
-    inputStore,
-    outputStore,
-    testCasesStore,
-} from "@/store/atom";
+import { codeStore, inputStore, testCasesStore } from "@/store/atom";
+import { importOutputCases, outputStore } from "@/store/outputStore";
 import { Spinner } from "./ui/spinner";
 import { addAlert } from "@/lib/alert";
 
@@ -110,7 +106,7 @@ export function ShareReceiveDialog() {
                         onClick={(e) => {
                             e.preventDefault();
                             setLoading(true);
-                            fetchSharedCode(shareId!).then((res) => {
+                            fetchSharedCode(shareId!).then(async (res) => {
                                 if (!res.ok) {
                                     setLoading(false);
                                     addAlert({
@@ -141,7 +137,9 @@ export function ShareReceiveDialog() {
                                 if (checkedItems.output) {
                                     defaultStore.set(
                                         outputStore,
-                                        data.outputData,
+                                        await importOutputCases(
+                                            data.outputData,
+                                        ),
                                     );
                                 }
                                 addAlert({

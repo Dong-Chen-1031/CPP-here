@@ -1,7 +1,6 @@
 import {
     codeStore,
     inputStore,
-    outputStore,
     testCasesStore,
     turnstileRefStore,
     verifyJwtStore,
@@ -10,6 +9,8 @@ import { PUBLIC_S3_BUCKET_NAME, PUBLIC_S3_BUCKET_URL } from "astro:env/client";
 import { axios, callAPI } from "@/lib/axiosInstance";
 import { addAlert } from "@/lib/alert";
 import { getDefaultStore } from "jotai";
+import { exportOutputCases, outputStore } from "@/store/outputStore";
+import { SHARE_OUTPUT_LIMIT_CHARS } from "@/config/runLimits";
 import { ShareObjectSchema, type ShareObject } from "@/types/share";
 import type { shareAPI } from "@/pages/api/share";
 
@@ -62,7 +63,10 @@ export async function shareCode(allowRetry = true): Promise<ShareResult> {
         const code = defaultStore.get(codeStore);
         const testCase = defaultStore.get(testCasesStore);
         const inputData = defaultStore.get(inputStore);
-        const outputData = defaultStore.get(outputStore);
+        const outputData = await exportOutputCases(
+            defaultStore.get(outputStore),
+            SHARE_OUTPUT_LIMIT_CHARS,
+        );
 
         const { shareId, success } = await callAPI<shareAPI>(`/api/share`, {
             code,

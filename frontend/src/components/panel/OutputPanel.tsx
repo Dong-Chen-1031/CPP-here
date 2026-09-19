@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Trash, SquareTerminal, ClipboardCopy } from "lucide-react";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import Tip from "../ui/tips";
 import { useAtom } from "jotai";
@@ -15,8 +15,22 @@ import {
     type OutputCase,
     outputdb,
     outputChunkToHtml,
+    clearOutputBuffer,
 } from "@/store/outputStore";
 import Dexie, { liveQuery } from "dexie";
+import { DISPLAY_LIMIT_CHARS, DISPLAY_LIMIT_LINES } from "@/config/runLimits";
+
+function clipToBudget(text: string, chars: number, lines: number) {
+    let kept = text.length > chars ? text.slice(0, chars) : text;
+    let newlines = 0;
+    for (let i = kept.indexOf("\n"); i !== -1; i = kept.indexOf("\n", i + 1)) {
+        if (++newlines >= lines) {
+            kept = kept.slice(0, i + 1);
+            break;
+        }
+    }
+    return { kept, newlines, clipped: kept.length < text.length };
+}
 
 interface OutputCaseJSXProps {
     line: OutputCase;
@@ -33,6 +47,7 @@ function OutputCaseJSX({
 }: OutputCaseJSXProps) {
     const { t } = useTranslation(["editor", "common"]);
     const outputPlace = useRef<HTMLDivElement>(null);
+    const [truncated, setTruncated] = useState(false);
     useEffect(() => {
         const container = outputPlace.current;
         if (!line.testCaseId || !container) return;
@@ -40,6 +55,9 @@ function OutputCaseJSX({
         const tid = line.testCaseId;
         let firstRenderedId: number | undefined;
         let cancelled = false;
+        let renderedChars = 0;
+        let renderedLines = 0;
+        let isTruncated = false;
 
         const sub = liveQuery(async () => ({
             firstId: (
@@ -64,6 +82,10 @@ function OutputCaseJSX({
                 ) {
                     container.replaceChildren();
                     firstRenderedId = undefined;
+                    renderedChars = 0;
+                    renderedLines = 0;
+                    isTruncated = false;
+                    setTruncated(false);
                     if (firstId === undefined) return;
                 }
 
@@ -71,9 +93,32 @@ function OutputCaseJSX({
                 for (const chunk of newChunks) {
                     const id = chunk.id as number;
                     if (id <= lastId) continue;
-                    html += outputChunkToHtml(chunk);
                     firstRenderedId ??= id;
                     lastId = id;
+                    if (isTruncated) {
+                        if (chunk.type === "error") {
+                            html += outputChunkToHtml(chunk);
+                        }
+                        continue;
+                    }
+                    const { kept, newlines, clipped } = clipToBudget(
+                        chunk.content,
+                        DISPLAY_LIMIT_CHARS - renderedChars,
+                        DISPLAY_LIMIT_LINES - renderedLines,
+                    );
+                    renderedChars += kept.length;
+                    renderedLines += newlines;
+                    if (kept) {
+                        html += outputChunkToHtml({ ...chunk, content: kept });
+                    }
+                    if (
+                        clipped ||
+                        renderedChars >= DISPLAY_LIMIT_CHARS ||
+                        renderedLines >= DISPLAY_LIMIT_LINES
+                    ) {
+                        isTruncated = true;
+                        setTruncated(true);
+                    }
                 }
 
                 if (html) container.insertAdjacentHTML("beforeend", html);
@@ -101,7 +146,7 @@ function OutputCaseJSX({
                         : "",
             )}
         >
-            {line.testCaseId && (
+            {line.testCaseName && (
                 <div className="text-[0.6rem] text-accent-foreground/80 mb-1 flex justify-between">
                     <p>{line.testCaseName}</p>
                     <Tip label={t("output.copyThisCaseTip")}>
@@ -136,6 +181,11 @@ function OutputCaseJSX({
                 </div>
             )}
             <div ref={outputPlace}></div>
+            {truncated && (
+                <p className="mt-2 text-muted-foreground italic">
+                    {t("output.truncated")}
+                </p>
+            )}
         </div>
     );
 }
@@ -169,8 +219,6 @@ export default function OutputPanel({ drawer = false }: { drawer?: boolean }) {
                     <Button
                         variant="outline"
                         onClick={async () => {
-                            // Copy every case, not just the first one: in run-all mode there
-                            // is one entry per test case.
                             const texts = await Promise.all(
                                 output.map(
                                     async (o, i) =>
@@ -195,6 +243,7 @@ export default function OutputPanel({ drawer = false }: { drawer?: boolean }) {
                         variant="outline"
                         onClick={() => {
                             setOutput([]);
+                            clearOutputBuffer();
                             setCleared(true);
                             setTimeout(() => setCleared(false), 1500);
                         }}
