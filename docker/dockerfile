@@ -1,4 +1,4 @@
-FROM emscripten/emsdk:latest
+FROM emscripten/emsdk:5.0.2
 
 USER root
 
@@ -9,6 +9,7 @@ RUN mkdir -p /emsdk/upstream/emscripten/cache/sysroot/include/c++/v1
 COPY inner/ /emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/
 
 COPY  js_lib/stdin_lib.js /tmp/stdin_lib.js
+COPY  js_lib/stdout_lib.js /tmp/stdout_lib.js
 # Create temp directory
 # RUN mkdir /temp \
 #     && chown sandbox_user:sandbox_user /temp \
