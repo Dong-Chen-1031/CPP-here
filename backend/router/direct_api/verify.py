@@ -37,9 +37,9 @@ def is_verified(token: str):
         payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
         return payload.get("verified", False)
     except jwt.ExpiredSignatureError as e:
-        raise HTTPException(status_code=400, detail="Token has expired") from e
+        raise HTTPException(status_code=403, detail="Token has expired") from e
     except jwt.InvalidTokenError as e:
-        raise HTTPException(status_code=400, detail="Invalid token") from e
+        raise HTTPException(status_code=401, detail="Invalid token") from e
 
 
 def need_token(request: Request) -> bool:
