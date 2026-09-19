@@ -39,6 +39,6 @@ export function getStaticLangPaths() {
     ];
 }
 
-export function getTranslation(lang: string) {
+export function getTranslation(lang?: string) {
     return lang === "zh-tw" ? twLanding : enLanding;
 }

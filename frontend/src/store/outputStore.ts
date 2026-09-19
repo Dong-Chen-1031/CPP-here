@@ -115,7 +115,7 @@ export async function importOutputCases(
 export function outputChunkToHtml(chunk: OutputChunk) {
     if (chunk.type === "stdout") return htmlEscape(chunk.content);
     else if (chunk.type === "stderr" || chunk.type === "error")
-        return `<span class="text-red-500">${htmlEscape(chunk.content)}</span>`;
+        return `<span class="text-destructive">${htmlEscape(chunk.content)}</span>`;
     else return htmlEscape(chunk.content);
 }
 
