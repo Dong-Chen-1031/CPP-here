@@ -118,7 +118,7 @@ export default defineConfig({
             PRIVATE_JWT_SECRET: envField.string({
                 context: "server",
                 access: "secret",
-                optional: !isProd,
+                optional: true,
                 ...(isProd ? {} : { default: DEV_JWT_SECRET }),
             }),
             PRIVATE_JWT_EXPIRATION_SECONDS: envField.number({
