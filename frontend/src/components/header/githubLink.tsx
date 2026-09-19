@@ -17,7 +17,8 @@ export function GithubLink({
             <a
                 href={PUBLIC_GITHUB_LINK}
                 target="_blank"
-                rel="noopener noreferrer">
+                rel="noopener noreferrer"
+            >
                 <SiGithub className="w-5 h-5 mr-1" />
                 Star
             </a>

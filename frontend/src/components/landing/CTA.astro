@@ -15,36 +15,35 @@ const { t } = Astro.props as Props;
 
 <section class="px-6 md:px-20 py-24 pb-40 w-full relative">
     <Hr />
-    <div
-        class="relative border border-foreground/10 rounded-xl overflow-hidden px-4 md:px-8 py-20 flex flex-col items-center text-center">
+    <div class="relative border border-foreground/10 rounded-xl overflow-hidden px-4 md:px-8 py-20 flex flex-col items-center text-center">
         <div
             class="pointer-events-none absolute inset-0 -z-10
                 bg-[linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)]
                 bg-size-[61px_61px]
-                mask-[radial-gradient(ellipse_70%_100%_at_50%_50%,black_30%,transparent_100%)]">
-        </div>
+                mask-[radial-gradient(ellipse_70%_100%_at_50%_50%,black_30%,transparent_100%)]"
+        ></div>
 
         <div
             class="pointer-events-none absolute inset-0 -z-10
-                bg-[radial-gradient(ellipse_60%_50%_at_50%_50%,color-mix(in_srgb,var(--primary)_8%,transparent),transparent)]">
-        </div>
+                bg-[radial-gradient(ellipse_60%_50%_at_50%_50%,color-mix(in_srgb,var(--primary)_8%,transparent),transparent)]"
+        ></div>
 
-        <p
-            class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
-            <span class="mr-1 tracking-widest">//</span>{t?.label}
+        <p class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
+            <span class="mr-1 tracking-widest">//</span>
+            {t?.label}
         </p>
-        <h2
-            class="text-[min(3.5rem,6vw)] leading-[1.15] font-bold tracking-tighter text-balance max-w-4xl">
+        <h2 class="text-[min(3.5rem,6vw)] leading-[1.15] font-bold tracking-tighter text-balance max-w-4xl">
             {t?.heading}
             <span class="text-muted-foreground mt-0.5 md:mt-0 block">
-                {t?.subheading}</span
-            >
+                {t?.subheading}
+            </span>
         </h2>
         <p class="text-muted-foreground mt-5 md:text-lg text-balance max-w-2xl">
-            {t?.description1}<br />{t?.description2}
+            {t?.description1}
+            <br />
+            {t?.description2}
         </p>
-        <div
-            class="flex items-center justify-center mt-10 gap-4 *:text-[0.9rem] flex-wrap">
+        <div class="flex items-center justify-center mt-10 gap-4 *:text-[0.9rem] flex-wrap">
             <a href="/editor">
                 <Button className="w-44" size={"xl"}>
                     <PlayIcon class="size-4" />
@@ -54,7 +53,8 @@ const { t } = Astro.props as Props;
             <a
                 href={PUBLIC_GITHUB_LINK}
                 target="_blank"
-                rel="noopener noreferrer">
+                rel="noopener noreferrer"
+            >
                 <Button className="w-44" variant={"outline"} size="xl">
                     <SiGithub className="size-4" />
                     <p class="ml-1">{t?.starOnGithub}</p>

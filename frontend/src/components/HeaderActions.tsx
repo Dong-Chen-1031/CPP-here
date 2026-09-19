@@ -31,7 +31,8 @@ export default function HeaderActions() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}>
+                        transition={{ duration: 0.3 }}
+                    >
                         <Skeleton className="w-[490px] h-7" />
                     </motion.div>
                 ) : (
@@ -41,7 +42,8 @@ export default function HeaderActions() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}>
+                        transition={{ duration: 0.3 }}
+                    >
                         <UndoRedo />
                         <UploadButton />
                         <DownloadButton />
@@ -72,13 +74,15 @@ export function HeaderActionsMobile() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}>
+                        transition={{ duration: 0.3 }}
+                    >
                         <Skeleton className="w-61.25 h-7" />
                     </motion.div>
                 ) : (
                     <motion.div
                         key="actions"
-                        className="flex flex-row-reverse flex-wrap justify-start items-center content-start gap-1">
+                        className="flex flex-row-reverse flex-wrap justify-start items-center content-start gap-1"
+                    >
                         <RunButton className="shrink-0" />
                         <Commands className="shrink-0" />
                         <div className="shrink-0 flex items-center">

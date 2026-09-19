@@ -67,7 +67,8 @@ export function UploadButton({
                         variant="outline"
                         className={className}
                         aria-label={t("headerActions.uploadCodeTip")}
-                        onClick={handleClick}>
+                        onClick={handleClick}
+                    >
                         <Upload />
                         <span className="inline md:hidden lg:inline">
                             {t("headerActions.uploadCode")}

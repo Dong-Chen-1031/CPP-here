@@ -107,7 +107,7 @@ export function useResetEditorAtoms() {
         resetCode();
         resetCppVersion();
         resetInput();
-        clearOutputBuffer()
+        clearOutputBuffer();
         resetRunMode();
         resetTestCases();
         resetEditorErrors();

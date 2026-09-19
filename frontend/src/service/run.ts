@@ -106,11 +106,11 @@ export async function url2WasmModule(url: string) {
 export class CodeWorker extends (typeof Worker !== "undefined"
     ? Worker
     : (class {
-        constructor() { }
-        postMessage() { }
-        addEventListener() { }
-        removeEventListener() { }
-    } as typeof Worker)) {
+          constructor() {}
+          postMessage() {}
+          addEventListener() {}
+          removeEventListener() {}
+      } as typeof Worker)) {
     running: boolean = false;
 
     constructor({ jsCode }: { jsCode: string }) {
@@ -328,7 +328,10 @@ export async function handleRun({
         onStdout: (output) => {
             store.set(outputStore, (prev) => [
                 {
-                    content: [...prev[0].content, { type: "stdout", content: output + "\n" }]
+                    content: [
+                        ...prev[0].content,
+                        { type: "stdout", content: output + "\n" },
+                    ],
                 },
             ]);
         },

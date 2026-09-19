@@ -39,11 +39,13 @@ export function CppVersionSelect({
             onValueChange={(version) => {
                 setCppVersion(version);
                 onSelect?.(version);
-            }}>
+            }}
+        >
             <SelectTrigger
                 className={cn("w-full max-w-48", className)}
                 size={size}
-                aria-label="C++ Version">
+                aria-label="C++ Version"
+            >
                 <SelectValue placeholder="C++ Version" />
             </SelectTrigger>
             <SelectContent position="popper">

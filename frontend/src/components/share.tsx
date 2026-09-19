@@ -91,7 +91,8 @@ export function ShareReceiveDialog() {
                                             }
                                         />
                                         <FieldLabel
-                                            htmlFor={`terms-checkbox-${label.toLowerCase()}`}>
+                                            htmlFor={`terms-checkbox-${label.toLowerCase()}`}
+                                        >
                                             {label}
                                         </FieldLabel>
                                     </Field>
@@ -152,7 +153,8 @@ export function ShareReceiveDialog() {
                                 setLoading(false);
                                 setShowDialog(false);
                             });
-                        }}>
+                        }}
+                    >
                         {loading && <Spinner />} {t("shareReceive.receive")}
                     </AlertDialogAction>
                 </AlertDialogFooter>

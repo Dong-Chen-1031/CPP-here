@@ -125,7 +125,8 @@ export function ShareButton({
                         } finally {
                             setSharing(false);
                         }
-                    }}>
+                    }}
+                >
                     <IconMotion
                         show={shared}
                         HideIcon={sharing ? Spinner : Share2Icon}

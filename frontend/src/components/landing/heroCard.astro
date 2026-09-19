@@ -155,15 +155,13 @@ const fallback = await getImage({
 <div class="px-6 py-20 md:px-20 w-full" id="hero-card">
     <picture>
         {/* 手機：AVIF（僅 prod） */}
-        {
-            isProd && (
-                <source
-                    media="(max-width: 500px)"
-                    type="image/avif"
-                    srcset={toSrcset(mobileImages, "avif")}
-                />
-            )
-        }
+        {isProd && (
+            <source
+                media="(max-width: 500px)"
+                type="image/avif"
+                srcset={toSrcset(mobileImages, "avif")}
+            />
+        )}
         {/* 手機：WebP */}
         <source
             media="(max-width: 500px)"
@@ -172,15 +170,13 @@ const fallback = await getImage({
         />
 
         {/* 桌機：AVIF（僅 prod） */}
-        {
-            isProd && (
-                <source
-                    media="(min-width: 501px)"
-                    type="image/avif"
-                    srcset={toSrcset(desktopImages, "avif")}
-                />
-            )
-        }
+        {isProd && (
+            <source
+                media="(min-width: 501px)"
+                type="image/avif"
+                srcset={toSrcset(desktopImages, "avif")}
+            />
+        )}
         {/* 桌機：WebP */}
         <source
             media="(min-width: 501px)"

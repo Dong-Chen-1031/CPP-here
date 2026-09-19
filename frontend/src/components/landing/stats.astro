@@ -121,40 +121,36 @@ const stats = [
 <section class="px-6 md:px-20 py-24 w-full relative">
     <Hr />
     <div class="max-w-2xl mx-auto text-center mb-16">
-        <p
-            class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
+        <p class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
             <span class="mr-1 tracking-widest">//</span>stats
         </p>
-        <h2
-            class="text-[min(3rem,9vw)] leading-[1.05] font-bold tracking-tighter text-balance">
-            Real numbers.<br />
+        <h2 class="text-[min(3rem,9vw)] leading-[1.05] font-bold tracking-tighter text-balance">
+            Real numbers.
+            <br />
             <span class="text-muted-foreground">Real usage.</span>
         </h2>
     </div>
 
-    <div
-        class="grid grid-cols-2 lg:grid-cols-4 gap-px bg-foreground/10 border border-foreground/10 rounded-xl overflow-hidden">
-        {
-            stats.map(({ icon: Icon, value, label, desc }) => (
-                <div class="stat-card group relative bg-background sm:p-8 p-5">
-                    <div class="relative z-10">
-                        <div class="flex items-center justify-center size-10 rounded-md border border-foreground/15 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-all duration-300 mb-5">
-                            <Icon class="size-5 text-foreground/80 group-hover:text-foreground transition-colors" />
-                        </div>
-                        <p class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter tabular-nums">
-                            {value}
-                        </p>
-                        <p class="text-sm font-semibold mt-2 tracking-tight">
-                            {label}
-                        </p>
-                        {/* <p class="text-sm leading-relaxed text-muted-foreground mt-1">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-px bg-foreground/10 border border-foreground/10 rounded-xl overflow-hidden">
+        {stats.map(({ icon: Icon, value, label, desc }) => (
+            <div class="stat-card group relative bg-background sm:p-8 p-5">
+                <div class="relative z-10">
+                    <div class="flex items-center justify-center size-10 rounded-md border border-foreground/15 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-all duration-300 mb-5">
+                        <Icon class="size-5 text-foreground/80 group-hover:text-foreground transition-colors" />
+                    </div>
+                    <p class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter tabular-nums">
+                        {value}
+                    </p>
+                    <p class="text-sm font-semibold mt-2 tracking-tight">
+                        {label}
+                    </p>
+                    {/* <p class="text-sm leading-relaxed text-muted-foreground mt-1">
                             {desc}
                         </p> */}
-                    </div>
-                    <div class="spotlight pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </div>
-            ))
-        }
+                <div class="spotlight pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            </div>
+        ))}
     </div>
 </section>
 

@@ -41,7 +41,10 @@ export function addOutputChunk(testCaseId: string, chunk: OutputChunk) {
 }
 
 export async function getOutputChunks(testCaseId: string) {
-    return outputdb.outputChunks.where("testCaseId").equals(testCaseId).toArray();
+    return outputdb.outputChunks
+        .where("testCaseId")
+        .equals(testCaseId)
+        .toArray();
 }
 
 export async function clearOutputBuffer() {
@@ -49,9 +52,7 @@ export async function clearOutputBuffer() {
 }
 
 export async function getOutputString(caseId: string) {
-    return (await getOutputChunks(caseId))
-        .map((c) => c.content)
-        .join("");
+    return (await getOutputChunks(caseId)).map((c) => c.content).join("");
 }
 
 export function outputChunkToHtml(chunk: OutputChunk) {
@@ -62,7 +63,5 @@ export function outputChunkToHtml(chunk: OutputChunk) {
 }
 
 export async function getOutputHtml(caseId: string) {
-    return (await getOutputChunks(caseId))
-        .map(outputChunkToHtml)
-        .join("");
+    return (await getOutputChunks(caseId)).map(outputChunkToHtml).join("");
 }

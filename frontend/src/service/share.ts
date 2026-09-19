@@ -55,8 +55,7 @@ function renewJwt() {
 }
 
 type ShareResult =
-    | { ok: true; shareId: string }
-    | { ok: false; errors: string[] };
+    { ok: true; shareId: string } | { ok: false; errors: string[] };
 
 export async function shareCode(allowRetry = true): Promise<ShareResult> {
     try {
@@ -104,8 +103,7 @@ export async function shareCode(allowRetry = true): Promise<ShareResult> {
 }
 
 type FetchShareResult =
-    | { ok: true; data: ShareObject }
-    | { ok: false; errors: string[] };
+    { ok: true; data: ShareObject } | { ok: false; errors: string[] };
 
 export async function fetchSharedCode(
     shareId: string,

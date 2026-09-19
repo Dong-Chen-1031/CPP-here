@@ -67,7 +67,6 @@ export function GlobalPanelDrawer() {
         }
     }, [panel]);
 
-
     const panelDrawerContentLocalized: Record<
         PanelDrawerView,
         {
@@ -98,7 +97,8 @@ export function GlobalPanelDrawer() {
     return (
         <Drawer
             open={Boolean(panel)}
-            onOpenChange={(open) => !open && setPanel(null)}>
+            onOpenChange={(open) => !open && setPanel(null)}
+        >
             <DrawerContent>
                 <div className="mx-auto w-full max-w-sm overflow-y-scroll">
                     <DrawerHeader>
