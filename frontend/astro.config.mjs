@@ -76,9 +76,7 @@ export default defineConfig({
                 access: "public",
                 optional: true,
                 url: true,
-                default:
-                    import.meta.env.PUBLIC_BUILD_TIME_API_URL ||
-                    "http://127.0.0.1:8000",
+                default: "http://127.0.0.1:8000",
             }),
             PUBLIC_GITHUB_LINK: envField.string({
                 context: "client",
@@ -112,7 +110,7 @@ export default defineConfig({
                 access: "public",
                 optional: true,
                 // Must match the backend's S3_BUCKET_NAME: shared code is read
-                // from `${PUBLIC_S3_BUCKET_URL}/${PUBLIC_S3_BUCKET_NAME}/<id>`.
+                // from `${PUBLIC_S3_BUCKET_URL}/${PUBLIC_S3_BUCKET_NAME}/share/<id>`.
                 default: "share",
             }),
             PRIVATE_JWT_SECRET: envField.string({
@@ -175,6 +173,14 @@ export default defineConfig({
                 access: "secret",
                 optional: true,
                 default: "",
+            }),
+
+            // TODO: Remove this after the complete migration to the new central control architecture.
+            PRIVATE_BUILDER_NODE_ENDPOINT: envField.string({
+                context: "server",
+                access: "secret",
+                optional: true,
+                default: "http://127.0.0.1:8000",
             }),
         },
     },

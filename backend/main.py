@@ -13,10 +13,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from prometheus_fastapi_instrumentator import Instrumentator
 
-import router
-import router.api
-import router.build
-import router.verify
+from router import direct_api
 from services.resource_manager import lifespan
 from utils.log import logger
 from utils.posthog import posthog
@@ -50,16 +47,7 @@ app.add_middleware(
 )
 
 
-app.include_router(router.build.router)
-app.include_router(router.verify.router)
-app.include_router(router.api.router)
-
-
-if settings.SHARE:
-    import router.share
-
-    app.include_router(router.share.router)
-    logger.info("🔗 Share feature is enabled")
+app.include_router(direct_api.router)
 
 
 @app.get("/")

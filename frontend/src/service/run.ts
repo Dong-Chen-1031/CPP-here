@@ -7,8 +7,6 @@ import {
     panelDrawerStore,
     runStatusStore,
     testCasesStore,
-    turnstileRefStore,
-    verifyJwtStore,
 } from "@/store/atom";
 import {
     addOutputChunk,
@@ -25,60 +23,29 @@ import {
 } from "@/config/runLimits";
 import { timeLimitStore } from "@/store/configStore";
 import i18next from "i18next";
-import { PUBLIC_API_URL } from "astro:env/client";
-import { apiAxios, axios } from "@/lib/axiosInstance";
+import { apiAxios, callAPI, isAuthError } from "@/lib/axiosInstance";
 import { addAlert } from "@/lib/alert";
 import { getDefaultStore } from "jotai";
-interface BuildResponse {
-    ok: boolean;
-    js_url?: string;
-    wasm_url?: string;
-    errors: string[];
-    js_code?: string;
-}
+import type { buildAPI } from "@/pages/api/build";
 
 const defaultStore = getDefaultStore();
 
-export async function buildCode(code: string, cppVersion: string) {
+async function buildCode(code: string, cppVersion: string) {
     try {
-        const jwt = defaultStore.get(verifyJwtStore) || "";
-        // console.log("JWT for build request:", jwt);
-
-        const respond = await apiAxios.post(
-            `/build`,
-            {
-                code: code,
-                cpp_version: cppVersion,
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${jwt}`,
-                },
-            },
-        );
-        return respond.data as BuildResponse;
+        return await callAPI<buildAPI>("/api/build", { code, cppVersion });
     } catch (error) {
         console.error("Error during build request:", error);
-        if (axios.isAxiosError(error) && error.status === 401) {
-            defaultStore.set(verifyJwtStore, null);
-            addAlert({
-                title: "Unauthorized",
-                description:
-                    "Your verification has expired and will be automatically renewed. Please try running your code again.",
-                variant: "destructive",
-            });
-            const turnstileRef = defaultStore.get(turnstileRefStore);
-            turnstileRef?.current?.reset();
-
-            await new Promise((resolve, reject) =>
-                defaultStore.sub(verifyJwtStore, () => {
-                    resolve(null);
-                }),
-            );
-
-            return await buildCode(code, cppVersion);
-        }
-        return { ok: false, errors: [String(error)] } as BuildResponse;
+        return {
+            ok: false,
+            js_code: "",
+            wasm_url: "",
+            errors: [
+                isAuthError(error)
+                    ? "Verification failed. Please try again."
+                    : String(error),
+            ],
+            success: false,
+        };
     }
 }
 
@@ -130,9 +97,9 @@ export class CodeWorker extends (typeof Worker !== "undefined"
     running: boolean = false;
     timer: ReturnType<typeof setTimeout> | null = null;
 
-    constructor({ jsCode }: { jsCode: string }) {
+    constructor({ js_code }: { js_code: string }) {
         const blobUrl = URL.createObjectURL(
-            new Blob([jsCode], { type: "application/javascript" }),
+            new Blob([js_code], { type: "application/javascript" }),
         );
         super(blobUrl);
         try {
@@ -167,7 +134,7 @@ function getTimeLimit() {
 }
 
 export async function runCode(
-    jsCode: string,
+    js_code: string,
     inputData: string,
     {
         onStdout,
@@ -200,7 +167,7 @@ export async function runCode(
             const wasmResponse = await fetch(wasmUrl);
             wasmModule = await WebAssembly.compileStreaming(wasmResponse);
         }
-        const worker = new CodeWorker({ jsCode });
+        const worker = new CodeWorker({ js_code });
         const taskId = crypto.randomUUID();
         let receivedBytes = 0;
 
@@ -381,7 +348,7 @@ export async function handleRun({
 
     const response = await buildCode(code, cppVersion);
 
-    if (!response.ok || !response.js_code) {
+    if (!response.ok || !response?.js_code) {
         window.posthog?.capture("code_build_failed", {
             cpp_version: cppVersion,
             mode: "single",

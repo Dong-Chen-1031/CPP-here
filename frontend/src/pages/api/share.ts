@@ -1,5 +1,5 @@
 import { makeAPI } from "@/lib/server/api";
-import { ShareObjectSchema } from "@/types/share";
+import { SHARE_KEY_PREFIX, ShareObjectSchema } from "@/types/share";
 import z from "zod";
 import { env } from "cloudflare:workers";
 import { createHash } from "node:crypto";
@@ -31,7 +31,9 @@ const shareAPI = makeAPI({
         while (true) {
             shareId = fullShareId.slice(0, len);
 
-            const old = await env.R2_BUCKET.head(`share/${shareId}`);
+            const old = await env.R2_BUCKET.head(
+                `${SHARE_KEY_PREFIX}${shareId}`,
+            );
 
             if (!old) break;
             else if (old.customMetadata?.fullHash === fullShareId) {
@@ -42,7 +44,7 @@ const shareAPI = makeAPI({
         }
 
         await env.R2_BUCKET.put(
-            `share/${shareId}`,
+            `${SHARE_KEY_PREFIX}${shareId}`,
             JSON.stringify(shareObject),
             {
                 customMetadata: {

@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+// Object key prefix for shares in the bucket; backend/router/direct_api/share.py uses the same one.
+export const SHARE_KEY_PREFIX = "share/";
+
 export const TestCaseSchema = z.object({
     id: z.string(),
     name: z.string(),

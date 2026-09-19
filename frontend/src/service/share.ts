@@ -1,64 +1,22 @@
-import {
-    codeStore,
-    inputStore,
-    testCasesStore,
-    turnstileRefStore,
-    verifyJwtStore,
-} from "@/store/atom";
+import { codeStore, inputStore, testCasesStore } from "@/store/atom";
 import { PUBLIC_S3_BUCKET_NAME, PUBLIC_S3_BUCKET_URL } from "astro:env/client";
-import { axios, callAPI } from "@/lib/axiosInstance";
-import { addAlert } from "@/lib/alert";
+import { axios, callAPI, isAuthError } from "@/lib/axiosInstance";
 import { getDefaultStore } from "jotai";
 import { exportOutputCases, outputStore } from "@/store/outputStore";
 import { SHARE_OUTPUT_LIMIT_CHARS } from "@/config/runLimits";
-import { ShareObjectSchema, type ShareObject } from "@/types/share";
+import {
+    SHARE_KEY_PREFIX,
+    ShareObjectSchema,
+    type ShareObject,
+} from "@/types/share";
 import type { shareAPI } from "@/pages/api/share";
 
 const defaultStore = getDefaultStore();
 
-const JWT_RENEW_TIMEOUT_MS = 60_000;
-
-let jwtRenewPromise: Promise<string | null> | null = null;
-
-function renewJwt() {
-    if (jwtRenewPromise) return jwtRenewPromise;
-
-    jwtRenewPromise = new Promise<string | null>((resolve) => {
-        let settled = false;
-        const finish = (jwt: string | null) => {
-            if (settled) return;
-            settled = true;
-            clearTimeout(timer);
-            unsub();
-            resolve(jwt);
-        };
-
-        const timer = setTimeout(() => finish(null), JWT_RENEW_TIMEOUT_MS);
-        const unsub = defaultStore.sub(verifyJwtStore, () => {
-            const jwt = defaultStore.get(verifyJwtStore);
-            if (jwt) finish(jwt);
-        });
-
-        defaultStore.set(verifyJwtStore, null);
-        addAlert({
-            title: "Unauthorized",
-            description:
-                "Your verification has expired and will be automatically renewed. Please try running your code again.",
-            variant: "destructive",
-        });
-        const turnstileRef = defaultStore.get(turnstileRefStore);
-        turnstileRef?.current?.reset();
-    }).finally(() => {
-        jwtRenewPromise = null;
-    });
-
-    return jwtRenewPromise;
-}
-
 type ShareResult =
     { ok: true; shareId: string } | { ok: false; errors: string[] };
 
-export async function shareCode(allowRetry = true): Promise<ShareResult> {
+export async function shareCode(): Promise<ShareResult> {
     try {
         const code = defaultStore.get(codeStore);
         const testCase = defaultStore.get(testCasesStore);
@@ -83,24 +41,11 @@ export async function shareCode(allowRetry = true): Promise<ShareResult> {
         return { ok: true, shareId: shareId };
     } catch (error) {
         console.error("Error during share request:", error);
-        if (axios.isAxiosError(error) && error.status === 401) {
-            if (!allowRetry) {
-                return {
-                    ok: false,
-                    errors: ["Verification failed. Please try again."],
-                };
-            }
-
-            const jwt = await renewJwt();
-            if (!jwt) {
-                return {
-                    ok: false,
-                    errors: ["Verification could not be renewed in time."],
-                };
-            }
-
-            // Only one retry: the renewed token either works or we give up.
-            return await shareCode(false);
+        if (isAuthError(error)) {
+            return {
+                ok: false,
+                errors: ["Verification failed. Please try again."],
+            };
         }
         return { ok: false, errors: [String(error)] };
     }
@@ -120,7 +65,7 @@ export async function fetchSharedCode(
     }
     try {
         const respond = await axios.get(
-            `${PUBLIC_S3_BUCKET_URL}/${PUBLIC_S3_BUCKET_NAME}/${encodeURIComponent(shareId)}`,
+            `${PUBLIC_S3_BUCKET_URL}/${PUBLIC_S3_BUCKET_NAME}/${SHARE_KEY_PREFIX}${encodeURIComponent(shareId)}`,
         );
 
         const parsed = ShareObjectSchema.safeParse(respond.data);

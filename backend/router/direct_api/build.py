@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends
 from prometheus_client import Counter, Histogram
 from pydantic import BaseModel, Field
 
-from router.verify import need_token
+from router.direct_api.verify import need_token
 from services.build import BuildError, build
 from settings import settings
 from utils import cache
@@ -60,7 +60,9 @@ BUILD_DURATION = Histogram(
 
 class BuildRequest(BaseModel):
     code: str = Field(max_length=50_000)
-    cpp_version: Literal["c++98", "c++11", "c++14", "c++17", "c++20", "c++23"]
+    cpp_version: Literal["c++98", "c++11", "c++14", "c++17", "c++20", "c++23"] = Field(
+        alias="cppVersion",
+    )
 
     def hash(self) -> str:
         return sha256(
@@ -70,7 +72,6 @@ class BuildRequest(BaseModel):
 
 class BuildResponse(BaseModel):
     ok: bool
-    js_url: str
     js_code: str
     wasm_url: str
     errors: list[str] = []
@@ -142,7 +143,6 @@ async def lookup_cache(case_id: str) -> BuildResponse | None:
         logger.info(f"Cache hit for code {case_id}")
         return BuildResponse(
             ok=True,
-            js_url=f"{settings.BACKEND_URL}/{settings.CACHE_PATH}/{case_id}/build.js",
             wasm_url=f"{settings.BACKEND_URL}/{settings.CACHE_PATH}/{case_id}/build.wasm",
             js_code=(await read_file(str(js_path))),
             metric_status="cache",
@@ -202,7 +202,6 @@ async def build_cpp(
         except BuildError as e:
             return BuildResponse(
                 ok=False,
-                js_url="",
                 wasm_url="",
                 js_code="",
                 errors=[
@@ -231,7 +230,6 @@ async def build_cpp(
 
         return BuildResponse(
             ok=True,
-            js_url=f"{settings.BACKEND_URL}/{output_path}/{js_name}",
             wasm_url=f"{settings.BACKEND_URL}/{output_path}/{wasm_name}",
             js_code=js_code,
             wasm_size_bytes=get_size(f"{output_path}/{wasm_name}"),
