@@ -85,6 +85,19 @@ export default defineConfig({
                 url: true,
                 default: "https://github.com/Dong-Chen-1031/CPP-here",
             }),
+            PUBLIC_POSTHOG_PROJECT_TOKEN: envField.string({
+                context: "client",
+                access: "public",
+                optional: true,
+                default: "",
+            }),
+            PUBLIC_POSTHOG_HOST: envField.string({
+                context: "client",
+                access: "public",
+                optional: true,
+                url: true,
+                default: "https://us.i.posthog.com",
+            }),
             PUBLIC_STATUS_PAGE: envField.string({
                 context: "client",
                 access: "public",
