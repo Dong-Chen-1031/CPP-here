@@ -3,7 +3,11 @@ import twLanding from "../../../i18n/zh-TW/landing.json";
 
 export function getLanguageCodes(): readonly string[] {
     const files = import.meta.glob("/public/i18n/*/common.json");
-    return Object.keys(files).map((file) => file.split("/")[3]);
+    const codes = Object.keys(files).map((file) => file.split("/")[3]);
+    if (codes.length === 0) {
+        throw new Error("No language codes found");
+    }
+    return codes;
 }
 
 export function getLanguages(): Record<string, string> {
