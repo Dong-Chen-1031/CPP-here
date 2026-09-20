@@ -3,12 +3,33 @@
     "name": "cpp-here",
     "compatibility_date": "2026-06-19",
     "compatibility_flags": ["nodejs_compat"],
+    "routes": [
+        {
+            "pattern": "cpp-insiders.doong.me",
+            "zone_name": "doong.me",
+            "custom_domain": true,
+        },
+    ],
+    // Astro's Cloudflare adapter binds sessions to `SESSION`; without the id here
+    // `wrangler deploy` drops it from the remote config and only inherits it.
+    "kv_namespaces": [
+        {
+            "binding": "SESSION",
+            "id": "00418d0d89144e979ab8cd851db8eb8e",
+        },
+    ],
     "r2_buckets": [
         {
             "binding": "R2_BUCKET",
             "bucket_name": "cpp-here",
         },
     ],
+    // Everything instance-specific lives in Cloudflare, not in this public repo:
+    //   - PRIVATE_BUILDER_NODE_ENDPOINT: `wrangler secret put` (secrets survive deploys).
+    //   - The PUBLIC_* values are inlined into the client bundle by `astro build`, so they
+    //     belong in the Workers Builds build variables, not in the Worker's vars.
+    // `keep_vars` stops `wrangler deploy` from deleting vars set in the dashboard.
+    "keep_vars": true,
     "observability": {
         "enabled": true,
         "head_sampling_rate": 1,
