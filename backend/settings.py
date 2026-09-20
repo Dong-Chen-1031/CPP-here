@@ -175,14 +175,19 @@ class Settings(BaseSettings):
         if not self.CACHE_SQLITE_PATH:
             self.CACHE_SQLITE_PATH = f"sqlite+aiosqlite:///{self.CACHE_PATH}/cache.db"
 
-        self.SHARE = self.SHARE and all(
-            [
-                self.S3_ENDPOINT_URL,
-                self.S3_ACCESS_KEY_ID,
-                self.S3_SECRET_ACCESS_KEY,
-                self.S3_BUCKET_NAME,
-            ]
-        )
+        if self.SHARE:
+            if not all(
+                [
+                    self.S3_ENDPOINT_URL,
+                    self.S3_ACCESS_KEY_ID,
+                    self.S3_SECRET_ACCESS_KEY,
+                    self.S3_BUCKET_NAME,
+                ]
+            ):
+                print(
+                    "[yellow]SHARE is enabled, but S3 credentials are missing. Disabling SHARE."
+                )
+                self.SHARE = False
 
         return self
 
