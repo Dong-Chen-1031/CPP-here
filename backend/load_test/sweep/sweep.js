@@ -185,7 +185,7 @@ export default function () {
     const code = UNIQUE ? marker + sample.code : sample.code;
 
     const res = http.post(
-        `${BASE_URL}/build`,
+        `${BASE_URL}/api/build`,
         JSON.stringify({ code, cpp_version: sample.cpp_version }),
         { headers: HEADERS, timeout: REQ_TIMEOUT, tags },
     );

@@ -2,26 +2,41 @@ services:
   frontend:
     image: ghcr.io/dong-chen-1031/cpp-here/frontend:latest
     environment:
+      - PUBLIC_API_URL=http://localhost:${BACKEND_PORT:-8000}
+        # Backend URL the browser uses for /api/verify, /api/build and /api/share.
+        # The Docker image is a static build with no server routes, so this must point at the backend
+        # and be reachable from the user's browser (use the host port or your public domain).
+        # The backend's FRONTEND_URL must match the URL you open the frontend at, or CORS will block it.
+
       - PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000BB
-        # Cloudflare Turnstile site key for CAPTCHA verification.
+        # Cloudflare Turnstile site key for CAPTCHA verification. Must pair with the backend's TURNSTILE_SECRET.
         # Get a real site key from Cloudflare Turnstile dashboard for production use.
         # Default: "1x00000000000000000000BB" (Always valid for development).
 
-      - PUBLIC_API_URL=http://127.0.0.1:8000
-        # Backend API URL to fetch data. In development, it points to the local backend server. 
-        # In production, it should point to the deployed backend API.
-        # Default: "http://127.0.0.1:8000".
+      - PUBLIC_BYPASS_CAPTCHA=false
+        # Set to true to skip Turnstile entirely. For local testing only; the backend then needs BYPASS_CAPTCHA=true.
+        # Default: false
 
       - PUBLIC_SKIP_API_FETCH=true
         # Set to "true" to skip API fetches for landing page stats data at build time.
-        # If your backend is not ready, you can set this to "true" during development.
+        # The frontend builds when the container starts, which may be before the backend is ready.
         # Default: "true".
 
-      - PUBLIC_BUILD_TIME_API_URL=http://127.0.0.1:8000
-        # Backend API URL to fetch data at build time. 
-        # If you are using docker, you need to set this to Docker internal host to allow the build process to fetch data from the backend container.
-        # Or you can just set PUBLIC_SKIP_API_FETCH to "true" to skip API fetches during build time.
-        # Default: not set (falls back to PUBLIC_API_URL).
+      - PUBLIC_BUILD_TIME_API_URL=http://host.docker.internal:8000
+        # Backend URL used at build time (inside Docker) to fetch landing page stats from "/api/status".
+        # "host.docker.internal" reaches a backend running on the host (Docker Desktop; on Linux add extra_hosts).
+        # Ignored when PUBLIC_SKIP_API_FETCH is "true".
+        # Default: "http://127.0.0.1:8000".
+
+      - PUBLIC_SHARE=false
+        # Set to true to enable sharing. Requires SHARE=true and the S3_* settings on the backend.
+        # Default: false
+
+      - PUBLIC_S3_BUCKET_URL=
+      - PUBLIC_S3_BUCKET_NAME=
+        # Where the browser reads shared code: "${PUBLIC_S3_BUCKET_URL}/${PUBLIC_S3_BUCKET_NAME}/share/<share id>".
+        # For a path-style URL (e.g. MinIO "http://localhost:9000"), set PUBLIC_S3_BUCKET_NAME to the backend's S3_BUCKET_NAME.
+        # Leave PUBLIC_S3_BUCKET_NAME empty when the URL already points at the bucket (e.g. an R2 public domain).
 
       - CI=true
         # Disables interactive/TTY output from Astro and bun to prevent duplicate log lines in Docker Compose.

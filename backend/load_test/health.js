@@ -1,5 +1,5 @@
 /**
- * k6 load test — GET /health & GET /status
+ * k6 load test — GET /api/health & GET /api/status
  *
  * 執行方式：
  *   k6 run health.js
@@ -28,8 +28,8 @@ export const options = {
 };
 
 export default function () {
-    // GET /health
-    const healthRes = http.get(`${BASE_URL}/health`);
+    // GET /api/health
+    const healthRes = http.get(`${BASE_URL}/api/health`);
     const healthOk = check(healthRes, {
         "health status 200": (r) => r.status === 200,
         'health body has "ok"': (r) => r.json("status") === "ok",
@@ -37,8 +37,8 @@ export default function () {
     healthDuration.add(healthRes.timings.duration);
     errorRate.add(!healthOk);
 
-    // GET /status
-    const statusRes = http.get(`${BASE_URL}/status`);
+    // GET /api/status
+    const statusRes = http.get(`${BASE_URL}/api/status`);
     const statusOk = check(statusRes, {
         "status 200": (r) => r.status === 200,
         "status has total_count": (r) => r.json("total_count") !== undefined,

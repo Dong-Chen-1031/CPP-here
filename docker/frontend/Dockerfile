@@ -6,9 +6,13 @@ WORKDIR /app
 COPY . .
 
 ENV PUBLIC_SKIP_API_FETCH=true
-RUN bun install --production
+# No --production: the build needs root devDependencies such as shx.
+RUN bun install
 
 EXPOSE 4321
 
 ENTRYPOINT []
-CMD ["/bin/sh", "-c", "bun run build && caddy file-server --root dist --listen :4321"]
+# Built at startup so the PUBLIC_* environment variables from docker compose are inlined.
+# The root scripts call `npm run`, which this image does not have, so run their steps directly.
+# build:static drops the Cloudflare Worker: /api/* is served by the Python backend (PUBLIC_API_URL).
+CMD ["/bin/sh", "-c", "bun run copy-i18n && bun run copy-docker && bun run logo && cd frontend && bun run build:static && caddy run --config /app/docker/frontend/Caddyfile --adapter caddyfile"]

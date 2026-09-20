@@ -157,7 +157,7 @@ template_heavy            17       4      13   76.47%
 | `--token` | `$CAPTCHA_TEST_TOKEN` | 繞過人機驗證的 token |
 | `--allow-cache` | 關 | 允許命中後端快取 |
 | `--max-vus` | `300` | 單一級距的 VU 上限 |
-| `--timeout` | `120s` | 單一 `/build` 請求的逾時 |
+| `--timeout` | `120s` | 單一 `/api/build` 請求的逾時 |
 | `--max-errors-per-vu` | `40` | 每個 VU 最多記錄幾筆錯誤明細 |
 | `--max-errors-per-level` | `500` | 每個級距最多保留幾筆錯誤明細 |
 | `--out` / `--name` | `./results` / 時間戳 | 輸出位置 |

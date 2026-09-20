@@ -1,6 +1,9 @@
 import * as z from "zod";
 import { makeAPI } from "@/lib/server/api";
-import { PRIVATE_BUILDER_NODE_ENDPOINT } from "astro:env/server";
+import {
+    PRIVATE_BUILDER_NODE_ENDPOINT,
+    PRIVATE_BUILDER_NODE_KEY,
+} from "astro:env/server";
 
 export const prerender = false;
 
@@ -25,6 +28,11 @@ export const buildAPI = makeAPI({
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                // The middleware already checked the user's token. The builder
+                // node checks its own Authorization header, so authenticate as
+                // the frontend with a shared key (its CAPTCHA_TEST_TOKEN)
+                // instead of forwarding a token it cannot verify.
+                Authorization: `Bearer ${PRIVATE_BUILDER_NODE_KEY}`,
                 "X-Client-IP": clientAddress,
                 "X-PostHog-Session-ID":
                     request.headers.get("X-PostHog-Session-ID") || "",

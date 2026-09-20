@@ -61,8 +61,8 @@ function formatDuration(seconds: number | undefined): string {
 let apiData: StatusResponse | null = null;
 if (!PUBLIC_SKIP_API_FETCH) {
     try {
-        console.log(`Fetching stats from ${PUBLIC_BUILD_TIME_API_URL}/status`);
-        const res = await fetch(`${PUBLIC_BUILD_TIME_API_URL}/status`);
+        console.log(`Fetching stats from ${PUBLIC_BUILD_TIME_API_URL}/api/status`);
+        const res = await fetch(`${PUBLIC_BUILD_TIME_API_URL}/api/status`);
         if (res.ok) apiData = await res.json();
 
         if (!apiData) {

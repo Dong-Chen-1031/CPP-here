@@ -64,8 +64,16 @@ export async function fetchSharedCode(
         return { ok: false, errors: ["S3 bucket URL is not configured."] };
     }
     try {
+        // PUBLIC_S3_BUCKET_NAME is empty when the bucket is already part of
+        // the URL (e.g. an R2 custom domain), set for path-style S3 URLs.
+        const baseUrl = [
+            PUBLIC_S3_BUCKET_URL.replace(/\/+$/, ""),
+            PUBLIC_S3_BUCKET_NAME,
+        ]
+            .filter(Boolean)
+            .join("/");
         const respond = await axios.get(
-            `${PUBLIC_S3_BUCKET_URL}/${PUBLIC_S3_BUCKET_NAME}/${SHARE_KEY_PREFIX}${encodeURIComponent(shareId)}`,
+            `${baseUrl}/${SHARE_KEY_PREFIX}${encodeURIComponent(shareId)}`,
         );
 
         const parsed = ShareObjectSchema.safeParse(respond.data);

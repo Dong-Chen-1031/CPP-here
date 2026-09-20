@@ -22,9 +22,10 @@ _VERSION = "0.8.0"
 
 CENTER_URL = os.getenv("CENTER_URL", "")
 CENTER_TOKEN = os.getenv("CENTER_TOKEN", "")
-ENABLE_CENTER_CONSOLE = os.getenv("ENABLE_CENTER_CONSOLE") and bool(
-    CENTER_URL and CENTER_TOKEN
-)
+# Compare against "true" so ENABLE_CENTER_CONSOLE="false" doesn't turn it on.
+ENABLE_CENTER_CONSOLE = os.getenv(
+    "ENABLE_CENTER_CONSOLE", ""
+).lower() == "true" and bool(CENTER_URL and CENTER_TOKEN)
 
 # Startup (and every reload_settings()) blocks on this request, so keep it short.
 CENTER_CONSOLE_TIMEOUT = float(os.getenv("CENTER_CONSOLE_TIMEOUT", "3.0"))

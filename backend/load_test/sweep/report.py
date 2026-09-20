@@ -811,7 +811,7 @@ def build_report(run: dict[str, Any]) -> str:
 <p class="sub">每分鐘編譯請求數（RPM）與 p50 / p95 / p99 延遲、錯誤率的關聯。</p>
 
 <div class="meta">
-  <span><b>目標</b> {html.escape(run["config"]["base_url"])}/build</span>
+  <span><b>目標</b> {html.escape(run["config"]["base_url"])}/api/build</span>
   <span><b>開始</b> {started}</span>
   <span><b>每級距</b> {html.escape(run["config"]["duration"])}（冷卻 {html.escape(run["config"]["cooldown"])}）</span>
   <span><b>樣本</b> {html.escape(samples)}</span>

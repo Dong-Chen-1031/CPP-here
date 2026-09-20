@@ -109,9 +109,12 @@ export default defineConfig({
                 context: "client",
                 access: "public",
                 optional: true,
-                // Must match the backend's S3_BUCKET_NAME: shared code is read
-                // from `${PUBLIC_S3_BUCKET_URL}/${PUBLIC_S3_BUCKET_NAME}/share/<id>`.
-                default: "share",
+                // Shared code is read from
+                // `${PUBLIC_S3_BUCKET_URL}/${PUBLIC_S3_BUCKET_NAME}/share/<id>`,
+                // skipping the bucket segment when this is empty. Leave it empty
+                // for an R2 custom domain; set it to the backend's S3_BUCKET_NAME
+                // for a path-style S3 URL.
+                default: "",
             }),
             PRIVATE_JWT_SECRET: envField.string({
                 context: "server",
@@ -149,38 +152,20 @@ export default defineConfig({
                 optional: true,
                 default: "",
             }),
-            PRIVATE_S3_ENDPOINT_URL: envField.string({
-                context: "server",
-                access: "secret",
-                optional: true,
-                url: true,
-                default: "",
-            }),
-            PRIVATE_S3_KEY_ID: envField.string({
-                context: "server",
-                access: "secret",
-                optional: true,
-                default: "",
-            }),
-            PRIVATE_S3_ACCESS_KEY: envField.string({
-                context: "server",
-                access: "secret",
-                optional: true,
-                default: "",
-            }),
-            PRIVATE_S3_BUCKET_NAME: envField.string({
-                context: "server",
-                access: "secret",
-                optional: true,
-                default: "",
-            }),
-
             // TODO: Remove this after the complete migration to the new central control architecture.
             PRIVATE_BUILDER_NODE_ENDPOINT: envField.string({
                 context: "server",
                 access: "secret",
                 optional: true,
                 default: "http://127.0.0.1:8000",
+            }),
+            // Sent as the bearer token to the builder node; must equal its
+            // CAPTCHA_TEST_TOKEN, or the node needs BYPASS_CAPTCHA="true".
+            PRIVATE_BUILDER_NODE_KEY: envField.string({
+                context: "server",
+                access: "secret",
+                optional: true,
+                default: "",
             }),
         },
     },

@@ -1,5 +1,5 @@
 /**
- * k6 load test — POST /build
+ * k6 load test — POST /api/build
  *
  * 使用 CAPTCHA_TEST_TOKEN 繞過人機驗證。
  *
@@ -130,7 +130,7 @@ export default function () {
         cpp_version: sample.cpp_version,
     });
 
-    const res = http.post(`${BASE_URL}/build`, payload, {
+    const res = http.post(`${BASE_URL}/api/build`, payload, {
         headers: HEADERS,
         tags: { sample: sample.label },
         timeout: "60s",

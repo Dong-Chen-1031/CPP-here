@@ -85,7 +85,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="第一個級距的編譯延遲預估（秒），用來配置 VU 數",
     )
     p.add_argument("--max-vus", type=int, default=300, help="單一級距的 VU 上限")
-    p.add_argument("--timeout", default="120s", help="單一 /build 請求的逾時")
+    p.add_argument("--timeout", default="120s", help="單一 /api/build 請求的逾時")
 
     p.add_argument(
         "--error-threshold",
@@ -512,7 +512,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.dry_run:
         out_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"目標：{args.url}/build")
+    print(f"目標：{args.url}/api/build")
     print(
         f"級距：{', '.join(str(r) for r in rpm_levels)} rpm"
         f"（每級 {args.duration}，冷卻 {args.cooldown}）"
