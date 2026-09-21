@@ -86,6 +86,11 @@ bun run frontend
 npm run frontend
 ```
 
+> [!TIP]
+> Every setting works out of the box. To change one, copy `frontend/.env.example` to
+> `frontend/.env` — each variable is documented inline with its default and whether it is
+> read at build time or at runtime.
+
 ### Backend
 
 Python 3.14 + UV is recommended.
@@ -115,6 +120,10 @@ bun run backend
 # or
 npm run backend
 ```
+
+> [!TIP]
+> Every setting works out of the box. To change one, copy `backend/.env.example` to
+> `backend/.env` — each variable is documented inline with its default.
 
 ### Run Frontend and Backend Together (Recommended)
 

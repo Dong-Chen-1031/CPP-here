@@ -1,90 +1,172 @@
+# Deployment template for the C++ Here backend. Every variable the backend reads is listed
+# here; a commented-out entry is already at its code default, so an active line means the
+# value inside Docker differs and the comment says why.
+# BACKEND_PORT and FRONTEND_PORT are read by the Docker CLI on the host, not by the service;
+# set them in a .env next to this file or in your shell.
+# Last synced 2026-09-21 at commit 0f82c44
 services:
   backend:
     image: ghcr.io/dong-chen-1031/cpp-here/backend:latest
     environment:
+      # Cache directory as seen on the Docker host. Build workers are sibling containers,
+      # so they mount this host path rather than the in-container one.
+      # Active here because the code default resolves inside the container.
       - HOST_CACHE_PATH=${PWD}/cache
-        # this env tell the backend the cache path on the host machine. 
-        # So when it starts sub containers for wasm builds, it can mount the same cache path to speed up builds and share cache between host and containers.
 
-      - DEV_MODE=false
-        # set to false for production deployment, true for local development
-        # If DEV_MODE is false, it will stop auto reloading and turn off api docs.
-        # Default: false
-
-      - PORT=8000
-        # Port for the backend server to listen on. 
-        # Default: 8000
-
+      # Frontend URL. Used for CORS and as the redirect target of "/". It must match the URL
+      # the browser actually opens the frontend at, or CORS blocks every request.
+      # Active here so it follows FRONTEND_PORT below.
+      # Default: "http://localhost:4321"
       - FRONTEND_URL=http://localhost:${FRONTEND_PORT:-4321}
-        # Frontend URL for CORS configuration. 
-        # Default: "http://localhost:4321"
 
+      # Public URL of this backend, as seen by the browser. Build results link to
+      # "${BACKEND_URL}/cache/<id>/build.wasm", which the browser downloads directly, so use
+      # the published host port or your domain — never "http://backend:8000".
+      # Active here so it follows BACKEND_PORT below.
+      # Default: "http://localhost:8000"
       - BACKEND_URL=http://localhost:${BACKEND_PORT:-8000}
-        # Public URL of the backend, as seen by the browser.
-        # Build results link to "${BACKEND_URL}/cache/<id>/build.wasm", which the browser downloads directly,
-        # so use the host port (see BACKEND_PORT) or your public domain, not "http://backend:8000".
-        # Default: "http://localhost:8000"
 
-      - TURNSTILE_SECRET=1x0000000000000000000000000000000AA
-        # Cloudflare Turnstile secret key, used by POST /api/verify.
-        # Must pair with the frontend's PUBLIC_TURNSTILE_SITE_KEY.
-        # Get a real secret key from Cloudflare Turnstile dashboard for production use.
-        # "1x0000000000000000000000000000000AA" always passes and is meant for development.
+      # Cloudflare Turnstile secret key, used by POST /api/verify. Must pair with the
+      # frontend's PUBLIC_TURNSTILE_SITE_KEY; replace both for production, because the
+      # default accepts any token and so the CAPTCHA protects nothing.
+      # Default: "1x0000000000000000000000000000000AA" (Cloudflare's always-pass test key)
+      # - TURNSTILE_SECRET=1x0000000000000000000000000000000AA
 
-      - JWT_SECRET=
-        # A secure random string used for signing JWT tokens. Generate one with: openssl rand -base64 32
-        # In production, make sure to set this to a strong, unique value and keep it secret.
-        # Default: not set (a random secret is generated on every start, so restarts log every user out).
-
-      - BYPASS_CAPTCHA=false
-        # Set to true to skip token checks on /api/build and /api/share. For local testing only.
-        # Must be true whenever the frontend has PUBLIC_BYPASS_CAPTCHA=true, since the frontend then sends no token.
-        # Default: false
-
-      - SHARE=false
-        # Whether to enable POST /api/share. It stays disabled unless all four S3_* values below are set.
-        # The frontend also needs PUBLIC_SHARE, PUBLIC_S3_BUCKET_URL and PUBLIC_S3_BUCKET_NAME.
-        # Default: false
-
-      - S3_ENDPOINT_URL=
-      - S3_ACCESS_KEY_ID=
-      - S3_SECRET_ACCESS_KEY=
-      - S3_BUCKET_NAME=
-        # S3-compatible storage for shared code (AWS S3, Cloudflare R2, MinIO, ...).
-        # Objects are stored at "<S3_BUCKET_NAME>/share/<share id>" and must be publicly readable.
-
+      # Terminal width rich formats log output for. Active here because a Compose service has
+      # no real TTY, so without it long log lines wrap in the middle.
+      # Default: not set (detected from the terminal, 80 when there is none)
       - COLUMNS=160
-        # how wide your terminal is.
-        # This is used to format the output of the backend server logs to prevent line breaks in the middle of log lines when running in Docker Compose.
 
-      - DOCKER_WORKER_TTL=1800
-        # Seconds a build worker container lives before killing itself.
-        # This is the backstop for ungraceful shutdowns (SIGKILL / OOM / host reboot):
-        # workers left behind by a dead backend disappear on their own within this window.
-        # Default: 1800
+      # Set to true for local development. When false, auto-reload stops and the API docs
+      # (/docs, /redoc) are turned off.
+      # Default: false
+      # - DEV_MODE=false
 
-      - DOCKER_ORPHAN_SWEEP=true
-        # Delete leftover workers from a previous run when the backend starts.
-        # Set to false if several backends share one Docker daemon, since the sweep
-        # cannot tell a dead instance's workers from a live sibling's.
-        # Default: true
+      # Port the backend listens on inside the container. Changing it also means changing the
+      # container side of the ports mapping below; use BACKEND_PORT to move the host port.
+      # Default: 8000
+      # - PORT=8000
 
-      # More settings (DOCKER_POOL_SIZE, CACHE_LIMIT, POSTHOG_API_KEY, ...) are listed in backend/.env.example.
+      # Python logging level as a number: 10 = DEBUG, 20 = INFO, 30 = WARNING, 40 = ERROR.
+      # Default: 20
+      # - LOG_LEVEL=20
 
-    # or use .env to set environment variables:
+      # Service name reported in logs and PostHog.
+      # Default: "C++ Here Backend"
+      # - SERVICE_NAME=C++ Here Backend
+
+      # Set to "true" to skip the ASCII banner printed at startup.
+      # Default: not set (the banner is printed)
+      # - NO_LOGO=true
+
+      # JSON list of origins allowed by CORS. Set it only when the frontend is reachable at
+      # more than one origin.
+      # Default: FRONTEND_URL, plus the same URL with 127.0.0.1 replaced by localhost
+      # - ALLOW_ORIGINS=["http://localhost:4321"]
+
+      # Signs and verifies the JWTs issued by /api/verify.
+      # Generate one with: openssl rand -base64 32
+      # Default: not set (a random secret is generated on every start, so restarts log every user out)
+      # - JWT_SECRET=
+
+      # Lifetime of tokens issued by POST /api/verify, in seconds.
+      # Default: 3600
+      # - JWT_EXPIRY_SECONDS=3600
+
+      # Skip token checks on /api/build and /api/share. For local testing only. Must be true
+      # whenever the frontend has PUBLIC_BYPASS_CAPTCHA=true, since it then sends no token.
+      # Default: false
+      # - BYPASS_CAPTCHA=false
+
+      # A static token always accepted as an Authorization bearer token. Set it to the same
+      # value as the frontend's PRIVATE_BUILDER_NODE_KEY when a Worker frontend proxies
+      # /api/build here. Also useful for load tests.
+      # Default: not set
+      # - CAPTCHA_TEST_TOKEN=
+
+      # Number of idle build worker containers kept warm. Raising it trades memory for
+      # latency on the first build after an idle period.
+      # Default: 15
+      # - DOCKER_POOL_SIZE=15
+
+      # Seconds a build worker container lives before killing itself. This is the backstop for
+      # ungraceful shutdowns (SIGKILL / OOM / host reboot): workers left behind by a dead
+      # backend disappear on their own within this window.
+      # Default: 1800
+      # - DOCKER_WORKER_TTL=1800
+
+      # Delete leftover workers from a previous run when the backend starts. Set to false if
+      # several backends share one Docker daemon, since the sweep cannot tell a dead
+      # instance's workers from a live sibling's.
+      # Default: true
+      # - DOCKER_ORPHAN_SWEEP=true
+
+      # Directory inside the container holding build outputs and the cache database; it is
+      # also served as "/<CACHE_PATH>/...". Changing it means changing the ./cache volume
+      # mount and HOST_CACHE_PATH above to match.
+      # Default: "cache"
+      # - CACHE_PATH=cache
+
+      # Maximum number of cached builds before the oldest are deleted.
+      # Default: 100
+      # - CACHE_LIMIT=100
+
+      # Seconds before a cached build expires.
+      # Default: 604800 (7 days)
+      # - CACHE_EXPIRY=604800
+
+      # SQLAlchemy URL of the cache database.
+      # Default: "sqlite+aiosqlite:///<CACHE_PATH>/cache.db"
+      # - CACHE_SQLITE_PATH=
+
+      # Enables POST /api/share. It stays off unless all four S3_* values below are set, and
+      # the frontend also needs PUBLIC_SHARE, PUBLIC_S3_BUCKET_URL and PUBLIC_S3_BUCKET_NAME.
+      # Default: false
+      # - SHARE=false
+
+      # S3-compatible storage for shared code (AWS S3, Cloudflare R2, MinIO, ...).
+      # Objects land at "<S3_BUCKET_NAME>/share/<share id>" and must be publicly readable.
+      # Required when SHARE=true.
+      # Default: "" (share stays disabled)
+      # - S3_ENDPOINT_URL=
+      # - S3_ACCESS_KEY_ID=
+      # - S3_SECRET_ACCESS_KEY=
+      # - S3_BUCKET_NAME=
+
+      # PostHog project API key. When set, logs and exceptions are sent to PostHog.
+      # Default: not set (disabled)
+      # - POSTHOG_API_KEY=
+
+      # PostHog ingestion host.
+      # Default: "https://us.i.posthog.com"
+      # - POSTHOG_BASE_URL=https://us.i.posthog.com
+
+      # Fetch settings from a Center Console at startup; what it returns overrides everything
+      # above. Only turns on when ENABLE_CENTER_CONSOLE is exactly "true" and both CENTER_URL
+      # and CENTER_TOKEN are set.
+      # Default: disabled
+      # - ENABLE_CENTER_CONSOLE=false
+      # - CENTER_URL=
+      # - CENTER_TOKEN=
+
+      # Timeout in seconds for the Center Console request. Startup blocks on it, so keep it short.
+      # Default: 3.0
+      # - CENTER_CONSOLE_TIMEOUT=3.0
+
+    # or put the same variables in a .env next to this file:
     # env_file: .env
 
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
       # Host port for the backend. The container always listens on 8000 (see PORT above),
-      # so set BACKEND_PORT to change the port on your machine.
+      # so set BACKEND_PORT to move it on your machine.
       # Backend and frontend must not share one variable, or both would try to bind it.
+      - "${BACKEND_PORT:-8000}:8000"
 
     volumes:
       - ./cache:/app/cache
       - ./logs:/app/logs
+      # Mount the Docker socket so the backend can start sibling containers for wasm builds.
       - /var/run/docker.sock:/var/run/docker.sock
-      # Mount Docker socket for DinD (Docker-in-Docker) to allow backend to manage Docker containers for wasm builds.
 
     stop_grace_period: 30s
     # The default 10s can expire while the backend is still removing its worker

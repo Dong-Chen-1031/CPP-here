@@ -45,13 +45,6 @@ export default defineConfig({
     },
     env: {
         schema: {
-            PUBLIC_FRONTEND_URL: envField.string({
-                context: "client",
-                access: "public",
-                optional: true,
-                url: true,
-                default: "http://localhost:4321",
-            }),
             PUBLIC_TURNSTILE_SITE_KEY: envField.string({
                 context: "client",
                 access: "public",
@@ -129,6 +122,9 @@ export default defineConfig({
                 // for a path-style S3 URL.
                 default: "",
             }),
+            // In production there is no default, so `astro build` fails fast when
+            // the secret is missing instead of shipping a Worker that signs
+            // tokens anyone could forge. NODE_ENV is set by the build command.
             PRIVATE_JWT_SECRET: envField.string({
                 context: "server",
                 access: "secret",
@@ -141,6 +137,9 @@ export default defineConfig({
                 optional: true,
                 default: 60 * 60, // 1 hour
             }),
+            // Also read server-side by src/middleware.ts, which skips the token
+            // check entirely when it is true. The Python backend then needs
+            // BYPASS_CAPTCHA="true" as well, since no token is sent.
             PUBLIC_BYPASS_CAPTCHA: envField.boolean({
                 context: "client",
                 access: "public",

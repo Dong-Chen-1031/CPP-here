@@ -94,6 +94,7 @@ class CenterConsoleSettingsSource(PydanticBaseSettingsSource):
 
 
 class Settings(BaseSettings):
+    # Documented for deployers in backend/.env.example and docker/docker-compose.yml.
     model_config = SettingsConfigDict(env_file_encoding="utf-8")
 
     SERVICE_NAME: str = Field(default="C++ Here Backend")
@@ -104,9 +105,9 @@ class Settings(BaseSettings):
 
     PORT: int = Field(default=8000)
 
+    # Reported as "service.version" in logs and PostHog. Tracks the release, so
+    # it is bumped with _VERSION rather than set per deployment.
     VERSION: str = Field(default=_VERSION)
-
-    LAST_VERSION: str = Field(default=_VERSION)
 
     FRONTEND_URL: str = Field(default="http://localhost:4321")
 
@@ -116,6 +117,7 @@ class Settings(BaseSettings):
 
     # Part of the build cache key: bump it whenever the emcc flags or
     # assets/worker.js change so stale cached builds aren't served.
+    # Not a deployment setting, so it is left out of the .env templates.
     BUILD_VERSION: str = Field(default="0.2.0")
 
     CACHE_LIMIT: int = Field(default=100)
@@ -128,7 +130,10 @@ class Settings(BaseSettings):
 
     CACHE_SQLITE_PATH: str = Field(default="")
 
-    TURNSTILE_SECRET: str = Field(default="")
+    # Cloudflare's always-pass test secret, so a fresh deployment verifies out of the
+    # box and matches the frontend's PRIVATE_TURNSTILE_SECRET_KEY default. It accepts
+    # any token, so production must replace it with a real key.
+    TURNSTILE_SECRET: str = Field(default="1x0000000000000000000000000000000AA")
 
     JWT_SECRET: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
 

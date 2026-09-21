@@ -24,10 +24,14 @@
             "bucket_name": "cpp-here",
         },
     ],
-    // Everything instance-specific lives in Cloudflare, not in this public repo:
-    //   - PRIVATE_BUILDER_NODE_ENDPOINT: `wrangler secret put` (secrets survive deploys).
+    // Everything instance-specific lives in Cloudflare, not in this public repo. Both sets
+    // are documented with their defaults in frontend/.env.example:
+    //   - The PRIVATE_* secrets (JWT_SECRET, TURNSTILE_SECRET_KEY, TURNSTILE_CHECK_IP,
+    //     TEST_JWT, BUILDER_NODE_ENDPOINT, BUILDER_NODE_KEY, JWT_EXPIRATION_SECONDS) are read
+    //     at request time: `wrangler secret put` each one, and secrets survive deploys.
     //   - The PUBLIC_* values are inlined into the client bundle by `astro build`, so they
-    //     belong in the Workers Builds build variables, not in the Worker's vars.
+    //     belong in the Workers Builds build variables, not in the Worker's vars. Changing
+    //     one in the dashboard does nothing until the next build.
     // `keep_vars` stops `wrangler deploy` from deleting vars set in the dashboard.
     "keep_vars": true,
     "observability": {

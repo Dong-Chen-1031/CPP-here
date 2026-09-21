@@ -81,6 +81,10 @@ bun run frontend
 npm run frontend
 ```
 
+> [!TIP]
+> 所有設定都有可用的預設值。要調整的話，把 `frontend/.env.example` 複製成 `frontend/.env`，
+> 檔案內每個變數都附有說明、預設值，以及它是在 build time 還是 runtime 被讀取。
+
 ### 後端
 推薦使用 Python 3.14 + UV
 需要確保 Docker 在執行
@@ -109,6 +113,10 @@ bun run backend
 # 或
 npm run backend
 ```
+
+> [!TIP]
+> 所有設定都有可用的預設值。要調整的話，把 `backend/.env.example` 複製成 `backend/.env`，
+> 檔案內每個變數都附有說明與預設值。
 
 ### 前後端同時執行（推薦）
 1. 依照前敘述完成環境設置
