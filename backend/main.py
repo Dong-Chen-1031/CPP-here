@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from router import api, direct_api
+from router import direct_api
 from services.resource_manager import lifespan
 from utils.log import logger
 from utils.posthog import posthog
@@ -48,7 +48,6 @@ app.add_middleware(
 
 
 app.include_router(direct_api.router)
-app.include_router(api.router, prefix="/api")
 
 
 @app.get("/")
