@@ -3,7 +3,7 @@
 # value inside Docker differs and the comment says why.
 # BACKEND_PORT and FRONTEND_PORT are read by the Docker CLI on the host, not by the services;
 # set them in a .env next to this file or in your shell.
-# Last synced 2026-09-21 at commit 0f82c44
+# Last synced 2026-09-22 at commit 4728ba4
 services:
   backend:
     image: ghcr.io/dong-chen-1031/cpp-here/backend:latest
@@ -190,13 +190,14 @@ services:
       # Default: "" (same origin)
       - PUBLIC_API_URL=http://localhost:${BACKEND_PORT:-8000}
 
-      # Backend URL used during the build to fetch landing-page stats from "/api/status".
-      # "backend" is the service name on the shared cpp-network, reachable while the
-      # frontend container builds.
+      # Full status endpoint the landing page reads its stats from during the build,
+      # fetched exactly as written. "backend" is the service name on the shared
+      # cpp-network, reachable while the frontend container builds; the path must match
+      # the backend's own /api/status route.
       # Ignored while PUBLIC_SKIP_API_FETCH is true, which is the image default.
-      # Scope: build-time (prerender only)
-      # Default: "http://127.0.0.1:8000"
-      - PUBLIC_BUILD_TIME_API_URL=http://backend:8000
+      # Scope: build-time (prerender only; never reaches the browser)
+      # Default: "http://127.0.0.1:8000/api/status"
+      - PRIVATE_BUILD_TIME_STATUS_URL=http://backend:8000/api/status
 
       # Disables interactive/TTY output from Astro and bun, which otherwise duplicates every
       # log line under Docker Compose. Read by the build tools, not by the app.

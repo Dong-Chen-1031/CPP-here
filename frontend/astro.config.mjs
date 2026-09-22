@@ -67,12 +67,17 @@ export default defineConfig({
                 optional: true,
                 default: true,
             }),
-            PUBLIC_BUILD_TIME_API_URL: envField.string({
-                context: "client",
+            // access "public" on the server context means "inlined at build from
+            // process.env", not "visible to the browser" - it stays out of the client
+            // bundle. A secret would be read from the Worker env instead, which the
+            // prerender step cannot see, so the default would always win.
+            PRIVATE_BUILD_TIME_STATUS_URL: envField.string({
+                context: "server",
                 access: "public",
                 optional: true,
                 url: true,
-                default: "http://127.0.0.1:8000",
+                // Full endpoint, not a base URL: the landing page fetches it as-is.
+                default: "http://127.0.0.1:8000/api/status",
             }),
             PUBLIC_GITHUB_LINK: envField.string({
                 context: "client",

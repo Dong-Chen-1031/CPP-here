@@ -1,10 +1,8 @@
 ---
 import { ZapIcon, FileTextIcon, DatabaseIcon, ClockIcon } from "@lucide/astro";
 import Hr from "@/components/landing/hr.astro";
-import {
-    PUBLIC_BUILD_TIME_API_URL,
-    PUBLIC_SKIP_API_FETCH,
-} from "astro:env/client";
+import { PUBLIC_SKIP_API_FETCH } from "astro:env/client";
+import { PRIVATE_BUILD_TIME_STATUS_URL } from "astro:env/server";
 
 interface Props {
     lang?: string;
@@ -61,8 +59,8 @@ function formatDuration(seconds: number | undefined): string {
 let apiData: StatusResponse | null = null;
 if (!PUBLIC_SKIP_API_FETCH) {
     try {
-        console.log(`Fetching stats from ${PUBLIC_BUILD_TIME_API_URL}/api/status`);
-        const res = await fetch(`${PUBLIC_BUILD_TIME_API_URL}/api/status`);
+        console.log(`Fetching stats from ${PRIVATE_BUILD_TIME_STATUS_URL}`);
+        const res = await fetch(PRIVATE_BUILD_TIME_STATUS_URL);
         if (res.ok) apiData = await res.json();
 
         if (!apiData) {
