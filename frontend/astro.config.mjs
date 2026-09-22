@@ -4,6 +4,7 @@ import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import cloudflare from "@astrojs/cloudflare";
+import { strictPrerender } from "./strict-prerender.mjs";
 import { DEV_JWT_SECRET } from "./env.defaults.mjs";
 
 const isProd = process.env.NODE_ENV === "production";
@@ -13,10 +14,12 @@ const isProd = process.env.NODE_ENV === "production";
 // https://astro.build/config
 export default defineConfig({
     output: "static",
-    adapter: cloudflare({
-        // prerenderEnvironment: "node",
-        imageService: "passthrough",
-    }),
+    adapter: strictPrerender(
+        cloudflare({
+            // prerenderEnvironment: "node",
+            imageService: "passthrough",
+        }),
+    ),
     site: "https://cpp.doong.me",
     integrations: [
         react(),
