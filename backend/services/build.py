@@ -13,7 +13,7 @@ from settings import settings
 from utils.log import logger
 from utils.scheduler import scheduler
 
-BUILDER_IMAGE = "ghcr.io/dong-chen-1031/safe-cpp2wasm:sha-80019ee"
+BUILDER_IMAGE = "ghcr.io/dong-chen-1031/safe-cpp2wasm:sha-58d3586"
 WORKER_NAME_PREFIX = "cpp-here-worker-"
 
 INSTANCE_ID = uuid.uuid4().hex
