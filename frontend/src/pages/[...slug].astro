@@ -22,7 +22,6 @@ if (byPassR2.includes(Astro.url.pathname)) {
             headers,
         });
     } else {
-        console.log(`url.pathname: ${Astro.url.pathname.substring(1)}`);
         Astro.response.status = 404;
     }
 }
