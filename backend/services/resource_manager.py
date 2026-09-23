@@ -51,5 +51,6 @@ async def lifespan(app: FastAPI):
     finally:
         await container_pool.shutdown()
         await resource_manager.close_all()
-        posthog_log.force_flush(timeout_millis=5000)
-        posthog_log.shutdown()
+        if posthog_log:
+            posthog_log.force_flush(timeout_millis=5000)
+            posthog_log.shutdown()

@@ -15,17 +15,19 @@ posthog = (
     else None
 )
 
-x_posthog_sesison_id = ContextVar("X-PostHog-Session-ID")
+x_posthog_session_id: ContextVar[str | None] = ContextVar(
+    "X-PostHog-Session-ID", default=None
+)
 
 
 def make_posthog_middleware(app: FastAPI):
     @app.middleware("http")
     async def posthog_middleware(request: Request, call_next):
-        token = x_posthog_sesison_id.set(request.headers.get("X-PostHog-Session-ID"))
+        token = x_posthog_session_id.set(request.headers.get("X-PostHog-Session-ID"))
         try:
             response = await call_next(request)
         finally:
-            x_posthog_sesison_id.reset(token)
+            x_posthog_session_id.reset(token)
 
         return response
 

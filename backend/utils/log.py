@@ -12,7 +12,7 @@ from rich.logging import RichHandler
 from rich.theme import Theme
 
 from settings import settings
-from utils.posthog import x_posthog_sesison_id
+from utils.posthog import x_posthog_session_id
 
 custom_theme = Theme({"info": "cyan", "warning": "yellow", "error": "bold red"})
 console = Console(theme=custom_theme)
@@ -46,6 +46,9 @@ file_handler.setFormatter(file_format)
 
 # Posthog
 def setup_posthog_logging():
+    if not settings.POSTHOG_API_KEY:
+        return None
+
     resource = Resource.create(
         {
             "service.name": settings.SERVICE_NAME,
@@ -59,7 +62,7 @@ def setup_posthog_logging():
 
     class PostHogLogFilter(logging.Filter):
         def filter(self, record):
-            if sid := x_posthog_sesison_id.get():
+            if sid := x_posthog_session_id.get():
                 record.posthogsessionId = sid
             return True
 
