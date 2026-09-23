@@ -1,7 +1,7 @@
 import { turnstileRefStore, verifyJwtStore } from "@/store/atom";
 import axios from "axios";
 import { getDefaultStore } from "jotai";
-import posthog from "posthog-js";
+import posthog from "posthog-js/dist/module.full.no-external";
 import { PUBLIC_API_URL } from "astro:env/client";
 import { addAlert } from "@/lib/alert";
 import type { APIResponse, API } from "@/lib/server/api";
