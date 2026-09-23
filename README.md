@@ -13,37 +13,16 @@ C++ Here is a next-generation in-browser (online) C++ editor built for competiti
 ## Features
 
 - **Error Highlighting**
-  > When an error occurs, the editor automatically analyzes it, highlights the corresponding line, and provides detailed diagnostics so users can quickly identify and fix the problem.
-
 - **Built-in Test Case Support**
-  > With the built-in test case system, users can input test data and run all test cases with one click. All test cases are executed in parallel inside browser workers, and clear color indicators make results easy to understand at a glance.
-
 - **Automatic Code Formatting**
-  > Integrates Clang-format WASM to format code with one click, with multiple style presets available.
-
 - **Internationalization and Localization (i18n)**
-  > Currently supports English and Traditional Chinese, and automatically switches based on browser language. More languages are planned, and contributions are welcome on [Crowdin](https://crowdin.com/project/cpp-here).
-
 - **Auto-completion**
-  > Provides C++ syntax auto-completion optimized for competitive programming.
-
 - **Responsive Design (RWD)**
-  > A well-designed responsive interface makes C++ Here easy to use on both desktop and mobile.
-
 - **Online Compilation and Instant Execution**
-  > Compiles C++ code into WebAssembly modules and executes them directly on the frontend, without resource limitations and without requiring backend compilation for each test run, greatly improving execution speed.
-
 - **Simple but Powerful Editor**
-  > The frontend offers a clean interface while remaining feature-complete. It is built with Astro and React components to deliver excellent load speed and smooth interactions.
-
 - **Smart Compilation Cache**
-  > The backend implements compilation-result caching. When users submit code identical to previous submissions, the system compares hash values and returns cached results directly, significantly reducing duplicate compilation time and server load.
-
 - **One-click Test Data Import**
-  > Import test data from competitive programming platforms with one click via the browser extension, with support for over 100 major platforms.
-
 - **Open Source and Free**
-  > C++ Here is fully open-source and welcomes community contributions for continuous improvement. It is also completely free to use for online C++ editing and execution.
 
 ## Tech Stack & Dependencies
 
@@ -67,12 +46,14 @@ The main difference between C++ Here and other online C++ editors is that we use
 Bun (recommended) or npm both work — the repo is a workspace monorepo, so run every command below from the repository root.
 
 1. Clone
+
 ```shell
 git clone https://github.com/Dong-Chen-1031/CPP-here.git
 cd CPP-here
 ```
 
 2. Install dependencies
+
 ```shell
 bun install
 # or
@@ -80,6 +61,7 @@ npm install
 ```
 
 3. Run frontend
+
 ```shell
 bun run frontend
 # or
@@ -97,12 +79,14 @@ Python 3.14 + UV is recommended.
 Make sure Docker is running.
 
 1. Clone
+
 ```shell
 git clone https://github.com/Dong-Chen-1031/CPP-here.git
 cd CPP-here
 ```
 
 2. Install dependencies
+
 ```shell
 uv venv
 source .venv/bin/activate  # Adjust for your operating system
@@ -110,11 +94,13 @@ uv pip install -r backend/requirements.txt
 ```
 
 3. Pull Docker image
+
 ```shell
 docker pull ghcr.io/dong-chen-1031/safe-cpp2wasm:latest
 ```
 
 4. Run backend
+
 ```shell
 bun run backend
 # or
@@ -129,6 +115,7 @@ npm run backend
 
 1. Complete the environment setup above.
 2. Start both frontend and backend with one command:
+
 ```shell
 bun run dev
 # or
@@ -145,6 +132,7 @@ docker compose up --pull always
 ```
 
 > [!TIP]
+>
 > - Add `-d` to the second command to run in background mode.
 > - You can modify environment variables based on the comments inside `docker-compose.yml`.
 
@@ -186,6 +174,7 @@ docker build \
 - The frontend uses Astro SSG mode. After running `bun run build`, it outputs a **fully static** website that can be easily deployed to services such as Cloudflare Pages and GitHub Pages. This approach is highly recommended because it improves loading speed and reduces backend workload.
 
 - Deploy frontend with Docker Compose in one command (the image uses Caddy as the web server):
+
 ```shell
 curl -sS "https://cpp.doong.me/script/frontend/docker-compose.yml" > docker-compose.yml
 docker compose up --pull always
