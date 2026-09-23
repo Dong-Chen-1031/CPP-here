@@ -28,11 +28,16 @@ jobs:
                   python -m pip install --upgrade pip
                   # Pinned: an unpinned Ruff means a new release can enable new
                   # default rules and fail CI on code that did not change.
+                  # Keep in sync with .lintstagedrc.mjs and the root `format` script.
                   pip install -r requirements.txt 'ruff==0.14.13'
 
             - name: Lint
               working-directory: backend
               run: ruff check .
+
+            - name: Format check
+              working-directory: backend
+              run: ruff format --check .
 
             - name: Import smoke test
               working-directory: backend
@@ -43,7 +48,7 @@ jobs:
                   python -c "import main"
 
     frontend:
-        name: Frontend type check
+        name: Frontend format & type check
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
@@ -57,6 +62,9 @@ jobs:
             - name: Install dependencies
               # No --frozen-lockfile: bun.lock is gitignored in this repo.
               run: bun install
+
+            - name: Format check
+              run: bun run format:check
 
             - name: Copy i18n resources
               run: bun run copy-i18n

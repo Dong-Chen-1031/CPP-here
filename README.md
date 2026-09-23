@@ -122,6 +122,17 @@ bun run dev
 npm run dev
 ```
 
+### Code Formatting
+
+`bun install` / `npm install` sets up a Git pre-commit hook (Husky + lint-staged) that formats
+staged files before each commit: Prettier for `frontend/`, Ruff for `backend/` Python files.
+Ruff runs through `uvx`, so [uv](https://docs.astral.sh/uv/) must be installed. CI runs the same checks.
+
+```shell
+bun run format        # format frontend and backend
+bun run format:check  # check frontend only, as CI does
+```
+
 ## Deployment
 
 ### Full deployment with Docker Compose

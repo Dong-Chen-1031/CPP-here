@@ -16,7 +16,10 @@
         "ext:firefox": "cd extensions && npm run dev:firefox",
         "docs": "cd docs && npm run dev",
         "docs:build": "cd docs && npm run build",
-        "build:mac": "npx --yes pake-cli@3.15.6 \"https://cpp.doong.me/editor?desktop=true\" --name \"CPP Here\" --icon \"https://cpp.doong.me/web-app-manifest-512x512.png\" --maximize --user-agent \"C++ Here Desktop\" --hide-title-bar"
+        "build:mac": "npx --yes pake-cli@3.15.6 \"https://cpp.doong.me/editor?desktop=true\" --name \"CPP Here\" --icon \"https://cpp.doong.me/web-app-manifest-512x512.png\" --maximize --user-agent \"C++ Here Desktop\" --hide-title-bar",
+        "format": "prettier --write frontend && cd backend && uvx ruff@0.14.13 check --fix . && uvx ruff@0.14.13 format .",
+        "format:check": "prettier --check frontend",
+        "prepare": "husky"
     },
     "dependencies": {
         "concurrently": "^10.0.3"
@@ -26,6 +29,8 @@
         "extensions"
     ],
     "devDependencies": {
+        "husky": "^9.1.7",
+        "lint-staged": "^17.5.1",
         "prettier": "^3.9.6",
         "prettier-plugin-astro": "^1.0.0",
         "shx": "^0.4.0"

@@ -30,9 +30,7 @@ async def status() -> StatusResponse:
 
     except Exception as e:
         logger.error(f"Failed to get build stats: {e}")
-        raise HTTPException(
-            status_code=500, detail="Failed to get build stats"
-        ) from e
+        raise HTTPException(status_code=500, detail="Failed to get build stats") from e
 
 
 @router.get("/health")
