@@ -63,7 +63,7 @@ def setup_posthog_logging():
     class PostHogLogFilter(logging.Filter):
         def filter(self, record):
             if sid := x_posthog_session_id.get():
-                record.posthogsessionId = sid
+                record.sessionId = sid
             return True
 
     otlp_exporter = OTLPLogExporter(
