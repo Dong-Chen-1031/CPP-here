@@ -12,6 +12,7 @@ from rich.logging import RichHandler
 from rich.theme import Theme
 
 from settings import settings
+from utils.posthog import x_posthog_sesison_id
 
 custom_theme = Theme({"info": "cyan", "warning": "yellow", "error": "bold red"})
 console = Console(theme=custom_theme)
@@ -44,7 +45,7 @@ file_handler.setFormatter(file_format)
 
 
 # Posthog
-if settings.POSTHOG_API_KEY:
+def setup_posthog_logging():
     resource = Resource.create(
         {
             "service.name": settings.SERVICE_NAME,
@@ -56,6 +57,12 @@ if settings.POSTHOG_API_KEY:
     logger_provider = LoggerProvider(resource=resource)
     set_logger_provider(logger_provider)
 
+    class PostHogLogFilter(logging.Filter):
+        def filter(self, record):
+            if sid := x_posthog_sesison_id.get():
+                record.posthogsessionId = sid
+            return True
+
     otlp_exporter = OTLPLogExporter(
         endpoint=f"{settings.POSTHOG_BASE_URL}/i/v1/logs",
         headers={"Authorization": f"Bearer {settings.POSTHOG_API_KEY}"},
@@ -63,7 +70,10 @@ if settings.POSTHOG_API_KEY:
 
     # Add processor
     logger_provider.add_log_record_processor(BatchLogRecordProcessor(otlp_exporter))
-    logger.addHandler(LoggingHandler(logger_provider=logger_provider))
+    handler = LoggingHandler(logger_provider=logger_provider)
+    handler.addFilter(PostHogLogFilter())
+    logger.addHandler(handler)
+    return logger_provider
 
 
 logger.addHandler(rich_handler)

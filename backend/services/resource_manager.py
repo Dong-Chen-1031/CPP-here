@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.concurrency import asynccontextmanager
 
 from utils.cache import init_db
-from utils.log import logger
+from utils.log import logger, setup_posthog_logging
 from utils.scheduler import scheduler
 
 
@@ -35,6 +35,7 @@ track = resource_manager.track
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    posthog_log = setup_posthog_logging()
     resource_manager.docker = await track(aiodocker.Docker())
     await init_db()
     scheduler.start()
@@ -50,3 +51,5 @@ async def lifespan(app: FastAPI):
     finally:
         await container_pool.shutdown()
         await resource_manager.close_all()
+        posthog_log.force_flush(timeout_millis=5000)
+        posthog_log.shutdown()
