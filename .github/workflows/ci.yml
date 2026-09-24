@@ -62,8 +62,7 @@ jobs:
                   bun-version: latest
 
             - name: Install dependencies
-              # No --frozen-lockfile: bun.lock is gitignored in this repo.
-              run: bun install
+              run: bun install --frozen-lockfile
 
             - name: Format check
               run: bun run format:check
