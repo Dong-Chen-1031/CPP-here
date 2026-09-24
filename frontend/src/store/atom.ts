@@ -112,9 +112,7 @@ const outputStorage: typeof jsonOutputStorage = {
             jsonOutputStorage.setItem(key, truncateOutput(value));
         } catch (e) {
             console.warn("Failed to persist output to localStorage:", e);
-            try {
-                jsonOutputStorage.removeItem(key);
-            } catch {}
+            jsonOutputStorage.removeItem(key);
         }
     },
 };
