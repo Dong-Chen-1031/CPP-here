@@ -1,5 +1,10 @@
 import { atom } from "jotai";
-import { atomWithStorage, RESET, useResetAtom } from "jotai/utils";
+import {
+    atomWithStorage,
+    createJSONStorage,
+    RESET,
+    useResetAtom,
+} from "jotai/utils";
 import { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import type { RefObject } from "react";
 import type { TurnstileInstance } from "@marsidev/react-turnstile";
@@ -80,7 +85,44 @@ export const cppVersionStore = atomWithStorage<string>(
 export const inputStore = atomWithStorage<string>("input", "", undefined, {
     getOnInit: true,
 });
-export const outputStore = atomWithStorage<OutputCase[]>("output", []);
+const MAX_PERSISTED_OUTPUT_CHARS = 200_000;
+const OUTPUT_TRUNCATED_MARKER = "[... output truncated ...]\n";
+
+function truncateOutput(output: OutputCase[]): OutputCase[] {
+    const total = output.reduce((sum, o) => sum + o.content.length, 0);
+    if (total <= MAX_PERSISTED_OUTPUT_CHARS) return output;
+    const perCase = Math.floor(MAX_PERSISTED_OUTPUT_CHARS / output.length);
+    return output.map((o) =>
+        o.content.length <= perCase
+            ? o
+            : {
+                  ...o,
+                  content: OUTPUT_TRUNCATED_MARKER + o.content.slice(-perCase),
+              },
+    );
+}
+
+// Program output can be very large, so persist only its tail and never let a
+// full localStorage break the run.
+const jsonOutputStorage = createJSONStorage<OutputCase[]>();
+const outputStorage: typeof jsonOutputStorage = {
+    ...jsonOutputStorage,
+    setItem(key, value) {
+        try {
+            jsonOutputStorage.setItem(key, truncateOutput(value));
+        } catch (e) {
+            console.warn("Failed to persist output to localStorage:", e);
+            try {
+                jsonOutputStorage.removeItem(key);
+            } catch {}
+        }
+    },
+};
+export const outputStore = atomWithStorage<OutputCase[]>(
+    "output",
+    [],
+    outputStorage,
+);
 export const runModeStore = atomWithStorage<"single" | "all">(
     "runMode",
     "single",
