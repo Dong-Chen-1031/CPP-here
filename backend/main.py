@@ -17,7 +17,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from router import direct_api
 from services.resource_manager import lifespan
 from utils.log import logger
-from utils.posthog import make_posthog_middleware, posthog
+from utils.posthog import add_posthog_middleware, posthog, setup_posthog_tracer
 
 if settings.DEV_MODE:
     logger.info("🚧 Running in development mode")
@@ -50,7 +50,10 @@ app.add_middleware(
 
 app.include_router(direct_api.router)
 app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=6)
-make_posthog_middleware(app)
+
+if settings.POSTHOG_API_KEY:
+    add_posthog_middleware(app)
+    setup_posthog_tracer(app)
 
 
 @app.get("/")

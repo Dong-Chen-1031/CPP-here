@@ -1,7 +1,6 @@
 import { turnstileRefStore, verifyJwtStore } from "@/store/atom";
 import axios from "axios";
 import { getDefaultStore } from "jotai";
-import posthog from "posthog-js/dist/module.full.no-external";
 import { PUBLIC_API_URL } from "astro:env/client";
 import { addAlert } from "@/lib/alert";
 import type { APIResponse, API } from "@/lib/server/api";
@@ -17,13 +16,9 @@ const apiAxios = axios.create({
 
 apiAxios.interceptors.request.use((config) => {
     const jwt = defaultStore.get(verifyJwtStore) || "";
-    const sessionId = posthog.get_session_id();
 
     if (jwt) {
         config.headers.Authorization = `Bearer ${jwt}`;
-    }
-    if (sessionId) {
-        config.headers["X-PostHog-Session-ID"] = sessionId;
     }
     return config;
 });

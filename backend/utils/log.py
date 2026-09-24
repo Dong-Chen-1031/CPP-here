@@ -2,17 +2,11 @@ import logging
 import os
 from logging.handlers import TimedRotatingFileHandler
 
-from opentelemetry._logs import set_logger_provider
-from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
-from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
-from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
-from opentelemetry.sdk.resources import Resource
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.theme import Theme
 
 from settings import settings
-from utils.posthog import x_posthog_session_id
 
 custom_theme = Theme({"info": "cyan", "warning": "yellow", "error": "bold red"})
 console = Console(theme=custom_theme)
@@ -42,41 +36,6 @@ file_handler = TimedRotatingFileHandler(
 file_handler.setLevel(settings.LOG_LEVEL)
 file_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 file_handler.setFormatter(file_format)
-
-
-# Posthog
-def setup_posthog_logging():
-    if not settings.POSTHOG_API_KEY:
-        return None
-
-    resource = Resource.create(
-        {
-            "service.name": settings.SERVICE_NAME,
-            "service.version": settings.VERSION,
-            "deployment.environment": "dev" if settings.DEV_MODE else "prod",
-        }
-    )
-
-    logger_provider = LoggerProvider(resource=resource)
-    set_logger_provider(logger_provider)
-
-    class PostHogLogFilter(logging.Filter):
-        def filter(self, record):
-            if sid := x_posthog_session_id.get():
-                record.sessionId = sid
-            return True
-
-    otlp_exporter = OTLPLogExporter(
-        endpoint=f"{settings.POSTHOG_BASE_URL}/i/v1/logs",
-        headers={"Authorization": f"Bearer {settings.POSTHOG_API_KEY}"},
-    )
-
-    # Add processor
-    logger_provider.add_log_record_processor(BatchLogRecordProcessor(otlp_exporter))
-    handler = LoggingHandler(logger_provider=logger_provider)
-    handler.addFilter(PostHogLogFilter())
-    logger.addHandler(handler)
-    return logger_provider
 
 
 logger.addHandler(rich_handler)
