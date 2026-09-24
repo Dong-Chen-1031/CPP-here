@@ -9,7 +9,7 @@ on:
 
 jobs:
     backend:
-        name: Backend lint & import smoke test
+        name: Backend lint, type check & import smoke test
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
@@ -29,7 +29,7 @@ jobs:
                   # Pinned: an unpinned Ruff means a new release can enable new
                   # default rules and fail CI on code that did not change.
                   # Keep in sync with .lintstagedrc.mjs and the root `format` script.
-                  pip install -r requirements.txt 'ruff==0.14.13'
+                  pip install -r requirements.txt 'ruff==0.14.13' 'ty==0.0.83'
 
             - name: Lint
               working-directory: backend
@@ -39,10 +39,12 @@ jobs:
               working-directory: backend
               run: ruff format --check .
 
+            - name: Type check
+              working-directory: backend
+              run: ty check --python "$(which python)"
+
             - name: Import smoke test
               working-directory: backend
-              # Catches "the app can't even start" regressions, such as a module
-              # level name that only exists when an optional setting is present.
               run: |
                   mkdir -p cache logs
                   python -c "import main"
