@@ -40,3 +40,5 @@ file_handler.setFormatter(file_format)
 
 logger.addHandler(rich_handler)
 logger.addHandler(file_handler)
+
+logging.getLogger("apscheduler").setLevel(logging.WARNING)
