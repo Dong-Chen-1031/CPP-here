@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from aiodocker import DockerError
+from opentelemetry import trace
 
 from services.resource_manager import resource_manager
 from settings import settings
@@ -20,6 +21,8 @@ INSTANCE_ID = uuid.uuid4().hex
 
 TTL_SAFETY_MARGIN = 120
 MAINTENANCE_INTERVAL = 60
+
+tracer = trace.get_tracer(__name__)
 
 
 class BuildError(Exception):
@@ -201,21 +204,30 @@ class ContainerPool:
     @asynccontextmanager
     async def acquire(self):
         container = None
-        while container is None:
-            try:
-                candidate = self.pool.get_nowait()
-            except asyncio.QueueEmpty:
-                container = await self._create_container()
-                break
-            self._spawn_replenish()
-            if self._is_usable(candidate):
-                container = candidate
-            else:
-                await self._destroy(candidate)
+        with tracer.start_as_current_span("build.acquire_container") as span:
+            span.set_attribute("build.pool.size", self.pool.qsize())
+            expired = 0
+            while container is None:
+                try:
+                    candidate = self.pool.get_nowait()
+                except asyncio.QueueEmpty:
+                    container = await self._create_container()
+                    span.set_attribute("build.container.source", "created")
+                    break
+                self._spawn_replenish()
+                if self._is_usable(candidate):
+                    container = candidate
+                    span.set_attribute("build.container.source", "pool")
+                else:
+                    expired += 1
+                    await self._destroy(candidate)
+            span.set_attribute("build.pool.expired_discarded", expired)
+            span.set_attribute("build.container.id", container.id[:12])
         try:
             yield container
         finally:
-            await self._destroy(container)
+            with tracer.start_as_current_span("build.release_container"):
+                await self._destroy(container)
 
     async def shutdown(self):
         self._closing = True
@@ -294,31 +306,36 @@ async def build(
         # acquire() itself can raise DockerError (it creates a container when the
         # pool is empty), so the try block has to wrap it too.
         async with container_pool.acquire() as container:
-            execute = await container.exec(
-                ["sh", "-c", cmd],
-                stdout=True,
-                stderr=True,
-            )
-
             log_parts: list[str] = []
 
-            async def _drain():
-                async with execute.start(detach=False) as stream:
-                    while True:
-                        msg = await stream.read_out()
-                        if msg is None:
-                            break
-                        log_parts.append(msg.data.decode(errors="replace"))
+            # A non-zero exit is the user's compile error, not a server fault,
+            # so it is raised after this span closes and doesn't mark it failed.
+            with tracer.start_as_current_span("build.emcc") as span:
+                span.set_attribute("build.cpp_version", cpp_version)
+                execute = await container.exec(
+                    ["sh", "-c", cmd],
+                    stdout=True,
+                    stderr=True,
+                )
 
-            try:
-                await asyncio.wait_for(_drain(), timeout=60)
-            except TimeoutError as e:
-                logger.warning("Container exec timeout")
-                raise BuildError("Build timed out") from e
+                async def _drain():
+                    async with execute.start(detach=False) as stream:
+                        while True:
+                            msg = await stream.read_out()
+                            if msg is None:
+                                break
+                            log_parts.append(msg.data.decode(errors="replace"))
 
-            exec_info = await execute.inspect()
-            exit_code = exec_info["ExitCode"]
-            output = "".join(log_parts)
+                try:
+                    await asyncio.wait_for(_drain(), timeout=60)
+                except TimeoutError as e:
+                    logger.warning("Container exec timeout")
+                    raise BuildError("Build timed out") from e
+
+                exec_info = await execute.inspect()
+                exit_code = exec_info["ExitCode"]
+                output = "".join(log_parts)
+                span.set_attribute("build.exit_code", exit_code)
 
             if exit_code != 0:
                 logger.warning(
@@ -335,15 +352,16 @@ async def build(
                 await asyncio.to_thread(shutil.rmtree, output_dir, ignore_errors=True)
                 raise BuildError(f"Build failed (exit {exit_code})", build_logs=output)
 
-            tar = await container.get_archive("/tmp/out")
-            output_dir.mkdir(parents=True, exist_ok=True)
-            for member in tar.getmembers():
-                if member.isfile():
-                    file_obj = tar.extractfile(member)
-                    if file_obj:
-                        (output_dir / Path(member.name).name).write_bytes(
-                            file_obj.read()
-                        )
+            with tracer.start_as_current_span("build.extract_output"):
+                tar = await container.get_archive("/tmp/out")
+                output_dir.mkdir(parents=True, exist_ok=True)
+                for member in tar.getmembers():
+                    if member.isfile():
+                        file_obj = tar.extractfile(member)
+                        if file_obj:
+                            (output_dir / Path(member.name).name).write_bytes(
+                                file_obj.read()
+                            )
 
             return output
 

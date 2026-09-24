@@ -9,6 +9,7 @@ from typing import Literal
 import aiofiles
 from aiofiles import open
 from fastapi import APIRouter, Depends
+from opentelemetry import trace
 from prometheus_client import Counter, Histogram
 from pydantic import BaseModel, Field
 
@@ -20,6 +21,7 @@ from utils.cache import add_build_stats
 from utils.log import logger
 
 router = APIRouter()
+tracer = trace.get_tracer(__name__)
 
 label_names = ["status", "cpp_version"]
 BUILD_COUNT = Counter("cpp_build_total", "Total number of C++ builds", label_names)
@@ -114,11 +116,19 @@ def log_build_request(func):
         elapsed = time.perf_counter() - start_time
         BUILD_DURATION.labels(**labels).observe(elapsed)
 
-        await add_build_stats(
-            lines=code_lines,
-            wasm_size_bytes=result.wasm_size_bytes or 0,
-            duration_seconds=elapsed,
-        )
+        span = trace.get_current_span()
+        span.set_attribute("build.status", result.metric_status)
+        span.set_attribute("build.cpp_version", cpp_version)
+        span.set_attribute("build.code_lines", code_lines)
+        if result.wasm_size_bytes:
+            span.set_attribute("build.wasm_size_bytes", result.wasm_size_bytes)
+
+        with tracer.start_as_current_span("build.record_stats"):
+            await add_build_stats(
+                lines=code_lines,
+                wasm_size_bytes=result.wasm_size_bytes or 0,
+                duration_seconds=elapsed,
+            )
 
         return result
 
@@ -133,6 +143,13 @@ def get_size(path: str | pathlib.Path) -> int:
 
 async def lookup_cache(case_id: str) -> BuildResponse | None:
     """Return a cached build, or None if there is no usable cache entry."""
+    with tracer.start_as_current_span("build.cache_lookup") as span:
+        result = await _lookup_cache(case_id)
+        span.set_attribute("build.cache_hit", result is not None)
+        return result
+
+
+async def _lookup_cache(case_id: str) -> BuildResponse | None:
     cache_entry = await cache.get_cache(case_id)
     if not cache_entry:
         return None
@@ -161,6 +178,7 @@ async def build_cpp(
 ) -> BuildResponse:
     global WORKER_CODE
     case_id = request.hash()
+    trace.get_current_span().set_attribute("build.case_id", case_id)
 
     # Claiming the build must be atomic: an `if case_id in _in_flight` check
     # followed by an await lets two identical requests both start compiling and
@@ -178,7 +196,8 @@ async def build_cpp(
             owns_build = True
             break
         # Someone else is building the same code — wait, then re-check the cache.
-        await owner.wait()
+        with tracer.start_as_current_span("build.wait_in_flight"):
+            await owner.wait()
 
     if not owns_build:
         logger.warning(
@@ -214,19 +233,20 @@ async def build_cpp(
                 metric_status="failure",
             )
 
-        if not WORKER_CODE:
-            async with aiofiles.open("assets/worker.js") as f:
-                WORKER_CODE = await f.read()
+        with tracer.start_as_current_span("build.finalize"):
+            if not WORKER_CODE:
+                async with aiofiles.open("assets/worker.js") as f:
+                    WORKER_CODE = await f.read()
 
-        worker_code = f"\n\n// Worker code\n{WORKER_CODE}"
-        async with aiofiles.open(f"{output_path}/{js_name}") as f:
-            js_code = await f.read()
-        async with aiofiles.open(f"{output_path}/{js_name}", mode="a") as f:
-            await f.write(worker_code)
+            worker_code = f"\n\n// Worker code\n{WORKER_CODE}"
+            async with aiofiles.open(f"{output_path}/{js_name}") as f:
+                js_code = await f.read()
+            async with aiofiles.open(f"{output_path}/{js_name}", mode="a") as f:
+                await f.write(worker_code)
 
-        js_code += worker_code
+            js_code += worker_code
 
-        await cache.add_cache(case_id)
+            await cache.add_cache(case_id)
 
         return BuildResponse(
             ok=True,

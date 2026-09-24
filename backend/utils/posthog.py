@@ -86,4 +86,6 @@ def setup_posthog_tracer(app: FastAPI):
 
     provider.add_span_processor(BatchSpanProcessor(exporter))
     trace.set_tracer_provider(provider)
-    FastAPIInstrumentor.instrument_app(app)
+    # Skip the per-message ASGI receive/send child spans: every response yields
+    # several identical "http send" spans that only add noise to the trace.
+    FastAPIInstrumentor.instrument_app(app, exclude_spans=["receive", "send"])
