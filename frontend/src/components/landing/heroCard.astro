@@ -8,7 +8,7 @@ const formats = isProd ? (["avif", "webp"] as const) : (["webp"] as const);
 
 const mobileImages = await Promise.all(
     formats.flatMap((fmt) =>
-        [800, heroPhone.width].map((w) =>
+        [heroPhone.width].map((w) =>
             getImage({ src: heroPhone, format: fmt, width: w }),
         ),
     ),

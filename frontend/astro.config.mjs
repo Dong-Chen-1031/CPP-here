@@ -17,7 +17,7 @@ export default defineConfig({
     adapter: strictPrerender(
         cloudflare({
             // prerenderEnvironment: "node",
-            imageService: "passthrough",
+            imageService: "compile",
         }),
     ),
     site: "https://cpp.doong.me",
