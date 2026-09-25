@@ -26,13 +26,11 @@ cat "$INPUT_FILE" | docker run \
   --cap-drop ALL \
   --security-opt no-new-privileges:true \
   -v "$(pwd)/output:/out:rw" \
+  -e CPP_STD="${CPP_STD:-c++17}" \
   safe-cpp2wasm \
-  sh -c "    
+  sh -c "
     cat > /tmp/source.cpp
-    timeout 30s emcc /tmp/source.cpp -o /out/${BASENAME}.js \
-    -ftemplate-depth=50 \
-    -fconstexpr-depth=50 \
-    -fmacro-backtrace-limit=10
+    cpp-here-build \"\$CPP_STD\" /tmp/source.cpp /out/${BASENAME}.js
   "
 
 EXIT_CODE=$?

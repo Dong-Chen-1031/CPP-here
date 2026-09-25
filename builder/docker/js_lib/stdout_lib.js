@@ -12,8 +12,15 @@ addToLibrary({
     // OUTPUT_LIMIT_BYTES in C++ Here's frontend/src/config/runLimits.ts.
     $outputState:
         "{ total: 0, limit: 33554432, decoders: [null, new TextDecoder(), new TextDecoder()] }",
-    $flushOutputDecoders__deps: ["$outputState"],
+    // Replacing fd_write also replaces its __postset, which is where Emscripten
+    // registers flush_NO_FILESYSTEM() -> fflush(0) at exit. Without that, the
+    // last stdio buffer is never written: `printf("x")` or `cout << ans` with
+    // no trailing newline printed nothing. So flush stdio first, then the
+    // decoders (fflush goes through fd_write and may leave a partial UTF-8
+    // sequence behind).
+    $flushOutputDecoders__deps: ["$outputState", "fflush"],
     $flushOutputDecoders: () => {
+        _fflush(0);
         for (var fd = 1; fd <= 2; fd++) {
             var rest = outputState.decoders[fd].decode();
             if (rest) (fd === 1 ? out : err)(rest);

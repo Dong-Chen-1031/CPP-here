@@ -1,0 +1,72 @@
+#!/bin/bash
+# The single definition of how C++ Here compiles user code. Installed in the
+# builder image as /usr/local/bin/cpp-here-build and used by:
+#   - the backend (backend/services/build.py), for every build
+#   - builder/docker/dockerfile, to warm the cache and build the PCHs
+#   - builder/test/regression, for every test case
+# so the flags, the PCHs built from them, and what the tests check can't drift.
+#
+# Usage:
+#   cpp-here-build <std> <source.cpp> <output.js> [--no-pch]
+#   cpp-here-build --make-pch <std> <output.pch>
+set -euo pipefail
+
+JS_LIB=/usr/local/share/cpp-here
+PCH_DIR=/emsdk/pch
+STDCXX=/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/bits/stdc++.h
+
+# EMCC_CORES doesn't reach wasm-ld's own thread pool (see -Wl,--threads=1)
+export EMCC_CORES=1
+
+# Language flags. The PCHs are built with these too, and clang rejects a PCH
+# built with different ones, so changing them means rebuilding the image
+# (which happens anyway: this file is part of it).
+COMPILE_FLAGS=(
+    -ftemplate-depth=50
+    -fconstexpr-depth=50
+    -fmacro-backtrace-limit=10
+)
+
+LINK_FLAGS=(
+    # EMCC_CORES doesn't reach wasm-ld's own thread pool, which is what
+    # actually blew up under load; cap it to match the container's 1 CPU.
+    -Wl,--threads=1
+    -sMODULARIZE=1
+    -sEXPORT_NAME=createMyModule
+    -sENVIRONMENT=worker
+    -sEXIT_RUNTIME=1
+    -sFILESYSTEM=0
+    --js-library "$JS_LIB/stdin_lib.js"
+    # 取代逐位元組的 stdout 緩衝並限制輸出量（OLE）
+    --js-library "$JS_LIB/stdout_lib.js"
+    -sSTACK_SIZE=8388608          # 8 MB stack
+    -sINITIAL_MEMORY=33554432     # 初始 32 MB
+    -sALLOW_MEMORY_GROWTH=1       # 按需成長
+    -sMAXIMUM_MEMORY=536870912    # 上限 512 MB（MLE）
+    # 超過上限時直接 abort 並回報 OOM，而不是讓 malloc 回傳 NULL；
+    # 開啟記憶體成長時預設是關閉的，所以要明確設定
+    -sABORTING_MALLOC=1
+)
+
+if [ "${1:-}" = --make-pch ]; then
+    exec emcc -x c++-header "$STDCXX" -o "$3" -std="$2" "${COMPILE_FLAGS[@]}"
+fi
+
+if [ $# -lt 3 ]; then
+    echo "usage: cpp-here-build <std> <source.cpp> <output.js> [--no-pch]" >&2
+    exit 2
+fi
+std=$1 src=$2 out=$3 mode=${4:-}
+
+# Use the precompiled bits/stdc++.h only when the source includes it:
+# -include-pch injects the whole header, which would otherwise pollute the
+# global namespace of programs that don't (y1, j0, ...). -std values without
+# a PCH (c++98) just compile normally.
+pch=()
+if [ "$mode" != --no-pch ] && [ -f "$PCH_DIR/stdc++-$std.pch" ] &&
+    grep -qE '^\s*#\s*include\s*[<"]bits/stdc\+\+\.h[>"]' "$src"; then
+    pch=(-include-pch "$PCH_DIR/stdc++-$std.pch")
+fi
+
+exec timeout 30s emcc "$src" -o "$out" -std="$std" "${pch[@]}" \
+    "${COMPILE_FLAGS[@]}" "${LINK_FLAGS[@]}"

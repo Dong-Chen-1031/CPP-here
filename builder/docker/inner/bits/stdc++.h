@@ -26,6 +26,9 @@
   *  This is an implementation file for a precompiled header.
   */
   
+#ifndef _CPP_HERE_BITS_STDCXX_H
+#define _CPP_HERE_BITS_STDCXX_H
+
  // 17.4.1.2 Headers
   
  // C
@@ -144,3 +147,67 @@
  // #include <syncstream>
  #include <version>
  #endif
+
+// C++23 headers (newer GCC versions of this file include them too); guarded
+// with __has_include since libc++ does not ship all of them yet
+#if __cplusplus > 202002L
+#if __has_include(<expected>)
+#include <expected>
+#endif
+#if __has_include(<flat_map>)
+#include <flat_map>
+#endif
+#if __has_include(<flat_set>)
+#include <flat_set>
+#endif
+#if __has_include(<mdspan>)
+#include <mdspan>
+#endif
+#if __has_include(<print>)
+#include <print>
+#endif
+#if __has_include(<spanstream>)
+#include <spanstream>
+#endif
+#if __has_include(<stacktrace>)
+#include <stacktrace>
+#endif
+#if __has_include(<stdfloat>)
+#include <stdfloat>
+#endif
+#endif
+
+// GCC's std::__gcd accepts any integer type, but libc++'s internal __gcd
+// only accepts unsigned types (and is only declared from C++17 on), so the
+// common `__gcd(a, b)` on int / long long fails to compile. Add non-template
+// overloads for every integer type: same-type calls prefer them over libc++'s
+// template, including libc++'s own calls from std::gcd, which give the same
+// results. The body copies GCC's (negative inputs give the same results as GCC).
+namespace std {
+#define _CPP_HERE_GCD(_Tp)                                                \
+  inline _LIBCPP_CONSTEXPR_SINCE_CXX14 _Tp __gcd(_Tp __m, _Tp __n) {      \
+    while (__n != 0) {                                                    \
+      _Tp __t = __m % __n;                                                \
+      __m = __n;                                                          \
+      __n = __t;                                                          \
+    }                                                                     \
+    return __m;                                                           \
+  }
+_CPP_HERE_GCD(signed char)
+_CPP_HERE_GCD(short)
+_CPP_HERE_GCD(int)
+_CPP_HERE_GCD(long)
+_CPP_HERE_GCD(long long)
+_CPP_HERE_GCD(unsigned char)
+_CPP_HERE_GCD(unsigned short)
+_CPP_HERE_GCD(unsigned int)
+_CPP_HERE_GCD(unsigned long)
+_CPP_HERE_GCD(unsigned long long)
+#ifdef __SIZEOF_INT128__
+_CPP_HERE_GCD(__int128)
+_CPP_HERE_GCD(unsigned __int128)
+#endif
+#undef _CPP_HERE_GCD
+} // namespace std
+
+#endif // _CPP_HERE_BITS_STDCXX_H
