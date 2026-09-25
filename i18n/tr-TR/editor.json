@@ -39,7 +39,8 @@
         "copyTip": "Copy first output",
         "copyThisCaseTip": "Copy output of this test case",
         "clearTip": "Clear output",
-        "noOutput": "No output yet."
+        "noOutput": "No output yet.",
+        "truncated": "Output is too long; only the first part is shown. Use copy to get the full output."
     },
     "testCase": {
         "label": "Test Case",
@@ -134,7 +135,9 @@
         "resetSettingsBtn": "Reset",
         "codeFormatStyle": "Code Format Style",
         "codeFormatStyleDesc": "Select a code formatting style.",
-        "cppVersion": "C++ Version"
+        "cppVersion": "C++ Version",
+        "timeLimit": "Time Limit (s)",
+        "timeLimitDesc": "Stop the program after this many seconds. Enter -1 for no limit."
     },
     "resize": {
         "loadingEditor": "Loading Editor"
@@ -153,5 +156,19 @@
         "receiveFailedDesc": "An error occurred while receiving the shared code. Please try again later.",
         "receiveSuccess": "Receive Successful",
         "receiveSuccessDesc": "The shared code has been received and applied to your editor."
+    },
+    "limit": {
+        "time": {
+            "title": "Time Limit Exceeded",
+            "description": "The program ran longer than {{seconds}} s and was stopped."
+        },
+        "output": {
+            "title": "Output Limit Exceeded",
+            "description": "The program printed more than {{size}} MiB and was stopped."
+        },
+        "memory": {
+            "title": "Memory Limit Exceeded",
+            "description": "The program used more than {{size}} MiB of memory and was stopped."
+        }
     }
 }
