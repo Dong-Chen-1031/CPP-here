@@ -39,7 +39,8 @@
         "copyTip": "複製第一筆輸出",
         "copyThisCaseTip": "複製此測資的輸出",
         "clearTip": "清除輸出",
-        "noOutput": "尚無輸出結果"
+        "noOutput": "尚無輸出結果",
+        "truncated": "Output is too long; only the first part is shown. Use copy to get the full output."
     },
     "testCase": {
         "label": "測資",
@@ -134,7 +135,9 @@
         "resetSettingsBtn": "重置",
         "codeFormatStyle": "格式化風格",
         "codeFormatStyleDesc": "選擇一個程式碼格式化風格。",
-        "cppVersion": "C++ 版本"
+        "cppVersion": "C++ 版本",
+        "timeLimit": "Time Limit (s)",
+        "timeLimitDesc": "Stop the program after this many seconds. Enter -1 for no limit."
     },
     "resize": {
         "loadingEditor": "正在載入編輯器"
@@ -153,5 +156,19 @@
         "receiveFailedDesc": "接收分享程式碼時發生錯誤，請稍後再試。",
         "receiveSuccess": "接收成功",
         "receiveSuccessDesc": "已成功接收分享的程式碼並套用至你的編輯器。"
+    },
+    "limit": {
+        "time": {
+            "title": "Time Limit Exceeded",
+            "description": "The program ran longer than {{seconds}} s and was stopped."
+        },
+        "output": {
+            "title": "Output Limit Exceeded",
+            "description": "The program printed more than {{size}} MiB and was stopped."
+        },
+        "memory": {
+            "title": "Memory Limit Exceeded",
+            "description": "The program used more than {{size}} MiB of memory and was stopped."
+        }
     }
 }
