@@ -42,3 +42,16 @@ logger.addHandler(rich_handler)
 logger.addHandler(file_handler)
 
 logging.getLogger("apscheduler").setLevel(logging.WARNING)
+
+
+class HealthCheckFilter(logging.Filter):
+    def filter(self, record):
+        args = record.args
+        return not (
+            isinstance(args, tuple)
+            and len(args) >= 3
+            and str(args[2]).split("?", 1)[0] == "/api/health"
+        )
+
+
+logging.getLogger("uvicorn.access").addFilter(HealthCheckFilter())
