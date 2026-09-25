@@ -246,10 +246,16 @@ class ContainerPool:
                 pass
             self._maintenance_job = None
 
-        for task in list(self._replenish_tasks):
-            task.cancel()
+        # Let in-flight replenishes finish instead of cancelling them: a cancel
+        # after Docker received the create request leaks the container (nothing
+        # holds it any more), while _replenish itself destroys what it creates
+        # once _closing is set. Cancel only what is still stuck after a while.
         if self._replenish_tasks:
-            await asyncio.gather(*self._replenish_tasks, return_exceptions=True)
+            _, pending = await asyncio.wait(list(self._replenish_tasks), timeout=10)
+            for task in pending:
+                task.cancel()
+            if pending:
+                await asyncio.gather(*pending, return_exceptions=True)
         while True:
             try:
                 container = self.pool.get_nowait()
