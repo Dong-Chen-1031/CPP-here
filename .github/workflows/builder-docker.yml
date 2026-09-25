@@ -24,6 +24,11 @@ on:
 env:
     REGISTRY: ghcr.io
     IMAGE_NAME: dong-chen-1031/safe-cpp2wasm
+    # Pushed for main and for pull requests from this repository (not forks),
+    # so a PR's backend image (backend-docker.yml pushes pr-N) can pull the
+    # builder tag it pins. tree-<hash> tags are content-addressed, so pushing
+    # them early is safe; latest only moves on main.
+    PUSH: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
 
 jobs:
     build:
@@ -45,7 +50,7 @@ jobs:
               uses: actions/checkout@v4
 
             - name: Log in to GitHub Container Registry
-              if: github.event_name != 'pull_request'
+              if: ${{ env.PUSH == 'true' }}
               uses: docker/login-action@v3
               with:
                   registry: ${{ env.REGISTRY }}
@@ -78,7 +83,7 @@ jobs:
 
             # Same inputs as the test build, so every layer comes from the cache
             - name: Build and push image by digest
-              if: github.event_name != 'pull_request'
+              if: ${{ env.PUSH == 'true' }}
               id: build
               uses: docker/build-push-action@v6
               with:
@@ -91,14 +96,14 @@ jobs:
                   cache-to: type=gha,mode=max,scope=builder-${{ matrix.platform }}
 
             - name: Export digest
-              if: github.event_name != 'pull_request'
+              if: ${{ env.PUSH == 'true' }}
               run: |
                   mkdir -p /tmp/digests
                   digest="${{ steps.build.outputs.digest }}"
                   touch "/tmp/digests/${digest#sha256:}"
 
             - name: Upload digest artifact
-              if: github.event_name != 'pull_request'
+              if: ${{ env.PUSH == 'true' }}
               uses: actions/upload-artifact@v4
               with:
                   name: builder-digest-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
@@ -109,7 +114,8 @@ jobs:
     merge:
         runs-on: ubuntu-latest
         needs: build
-        if: github.event_name != 'pull_request'
+        # Same condition as env.PUSH (the env context isn't available here)
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         permissions:
             contents: read
             packages: write
@@ -144,6 +150,7 @@ jobs:
                   tags: |
                       type=raw,value=latest,enable={{is_default_branch}}
                       type=raw,value=tree-${{ steps.tree.outputs.hash }}
+                      type=ref,event=pr
                       type=sha,prefix=sha-
 
             - name: Set up Docker Buildx

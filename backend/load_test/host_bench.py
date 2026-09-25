@@ -389,7 +389,18 @@ async def main() -> int:
 
         pool = B.ContainerPool()
         say("▸ 確認 builder 映像檔（沒有的話會 pull）…")
-        await pool._ensure_image()
+        try:
+            await pool._ensure_image()
+        except aiodocker.DockerError as e:
+            say(f"✗ 拿不到 builder 映像檔：{e.message}")
+            say(
+                "  這個後端映像檔 pin 的 builder tag 還沒推上 registry：builder 映像檔在"
+                " main 或同 repo 的 PR 才會推送（builder-docker.yml），等那個 workflow"
+                " 跑完再試；或在這台主機上自己 build：\n"
+                f"  docker build -t {B.BUILDER_IMAGE} \\\n"
+                "      https://github.com/Dong-Chen-1031/CPP-here.git#<分支>:builder/docker"
+            )
+            return 1
 
         say("▸ 量測容器啟動速度與記憶體…")
         cont = await measure_containers(pool, parallel=min(8, ncpu))
