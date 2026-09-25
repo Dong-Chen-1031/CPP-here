@@ -9,6 +9,11 @@
             "zone_name": "doong.me",
             "custom_domain": true,
         },
+        {
+            "pattern": "cpp-insiders.doong.me",
+            "zone_name": "doong.me",
+            "custom_domain": true,
+        },
     ],
     // Astro's Cloudflare adapter binds sessions to `SESSION`; without the id here
     // `wrangler deploy` drops it from the remote config and only inherits it.
