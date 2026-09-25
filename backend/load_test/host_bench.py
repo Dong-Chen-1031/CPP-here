@@ -272,7 +272,9 @@ async def measure_containers(pool: B.ContainerPool, parallel: int) -> dict:
     }
 
 
-async def measure_raw_compile(docker: aiodocker.Docker, ncpu: int) -> dict:
+async def measure_raw_compile(
+    docker: aiodocker.Docker, parallel: int, memory_limit: int
+) -> dict:
     """不經過容器管理的純編譯上限：在一個容器裡用 xargs 平行跑 cpp-here-build。
 
     和完整流程的差距，就是 docker exec、每次 build 建立與刪除容器、補充 pool
@@ -287,7 +289,9 @@ async def measure_raw_compile(docker: aiodocker.Docker, ncpu: int) -> dict:
             "HostConfig": {
                 "AutoRemove": True,
                 "NetworkMode": "none",
-                "NanoCpus": ncpu * 1_000_000_000,
+                "NanoCpus": parallel * 1_000_000_000,
+                # 平行數已經依記憶體封頂，這裡再設上限，保護記憶體小的主機
+                "Memory": memory_limit,
                 "CapDrop": ["ALL"],
                 "SecurityOpt": ["no-new-privileges:true"],
             },
@@ -300,7 +304,7 @@ async def measure_raw_compile(docker: aiodocker.Docker, ncpu: int) -> dict:
             container,
             f"printf '%s' '{code}' > /tmp/s.cpp && "
             "cpp-here-build c++17 /tmp/s.cpp /tmp/w.js >/dev/null 2>&1; "
-            f"for p in 1 {ncpu}; do n=$((p*4)); s=$(date +%s%N); "
+            f"for p in 1 {parallel}; do n=$((p*4)); s=$(date +%s%N); "
             "seq $n | xargs -P $p -I{} sh -c "
             "'mkdir -p /tmp/{} && cpp-here-build c++17 /tmp/s.cpp /tmp/{}/o.js >/dev/null 2>&1'; "
             'echo "$p $n $(( ($(date +%s%N)-s)/1000000 ))"; done',
@@ -313,7 +317,10 @@ async def measure_raw_compile(docker: aiodocker.Docker, ncpu: int) -> dict:
         rates[p] = n / ms * 60_000
     return {
         "single_per_min": rates.get(1, math.nan),
-        "all_cpus_per_min": rates.get(ncpu, math.nan),
+        "parallel": parallel,
+        "parallel_per_min": rates.get(parallel, math.nan),
+        # 平行時比單一快了幾倍，約等於實際能用的 CPU 數
+        "effective_cpus": rates.get(parallel, math.nan) / rates.get(1, math.nan),
     }
 
 
@@ -568,10 +575,13 @@ async def main() -> int:
 
         # 放在掃描之後：這段會把所有 CPU 吃滿，放在前面會拖慢掃描（筆電還會降頻）
         with console.status("量測純編譯上限（不含容器管理開銷）…"):
-            raw = await measure_raw_compile(docker, ncpu)
+            # 平行數受 CPU 與記憶體（實測峰值）限制，否則小記憶體的主機會 OOM
+            raw_parallel = max(1, min(ncpu, mem_cap))
+            raw = await measure_raw_compile(docker, raw_parallel, int(mem_total * 0.8))
         done(
             f"純編譯上限：1 個同時 [bold]{raw['single_per_min']:.0f}[/] 次/分鐘、"
-            f"{ncpu} 個同時 [bold]{raw['all_cpus_per_min']:.0f}[/] 次/分鐘"
+            f"{raw_parallel} 個同時 [bold]{raw['parallel_per_min']:.0f}[/] 次/分鐘"
+            f"（約 {raw['effective_cpus']:.1f} 顆 CPU 的效果）"
         )
         console.print()
 
@@ -585,7 +595,7 @@ async def main() -> int:
         single = results[0]
         build_rate = rec["throughput_per_min"] / 60
         pool_size = min(rec["concurrency"], worst_cap)
-        overhead = 1 - peak / raw["all_cpus_per_min"]
+        overhead = 1 - peak / raw["parallel_per_min"]
 
         score = (
             1000
@@ -620,7 +630,7 @@ async def main() -> int:
         summary.add_row("最高吞吐量", f"{peak:.0f} 次/分鐘")
         summary.add_row(
             "純編譯上限",
-            f"{raw['all_cpus_per_min']:.0f} 次/分鐘"
+            f"{raw['parallel_per_min']:.0f} 次/分鐘"
             f"  [dim]（容器管理等開銷吃掉 {overhead * 100:.0f}%）",
         )
         summary.add_row("單一編譯延遲", f"p50 {single['p50_s']:.2f} s")
@@ -649,6 +659,14 @@ async def main() -> int:
         leaked = sum(r["leaked_containers"] for r in results)
         if leaked:
             warnings.append(f"測試中有 {leaked} 個容器沒被 pool 刪掉（已清除）。")
+        # 門檻抓寬一點：大小核混合的 CPU（例如 Apple M 系列）本來就達不到線性
+        if raw_parallel >= 4 and raw["effective_cpus"] < raw_parallel / 4:
+            warnings.append(
+                f"Docker 回報 {ncpu} 顆 CPU，但 {raw_parallel} 個平行編譯只比 1 個快了 "
+                f"{raw['effective_cpus']:.1f} 倍，實際能用的 CPU 少很多。常見原因是 LXC／VM 的 "
+                "CPU 配額或共用主機的 steal time，可以用 systemd-detect-virt、"
+                "cat /sys/fs/cgroup/cpu.max、top 的 %st 確認。"
+            )
         if results[-1]["concurrency"] == max_c and rec["concurrency"] == max_c:
             warnings.append(f"測到上限 {max_c} 仍未飽和，可以用 --max 測更高。")
         if warnings:
