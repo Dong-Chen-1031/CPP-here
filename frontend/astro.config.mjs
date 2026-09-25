@@ -104,7 +104,7 @@ export default defineConfig({
                 access: "public",
                 optional: true,
                 url: true,
-                default: "https://status.doong.me/status/cpp-here",
+                default: "https://cpp-status.doong.me/",
             }),
             PUBLIC_SHARE: envField.boolean({
                 context: "client",
