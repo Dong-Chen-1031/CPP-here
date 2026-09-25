@@ -1,0 +1,37 @@
+FROM emscripten/emsdk:5.0.2
+
+USER root
+
+# 1. Create the system-level directory
+RUN mkdir -p /emsdk/upstream/emscripten/cache/sysroot/include/c++/v1
+
+# 2. Copy all contents from inner/ into the container's standard library path
+COPY inner/ /emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/
+
+COPY  js_lib/stdin_lib.js /tmp/stdin_lib.js
+COPY  js_lib/stdout_lib.js /tmp/stdout_lib.js
+# Create temp directory
+# RUN mkdir /temp \
+#     && chown sandbox_user:sandbox_user /temp \
+#     && chmod 700 /temp
+
+RUN useradd -m -s /bin/bash sandbox_user
+
+RUN chown -R sandbox_user:sandbox_user /emsdk/upstream/emscripten/cache \
+    && chmod -R 755 /emsdk/upstream/emscripten/cache
+
+# COPY entrypoint.sh /entrypoint.sh
+# RUN chmod +x /entrypoint.sh
+
+# # 4. Pre-compile and warm up the system cache to reduce write overhead at runtime
+# RUN embuilder build sysroot
+
+# # 5. Switch to a non-root user, fully dropping superuser privileges
+USER sandbox_user
+
+# 6. Set the default working directory
+WORKDIR /src
+
+# ENTRYPOINT ["/entrypoint.sh"]
+
+CMD ["/bin/bash"]
