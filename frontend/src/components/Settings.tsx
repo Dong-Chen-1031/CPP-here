@@ -11,8 +11,11 @@ import {
     defCodeStore,
     editorFontSizeStore,
     editorTabSizeStore,
+    timeLimitStore,
     useResetSettingsAtoms,
 } from "@/store/configStore";
+import { Input } from "@/components/ui/input";
+import { parseTimeLimit } from "@/config/runLimits";
 import { useAtom } from "jotai";
 import {
     Field,
@@ -59,6 +62,23 @@ export function Settings({ allLangs }: SettingsProps) {
     const [defCode, setDefCode] = useAtom(defCodeStore);
     const [code, setCode] = useAtom(codeStore);
     const [tabSize, setTabSize] = useAtom(editorTabSizeStore);
+    const [timeLimit, setTimeLimit] = useAtom(timeLimitStore);
+    // Edited as free text and only committed when valid, so typing "-" on the
+    // way to "-1" doesn't get rejected mid-edit.
+    const [timeLimitDraft, setTimeLimitDraft] = React.useState(
+        String(timeLimit),
+    );
+    useEffect(() => {
+        setTimeLimitDraft(String(timeLimit));
+    }, [timeLimit]);
+    const commitTimeLimit = () => {
+        const value = parseTimeLimit(timeLimitDraft);
+        if (value === null) {
+            setTimeLimitDraft(String(timeLimit));
+            return;
+        }
+        setTimeLimit(value);
+    };
     const resetSettingsAtoms = useResetSettingsAtoms();
 
     const matchedLang =
@@ -105,7 +125,8 @@ export function Settings({ allLangs }: SettingsProps) {
                     <FieldGroup>
                         <Field
                             orientation="horizontal"
-                            className="items-center!">
+                            className="items-center!"
+                        >
                             <FieldContent>
                                 <FieldLabel>
                                     {t("settings.cppVersion")}
@@ -117,7 +138,8 @@ export function Settings({ allLangs }: SettingsProps) {
                         </Field>
                         <Field
                             orientation="horizontal"
-                            className="items-center!">
+                            className="items-center!"
+                        >
                             <FieldContent>
                                 <FieldLabel>
                                     {t("settings.language")}
@@ -129,7 +151,8 @@ export function Settings({ allLangs }: SettingsProps) {
                                 onOpenChange={setComboOpen}
                                 items={Object.keys(allLangs)}
                                 onValueChange={handleLanguageChange}
-                                value={localLang}>
+                                value={localLang}
+                            >
                                 <ComboboxInput
                                     placeholder={t("settings.selectLanguage")}
                                     autoFocus={false}
@@ -150,7 +173,8 @@ export function Settings({ allLangs }: SettingsProps) {
                                                 }
                                                 onPointerUp={() =>
                                                     handleLanguageChange(item)
-                                                }>
+                                                }
+                                            >
                                                 {item}
                                             </ComboboxItem>
                                         )}
@@ -160,7 +184,8 @@ export function Settings({ allLangs }: SettingsProps) {
                         </Field>
                         <Field
                             orientation="horizontal"
-                            className="items-center!">
+                            className="items-center!"
+                        >
                             <FieldContent>
                                 <FieldLabel>
                                     {t("settings.fontSize")}
@@ -170,7 +195,8 @@ export function Settings({ allLangs }: SettingsProps) {
                             <ButtonGroup
                                 orientation="horizontal"
                                 aria-label={t("settings.fontSize")}
-                                className="h-fit">
+                                className="h-fit"
+                            >
                                 <Button
                                     variant="outline"
                                     size="icon"
@@ -178,14 +204,16 @@ export function Settings({ allLangs }: SettingsProps) {
                                     onClick={() =>
                                         setFontSize((p) => Math.max(p - 1, 5))
                                     }
-                                    disabled={fontSize <= 5}>
+                                    disabled={fontSize <= 5}
+                                >
                                     <MinusIcon />
                                 </Button>
                                 <Button
                                     variant="outline"
                                     size="icon"
                                     aria-label={`${t("settings.fontSize")}: ${fontSize}`}
-                                    className="bg-input/30! cursor-default">
+                                    className="bg-input/30! cursor-default"
+                                >
                                     {fontSize}
                                 </Button>
                                 <Button
@@ -195,14 +223,16 @@ export function Settings({ allLangs }: SettingsProps) {
                                     onClick={() =>
                                         setFontSize((p) => Math.min(p + 1, 50))
                                     }
-                                    disabled={fontSize >= 50}>
+                                    disabled={fontSize >= 50}
+                                >
                                     <PlusIcon />
                                 </Button>
                             </ButtonGroup>
                         </Field>
                         <Field
                             orientation="horizontal"
-                            className="items-center!">
+                            className="items-center!"
+                        >
                             <FieldContent>
                                 <FieldLabel>{t("settings.tabSize")}</FieldLabel>
                                 {/* <FieldDescription></FieldDescription> */}
@@ -210,7 +240,8 @@ export function Settings({ allLangs }: SettingsProps) {
                             <ButtonGroup
                                 orientation="horizontal"
                                 aria-label={t("settings.tabSize")}
-                                className="h-fit">
+                                className="h-fit"
+                            >
                                 <Button
                                     variant="outline"
                                     size="icon"
@@ -218,14 +249,16 @@ export function Settings({ allLangs }: SettingsProps) {
                                     onClick={() =>
                                         setTabSize((p) => Math.max(p - 1, 1))
                                     }
-                                    disabled={tabSize <= 1}>
+                                    disabled={tabSize <= 1}
+                                >
                                     <MinusIcon />
                                 </Button>
                                 <Button
                                     variant="outline"
                                     size="icon"
                                     aria-label={`${t("settings.tabSize")}: ${tabSize}`}
-                                    className="bg-input/30! cursor-default">
+                                    className="bg-input/30! cursor-default"
+                                >
                                     {tabSize}
                                 </Button>
                                 <Button
@@ -235,14 +268,45 @@ export function Settings({ allLangs }: SettingsProps) {
                                     onClick={() =>
                                         setTabSize((p) => Math.min(p + 1, 50))
                                     }
-                                    disabled={tabSize >= 50}>
+                                    disabled={tabSize >= 50}
+                                >
                                     <PlusIcon />
                                 </Button>
                             </ButtonGroup>
                         </Field>
                         <Field
                             orientation="horizontal"
-                            className="items-center!">
+                            className="items-center!"
+                        >
+                            <FieldContent>
+                                <FieldLabel htmlFor="settings-time-limit">
+                                    {t("settings.timeLimit")}
+                                </FieldLabel>
+                                <FieldDescription className="text-xs">
+                                    {t("settings.timeLimitDesc")}
+                                </FieldDescription>
+                            </FieldContent>
+                            <Input
+                                id="settings-time-limit"
+                                type="number"
+                                inputMode="numeric"
+                                min={-1}
+                                step={1}
+                                className="w-20 shrink-0"
+                                value={timeLimitDraft}
+                                onChange={(e) =>
+                                    setTimeLimitDraft(e.target.value)
+                                }
+                                onBlur={commitTimeLimit}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") commitTimeLimit();
+                                }}
+                            />
+                        </Field>
+                        <Field
+                            orientation="horizontal"
+                            className="items-center!"
+                        >
                             <FieldContent>
                                 <FieldLabel>
                                     {t("settings.defaultCode")}
@@ -254,12 +318,14 @@ export function Settings({ allLangs }: SettingsProps) {
                             <ButtonGroup
                                 orientation="horizontal"
                                 aria-label="Media controls"
-                                className="h-fit">
+                                className="h-fit"
+                            >
                                 <Button
                                     variant="outline"
                                     // size="icon"
                                     onClick={() => setDefCode(code)}
-                                    disabled={code === defCode}>
+                                    disabled={code === defCode}
+                                >
                                     {t("settings.defaultCodeBtn")}
                                 </Button>
                             </ButtonGroup>
@@ -267,7 +333,8 @@ export function Settings({ allLangs }: SettingsProps) {
 
                         <Field
                             orientation="horizontal"
-                            className="items-center!">
+                            className="items-center!"
+                        >
                             <FieldContent>
                                 <FieldLabel>
                                     {t("settings.codeFormatStyle")}
@@ -279,7 +346,8 @@ export function Settings({ allLangs }: SettingsProps) {
 
                             <Select
                                 value={formatStyle}
-                                onValueChange={setFormatStyle}>
+                                onValueChange={setFormatStyle}
+                            >
                                 <SelectTrigger className="w-full max-w-30">
                                     <SelectValue />
                                 </SelectTrigger>
@@ -305,7 +373,8 @@ export function Settings({ allLangs }: SettingsProps) {
                         </Field>
                         <Field
                             orientation="horizontal"
-                            className="items-center!">
+                            className="items-center!"
+                        >
                             <FieldContent>
                                 <FieldLabel>
                                     {t("settings.resetSettings")}
@@ -317,10 +386,12 @@ export function Settings({ allLangs }: SettingsProps) {
                             <ButtonGroup
                                 orientation="horizontal"
                                 aria-label="Media controls"
-                                className="h-fit">
+                                className="h-fit"
+                            >
                                 <Button
                                     variant="outline"
-                                    onClick={resetSettingsAtoms}>
+                                    onClick={resetSettingsAtoms}
+                                >
                                     <IconMotion
                                         show={false}
                                         HideIcon={ListRestart}

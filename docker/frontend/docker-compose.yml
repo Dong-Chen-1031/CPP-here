@@ -1,35 +1,102 @@
+# Deployment template for the C++ Here frontend. Every variable this image reads is listed
+# here; a commented-out entry is already at its code default, so an active line means the
+# value inside Docker differs and the comment says why.
+# BACKEND_PORT and FRONTEND_PORT are read by the Docker CLI on the host, not by the service;
+# set them in a .env next to this file or in your shell.
+# Last synced 2026-09-22 at commit 4728ba4
 services:
   frontend:
     image: ghcr.io/dong-chen-1031/cpp-here/frontend:latest
     environment:
-      - PUBLIC_CAPTCHA_SITE_KEY=1x00000000000000000000BB
-        # Cloudflare Turnstile site key for CAPTCHA verification.
-        # Get a real site key from Cloudflare Turnstile dashboard for production use.
-        # Default: "1x00000000000000000000BB" (Always valid for development).
+      # Backend URL the browser uses for /api/verify, /api/build and /api/share. Active here
+      # because this image is a static build with no server routes, so the code default
+      # (same origin) has nothing to call. It must be reachable from the user's browser: use
+      # the published host port or your domain, not "http://backend:8000". The backend's
+      # FRONTEND_URL must match the URL you open this frontend at, or CORS blocks it.
+      # Scope: build-time (the image builds on container start, so a restart applies changes)
+      # Default: "" (same origin)
+      - PUBLIC_API_URL=http://localhost:${BACKEND_PORT:-8000}
 
-      - PUBLIC_API_URL=http://127.0.0.1:8000
-        # Backend API URL to fetch data. In development, it points to the local backend server. 
-        # In production, it should point to the deployed backend API.
-        # Default: "http://127.0.0.1:8000".
+      # Full status endpoint the landing page reads its stats from during the build,
+      # fetched exactly as written. "host.docker.internal" reaches a backend running on
+      # the host (Docker Desktop; on Linux add an extra_hosts entry for it); the path must
+      # match the backend's own /api/status route.
+      # Ignored while PUBLIC_SKIP_API_FETCH is true, which is the image default.
+      # Scope: build-time (prerender only; never reaches the browser)
+      # Default: "http://127.0.0.1:8000/api/status"
+      - PRIVATE_BUILD_TIME_STATUS_URL=http://host.docker.internal:8000/api/status
 
-      - SKIP_API_FETCH=true
-        # Set to "true" to skip API fetches for landing page stats data at build time.
-        # If your backend is not ready, you can set this to "true" during development.
-        # Default: "true".
-
-      - PUBLIC_BUILD_TIME_API_URL=http://127.0.0.1:8000
-        # Backend API URL to fetch data at build time. 
-        # If you are using docker, you need to set this to Docker internal host to allow the build process to fetch data from the backend container.
-        # Or you can just set SKIP_API_FETCH to "true" to skip API fetches during build time.
-        # Default: not set (falls back to PUBLIC_API_URL).
-
+      # Disables interactive/TTY output from Astro and bun, which otherwise duplicates every
+      # log line under Docker Compose. Read by the build tools, not by the app.
+      # Active here because there is no real TTY in a Compose service.
       - CI=true
-        # Disables interactive/TTY output from Astro and bun to prevent duplicate log lines in Docker Compose.
-    
-    # or use .env to set environment variables:
+
+      # Skip the landing-page stats fetch during the build. The image already bakes this in
+      # (see docker/frontend/Dockerfile), because the frontend builds on container start,
+      # which may be before the backend is ready. Set it to false only if the backend is up.
+      # Scope: build-time
+      # Default: true
+      # - PUBLIC_SKIP_API_FETCH=true
+
+      # Cloudflare Turnstile site key rendered in the browser widget. Must pair with the
+      # backend's TURNSTILE_SECRET; replace both for production.
+      # Scope: build-time (inlined into the client bundle)
+      # Default: "1x00000000000000000000BB" (Cloudflare's always-pass test key)
+      # - PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000BB
+
+      # Skip Turnstile and token checks entirely. For local testing only; the backend then
+      # needs BYPASS_CAPTCHA=true, since no token is sent.
+      # Scope: build-time
+      # Default: false
+      # - PUBLIC_BYPASS_CAPTCHA=false
+
+      # Show the sharing features in the UI. Also needs SHARE=true and the S3_* settings on
+      # the backend, plus the two PUBLIC_S3_* values below.
+      # Scope: build-time
+      # Default: false
+      # - PUBLIC_SHARE=false
+
+      # Where the browser reads shared code:
+      # "${PUBLIC_S3_BUCKET_URL}/${PUBLIC_S3_BUCKET_NAME}/share/<share id>".
+      # Leave PUBLIC_S3_BUCKET_NAME empty when the URL already points at the bucket (an R2
+      # public domain); set it to the backend's S3_BUCKET_NAME for a path-style URL such as
+      # MinIO at "http://localhost:9000".
+      # Scope: build-time
+      # Default: "" (loading shared code is disabled)
+      # - PUBLIC_S3_BUCKET_URL=
+      # - PUBLIC_S3_BUCKET_NAME=
+
+      # Repository link shown in the header and on the landing page.
+      # Scope: build-time
+      # Default: "https://github.com/Dong-Chen-1031/CPP-here"
+      # - PUBLIC_GITHUB_LINK=https://github.com/Dong-Chen-1031/CPP-here
+
+      # Status page link shown in the footer.
+      # Scope: build-time
+      # Default: "https://status.doong.me/status/cpp-here"
+      # - PUBLIC_STATUS_PAGE=https://status.doong.me/status/cpp-here
+
+      # PostHog project token for browser analytics. It is inlined into the client bundle and
+      # so is visible to anyone who opens devtools — never put a personal API key here.
+      # Scope: build-time
+      # Default: "" (PostHog loads but sends nothing)
+      # - PUBLIC_POSTHOG_PROJECT_TOKEN=
+
+      # PostHog ingestion host.
+      # Scope: build-time
+      # Default: "https://us.i.posthog.com"
+      # - PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
+
+      # The PRIVATE_* settings in frontend/.env.example are not listed here: this image runs
+      # `build:static`, which produces no server routes, so nothing reads them. /api/* is
+      # served by the Python backend at PUBLIC_API_URL instead.
+
+    # or put the same variables in a .env next to this file:
     # env_file: .env
 
     ports:
-      - "${PORT:-4321}:${PORT:-4321}"
-    
+      # Host port for the frontend. Caddy inside the container always serves on 4321,
+      # so set FRONTEND_PORT to move it on your machine.
+      - "${FRONTEND_PORT:-4321}:4321"
+
     restart: unless-stopped

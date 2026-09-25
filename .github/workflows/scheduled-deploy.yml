@@ -8,4 +8,9 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Trigger Cloudflare Pages Deploy
-              run: curl -X POST "${{ secrets.CF_DEPLOY_HOOK }}"
+              # Pass the secret through the environment instead of interpolating it
+              # into the command line, where it would land in the process table and
+              # be re-parsed by the shell.
+              env:
+                  CF_DEPLOY_HOOK: ${{ secrets.CF_DEPLOY_HOOK }}
+              run: curl -X POST --fail --silent --show-error "$CF_DEPLOY_HOOK"

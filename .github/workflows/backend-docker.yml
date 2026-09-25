@@ -61,21 +61,19 @@ jobs:
                   context: .
                   file: ./docker/backend/Dockerfile
                   platforms: ${{ matrix.platform }}
-                  push: ${{ github.event_name != 'pull_request' }}
+                  push: true
                   outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true
                   labels: ${{ steps.meta.outputs.labels }}
                   cache-from: type=gha,scope=${{ matrix.platform }}
                   cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
 
             - name: Export digest
-              if: github.event_name != 'pull_request'
               run: |
                   mkdir -p /tmp/digests
                   digest="${{ steps.build.outputs.digest }}"
                   touch "/tmp/digests/${digest#sha256:}"
 
             - name: Upload digest artifact
-              if: github.event_name != 'pull_request'
               uses: actions/upload-artifact@v4
               with:
                   name: digest-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
@@ -85,7 +83,6 @@ jobs:
 
     merge:
         runs-on: ubuntu-latest
-        if: github.event_name != 'pull_request'
         needs: build
         permissions:
             contents: read
@@ -113,6 +110,7 @@ jobs:
                   images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
                   tags: |
                       type=raw,value=latest,enable={{is_default_branch}}
+                      type=ref,event=pr
                       type=sha,prefix=sha-
 
             - name: Set up Docker Buildx

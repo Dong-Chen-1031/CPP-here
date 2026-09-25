@@ -1,4 +1,4 @@
-function center(str: string, width: number, fill = " ") {
+function center(str, width, fill = " ") {
     const totalPad = width - str.length;
     if (totalPad <= 0) return str;
     const left = Math.floor(totalPad / 2);

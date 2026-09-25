@@ -1,0 +1,8 @@
+:4321 {
+	root * /app/frontend/dist
+
+	# Static builds have no server routes, so mirror src/pages/share/[shareId].ts here.
+	redir /share/* /editor?shareId={http.request.uri.path.1}
+
+	file_server
+}

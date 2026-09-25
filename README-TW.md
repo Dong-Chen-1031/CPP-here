@@ -59,7 +59,7 @@ C++ Here 與其他線上 C++ 編輯器的最大不同在於我們使用 [safe-cp
 
 ### 前端
 
-需要 Bun，若使用 npm 可能會導致問題。
+Bun（推薦）與 npm 皆可使用；本專案採用 workspaces 單一儲存庫，以下指令請都在專案根目錄執行。
 
 1. Clone
 ```shell
@@ -70,12 +70,20 @@ cd CPP-here
 2. 安裝依賴項
 ```shell
 bun install
+# 或
+npm install
 ```
 
 3. 執行前端
 ```shell
 bun run frontend
+# 或
+npm run frontend
 ```
+
+> [!TIP]
+> 所有設定都有可用的預設值。要調整的話，把 `frontend/.env.example` 複製成 `frontend/.env`，
+> 檔案內每個變數都附有說明、預設值，以及它是在 build time 還是 runtime 被讀取。
 
 ### 後端
 推薦使用 Python 3.14 + UV
@@ -102,13 +110,29 @@ docker pull ghcr.io/dong-chen-1031/safe-cpp2wasm:latest
 4. 執行後端
 ```shell
 bun run backend
+# 或
+npm run backend
 ```
+
+> [!TIP]
+> 所有設定都有可用的預設值。要調整的話，把 `backend/.env.example` 複製成 `backend/.env`，
+> 檔案內每個變數都附有說明與預設值。
 
 ### 前後端同時執行（推薦）
 1. 依照前敘述完成環境設置
 2. 一鍵同時執行前後端
 ```shell
 bun run dev
+# 或
+npm run dev
+```
+
+### 程式碼格式化
+`bun install` / `npm install` 會自動安裝 Git pre-commit hook（Husky + lint-staged），在每次 commit 前格式化暫存的檔案：
+`frontend/` 使用 Prettier，`backend/` 的 Python 檔案使用 Ruff。Ruff 透過 `uvx` 執行，需先安裝 [uv](https://docs.astral.sh/uv/)。CI 也會執行相同的檢查。
+```shell
+bun run format        # 格式化前端與後端
+bun run format:check  # 只檢查前端（與 CI 相同）
 ```
 
 ## 部署

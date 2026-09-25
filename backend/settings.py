@@ -2,10 +2,11 @@ import asyncio
 import logging
 import os
 import secrets
-from typing import Any
+from typing import Any, ClassVar
 
 import httpx
 from dotenv import load_dotenv
+from prometheus_client import Counter
 from pydantic import Field, model_validator
 from pydantic.fields import FieldInfo
 from pydantic_settings import (
@@ -21,8 +22,17 @@ _VERSION = "0.8.0"
 
 CENTER_URL = os.getenv("CENTER_URL", "")
 CENTER_TOKEN = os.getenv("CENTER_TOKEN", "")
-ENABLE_CENTER_CONSOLE = os.getenv("ENABLE_CENTER_CONSOLE") and bool(
-    CENTER_URL and CENTER_TOKEN
+# Compare against "true" so ENABLE_CENTER_CONSOLE="false" doesn't turn it on.
+ENABLE_CENTER_CONSOLE = os.getenv(
+    "ENABLE_CENTER_CONSOLE", ""
+).lower() == "true" and bool(CENTER_URL and CENTER_TOKEN)
+
+# Startup (and every reload_settings()) blocks on this request, so keep it short.
+CENTER_CONSOLE_TIMEOUT = float(os.getenv("CENTER_CONSOLE_TIMEOUT", "3.0"))
+
+CENTER_CONSOLE_FETCH_FAILURES = Counter(
+    "center_console_fetch_failures_total",
+    "Number of failed Center Console configuration fetches",
 )
 
 if ENABLE_CENTER_CONSOLE:
@@ -34,7 +44,7 @@ else:
 
 
 class CenterConsoleSettingsSource(PydanticBaseSettingsSource):
-    center_json: dict[str, Any] = {}
+    center_json: ClassVar[dict[str, Any]] = {}
 
     def get_field_value(
         self, field: FieldInfo, field_name: str
@@ -54,13 +64,19 @@ class CenterConsoleSettingsSource(PydanticBaseSettingsSource):
             return d
 
         try:
-            self.center_json = httpx.get(
+            _ = httpx.get(
                 f"{CENTER_URL}/center-api/v1/config",
                 headers={"Authorization": f"Bearer {CENTER_TOKEN}"},
+                timeout=CENTER_CONSOLE_TIMEOUT,
             ).json()
-        except Exception:
+            if not isinstance(_, dict):
+                raise ValueError(f"Center Console returned non-dict JSON: {_!r}")
+            self.__class__.center_json = _
+        except Exception as e:
+            CENTER_CONSOLE_FETCH_FAILURES.inc()
             print(
-                "[red]Failed to fetch settings from Center Console, using env / .env instead"
+                f"[red]Failed to fetch settings from Center Console ({e!r}), "
+                "using env / .env instead"
             )
             return d
 
@@ -78,6 +94,7 @@ class CenterConsoleSettingsSource(PydanticBaseSettingsSource):
 
 
 class Settings(BaseSettings):
+    # Documented for deployers in backend/.env.example and docker/docker-compose.yml.
     model_config = SettingsConfigDict(env_file_encoding="utf-8")
 
     SERVICE_NAME: str = Field(default="C++ Here Backend")
@@ -88,9 +105,9 @@ class Settings(BaseSettings):
 
     PORT: int = Field(default=8000)
 
+    # Reported as "service.version" in logs and PostHog. Tracks the release, so
+    # it is bumped with _VERSION rather than set per deployment.
     VERSION: str = Field(default=_VERSION)
-
-    LAST_VERSION: str = Field(default=_VERSION)
 
     FRONTEND_URL: str = Field(default="http://localhost:4321")
 
@@ -98,7 +115,10 @@ class Settings(BaseSettings):
 
     ALLOW_ORIGINS: list[str] = Field(default_factory=list)
 
-    BUILD_VERSION: str = Field(default="0.1.0")
+    # Part of the build cache key: bump it whenever the emcc flags or
+    # assets/worker.js change so stale cached builds aren't served.
+    # Not a deployment setting, so it is left out of the .env templates.
+    BUILD_VERSION: str = Field(default="0.2.0")
 
     CACHE_LIMIT: int = Field(default=100)
 
@@ -110,13 +130,20 @@ class Settings(BaseSettings):
 
     CACHE_SQLITE_PATH: str = Field(default="")
 
-    TURNSTILE_SECRET: str = Field(default="")
+    # Cloudflare's always-pass test secret, so a fresh deployment verifies out of the
+    # box and matches the frontend's PRIVATE_TURNSTILE_SECRET_KEY default. It accepts
+    # any token, so production must replace it with a real key.
+    TURNSTILE_SECRET: str = Field(default="1x0000000000000000000000000000000AA")
 
     JWT_SECRET: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
 
     JWT_EXPIRY_SECONDS: int = Field(default=3600)
 
     DOCKER_POOL_SIZE: int = Field(default=15)
+
+    DOCKER_WORKER_TTL: int = Field(default=1800)
+
+    DOCKER_ORPHAN_SWEEP: bool = Field(default=True)
 
     S3_ENDPOINT_URL: str = Field(default="")
 
@@ -153,14 +180,19 @@ class Settings(BaseSettings):
         if not self.CACHE_SQLITE_PATH:
             self.CACHE_SQLITE_PATH = f"sqlite+aiosqlite:///{self.CACHE_PATH}/cache.db"
 
-        self.SHARE = self.SHARE and all(
-            [
-                self.S3_ENDPOINT_URL,
-                self.S3_ACCESS_KEY_ID,
-                self.S3_SECRET_ACCESS_KEY,
-                self.S3_BUCKET_NAME,
-            ]
-        )
+        if self.SHARE:
+            if not all(
+                [
+                    self.S3_ENDPOINT_URL,
+                    self.S3_ACCESS_KEY_ID,
+                    self.S3_SECRET_ACCESS_KEY,
+                    self.S3_BUCKET_NAME,
+                ]
+            ):
+                print(
+                    "[yellow]SHARE is enabled, but S3 credentials are missing. Disabling SHARE."
+                )
+                self.SHARE = False
 
         return self
 

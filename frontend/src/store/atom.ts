@@ -3,24 +3,16 @@ import { atomWithStorage, RESET, useResetAtom } from "jotai/utils";
 import { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import type { RefObject } from "react";
 import type { TurnstileInstance } from "@marsidev/react-turnstile";
-import type { CodeWorker } from "@/api/run";
+import type { CodeWorker } from "@/service/run";
 import type { AlertDialogOptions } from "@/components/Alert";
 import type { EditDialogOptions } from "@/components/panel/TestEditDialog";
 import { defCodeStore } from "./configStore";
+import { clearOutputBuffer, outputStore } from "./outputStore";
 export interface TestCase {
     id: string;
     name: string;
     input: string;
     expectedOutput?: string;
-}
-
-export interface OutputCase {
-    type?: "stdout" | "err";
-    testCaseId?: string;
-    testCaseName?: string;
-    expectedOutput?: string;
-    content: string;
-    status?: "running" | "ac" | "error" | "wa" | "finished";
 }
 
 export type PanelDrawerView = "input" | "testCases" | "output";
@@ -80,17 +72,21 @@ export const cppVersionStore = atomWithStorage<string>(
 export const inputStore = atomWithStorage<string>("input", "", undefined, {
     getOnInit: true,
 });
-export const outputStore = atomWithStorage<OutputCase[]>("output", []);
 export const runModeStore = atomWithStorage<"single" | "all">(
     "runMode",
     "single",
 );
 export const runStatusStore = atom<"idle" | "building" | "running">("idle");
-export const testCasesStore = atomWithStorage<TestCase[]>("testCases", [
-    { id: "example-1", name: "Test Case 1", input: "Example input 1" },
-    { id: "example-2", name: "Test Case 2", input: "Example input 2" },
-    { id: "example-3", name: "Test Case 3", input: "Example input 3" },
-]);
+export const testCasesStore = atomWithStorage<TestCase[]>(
+    "testCases",
+    [
+        { id: "example-1", name: "Test Case 1", input: "Example input 1" },
+        { id: "example-2", name: "Test Case 2", input: "Example input 2" },
+        { id: "example-3", name: "Test Case 3", input: "Example input 3" },
+    ],
+    undefined,
+    { getOnInit: true },
+);
 export const codeWorkersStore = atom<CodeWorker[]>([]);
 
 export const verifyJwtStore = atom<string | null>(null);
@@ -113,6 +109,7 @@ export function useResetEditorAtoms() {
         resetCppVersion();
         resetInput();
         resetOutput();
+        clearOutputBuffer();
         resetRunMode();
         resetTestCases();
         resetEditorErrors();

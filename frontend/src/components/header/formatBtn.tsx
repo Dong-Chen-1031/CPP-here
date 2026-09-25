@@ -38,7 +38,8 @@ export function FormatButton({
                         <Kbd>{shiftKeyIcon}</Kbd>
                         <Kbd>F</Kbd>
                     </>
-                }>
+                }
+            >
                 <Button
                     variant="outline"
                     className={className}
@@ -58,7 +59,8 @@ export function FormatButton({
                     }}
                     onMouseEnter={() => {
                         ensureFormatterInit();
-                    }}>
+                    }}
+                >
                     <IconMotion
                         show={formatted}
                         HideIcon={formatting ? Spinner : FormIcon}

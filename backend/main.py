@@ -4,22 +4,23 @@ if __name__ == "__main__":
     print_logo()
 if True:  # don't that Ruff sort this import
     from settings import settings
-import router
-import router.api
-import router.build
-import router.verify
+import uuid
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from prometheus_fastapi_instrumentator import Instrumentator
+
+from router import direct_api
 from services.resource_manager import lifespan
 from utils.log import logger
-from utils.posthog import posthog
+from utils.posthog import add_posthog_middleware, posthog, setup_posthog_tracer
 
 if settings.DEV_MODE:
-    logger.info("Running in development mode")
+    logger.info("🚧 Running in development mode")
 
 app = FastAPI(
     lifespan=lifespan,
@@ -47,16 +48,12 @@ app.add_middleware(
 )
 
 
-app.include_router(router.build.router)
-app.include_router(router.verify.router)
-app.include_router(router.api.router)
+app.include_router(direct_api.router)
+app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=6)
 
-
-if settings.SHARE:
-    import router.share
-
-    app.include_router(router.share.router)
-    logger.info("Share feature is enabled")
+if settings.POSTHOG_API_KEY:
+    add_posthog_middleware(app)
+    setup_posthog_tracer(app)
 
 
 @app.get("/")
@@ -66,8 +63,21 @@ async def root():
 
 @app.exception_handler(Exception)
 async def http_exception_handler(request, exc):
-    posthog.capture_exception(exc)
-    return JSONResponse(status_code=500, content={"message": str(exc)})
+    # Never leak str(exc) to the client: it carries absolute paths, bucket names
+    # and other internals. The trace id is the bridge to the server-side log.
+    trace_id = uuid.uuid4().hex
+    logger.error(
+        f"Unhandled exception (trace_id={trace_id})",
+        exc_info=exc,
+        extra={"trace_id": trace_id, "path": str(request.url)},
+    )
+    if posthog:
+        posthog.capture_exception(exc, properties={"trace_id": trace_id})
+
+    message = str(exc) if settings.DEV_MODE else "Internal server error"
+    return JSONResponse(
+        status_code=500, content={"message": message, "trace_id": trace_id}
+    )
 
 
 if __name__ == "__main__":

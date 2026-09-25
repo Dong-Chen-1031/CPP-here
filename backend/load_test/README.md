@@ -16,7 +16,7 @@ brew install k6
 | 檔案 | 測試範圍 | 需要 Token |
 |------|---------|-----------|
 | `health.js` | `GET /health`、`GET /status` | 否 |
-| `build.js` | `POST /build`（多種 C++ 程式碼樣本） | 是 |
+| `build.js` | `POST /api/build`（多種 C++ 程式碼樣本） | 是 |
 | `full_flow.js` | health + status + build 完整流程（雙 scenario） | 是 |
 
 ## 執行方式

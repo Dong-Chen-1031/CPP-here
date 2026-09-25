@@ -28,7 +28,8 @@ export default function IconMotion({
                             stiffness: 400,
                             damping: 25,
                             duration: 200,
-                        }}>
+                        }}
+                    >
                         <ShowIcon className={cn("w-4 h-4", className)} />
                     </motion.div>
                 ) : (
@@ -43,7 +44,8 @@ export default function IconMotion({
                             stiffness: 400,
                             damping: 25,
                             duration: 200,
-                        }}>
+                        }}
+                    >
                         <HideIcon className={cn("w-4 h-4", className)} />
                     </motion.div>
                 )}

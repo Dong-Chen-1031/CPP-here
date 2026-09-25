@@ -42,7 +42,8 @@ export function DownloadButton({
                             code_length: code.length,
                         });
                         onClick(e);
-                    }}>
+                    }}
+                >
                     <DownloadIcon />
                     <span className="inline md:hidden lg:inline">
                         {t("headerActions.downloadCode")}

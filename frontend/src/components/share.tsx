@@ -9,25 +9,21 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/checkbox";
-import { fetchSharedCode } from "@/api/share";
+import { fetchSharedCode } from "@/service/share";
 import { getDefaultStore } from "jotai";
-import {
-    codeStore,
-    inputStore,
-    outputStore,
-    testCasesStore,
-} from "@/store/atom";
+import { codeStore, inputStore, testCasesStore } from "@/store/atom";
+import { importOutputCases, outputStore } from "@/store/outputStore";
 import { Spinner } from "./ui/spinner";
 import { addAlert } from "@/lib/alert";
 
 export function ShareReceiveDialog() {
     const [showDialog, setShowDialog] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [shareID, setShareID] = useState<string | null>(null);
+    const [shareId, setShareId] = useState<string | null>(null);
     const checked = useRef(false);
     const defaultStore = getDefaultStore();
     const { t } = useTranslation(["editor"]);
@@ -50,8 +46,8 @@ export function ShareReceiveDialog() {
         if (checked.current) return;
         checked.current = true;
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has("shareID")) {
-            setShareID(urlParams.get("shareID"));
+        if (urlParams.has("shareId")) {
+            setShareId(urlParams.get("shareId"));
             setShowDialog(true);
             history.replaceState(null, "", "/editor");
         }
@@ -91,7 +87,8 @@ export function ShareReceiveDialog() {
                                             }
                                         />
                                         <FieldLabel
-                                            htmlFor={`terms-checkbox-${label.toLowerCase()}`}>
+                                            htmlFor={`terms-checkbox-${label.toLowerCase()}`}
+                                        >
                                             {label}
                                         </FieldLabel>
                                     </Field>
@@ -109,7 +106,7 @@ export function ShareReceiveDialog() {
                         onClick={(e) => {
                             e.preventDefault();
                             setLoading(true);
-                            fetchSharedCode(shareID!).then((res) => {
+                            fetchSharedCode(shareId!).then(async (res) => {
                                 if (!res.ok) {
                                     setLoading(false);
                                     addAlert({
@@ -121,7 +118,7 @@ export function ShareReceiveDialog() {
                                     });
                                     return;
                                 }
-                                const data = res.data!;
+                                const data = res.data;
                                 if (checkedItems.code) {
                                     defaultStore.set(codeStore, data.code);
                                 }
@@ -140,7 +137,9 @@ export function ShareReceiveDialog() {
                                 if (checkedItems.output) {
                                     defaultStore.set(
                                         outputStore,
-                                        data.outputData,
+                                        await importOutputCases(
+                                            data.outputData,
+                                        ),
                                     );
                                 }
                                 addAlert({
@@ -152,7 +151,8 @@ export function ShareReceiveDialog() {
                                 setLoading(false);
                                 setShowDialog(false);
                             });
-                        }}>
+                        }}
+                    >
                         {loading && <Spinner />} {t("shareReceive.receive")}
                     </AlertDialogAction>
                 </AlertDialogFooter>

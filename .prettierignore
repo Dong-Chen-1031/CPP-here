@@ -1,0 +1,15 @@
+# Prettier also skips everything in .gitignore. This file only lists what is
+# tracked (or generated locally) but should keep its original formatting.
+
+# Static files served as-is (search-engine verification page, web manifest)
+frontend/public/
+
+# Build output and generated types
+frontend/dist/
+frontend/.astro/
+frontend/.wrangler/
+frontend/worker-configuration.d.ts
+
+# Lockfiles
+*.lock
+package-lock.json

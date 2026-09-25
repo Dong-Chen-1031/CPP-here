@@ -222,3 +222,17 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Local state that must not end up in the images (env files would override compose settings)
+**/.env
+**/node_modules
+**/.venv
+**/__pycache__
+**/.DS_Store
+backend/cache
+backend/logs
+frontend/dist
+frontend/.astro
+frontend/.wrangler
+frontend/public/i18n
+frontend/public/script

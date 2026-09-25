@@ -1,71 +1,51 @@
-import config from "@/config/constants";
 import {
     codeStore,
     codeWorkersStore,
     cppVersionStore,
     editorErrorStore,
     inputStore,
-    outputStore,
     panelDrawerStore,
     runStatusStore,
     testCasesStore,
-    turnstileRefStore,
-    verifyJwtStore,
-    type OutputCase,
 } from "@/store/atom";
-import { apiAxios, axios } from "@/lib/axiosInstance";
+import {
+    addOutputChunk,
+    clearOutputBuffer,
+    outputStore,
+    type OutputCase,
+} from "@/store/outputStore";
+import {
+    DEFAULT_TIME_LIMIT_S,
+    MEMORY_LIMIT_MIB,
+    NO_TIME_LIMIT,
+    OUTPUT_LIMIT_BYTES,
+    parseTimeLimit,
+} from "@/config/runLimits";
+import { timeLimitStore } from "@/store/configStore";
+import i18next from "i18next";
+import { apiAxios, callAPI, isAuthError } from "@/lib/axiosInstance";
 import { addAlert } from "@/lib/alert";
 import { getDefaultStore } from "jotai";
-interface BuildResponse {
-    ok: boolean;
-    js_url?: string;
-    wasm_url?: string;
-    errors: string[];
-    js_code?: string;
-}
+import type { buildAPI } from "@/pages/api/build";
 
 const defaultStore = getDefaultStore();
 
-export async function buildCode(code: string, cppVersion: string) {
+async function buildCode(code: string, cppVersion: string) {
     try {
-        const jwt = defaultStore.get(verifyJwtStore) || "";
-        // console.log("JWT for build request:", jwt);
-
-        const respond = await apiAxios.post(
-            `/build`,
-            {
-                code: code,
-                cpp_version: cppVersion,
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${jwt}`,
-                },
-            },
-        );
-        return respond.data as BuildResponse;
+        return await callAPI<buildAPI>("/api/build", { code, cppVersion });
     } catch (error) {
         console.error("Error during build request:", error);
-        if (axios.isAxiosError(error) && error.status === 401) {
-            defaultStore.set(verifyJwtStore, null);
-            addAlert({
-                title: "Unauthorized",
-                description:
-                    "Your verification has expired and will be automatically renewed. Please try running your code again.",
-                variant: "destructive",
-            });
-            const turnstileRef = defaultStore.get(turnstileRefStore);
-            turnstileRef?.current?.reset();
-
-            await new Promise((resolve, reject) =>
-                defaultStore.sub(verifyJwtStore, () => {
-                    resolve(null);
-                }),
-            );
-
-            return await buildCode(code, cppVersion);
-        }
-        return { ok: false, errors: [String(error)] } as BuildResponse;
+        return {
+            ok: false,
+            js_code: "",
+            wasm_url: "",
+            errors: [
+                isAuthError(error)
+                    ? "Verification failed. Please try again."
+                    : String(error),
+            ],
+            success: false,
+        };
     }
 }
 
@@ -86,9 +66,12 @@ async function url2BlobUrl(
     return text2BlobUrl(code, type);
 }
 
+export type LimitKind = "time" | "output" | "memory";
+
 interface RunOptions {
     onStdout?: (output: string) => void;
     onError?: (error: string) => void;
+    onLimit?: (kind: LimitKind) => void;
     onInit?: () => void;
     onStderr?: (stderr: string) => void;
     onEvent?: (event: any) => void;
@@ -112,10 +95,11 @@ export class CodeWorker extends (typeof Worker !== "undefined"
           removeEventListener() {}
       } as typeof Worker)) {
     running: boolean = false;
+    timer: ReturnType<typeof setTimeout> | null = null;
 
-    constructor({ jsCode }: { jsCode: string }) {
+    constructor({ js_code }: { js_code: string }) {
         const blobUrl = URL.createObjectURL(
-            new Blob([jsCode], { type: "application/javascript" }),
+            new Blob([js_code], { type: "application/javascript" }),
         );
         super(blobUrl);
         try {
@@ -131,6 +115,10 @@ export class CodeWorker extends (typeof Worker !== "undefined"
 
     terminate() {
         super.terminate();
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = null;
+        }
         this.running = false;
         defaultStore.set(codeWorkersStore, (prev) =>
             prev.filter((w) => w !== this),
@@ -138,12 +126,20 @@ export class CodeWorker extends (typeof Worker !== "undefined"
     }
 }
 
+/** The user's time limit in seconds, falling back to the default if invalid. */
+function getTimeLimit() {
+    return (
+        parseTimeLimit(defaultStore.get(timeLimitStore)) ?? DEFAULT_TIME_LIMIT_S
+    );
+}
+
 export async function runCode(
-    jsCode: string,
+    js_code: string,
     inputData: string,
     {
         onStdout,
         onError,
+        onLimit,
         onInit,
         onStderr = (err) => {
             console.error("Standard error occurred.", err);
@@ -171,20 +167,47 @@ export async function runCode(
             const wasmResponse = await fetch(wasmUrl);
             wasmModule = await WebAssembly.compileStreaming(wasmResponse);
         }
-        const worker = new CodeWorker({ jsCode });
+        const worker = new CodeWorker({ js_code });
         const taskId = crypto.randomUUID();
+        let receivedBytes = 0;
+
+        const stopForLimit = (kind: LimitKind) => {
+            worker.terminate();
+            onLimit && onLimit(kind);
+            onExit && onExit();
+        };
+
+        const timeLimit = getTimeLimit();
+        if (timeLimit !== NO_TIME_LIMIT) {
+            worker.timer = setTimeout(
+                () => stopForLimit("time"),
+                timeLimit * 1000,
+            );
+        }
+
         worker.onerror = (event) => {
+            if (!worker.running) return;
             worker.terminate();
             onError && onError(event.message);
             onExit && onExit();
         };
         worker.onmessage = (event) => {
-            // console.log("Worker message received:", event.data);
+            if (!worker.running) return;
             onEvent && onEvent(event);
             const { type, content } = event.data;
             switch (type) {
                 case "stdout":
-                    onStdout && onStdout(content);
+                case "stderr":
+                    receivedBytes += content.length;
+                    if (receivedBytes > OUTPUT_LIMIT_BYTES) {
+                        stopForLimit("output");
+                        break;
+                    }
+                    if (type === "stdout") onStdout && onStdout(content);
+                    else onStderr && onStderr(content);
+                    break;
+                case "limit":
+                    stopForLimit(content);
                     break;
                 case "error":
                     worker.terminate();
@@ -208,10 +231,6 @@ export async function runCode(
                             );
                     }
                     break;
-                case "stderr":
-                    onStderr && onStderr(content);
-                    // onExit && onExit();
-                    break;
                 default:
                     console.warn("Unknown status from worker:", content);
             }
@@ -229,6 +248,8 @@ export async function runCode(
 }
 
 const store = getDefaultStore();
+
+const SINGLE_CASE_ID = "single";
 
 interface ShowErrorOptions {
     title?: string;
@@ -271,20 +292,42 @@ export function showError(err: string, options?: ShowErrorOptions) {
         variant: "destructive",
     });
 
-    const outputItem: OutputCase = {
-        type: "err",
-        content: err,
-        testCaseId: options?.testCaseId,
-        testCaseName: options?.testCaseName,
-    };
+    const testCaseId = options?.testCaseId ?? SINGLE_CASE_ID;
+    const prev = options?.replaceOutput ? [] : store.get(outputStore);
+    const hasOutput = prev.some((o) => o.testCaseId === testCaseId);
+    addOutputChunk(testCaseId, {
+        type: "error",
+        content: (hasOutput ? "\n" : "") + err,
+    });
+    store.set(
+        outputStore,
+        upsertCase(prev, {
+            type: "err",
+            testCaseId,
+            testCaseName: options?.testCaseName,
+            status: options?.testCaseId ? "error" : undefined,
+        }),
+    );
+}
 
-    store.set(outputStore, (prev) => {
-        if (options?.replaceOutput) return [outputItem];
-        if (options?.testCaseId) {
-            return insertInOrder(prev, outputItem);
-        } else {
-            return [...prev, outputItem];
-        }
+function showLimit(
+    kind: LimitKind,
+    options?: Pick<ShowErrorOptions, "testCaseId" | "testCaseName">,
+) {
+    const title = i18next.t(`editor:limit.${kind}.title`);
+    const description = i18next.t(`editor:limit.${kind}.description`, {
+        seconds: getTimeLimit(),
+        size:
+            kind === "memory"
+                ? MEMORY_LIMIT_MIB
+                : OUTPUT_LIMIT_BYTES / 1024 / 1024,
+    });
+    showError(`${title}: ${description}`, {
+        ...options,
+        title: options?.testCaseName
+            ? `${title} (${options.testCaseName})`
+            : title,
+        description,
     });
 }
 
@@ -300,11 +343,12 @@ export async function handleRun({
     store.set(runStatusStore, "building");
     store.set(editorErrorStore, []);
     store.set(outputStore, []);
-    window.screen.width < 768 && store.set(panelDrawerStore, "output");
+    await clearOutputBuffer();
+    window.innerWidth < 768 && store.set(panelDrawerStore, "output");
 
     const response = await buildCode(code, cppVersion);
 
-    if (!response.ok || !response.js_code) {
+    if (!response.ok || !response?.js_code) {
         window.posthog?.capture("code_build_failed", {
             cpp_version: cppVersion,
             mode: "single",
@@ -323,22 +367,26 @@ export async function handleRun({
         cpp_version: cppVersion,
     });
 
+    const addSingleOutput = (type: "stdout" | "stderr", content: string) => {
+        addOutputChunk(SINGLE_CASE_ID, { type, content });
+        if (store.get(outputStore).length === 0) {
+            store.set(outputStore, [{ testCaseId: SINGLE_CASE_ID }]);
+        }
+    };
+
     runCode(response.js_code, input, {
         wasmUrl: response.wasm_url,
-        onStdout: (output) => {
-            store.set(outputStore, (prev) => [
-                {
-                    content:
-                        (prev[prev.length - 1]?.content || "") + output + "\n",
-                },
-            ]);
-        },
+        onStdout: (output) => addSingleOutput("stdout", output),
+        onStderr: (output) => addSingleOutput("stderr", output),
         onError(error) {
             showError(error, {
                 title: "Runtime Error",
                 description:
                     "An error occurred during code execution. Please check output for details.",
             });
+        },
+        onLimit(kind) {
+            showLimit(kind);
         },
         onExit() {
             store.set(runStatusStore, "idle");
@@ -347,35 +395,29 @@ export async function handleRun({
     store.set(runStatusStore, "running");
 }
 
-function insertInOrder(prev: OutputCase[], item: OutputCase) {
-    // console.log("Inserting output item:", item);
-    const testCases = store.get(testCasesStore);
-
-    const lastSameIdx = prev.findLastIndex(
-        (o) => o.testCaseId === item.testCaseId && o.type === item.type,
-    );
-    if (lastSameIdx !== -1) {
-        const merged = {
-            ...prev[lastSameIdx],
-            content:
-                item.content !== ""
-                    ? prev[lastSameIdx].content + "\n" + item.content
-                    : prev[lastSameIdx].content,
-            status: item.status ?? prev[lastSameIdx].status,
+function upsertCase(prev: OutputCase[], item: OutputCase): OutputCase[] {
+    const existingIdx = prev.findIndex((o) => o.testCaseId === item.testCaseId);
+    if (existingIdx !== -1) {
+        const existing = prev[existingIdx];
+        const merged: OutputCase = {
+            ...existing,
+            type: item.type ?? existing.type,
+            testCaseName: item.testCaseName ?? existing.testCaseName,
+            status: item.status ?? existing.status,
         };
         return [
-            ...prev.slice(0, lastSameIdx),
+            ...prev.slice(0, existingIdx),
             merged,
-            ...prev.slice(lastSameIdx + 1),
+            ...prev.slice(existingIdx + 1),
         ];
     }
 
-    const orderedIds = testCases.map((tc) => tc.id);
+    const orderedIds = store.get(testCasesStore).map((tc) => tc.id);
 
-    const insertIdx = orderedIds.indexOf(item.testCaseId!);
+    const insertIdx = orderedIds.indexOf(item.testCaseId);
     let pos = prev.length;
     for (let i = prev.length - 1; i >= 0; i--) {
-        const idx = orderedIds.indexOf(prev[i].testCaseId!);
+        const idx = orderedIds.indexOf(prev[i].testCaseId);
         if (idx <= insertIdx) {
             pos = i + 1;
             break;
@@ -405,7 +447,8 @@ export async function handleRunAll() {
     store.set(runStatusStore, "building");
     store.set(editorErrorStore, []);
     store.set(outputStore, []);
-    window.screen.width < 768 && store.set(panelDrawerStore, "output");
+    await clearOutputBuffer();
+    window.innerWidth < 768 && store.set(panelDrawerStore, "output");
 
     const response = await buildCode(code, cppVersion);
     if (!response.ok || !response.js_code || !response.wasm_url) {
@@ -434,55 +477,54 @@ export async function handleRunAll() {
     // exitCount = 0;
 
     for (const testCase of testCases) {
+        let collected = "";
+        let failed = false;
+        const caseInfo = {
+            testCaseId: testCase.id,
+            testCaseName: testCase.name,
+        };
+        const addCaseOutput = (type: "stdout" | "stderr", content: string) => {
+            addOutputChunk(testCase.id, { type, content });
+            if (
+                !store
+                    .get(outputStore)
+                    .some((o) => o.testCaseId === testCase.id)
+            ) {
+                store.set(outputStore, (prev) =>
+                    upsertCase(prev, { ...caseInfo, status: "running" }),
+                );
+            }
+        };
         runCode(response.js_code, testCase.input, {
             wasmModule: wasmModule,
             onStdout(output) {
-                store.set(outputStore, (prev) =>
-                    insertInOrder(prev, {
-                        content: output,
-                        testCaseId: testCase.id,
-                        testCaseName: testCase.name,
-                        status: "running",
-                    }),
-                );
+                collected += output;
+                addCaseOutput("stdout", output);
+            },
+            onStderr(output) {
+                addCaseOutput("stderr", output);
             },
             onError(error) {
-                showError(error, {
-                    testCaseId: testCase.id,
-                    testCaseName: testCase.name,
-                });
+                failed = true;
+                showError(error, caseInfo);
+            },
+            onLimit(kind) {
+                failed = true;
+                showLimit(kind, caseInfo);
             },
             onExit() {
-                let status: "finished" | "running" | "error" | "ac" | "wa" =
-                    "finished";
-                if (testCase.expectedOutput) {
-                    const currentOutput = store
-                        .get(outputStore)
-                        .filter((o) => o.testCaseId === testCase.id)
-                        .map((o) => o.content.trim())
-                        .join("\n");
-                    // console.log(
-                    //   `Test case "${testCase.name}" expected output:`,
-                    //   testCase.expectedOutput,
-                    // );
-                    // console.log(
-                    //   `Test case "${testCase.name}" actual output:`,
-                    //   currentOutput,
-                    // );
-                    if (currentOutput === testCase.expectedOutput.trim()) {
-                        status = "ac";
-                    } else {
-                        status = "wa";
+                if (!failed) {
+                    let status: "finished" | "ac" | "wa" = "finished";
+                    if (testCase.expectedOutput) {
+                        status =
+                            collected.trim() === testCase.expectedOutput.trim()
+                                ? "ac"
+                                : "wa";
                     }
+                    store.set(outputStore, (prev) =>
+                        upsertCase(prev, { ...caseInfo, status }),
+                    );
                 }
-                store.set(outputStore, (prev) =>
-                    insertInOrder(prev, {
-                        content: "",
-                        testCaseId: testCase.id,
-                        testCaseName: testCase.name,
-                        status: status,
-                    }),
-                );
                 if (defaultStore.get(codeWorkersStore).length === 0) {
                     store.set(runStatusStore, "idle");
                 }

@@ -22,10 +22,11 @@ import {
     type TestCase,
 } from "@/store/atom";
 import { cn, useIsMobile } from "@/lib/utils";
-import { handleRun } from "@/api/run";
+import { handleRun } from "@/service/run";
 import { useTranslation } from "react-i18next";
 import TestEditDialog from "./TestEditDialog";
 import { addAlert } from "@/lib/alert";
+import { z } from "zod";
 
 interface Test {
     input: string;
@@ -80,6 +81,20 @@ interface extTestCase {
     batch: Batch;
 }
 
+/**
+ * The "ext" event can be dispatched by anything running on the page, so only
+ * the fields we actually consume are trusted — and only after validation.
+ */
+const ExtEventSchema = z.object({
+    name: z.string(),
+    tests: z.array(
+        z.object({
+            input: z.string(),
+            output: z.string(),
+        }),
+    ),
+});
+
 export default function TestCasePanel({
     drawer = false,
 }: {
@@ -106,7 +121,17 @@ export default function TestCasePanel({
                     problemName: "||||",
                 },
             ).split("||||");
-            const testCaseData = (event as CustomEvent<extTestCase>).detail;
+            const parsed = ExtEventSchema.safeParse(
+                (event as CustomEvent<extTestCase>).detail,
+            );
+            if (!parsed.success) {
+                console.warn(
+                    "Ignoring malformed ext event",
+                    parsed.error.issues,
+                );
+                return;
+            }
+            const testCaseData = parsed.data;
             const testCasesFromExtension: TestCase[] = testCaseData.tests.map(
                 (test, index) => ({
                     id: crypto.randomUUID(),
@@ -153,11 +178,15 @@ export default function TestCasePanel({
                         text: t("testCase.extension.alertDialog.overwrite"),
                         onClick: () => {
                             setTestCases(testCasesFromExtension);
-                            window.posthog?.capture("extension_test_cases_imported", {
-                                test_case_count: testCasesFromExtension.length,
-                                problem_name: testCaseData.name,
-                                mode: "overwrite",
-                            });
+                            window.posthog?.capture(
+                                "extension_test_cases_imported",
+                                {
+                                    test_case_count:
+                                        testCasesFromExtension.length,
+                                    problem_name: testCaseData.name,
+                                    mode: "overwrite",
+                                },
+                            );
                             if (isMobile) {
                                 setPanel("testCases");
                             }
@@ -171,11 +200,15 @@ export default function TestCasePanel({
                                 ...testCasesFromExtension,
                                 ...prev,
                             ]);
-                            window.posthog?.capture("extension_test_cases_imported", {
-                                test_case_count: testCasesFromExtension.length,
-                                problem_name: testCaseData.name,
-                                mode: "insert",
-                            });
+                            window.posthog?.capture(
+                                "extension_test_cases_imported",
+                                {
+                                    test_case_count:
+                                        testCasesFromExtension.length,
+                                    problem_name: testCaseData.name,
+                                    mode: "insert",
+                                },
+                            );
                             if (isMobile) {
                                 setPanel("testCases");
                             }
@@ -214,7 +247,8 @@ export default function TestCasePanel({
             <div
                 className={cn(
                     "p-4 border-border border-2 rounded-md h-full @container",
-                )}>
+                )}
+            >
                 <div className="flex gap-2 items-center">
                     <TestTubes className="w-3 h-3 shrink-0" />
                     <p className="text-sm truncate">{t("testCase.label")}</p>
@@ -232,7 +266,8 @@ export default function TestCasePanel({
                                     }),
                                     handleSubmit: handleAddTestCase,
                                 });
-                            }}>
+                            }}
+                        >
                             <CirclePlus className="w-4 h-4" />
                             <span className="hidden @[250px]:inline">
                                 {t("testCase.addBtn")}
@@ -254,7 +289,8 @@ export default function TestCasePanel({
                                     onClick={() => {
                                         setInput(testCase.input);
                                         isMobile && setPanel("input");
-                                    }}>
+                                    }}
+                                >
                                     <Tip label={t("testCase.setInputTip")}>
                                         <p className="flex-1 truncate">
                                             {testCase.name}
@@ -264,7 +300,8 @@ export default function TestCasePanel({
                                         <div
                                             className={
                                                 cantRun ? "cursor-default" : ""
-                                            }>
+                                            }
+                                        >
                                             <Button
                                                 variant="outline"
                                                 size="icon"
@@ -278,7 +315,8 @@ export default function TestCasePanel({
                                                     handleRun({
                                                         input: testCase.input,
                                                     });
-                                                }}>
+                                                }}
+                                            >
                                                 <Play className="w-4 h-4" />
                                             </Button>
                                         </div>
@@ -323,7 +361,8 @@ export default function TestCasePanel({
                                                         );
                                                     },
                                                 });
-                                            }}>
+                                            }}
+                                        >
                                             <Pencil className="w-4 h-4" />
                                         </Button>
                                     </Tip>
@@ -342,8 +381,11 @@ export default function TestCasePanel({
                                                             testCase.id,
                                                     ),
                                                 );
-                                                window.posthog?.capture("test_case_deleted");
-                                            }}>
+                                                window.posthog?.capture(
+                                                    "test_case_deleted",
+                                                );
+                                            }}
+                                        >
                                             <Trash className="w-4 h-4" />
                                         </Button>
                                     </Tip>

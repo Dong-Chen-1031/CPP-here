@@ -22,7 +22,7 @@ import {
     verifyJwtStore,
 } from "@/store/atom";
 
-import { handleRun, handleRunAll } from "@/api/run";
+import { handleRun, handleRunAll } from "@/service/run";
 
 import Tip from "@/components/ui/tips";
 import { cn, commandKeyIcon } from "@/lib/utils";
@@ -44,30 +44,34 @@ const MotionButtonLabel = React.forwardRef(function MotionButtonLabel(
     },
     ref: React.Ref<HTMLDivElement>,
 ) {
-    const el =
-        typeof window !== "undefined"
-            ? window.document.getElementById("runBtnText")
-            : null;
+    const innerRef = React.useRef<HTMLDivElement>(null);
+    React.useImperativeHandle(ref, () => innerRef.current as HTMLDivElement);
 
-    if (el) {
+    // Measure after commit, never during render: reading the DOM while
+    // rendering breaks under StrictMode / concurrent rendering, and a global
+    // getElementById would pick up the label that is currently animating out.
+    // Each label records its own width while mounted, so the next label to
+    // enter starts from the width of the one it replaced.
+    React.useLayoutEffect(() => {
+        const el = innerRef.current?.querySelector<HTMLElement>(
+            "[data-run-btn-text]",
+        );
+        if (!el) return;
+
         const len = el.offsetWidth;
-        if (len != lastWidthRef.current[lastWidthRef.current.length - 1]) {
-            lastWidthRef.current.push(len);
-            lastWidthRef.current = lastWidthRef.current.slice(-2);
-            // console.log("Measured width:", lastWidthRef.current);
+        if (len !== lastWidthRef.current[lastWidthRef.current.length - 1]) {
+            lastWidthRef.current = [...lastWidthRef.current, len].slice(-2);
         }
-    }
+    });
 
-    // console.log(
-    //   "Rendering MotionButtonLabel with children:",
-    //   lastWidthRef.current[0],
-    // );
+    const enterWidth = lastWidthRef.current[lastWidthRef.current.length - 1];
+
     return (
         <motion.div
-            ref={ref}
+            ref={innerRef}
             initial={
                 initial && {
-                    width: `calc(${lastWidthRef.current[1]}px + 1.125rem)`,
+                    width: `calc(${enterWidth}px + 1.125rem)`,
                     opacity: 0,
                 }
             }
@@ -86,7 +90,8 @@ const MotionButtonLabel = React.forwardRef(function MotionButtonLabel(
             className={cn(
                 "w-full h-full flex items-center justify-center gap-1 overflow-hidden whitespace-nowrap opacity-0",
                 className,
-            )}>
+            )}
+        >
             {children}
         </motion.div>
     );
@@ -107,7 +112,6 @@ export function RunButton({
     const runBtnGroupRef = React.useRef<HTMLDivElement>(
         undefined,
     ) as React.RefObject<HTMLDivElement>;
-    const btnTextRef = React.useRef<HTMLSpanElement>(null);
     const cantPress = !jwt || (runStatus !== "idle" && runStatus !== "running");
     const { t } = useTranslation(["editor"]);
     const [hasLoaded, setHasLoaded] = React.useState(false);
@@ -133,7 +137,8 @@ export function RunButton({
                             <Kbd>⏎</Kbd>
                         </>
                     )
-                }>
+                }
+            >
                 <Button
                     variant={
                         runStatus === "running" ? "destructive" : "outline"
@@ -157,30 +162,27 @@ export function RunButton({
                             handleRunAll();
                         }
                         onClick(e);
-                    }}>
+                    }}
+                >
                     <AnimatePresence mode="popLayout" initial={hasLoaded}>
                         {!jwt ? (
                             <MotionButtonLabel
                                 key="verify"
                                 lastWidthRef={lastWidthRef}
-                                initial={false}>
+                                initial={false}
+                            >
                                 <Spinner className="size-3" />
-                                <span
-                                    className="text-xs"
-                                    id="runBtnText"
-                                    ref={btnTextRef}>
+                                <span className="text-xs" data-run-btn-text>
                                     {t("headerActions.verifying")}
                                 </span>
                             </MotionButtonLabel>
                         ) : runStatus === "building" ? (
                             <MotionButtonLabel
                                 key="building"
-                                lastWidthRef={lastWidthRef}>
+                                lastWidthRef={lastWidthRef}
+                            >
                                 <Spinner className="size-3" />
-                                <span
-                                    className="text-xs"
-                                    id="runBtnText"
-                                    ref={btnTextRef}>
+                                <span className="text-xs" data-run-btn-text>
                                     {t("headerActions.building")}
                                 </span>
                             </MotionButtonLabel>
@@ -188,31 +190,31 @@ export function RunButton({
                             <MotionButtonLabel
                                 key="running"
                                 lastWidthRef={lastWidthRef}
-                                className="relative">
+                                className="relative"
+                            >
                                 {/* <Spinner></Spinner> */}
                                 <SquareIcon className="" />
-                                <span
-                                    className="text-xs"
-                                    id="runBtnText"
-                                    ref={btnTextRef}>
+                                <span className="text-xs" data-run-btn-text>
                                     {t("headerActions.stop")}
                                 </span>
                             </MotionButtonLabel>
                         ) : runMode === "single" ? (
                             <MotionButtonLabel
                                 key="run"
-                                lastWidthRef={lastWidthRef}>
+                                lastWidthRef={lastWidthRef}
+                            >
                                 <Play />
-                                <span id="runBtnText" ref={btnTextRef}>
+                                <span data-run-btn-text>
                                     {t("headerActions.run")}
                                 </span>
                             </MotionButtonLabel>
                         ) : (
                             <MotionButtonLabel
                                 key="run-all"
-                                lastWidthRef={lastWidthRef}>
+                                lastWidthRef={lastWidthRef}
+                            >
                                 <TestTubes />
-                                <span id="runBtnText" ref={btnTextRef}>
+                                <span data-run-btn-text>
                                     {t("headerActions.runAll")}
                                 </span>
                             </MotionButtonLabel>
@@ -247,7 +249,8 @@ export function RunButton({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                         align="end"
-                        className="max-w-fit min-w-fit w-fit">
+                        className="max-w-fit min-w-fit w-fit"
+                    >
                         <DropdownMenuGroup>
                             {runMode === "single" ? (
                                 <DropdownMenuItem
@@ -255,12 +258,14 @@ export function RunButton({
                                         setRunMode("all");
                                         handleRunAll();
                                         onClick(e);
-                                    }}>
+                                    }}
+                                >
                                     <TestTubes />
                                     <Tip
                                         label={t(
                                             "headerActions.runAllTestCases",
-                                        )}>
+                                        )}
+                                    >
                                         <p className="text-xs flex-1 text-left">
                                             {t("headerActions.runAll")}
                                         </p>
@@ -272,12 +277,14 @@ export function RunButton({
                                         setRunMode("single");
                                         handleRun();
                                         onClick(e);
-                                    }}>
+                                    }}
+                                >
                                     <Play />
                                     <Tip
                                         label={t(
                                             "headerActions.runCurrentInput",
-                                        )}>
+                                        )}
+                                    >
                                         <p className="text-xs flex-1 text-left pr-5">
                                             {t("headerActions.run")}
                                         </p>

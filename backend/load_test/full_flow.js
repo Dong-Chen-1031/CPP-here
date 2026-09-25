@@ -55,7 +55,7 @@ const BUILD_HEADERS = {
 // ── Scenario: pollEndpoints ────────────────────────────────────────────────
 export function pollEndpoints() {
     group("health", () => {
-        const r = http.get(`${BASE_URL}/health`);
+        const r = http.get(`${BASE_URL}/api/health`);
         errorRate.add(
             !check(r, {
                 "health 200": (res) => res.status === 200,
@@ -64,7 +64,7 @@ export function pollEndpoints() {
     });
 
     group("status", () => {
-        const r = http.get(`${BASE_URL}/status`);
+        const r = http.get(`${BASE_URL}/api/status`);
         errorRate.add(
             !check(r, {
                 "status 200": (res) => res.status === 200,
@@ -79,7 +79,7 @@ export function pollEndpoints() {
 export function buildFlow() {
     // Step 1: 確認服務存活
     group("pre-check health", () => {
-        const r = http.get(`${BASE_URL}/health`);
+        const r = http.get(`${BASE_URL}/api/health`);
         check(r, { "pre-check 200": (res) => res.status === 200 });
     });
 
@@ -97,10 +97,10 @@ int main() {
     std::cout << "Sum 1..100 = " << sum << std::endl;
     return 0;
 }`,
-            cpp_version: "c++20",
+            cppVersion: "c++20",
         });
 
-        const r = http.post(`${BASE_URL}/build`, payload, {
+        const r = http.post(`${BASE_URL}/api/build`, payload, {
             headers: BUILD_HEADERS,
             timeout: "60s",
         });

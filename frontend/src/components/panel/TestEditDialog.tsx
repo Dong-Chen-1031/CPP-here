@@ -76,7 +76,8 @@ export default function TestEditDialog() {
             <DialogContent
                 className="md:max-w-125"
                 showCloseButton={false}
-                onKeyDown={handleDialogKeyDown}>
+                onKeyDown={handleDialogKeyDown}
+            >
                 <DialogHeader className="p-2">
                     <DialogTitle>{title}</DialogTitle>
                 </DialogHeader>
@@ -131,7 +132,8 @@ export default function TestEditDialog() {
                             <>
                                 {t("common:cancel")} <Kbd>Esc</Kbd>
                             </>
-                        }>
+                        }
+                    >
                         <DialogClose asChild>
                             <Button variant="outline">
                                 {t("common:cancel")}
@@ -151,7 +153,8 @@ export default function TestEditDialog() {
                                 {""}
                                 <Kbd>⏎</Kbd>
                             </>
-                        }>
+                        }
+                    >
                         <Button onClick={handleSubmitWrapper}>
                             {submitBtnName}
                         </Button>
