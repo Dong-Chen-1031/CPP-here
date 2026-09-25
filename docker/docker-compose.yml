@@ -280,7 +280,7 @@ services:
             - backend
 
     wasm-builder:
-        image: ghcr.io/dong-chen-1031/safe-cpp2wasm:sha-58d3586
+        image: ghcr.io/dong-chen-1031/safe-cpp2wasm:tree-0b67a8c42a28
         entrypoint: ["true"]
         restart: "no"
         # This service exists only to pre-pull the wasm builder image onto the host,

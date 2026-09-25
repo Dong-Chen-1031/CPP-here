@@ -28,11 +28,11 @@ C++ Here is a next-generation in-browser (online) C++ editor built for competiti
 
 - **Frontend**: Astro, Bun, Motion, React, Shadcn, Tailwind CSS, TypeScript, axios, cloudflare turnstile, codemirror, i18next, Jotai Atom, lucide
 - **Browser Extension**: Bun, TypeScript, esbuild, web-ext
-- **Backend**: FastAPI, PyJWT, PyTurnstile, Python, SQLAlchemy, Uvicorn, aiodocker, aiofiles, aiosqlite, apscheduler, [safe-cpp2wasm](https://github.com/Dong-Chen-1031/safe-cpp2wasm/)
+- **Backend**: FastAPI, PyJWT, PyTurnstile, Python, SQLAlchemy, Uvicorn, aiodocker, aiofiles, aiosqlite, apscheduler, [safe-cpp2wasm](builder/)
 
 ## Principles and Advantages
 
-The main difference between C++ Here and other online C++ editors is that we use [safe-cpp2wasm](https://github.com/Dong-Chen-1031/safe-cpp2wasm/) to compile C++ files into WebAssembly and execute them directly in the frontend. The advantages of this approach are:
+The main difference between C++ Here and other online C++ editors is that we use [safe-cpp2wasm](builder/) to compile C++ files into WebAssembly and execute them directly in the frontend. The advantages of this approach are:
 
 1. **Fast**: Since the compiled WebAssembly modules can run directly in the browser, there is no need to rely on the backend for execution every time, significantly improving execution speed.
 2. **Secure**: WebAssembly runs in the browser and features sandbox isolation, which effectively prevents malicious code from threatening the system.
@@ -96,7 +96,8 @@ uv pip install -r backend/requirements.txt
 3. Pull Docker image
 
 ```shell
-docker pull ghcr.io/dong-chen-1031/safe-cpp2wasm:latest
+# The builder image tag the backend is pinned to
+docker pull "$(grep -oE 'ghcr.io/dong-chen-1031/safe-cpp2wasm:[a-z0-9-]+' backend/services/build.py)"
 ```
 
 4. Run backend

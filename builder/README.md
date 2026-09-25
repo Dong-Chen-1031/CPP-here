@@ -35,7 +35,7 @@ build.sh               # Compile a local file with the image
 CI ([`.github/workflows/builder-docker.yml`](../.github/workflows/builder-docker.yml))
 tags every image with `tree-<hash>`, the git tree hash of `builder/docker`.
 The hash is known before merging, so a pull request that changes the image
-pins the new tag in `backend/services/build.py` and `docker/docker-compose.yml`
+pins the new tag in `backend/services/build.py` and `docker/**/docker-compose.yml`
 in the same change; `ci.yml` fails when the pin doesn't match:
 
 ```bash

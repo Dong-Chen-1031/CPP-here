@@ -14,7 +14,7 @@ from prometheus_client import Counter, Histogram
 from pydantic import BaseModel, Field
 
 from router.direct_api.verify import need_token
-from services.build import BuildError, build
+from services.build import BUILDER_IMAGE, BuildError, build
 from settings import settings
 from utils import cache
 from utils.cache import add_build_stats
@@ -67,8 +67,10 @@ class BuildRequest(BaseModel):
     )
 
     def hash(self) -> str:
+        # BUILDER_IMAGE is part of the key so switching builder images never
+        # serves output built by the previous one
         return sha256(
-            (str(self.model_dump()) + settings.BUILD_VERSION).encode()
+            (str(self.model_dump()) + settings.BUILD_VERSION + BUILDER_IMAGE).encode()
         ).hexdigest()
 
 
