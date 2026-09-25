@@ -6,13 +6,14 @@
 
 量一台主機的編譯效能、建議的 `DOCKER_POOL_SIZE`，並給一個綜合分數。不需要
 k6，也不需要先啟動後端：腳本已經在後端映像檔裡，要測的主機只要有 Docker。
+`-t` 讓輸出有顏色和即時更新的表格；沒加也能跑，只是改成逐行印進度。
 
 ```bash
-docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+docker run --rm -t -v /var/run/docker.sock:/var/run/docker.sock \
     ghcr.io/dong-chen-1031/cpp-here/backend python load_test/host_bench.py
 
 # 快速版（每級 10 秒，約 2 分鐘），並把 JSON 結果存到目前目錄
-docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/out" \
+docker run --rm -t -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/out" \
     ghcr.io/dong-chen-1031/cpp-here/backend \
     python load_test/host_bench.py --quick --out /out
 ```

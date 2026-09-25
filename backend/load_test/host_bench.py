@@ -6,11 +6,11 @@ pool 補充邏輯、cpp-here-build、取回產物的流程都和正式環境相�
 
 在要測的主機上，只需要 Docker（腳本已經在後端映像檔裡）：
 
-    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \\
+    docker run --rm -t -v /var/run/docker.sock:/var/run/docker.sock \\
         ghcr.io/dong-chen-1031/cpp-here/backend python load_test/host_bench.py
 
     # 快速版（每級 10 秒）、存 JSON 結果到目前目錄
-    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/out" \\
+    docker run --rm -t -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/out" \\
         ghcr.io/dong-chen-1031/cpp-here/backend \\
         python load_test/host_bench.py --quick --out /out
 
@@ -43,6 +43,19 @@ sys.path.insert(0, str(BACKEND))
 os.chdir(BACKEND)
 
 import aiodocker  # noqa: E402
+from rich.console import Console, Group  # noqa: E402
+from rich.live import Live  # noqa: E402
+from rich.panel import Panel  # noqa: E402
+from rich.progress import (  # noqa: E402
+    BarColumn,
+    DownloadColumn,
+    Progress,
+    TimeRemainingColumn,
+    TransferSpeedColumn,
+)
+from rich.spinner import Spinner  # noqa: E402
+from rich.table import Table  # noqa: E402
+from rich.text import Text  # noqa: E402
 
 import services.build as B  # noqa: E402
 from services.resource_manager import resource_manager  # noqa: E402
@@ -144,8 +157,39 @@ COOLDOWN_S = 3  # 級距之間的間隔，讓上一級刪除容器等收尾先�
 
 
 # ── 輸出 ──────────────────────────────────────────────────────────────────
-def say(msg: str = "") -> None:
-    print(msg, flush=True)
+# 沒有 TTY 時（docker run 沒加 -t）rich 不會畫動畫與即時表格，改成逐行印進度
+console = Console(highlight=False)
+
+
+def done(msg: str) -> None:
+    console.print(f"[green]✓[/] {msg}")
+
+
+def sweep_table(results: list[dict], recommended: int | None = None) -> Table:
+    table = Table(title="同時編譯數掃描（pool 數 = 同時編譯數）", title_justify="left")
+    table.add_column("同時", justify="right")
+    table.add_column("吞吐量/分", justify="right")
+    table.add_column("p50", justify="right")
+    table.add_column("p95", justify="right")
+    table.add_column("冷啟動", justify="right")
+    table.add_column("錯誤", justify="right")
+    best = max((r["throughput_per_min"] for r in results), default=0)
+    for r in results:
+        rec = r["concurrency"] == recommended
+        tput = f"{r['throughput_per_min']:.0f}"
+        if r["throughput_per_min"] == best:
+            tput = f"[bold]{tput}[/]"
+        errors = f"[red]{r['errors']}[/]" if r["errors"] else "0"
+        table.add_row(
+            f"{'★ ' if rec else ''}{r['concurrency']}",
+            tput,
+            f"{r['p50_s']:.2f} s",
+            f"{r['p95_s']:.2f} s",
+            f"{r['cold_ratio'] * 100:.0f}%",
+            errors,
+            style="green" if rec else None,
+        )
+    return table
 
 
 def fmt_bytes(n: float) -> str:
@@ -273,6 +317,59 @@ async def measure_raw_compile(docker: aiodocker.Docker, ncpu: int) -> dict:
     }
 
 
+async def ensure_builder_image(docker: aiodocker.Docker) -> None:
+    """本機沒有 builder 映像檔時 pull，並顯示下載進度。
+
+    和 ContainerPool._ensure_image() 做一樣的事，但那個是靜默的：映像檔約
+    360 MB，沒有進度的話看起來像卡住。
+    """
+    try:
+        await docker.images.inspect(B.BUILDER_IMAGE)
+        done("builder 映像檔已在本機")
+        return
+    except aiodocker.DockerError as e:
+        if e.status != 404:
+            raise
+
+    console.print(
+        f"[cyan]↓[/] 本機沒有 builder 映像檔，開始 pull [bold]{B.BUILDER_IMAGE}[/]"
+    )
+    start = time.monotonic()
+    layers: dict[str, tuple[int, int]] = {}  # layer id -> (已下載, 總大小)
+    columns = (
+        BarColumn(),
+        DownloadColumn(),
+        TransferSpeedColumn(),
+        TimeRemainingColumn(),
+    )
+    # 沒有 TTY 時不畫進度條（rich 會多印空行），改成每 10 秒印一行
+    progress = Progress(
+        *columns, console=console, transient=True, disable=not console.is_terminal
+    )
+    last_line = start
+    with progress:
+        task = progress.add_task("pull", total=None)
+        async for event in docker.images.pull(B.BUILDER_IMAGE, stream=True):
+            if "error" in event:
+                raise aiodocker.DockerError(500, str(event["error"]))
+            layer, detail = str(event.get("id")), event.get("progressDetail") or {}
+            if event.get("status") == "Downloading" and detail.get("total"):
+                layers[layer] = (detail.get("current", 0), detail["total"])
+            elif event.get("status") in ("Download complete", "Already exists"):
+                if layer in layers:
+                    layers[layer] = (layers[layer][1], layers[layer][1])
+            if not layers:
+                continue
+            got = sum(c for c, _ in layers.values())
+            total = sum(t for _, t in layers.values())
+            progress.update(task, completed=got, total=total)
+            if not console.is_terminal and time.monotonic() - last_line >= 10:
+                last_line = time.monotonic()
+                console.print(f"  已下載 {fmt_bytes(got)} / {fmt_bytes(total)}")
+    size = sum(t for _, t in layers.values())
+    done(f"pull 完成（{fmt_bytes(size)}，{time.monotonic() - start:.0f} 秒）")
+
+
 async def remove_leftovers(docker: aiodocker.Docker) -> int:
     """刪掉這次測試建立、但還沒被刪的 worker（owner 標籤是這個行程的）。"""
     containers = await docker.containers.list(
@@ -375,39 +472,51 @@ async def main() -> int:
     try:
         info = await docker.system.info()
         ncpu, mem_total = info["NCPU"], info["MemTotal"]
-        say("═══ C++ Here 主機編譯效能測試 ═══")
-        say(
-            f"主機      {info.get('Name')}  ({info.get('OperatingSystem')}, {info.get('Architecture')})"
+        header = Table.grid(padding=(0, 2))
+        header.add_column(style="dim")
+        header.add_column()
+        header.add_row(
+            "主機",
+            f"{info.get('Name')}（{info.get('OperatingSystem')}，{info.get('Architecture')}）",
         )
-        say(f"資源      {ncpu} CPU、{fmt_bytes(mem_total)} 記憶體（Docker 看到的）")
-        say(f"映像檔    {B.BUILDER_IMAGE}")
-        say(f"負載      workload v{WORKLOAD_VERSION}，每級 {duration:.0f} 秒")
+        header.add_row(
+            "資源", f"{ncpu} CPU、{fmt_bytes(mem_total)} 記憶體（Docker 看到的）"
+        )
+        header.add_row("映像檔", B.BUILDER_IMAGE)
+        header.add_row("負載", f"workload v{WORKLOAD_VERSION}，每級 {duration:.0f} 秒")
+        console.print(
+            Panel(header, title="[bold]C++ Here 主機編譯效能測試", expand=False)
+        )
         busy = host_load()
         if busy is not None and busy > 0.25 * ncpu:
-            say(f"⚠ 主機目前的 load average 是 {busy:.1f}（{ncpu} CPU），結果會偏低")
-        say()
+            console.print(
+                f"[yellow]⚠ 主機目前的 load average 是 {busy:.1f}（{ncpu} CPU），結果會偏低"
+            )
 
         pool = B.ContainerPool()
-        say("▸ 確認 builder 映像檔（沒有的話會 pull）…")
         try:
-            await pool._ensure_image()
+            await ensure_builder_image(docker)
         except aiodocker.DockerError as e:
-            say(f"✗ 拿不到 builder 映像檔：{e.message}")
-            say(
-                "  這個後端映像檔 pin 的 builder tag 還沒推上 registry：builder 映像檔在"
-                " main 或同 repo 的 PR 才會推送（builder-docker.yml），等那個 workflow"
-                " 跑完再試；或在這台主機上自己 build：\n"
-                f"  docker build -t {B.BUILDER_IMAGE} \\\n"
-                "      https://github.com/Dong-Chen-1031/CPP-here.git#<分支>:builder/docker"
+            console.print(
+                Panel(
+                    f"{e.message}\n\n"
+                    "這個後端映像檔 pin 的 builder tag 還沒推上 registry：builder 映像檔在"
+                    " main 或同 repo 的 PR 才會推送（builder-docker.yml），等那個 workflow"
+                    " 跑完再試；或在這台主機上自己 build：\n\n"
+                    f"  docker build -t {B.BUILDER_IMAGE} \\\n"
+                    "      https://github.com/Dong-Chen-1031/CPP-here.git#<分支>:builder/docker",
+                    title="[bold red]拿不到 builder 映像檔",
+                    border_style="red",
+                )
             )
             return 1
 
-        say("▸ 量測容器啟動速度與記憶體…")
-        cont = await measure_containers(pool, parallel=min(8, ncpu))
-        say(
-            f"  冷啟動 {cont['cold_start_s'] * 1000:.0f} ms、"
-            f"並行建立 {cont['create_rate_per_s']:.1f} 個/秒、"
-            f"編譯峰值記憶體 {fmt_bytes(cont['build_peak_memory_bytes'])}"
+        with console.status("量測容器啟動速度與記憶體…"):
+            cont = await measure_containers(pool, parallel=min(8, ncpu))
+        done(
+            f"容器：冷啟動 [bold]{cont['cold_start_s'] * 1000:.0f} ms[/]、"
+            f"並行建立 [bold]{cont['create_rate_per_s']:.1f}[/] 個/秒、"
+            f"編譯峰值記憶體 [bold]{fmt_bytes(cont['build_peak_memory_bytes'])}[/]"
             + ("" if cont["memory_measured"] else "（讀不到，以上限估計）")
         )
 
@@ -418,46 +527,53 @@ async def main() -> int:
         worst_cap = max(1, int(mem_total * 0.8 // limit))
         max_c = args.max or min(2 * ncpu, mem_cap)
         levels = [c for c in LEVEL_CANDIDATES if c <= max_c] or [1]
-        say(
-            f"  記憶體：最壞情況（每個編譯用滿 {fmt_bytes(limit)}）最多同時 {worst_cap} 個；"
-            f"測試級距 {levels}"
+        done(
+            f"記憶體：最壞情況（每個編譯用滿 {fmt_bytes(limit)}）最多同時 "
+            f"[bold]{worst_cap}[/] 個；測試級距 {', '.join(map(str, levels))}"
         )
-        say()
+        console.print()
 
-        say("▸ 同時編譯數掃描（pool 數 = 同時編譯數）")
-        say(
-            f"  {'同時':>4} {'吞吐量/分':>10} {'p50':>7} {'p95':>7} {'冷啟動':>7} {'錯誤':>5}"
-        )
-        results = []
+        results: list[dict] = []
         best = 0.0
         stale = 0
-        for c in levels:
-            r = await run_level(c, duration, args.seed)
-            r["leaked_containers"] = await remove_leftovers(docker)
-            results.append(r)
-            say(
-                f"  {c:>4} {r['throughput_per_min']:>10.0f} {r['p50_s']:>6.2f}s "
-                f"{r['p95_s']:>6.2f}s {r['cold_ratio'] * 100:>6.0f}% {r['errors']:>5}"
+
+        def running(c: int) -> Group:
+            return Group(
+                sweep_table(results),
+                Spinner("dots", text=f" 測試 {c} 個同時編譯（{duration:.0f} 秒）…"),
             )
-            for e in r["error_samples"]:
-                say(f"       ! {e[:110]}")
-            # 吞吐量連續兩級沒有再成長 3% 以上，就表示已經過了飽和點；至少測到
-            # 4 個同時，避免低級距的雜訊讓測試太早結束
-            stale = 0 if r["throughput_per_min"] > best * 1.03 else stale + 1
-            best = max(best, r["throughput_per_min"])
-            if stale >= 2 and c >= 4:
-                break
-            await asyncio.sleep(COOLDOWN_S)
-        say()
+
+        with Live(running(levels[0]), console=console, transient=True) as live:
+            for c in levels:
+                live.update(running(c))
+                r = await run_level(c, duration, args.seed)
+                r["leaked_containers"] = await remove_leftovers(docker)
+                results.append(r)
+                if not console.is_terminal:
+                    console.print(
+                        f"  {c} 個同時：{r['throughput_per_min']:.0f} 次/分鐘、"
+                        f"p50 {r['p50_s']:.2f} s、p95 {r['p95_s']:.2f} s、錯誤 {r['errors']}"
+                    )
+                for e in r["error_samples"]:
+                    console.print(f"  [red]! {e[:110]}")
+                # 吞吐量連續兩級沒有再成長 3% 以上，就表示已經過了飽和點；至少測到
+                # 4 個同時，避免低級距的雜訊讓測試太早結束
+                stale = 0 if r["throughput_per_min"] > best * 1.03 else stale + 1
+                best = max(best, r["throughput_per_min"])
+                if stale >= 2 and c >= 4:
+                    break
+                live.update(Group(sweep_table(results), Text(" 冷卻中…", style="dim")))
+                await asyncio.sleep(COOLDOWN_S)
+        done(f"同時編譯數掃描完成（測到 {results[-1]['concurrency']} 個同時）")
 
         # 放在掃描之後：這段會把所有 CPU 吃滿，放在前面會拖慢掃描（筆電還會降頻）
-        say("▸ 量測純編譯上限（不含容器管理開銷）…")
-        raw = await measure_raw_compile(docker, ncpu)
-        say(
-            f"  1 個同時 {raw['single_per_min']:.0f} 次/分鐘、"
-            f"{ncpu} 個同時 {raw['all_cpus_per_min']:.0f} 次/分鐘"
+        with console.status("量測純編譯上限（不含容器管理開銷）…"):
+            raw = await measure_raw_compile(docker, ncpu)
+        done(
+            f"純編譯上限：1 個同時 [bold]{raw['single_per_min']:.0f}[/] 次/分鐘、"
+            f"{ncpu} 個同時 [bold]{raw['all_cpus_per_min']:.0f}[/] 次/分鐘"
         )
-        say()
+        console.print()
 
         # 建議 pool 數：沒有錯誤、吞吐量達到最高值 90% 的最小同時編譯數
         clean = [r for r in results if r["errors"] == 0] or results
@@ -469,6 +585,7 @@ async def main() -> int:
         single = results[0]
         build_rate = rec["throughput_per_min"] / 60
         pool_size = min(rec["concurrency"], worst_cap)
+        overhead = 1 - peak / raw["all_cpus_per_min"]
 
         score = (
             1000
@@ -476,24 +593,40 @@ async def main() -> int:
             * (REF_LATENCY / single["p50_s"]) ** 0.3
         )
 
-        say("═══ 結果 ═══")
-        say(
-            f"單一編譯延遲    p50 {single['p50_s']:.2f} s（"
-            + "、".join(f"{n} {v:.2f}" for n, v in single["per_sample_p50_s"].items())
-            + "）"
+        console.print(sweep_table(results, recommended=rec["concurrency"]))
+        console.print()
+
+        samples = Table.grid(padding=(0, 2))
+        samples.add_column(style="dim")
+        samples.add_column(justify="right")
+        for n, v in single["per_sample_p50_s"].items():
+            samples.add_row(n, f"{v:.2f} s")
+
+        summary = Table.grid(padding=(0, 2))
+        summary.add_column(style="bold")
+        summary.add_column()
+        summary.add_row(
+            "建議 pool 數",
+            f"[bold green]DOCKER_POOL_SIZE={pool_size}[/]"
+            f"  [dim]（{rec['throughput_per_min']:.0f} 次/分鐘，p95 {rec['p95_s']:.2f} s）",
         )
-        overhead = 1 - peak / raw["all_cpus_per_min"]
-        say(
-            f"最高吞吐量      {peak:.0f} 次/分鐘（純編譯上限 {raw['all_cpus_per_min']:.0f}，"
-            f"容器管理等開銷吃掉 {overhead * 100:.0f}%）"
+        color = "green" if score >= 1000 else "yellow" if score >= 500 else "red"
+        summary.add_row(
+            "綜合分數",
+            f"[bold {color}]{score:.0f}[/]"
+            "  [dim]（1000 = Apple M4 10 核 + OrbStack；吞吐量占 70%、延遲占 30%）",
         )
-        say(
-            f"建議 pool 數    DOCKER_POOL_SIZE={pool_size}"
-            f"（{rec['throughput_per_min']:.0f} 次/分鐘，p95 {rec['p95_s']:.2f} s）"
+        summary.add_row("", "")
+        summary.add_row("最高吞吐量", f"{peak:.0f} 次/分鐘")
+        summary.add_row(
+            "純編譯上限",
+            f"{raw['all_cpus_per_min']:.0f} 次/分鐘"
+            f"  [dim]（容器管理等開銷吃掉 {overhead * 100:.0f}%）",
         )
-        say(
-            f"綜合分數        {score:.0f}   （1000 = Apple M4 10 核 + OrbStack；"
-            f"吞吐量占 70%、延遲占 30%）"
+        summary.add_row("單一編譯延遲", f"p50 {single['p50_s']:.2f} s")
+        summary.add_row("", samples)
+        console.print(
+            Panel(summary, title="[bold]結果", border_style="green", expand=False)
         )
 
         warnings = []
@@ -518,8 +651,15 @@ async def main() -> int:
             warnings.append(f"測試中有 {leaked} 個容器沒被 pool 刪掉（已清除）。")
         if results[-1]["concurrency"] == max_c and rec["concurrency"] == max_c:
             warnings.append(f"測到上限 {max_c} 仍未飽和，可以用 --max 測更高。")
-        for w in warnings:
-            say(f"⚠ {w}")
+        if warnings:
+            console.print(
+                Panel(
+                    "\n".join(f"• {w}" for w in warnings),
+                    title="[bold yellow]注意",
+                    border_style="yellow",
+                    expand=False,
+                )
+            )
 
         report = {
             "time": datetime.now(UTC).isoformat(),
@@ -548,7 +688,7 @@ async def main() -> int:
             stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
             path = Path(args.out) / f"host_bench-{info.get('Name')}-{stamp}.json"
             path.write_text(json.dumps(report, indent=2, ensure_ascii=False))
-            say(f"\n結果已存到 {path}")
+            done(f"結果已存到 {path}")
         return 0
     finally:
         try:
@@ -561,5 +701,7 @@ if __name__ == "__main__":
     try:
         sys.exit(asyncio.run(main()))
     except KeyboardInterrupt:
-        say("\n已中斷；測試容器會在 backend 下次啟動時被清掉（或手動 docker rm）。")
+        console.print(
+            "\n[yellow]已中斷；還沒刪掉的測試容器會在 backend 下次啟動時被清掉。"
+        )
         sys.exit(130)
