@@ -186,7 +186,7 @@ export default function () {
 
     const res = http.post(
         `${BASE_URL}/api/build`,
-        JSON.stringify({ code, cpp_version: sample.cpp_version }),
+        JSON.stringify({ code, cppVersion: sample.cpp_version }),
         { headers: HEADERS, timeout: REQ_TIMEOUT, tags },
     );
 

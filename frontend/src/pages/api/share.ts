@@ -1,4 +1,4 @@
-import { makeAPI } from "@/lib/server/api";
+import { APIError, makeAPI } from "@/lib/server/api";
 import { SHARE_KEY_PREFIX, ShareObjectSchema } from "@/types/share";
 import z from "zod";
 import { env } from "cloudflare:workers";
@@ -6,6 +6,9 @@ import { createHash } from "node:crypto";
 
 import bs58 from "bs58";
 export const prerender = false;
+
+const SHARE_ID_MIN_LEN = 5;
+const SHARE_HASH_METADATA_KEY = "fullhash";
 
 async function hashShareObject(
     shareObject: z.infer<typeof ShareObjectSchema>,
@@ -25,37 +28,30 @@ const shareAPI = makeAPI({
     handler: async ({}, shareObject, reply) => {
         const fullShareId = await hashShareObject(shareObject);
 
-        let len = 5;
-        let shareId: string;
+        for (let len = SHARE_ID_MIN_LEN; len <= fullShareId.length; len++) {
+            const shareId = fullShareId.slice(0, len);
+            const key = `${SHARE_KEY_PREFIX}${shareId}`;
 
-        while (true) {
-            shareId = fullShareId.slice(0, len);
+            const old = await env.R2_BUCKET.head(key);
 
-            const old = await env.R2_BUCKET.head(
-                `${SHARE_KEY_PREFIX}${shareId}`,
-            );
-
-            if (!old) break;
-            else if (old.customMetadata?.fullHash === fullShareId) {
-                return reply({
-                    shareId: shareId,
+            if (!old) {
+                await env.R2_BUCKET.put(key, JSON.stringify(shareObject), {
+                    customMetadata: {
+                        [SHARE_HASH_METADATA_KEY]: fullShareId,
+                    },
                 });
-            } else len += 1;
+                return reply({ shareId });
+            }
+
+            const storedHash =
+                old.customMetadata?.[SHARE_HASH_METADATA_KEY] ??
+                old.customMetadata?.fullHash;
+            if (storedHash === fullShareId) {
+                return reply({ shareId });
+            }
         }
 
-        await env.R2_BUCKET.put(
-            `${SHARE_KEY_PREFIX}${shareId}`,
-            JSON.stringify(shareObject),
-            {
-                customMetadata: {
-                    fullHash: fullShareId,
-                },
-            },
-        );
-
-        return reply({
-            shareId: shareId,
-        });
+        throw new APIError(500, "Could not allocate a share id");
     },
 });
 
