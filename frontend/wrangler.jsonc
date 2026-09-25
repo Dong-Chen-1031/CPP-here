@@ -40,6 +40,7 @@
         "logs": {
             "enabled": true,
             "head_sampling_rate": 1,
+            "destinations": ["posthog-logs"],
             "persist": true,
             "invocation_logs": true,
         },
@@ -47,6 +48,7 @@
             "enabled": true,
             "persist": true,
             "head_sampling_rate": 1,
+            "destinations": ["posthog"],
         },
     },
 }
