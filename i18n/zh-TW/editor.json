@@ -40,7 +40,7 @@
         "copyThisCaseTip": "複製此測資的輸出",
         "clearTip": "清除輸出",
         "noOutput": "尚無輸出結果",
-        "truncated": "Output is too long; only the first part is shown. Use copy to get the full output."
+        "truncated": "Output is too long to show in full. Use copy to get the full output."
     },
     "testCase": {
         "label": "測資",
