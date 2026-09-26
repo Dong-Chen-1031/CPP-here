@@ -1,0 +1,97 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { Button } from "@/components/ui/button";
+---
+
+<Layout title="Reset - C++ Here" noindex={true}>
+    <meta
+        slot="head"
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
+    <div class="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <h1 class="text-xl font-medium">Reset local data</h1>
+        <p class="text-sm text-muted-foreground max-w-md">
+            This deletes everything C++ Here stores in this browser, including
+            your code, test cases and settings (localStorage and IndexedDB).
+            This cannot be undone.
+        </p>
+        <Button
+            id="reset-button"
+            variant="destructive"
+            size="lg"
+            className="mt-2"
+        >
+            Delete all local data
+        </Button>
+        <p id="reset-status" class="text-sm text-muted-foreground" hidden></p>
+        <div class="flex gap-3 mt-2">
+            <a
+                href="/"
+                class="text-sm underline underline-offset-4 hover:opacity-80 transition-opacity"
+            >
+                Go to home page
+            </a>
+            <a
+                href="/editor"
+                class="text-sm underline underline-offset-4 hover:opacity-80 transition-opacity"
+            >
+                Open the editor
+            </a>
+        </div>
+    </div>
+</Layout>
+
+<script>
+    const button = document.getElementById("reset-button") as HTMLButtonElement;
+    const status = document.getElementById("reset-status") as HTMLElement;
+
+    function deleteDatabase(name: string) {
+        return new Promise<void>((resolve, reject) => {
+            const req = indexedDB.deleteDatabase(name);
+            req.onsuccess = () => resolve();
+            req.onerror = () => reject(req.error);
+            // Another tab still holds the database open; it will be deleted
+            // once that tab closes it.
+            req.onblocked = () => resolve();
+        });
+    }
+
+    async function reset() {
+        const errors: string[] = [];
+
+        try {
+            localStorage.clear();
+        } catch (e) {
+            errors.push(`localStorage: ${e}`);
+        }
+
+        try {
+            const dbs = await indexedDB.databases();
+            await Promise.all(
+                dbs
+                    .map((db) => db.name)
+                    .filter((name): name is string => !!name)
+                    .map(deleteDatabase),
+            );
+        } catch (e) {
+            errors.push(`IndexedDB: ${e}`);
+        }
+
+        return errors;
+    }
+
+    button.addEventListener("click", async () => {
+        if (!confirm("Delete all local data? This cannot be undone.")) return;
+        button.disabled = true;
+        const errors = await reset();
+        status.hidden = false;
+        if (errors.length) {
+            console.error(errors);
+            status.textContent = `Some data could not be deleted: ${errors.join("; ")}`;
+            button.disabled = false;
+        } else {
+            status.textContent = "All local data has been deleted.";
+        }
+    });
+</script>

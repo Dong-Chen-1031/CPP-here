@@ -25,7 +25,9 @@ export default defineConfig({
         react(),
         sitemap({
             filter: (page) =>
-                !page.includes("/editor") && !page.includes("/test"),
+                !page.includes("/editor") &&
+                !page.includes("/test") &&
+                !page.includes("/reset"),
         }),
         // starlight({
         //     title: "C++ Here Docs",
