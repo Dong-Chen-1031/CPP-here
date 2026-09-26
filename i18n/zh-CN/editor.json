@@ -40,7 +40,7 @@
         "copyThisCaseTip": "Copy output of this test case",
         "clearTip": "Clear output",
         "noOutput": "No output yet.",
-        "truncated": "Output is too long; only the first part is shown. Use copy to get the full output."
+        "truncated": "Output is too long to show in full. Use copy to get the full output."
     },
     "testCase": {
         "label": "Test Case",
