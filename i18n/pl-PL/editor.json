@@ -9,7 +9,8 @@
         "panelsGroup": "Panels",
         "input": "Input",
         "testCase": "Test Case",
-        "output": "Output"
+        "output": "Output",
+        "starOnGithub": "Star on GitHub"
     },
     "drawer": {
         "openBtn": "Open Drawer",
@@ -47,6 +48,7 @@
         "addTip": "Add new test case",
         "addBtn": "Add",
         "defaultName": "Test Case {{index}}",
+        "exampleInput": "Example input {{index}}",
         "noTestCase": "No test case yet.",
         "setInputTip": "Set Input to this Test Case",
         "runTip": "Run this Test Case",
@@ -140,7 +142,27 @@
         "timeLimitDesc": "Stop the program after this many seconds. Enter -1 for no limit."
     },
     "resize": {
-        "loadingEditor": "Loading Editor"
+        "loadingEditor": "Loading Editor",
+        "movedTitle": "We have moved!",
+        "movedDescription": "Please use the new url cpp.doong.me"
+    },
+    "run": {
+        "errorTitle": "Error",
+        "errorDescription": "An error occurred. Please check output for details.",
+        "runtimeErrorIn": "Runtime Error in {{testCaseName}}",
+        "runtimeErrorTitle": "Runtime Error",
+        "runtimeErrorDescription": "An error occurred during code execution. Please check output for details.",
+        "buildFailedTitle": "Build Failed",
+        "buildFailedDescription": "Failed to build the code. Please check output for details.",
+        "buildFailedOutput": "Build failed with errors:",
+        "noTestCasesTitle": "No Test Cases",
+        "noTestCasesDescription": "There are no test cases to run. Please add some test cases first.",
+        "verificationFailed": "Verification failed. Please try again.",
+        "workersUnsupported": "Web Workers are not supported in this environment."
+    },
+    "auth": {
+        "unauthorizedTitle": "Unauthorized",
+        "unauthorizedDescription": "Your verification has expired and is being renewed automatically."
     },
     "shareReceive": {
         "title": "Receive Shared Code",
