@@ -1,8 +1,11 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import { getTranslation } from "@/lib/langList";
+
+const t = getTranslation().notFound;
 ---
 
-<Layout title="404 - Page not found | C++ Here" noindex={true}>
+<Layout title={t.title} noindex={true}>
     <meta
         slot="head"
         name="viewport"
@@ -10,22 +13,20 @@ import Layout from "@/layouts/Layout.astro";
     />
     <div class="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center">
         <p class="text-6xl font-semibold tracking-tight">404</p>
-        <h1 class="text-xl font-medium">Page not found</h1>
-        <p class="text-sm text-muted-foreground max-w-md">
-            The page you are looking for does not exist or has been moved.
-        </p>
+        <h1 class="text-xl font-medium">{t.heading}</h1>
+        <p class="text-sm text-muted-foreground max-w-md">{t.description}</p>
         <div class="flex gap-3 mt-2">
             <a
                 href="/"
                 class="text-sm underline underline-offset-4 hover:opacity-80 transition-opacity"
             >
-                Go to home page
+                {t.home}
             </a>
             <a
                 href="/editor"
                 class="text-sm underline underline-offset-4 hover:opacity-80 transition-opacity"
             >
-                Open the editor
+                {t.editor}
             </a>
         </div>
     </div>

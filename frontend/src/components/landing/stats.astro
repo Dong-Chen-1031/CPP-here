@@ -120,12 +120,13 @@ const stats = [
     <Hr />
     <div class="max-w-2xl mx-auto text-center mb-16">
         <p class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
-            <span class="mr-1 tracking-widest">//</span>stats
+            <span class="mr-1 tracking-widest">//</span>
+            {t?.label}
         </p>
         <h2 class="text-[min(3rem,9vw)] leading-[1.05] font-bold tracking-tighter text-balance">
-            Real numbers.
+            {t?.heading}
             <br />
-            <span class="text-muted-foreground">Real usage.</span>
+            <span class="text-muted-foreground">{t?.subheading}</span>
         </h2>
     </div>
 

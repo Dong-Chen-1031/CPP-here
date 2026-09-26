@@ -1,5 +1,6 @@
 import { turnstileRefStore, verifyJwtStore } from "@/store/atom";
 import axios from "axios";
+import i18next from "i18next";
 import { getDefaultStore } from "jotai";
 import { PUBLIC_API_URL } from "astro:env/client";
 import { addAlert } from "@/lib/alert";
@@ -46,9 +47,8 @@ export function renewJwt() {
 
         defaultStore.set(verifyJwtStore, null);
         addAlert({
-            title: "Unauthorized",
-            description:
-                "Your verification has expired and is being renewed automatically.",
+            title: i18next.t("editor:auth.unauthorizedTitle"),
+            description: i18next.t("editor:auth.unauthorizedDescription"),
             variant: "destructive",
         });
         const turnstileRef = defaultStore.get(turnstileRefStore);

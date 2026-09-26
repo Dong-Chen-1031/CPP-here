@@ -171,6 +171,7 @@ const Loading = React.forwardRef<
 Loading.displayName = "Loading";
 
 export function SplitViewEditor() {
+    const { t } = useTranslation(["editor"]);
     const isMobile = useIsMobile();
     const [loaded] = useAtom(loadedStore);
     const [, setLoadedCount] = useAtom(loadedCountStore);
@@ -180,8 +181,8 @@ export function SplitViewEditor() {
         // console.log("SplitViewEditor loaded");
         if (document.location.origin === "https://cpp-here.pages.dev") {
             addAlert({
-                title: "We have moved!",
-                description: "Please use the new url cpp.doong.me",
+                title: t("resize.movedTitle"),
+                description: t("resize.movedDescription"),
                 variant: "default",
             });
         }

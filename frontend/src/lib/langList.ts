@@ -30,6 +30,28 @@ export function getStaticLangPaths() {
     ];
 }
 
+// Fill keys missing from a locale (new strings not yet translated on Crowdin)
+// with the English source, so the page never renders `undefined`.
+function withFallback<T>(base: T, override: unknown): T {
+    if (
+        typeof base !== "object" ||
+        base === null ||
+        Array.isArray(base) ||
+        typeof override !== "object" ||
+        override === null
+    ) {
+        return (override ?? base) as T;
+    }
+    const merged: Record<string, unknown> = { ...(base as object) };
+    for (const [key, value] of Object.entries(override)) {
+        merged[key] = withFallback(
+            (base as Record<string, unknown>)[key],
+            value,
+        );
+    }
+    return merged as T;
+}
+
 export function getTranslation(lang?: string) {
-    return lang === "zh-tw" ? twLanding : enLanding;
+    return lang === "zh-tw" ? withFallback(enLanding, twLanding) : enLanding;
 }

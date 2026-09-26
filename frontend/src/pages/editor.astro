@@ -10,9 +10,10 @@ import { Settings } from "@/components/Settings";
 import { getLanguages } from "@/lib/langList";
 import TestEditDialog from "@/components/panel/TestEditDialog";
 import { ShareReceiveDialog } from "@/components/share";
-import { getStaticLangPaths } from "@/lib/langList";
+import { getStaticLangPaths, getTranslation } from "@/lib/langList";
 
 const allLangs = getLanguages();
+const t = getTranslation().editorPage;
 
 export { getStaticLangPaths as getStaticPaths };
 
@@ -29,11 +30,7 @@ const lsVersion = {
 };
 ---
 
-<Layout
-    title="Editor - C++ Here"
-    description="Online C++ editor — compile, run, and test C++ code directly in your browser."
-    noindex={true}
->
+<Layout title={t.title} description={t.description} noindex={true}>
     <meta
         slot="head"
         name="viewport"
