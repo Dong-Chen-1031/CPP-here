@@ -24,6 +24,7 @@ import { RunButton } from "@/components/header/runBtn";
 import { ShareButton } from "@/components/header/shareBtn";
 import { UndoRedo } from "@/components/header/undoRedo";
 import { SettingsButton } from "@/components/header/SettingsBtn";
+import { PUBLIC_SHARE } from "astro:env/client";
 
 export function Commands({ className = "" }: { className?: string }) {
     const [open, setOpen] = React.useState(false);
@@ -40,7 +41,8 @@ export function Commands({ className = "" }: { className?: string }) {
             <Button
                 onClick={() => setOpen(true)}
                 variant="outline"
-                className="w-fit">
+                className="w-fit"
+            >
                 {/* <Menu></Menu> */}
                 {t("commands.menuBtn")}
             </Button>
@@ -65,7 +67,11 @@ export function Commands({ className = "" }: { className?: string }) {
                                 />
                             </CommandItem>
                             <CommandItem>
-                                <ShareButton onClick={() => setOpen(false)} />
+                                {PUBLIC_SHARE && (
+                                    <ShareButton
+                                        onClick={() => setOpen(false)}
+                                    />
+                                )}
                                 <CppVersionSelect
                                     className="w-25"
                                     // onSelect={() => setOpen(false)}
@@ -80,19 +86,22 @@ export function Commands({ className = "" }: { className?: string }) {
                         <CommandSeparator />
                         <CommandGroup heading={t("commands.panelsGroup")}>
                             <CommandItem
-                                onSelect={() => handleOpenPanel("input")}>
+                                onSelect={() => handleOpenPanel("input")}
+                            >
                                 <KeyboardIcon className="mr-2 h-4 w-4" />
                                 <span>{t("commands.input")}</span>
                             </CommandItem>
                             <CommandItem
-                                onSelect={() => handleOpenPanel("testCases")}>
+                                onSelect={() => handleOpenPanel("testCases")}
+                            >
                                 <TestTubes />
                                 <span className="ml-2">
                                     {t("commands.testCase")}
                                 </span>
                             </CommandItem>
                             <CommandItem
-                                onSelect={() => handleOpenPanel("output")}>
+                                onSelect={() => handleOpenPanel("output")}
+                            >
                                 <SquareTerminalIcon className="mr-2" />
                                 <span>{t("commands.output")}</span>
 
@@ -105,9 +114,10 @@ export function Commands({ className = "" }: { className?: string }) {
                                         "_blank",
                                         "noopener,noreferrer",
                                     );
-                                }}>
+                                }}
+                            >
                                 <SiGithub className="size-4 mr-2" />
-                                Star on GitHub
+                                {t("commands.starOnGithub")}
                             </CommandItem>
                         </CommandGroup>
                     </CommandList>

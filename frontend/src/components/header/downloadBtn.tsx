@@ -38,8 +38,12 @@ export function DownloadButton({
                         a.download = "main.cpp";
                         a.click();
                         URL.revokeObjectURL(url);
+                        window.posthog?.capture("code_downloaded", {
+                            code_length: code.length,
+                        });
                         onClick(e);
-                    }}>
+                    }}
+                >
                     <DownloadIcon />
                     <span className="inline md:hidden lg:inline">
                         {t("headerActions.downloadCode")}

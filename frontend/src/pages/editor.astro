@@ -7,12 +7,13 @@ import { GlobalPanelDrawer } from "@/components/Drawer";
 import TurnstileWidget from "@/components/turnstile";
 import { AlertDialogGood, Alerts } from "@/components/Alert";
 import { Settings } from "@/components/Settings";
-import { getLanguages, getLanguageCodes } from "@/lib/langList";
+import { getLanguages } from "@/lib/langList";
 import TestEditDialog from "@/components/panel/TestEditDialog";
 import { ShareReceiveDialog } from "@/components/share";
-import { getStaticLangPaths } from "@/lib/langList";
+import { getStaticLangPaths, getTranslation } from "@/lib/langList";
 
 const allLangs = getLanguages();
+const t = getTranslation().editorPage;
 
 export { getStaticLangPaths as getStaticPaths };
 
@@ -20,7 +21,7 @@ const lsVersion = {
     code: "1",
     cppVersion: "1",
     input: "1",
-    output: "1",
+    output: "2",
     runMode: "1",
     testCases: "1.1",
     editorErrors: "1",
@@ -29,10 +30,7 @@ const lsVersion = {
 };
 ---
 
-<Layout
-    title="Editor - C++ Here"
-    description="Online C++ editor — compile, run, and test C++ code directly in your browser."
-    noindex={true}>
+<Layout title={t.title} description={t.description} noindex={true}>
     <meta
         slot="head"
         name="viewport"

@@ -13,7 +13,6 @@ import { PlayIcon } from "@lucide/astro";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import "@/styles/landing.css";
 import HeroCard from "@/components/landing/heroCard.astro";
-import config from "@/config/constants";
 ---
 
 <!-- 
@@ -47,19 +46,18 @@ import config from "@/config/constants";
         }
     </style>
     <section class="w-full relative">
-        <div
-            class="relative border border-foreground/10 rounded-xl overflow-hidden md:px-8 flex flex-col items-center text-center h-60">
+        <div class="relative border border-foreground/10 rounded-xl overflow-hidden md:px-8 flex flex-col items-center text-center h-60">
             <div
                 class="pointer-events-none absolute inset-0 -z-10
                 bg-[linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)]
                 bg-size-[61px_61px]
-                mask-[radial-gradient(ellipse_70%_100%_at_50%_50%,black_30%,transparent_100%)]">
-            </div>
+                mask-[radial-gradient(ellipse_70%_100%_at_50%_50%,black_30%,transparent_100%)]"
+            ></div>
 
             <div
                 class="pointer-events-none absolute inset-0 -z-10
-                bg-[radial-gradient(ellipse_60%_50%_at_50%_50%,color-mix(in_srgb,var(--primary)_8%,transparent),transparent)]">
-            </div>
+                bg-[radial-gradient(ellipse_60%_50%_at_50%_50%,color-mix(in_srgb,var(--primary)_8%,transparent),transparent)]"
+            ></div>
         </div>
     </section>
 </Layout>

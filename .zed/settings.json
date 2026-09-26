@@ -1,0 +1,12 @@
+{
+    "tab_size": 4,
+    "prettier": { "allowed": true },
+    "languages": {
+        "TSX": { "tab_size": 4, "formatter": "prettier" },
+        "TypeScript": { "formatter": "prettier" },
+        "JavaScript": { "formatter": "prettier" },
+        "JSON": { "formatter": "prettier" },
+        "Astro": { "formatter": "prettier" },
+        "Python": { "formatter": { "language_server": { "name": "ruff" } } }
+    }
+}

@@ -26,7 +26,8 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
                         {t("headerActions.undo")} <Kbd>{commandKeyIcon}</Kbd>
                         <Kbd>Z</Kbd>
                     </>
-                }>
+                }
+            >
                 <Button
                     variant="outline"
                     size={menu ? "sm" : "icon-sm"}
@@ -39,7 +40,8 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
                                 "Editor view is not available for undo.",
                             );
                         }
-                    }}>
+                    }}
+                >
                     <motion.div
                         whileTap={{ rotate: -30 }}
                         className="w-full h-full flex items-center justify-center"
@@ -47,7 +49,8 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
                             type: "spring",
                             stiffness: 400,
                             damping: 25,
-                        }}>
+                        }}
+                    >
                         <UndoIcon />
                     </motion.div>
                     {/* {menu && <span>Undo</span>} */}
@@ -60,7 +63,8 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
                         <Kbd>⇧</Kbd>
                         <Kbd>Z</Kbd>
                     </>
-                }>
+                }
+            >
                 <Button
                     variant="outline"
                     size={menu ? "sm" : "icon-sm"}
@@ -73,7 +77,8 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
                                 "Editor view is not available for redo.",
                             );
                         }
-                    }}>
+                    }}
+                >
                     <motion.div
                         whileTap={{ rotate: 30 }}
                         className="w-full h-full flex items-center justify-center"
@@ -81,7 +86,8 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
                             type: "spring",
                             stiffness: 400,
                             damping: 25,
-                        }}>
+                        }}
+                    >
                         <RedoIcon />
                     </motion.div>
                     {/* {menu && <span>Redo</span>} */}

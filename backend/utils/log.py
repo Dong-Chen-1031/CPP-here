@@ -6,6 +6,8 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.theme import Theme
 
+from settings import settings
+
 custom_theme = Theme({"info": "cyan", "warning": "yellow", "error": "bold red"})
 console = Console(theme=custom_theme)
 
@@ -17,12 +19,12 @@ if not os.path.exists(log_dir):
 # log_file = f"{log_dir}/{current_time}.log"
 
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(settings.LOG_LEVEL)
 
 rich_handler = RichHandler(
     console=console, rich_tracebacks=True, tracebacks_show_locals=False
 )
-rich_handler.setLevel(logging.INFO)
+rich_handler.setLevel(settings.LOG_LEVEL)
 
 file_handler = TimedRotatingFileHandler(
     filename=f"{log_dir}/backend.log",
@@ -31,9 +33,25 @@ file_handler = TimedRotatingFileHandler(
     interval=1,
     backupCount=7,
 )
-file_handler.setLevel(logging.DEBUG)
+file_handler.setLevel(settings.LOG_LEVEL)
 file_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 file_handler.setFormatter(file_format)
 
+
 logger.addHandler(rich_handler)
 logger.addHandler(file_handler)
+
+logging.getLogger("apscheduler").setLevel(logging.WARNING)
+
+
+class HealthCheckFilter(logging.Filter):
+    def filter(self, record):
+        args = record.args
+        return not (
+            isinstance(args, tuple)
+            and len(args) >= 3
+            and str(args[2]).split("?", 1)[0] == "/api/health"
+        )
+
+
+logging.getLogger("uvicorn.access").addFilter(HealthCheckFilter())

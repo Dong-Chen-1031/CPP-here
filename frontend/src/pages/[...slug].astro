@@ -1,0 +1,30 @@
+---
+import NotFound from "@/components/NotFound.astro";
+import { env } from "cloudflare:workers";
+
+export const prerender = false;
+
+const byPassR2 = ["/favicon.ico"];
+
+if (byPassR2.includes(Astro.url.pathname)) {
+    Astro.response.status = 404;
+} else {
+    const res = await env.R2_BUCKET.get(
+        `public/${Astro.url.pathname.substring(1)}`,
+    );
+    if (res) {
+        const headers = new Headers();
+        res.writeHttpMetadata(headers);
+        headers.set("etag", res.httpEtag);
+
+        return new Response("body" in res ? res.body : undefined, {
+            status: "body" in res ? 200 : 412,
+            headers,
+        });
+    } else {
+        Astro.response.status = 404;
+    }
+}
+---
+
+<NotFound />

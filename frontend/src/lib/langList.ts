@@ -1,22 +1,13 @@
-import fs from "node:fs";
-import path from "node:path";
-import i18next from "i18next";
-import enCommon from "../../../i18n/en/common.json";
-import enEditor from "../../../i18n/en/editor.json";
 import enLanding from "../../../i18n/en/landing.json";
-import twCommon from "../../../i18n/zh-TW/common.json";
-import twEditor from "../../../i18n/zh-TW/editor.json";
 import twLanding from "../../../i18n/zh-TW/landing.json";
 
 export function getLanguageCodes(): readonly string[] {
-    const i18nDir = path.resolve("./public/i18n");
-
-    if (!fs.existsSync(i18nDir)) return [];
-
-    return fs
-        .readdirSync(i18nDir, { withFileTypes: true })
-        .filter((dirent) => dirent.isDirectory())
-        .map((dirent) => dirent.name);
+    const files = import.meta.glob("/public/i18n/*/common.json");
+    const codes = Object.keys(files).map((file) => file.split("/")[3]);
+    if (codes.length === 0) {
+        throw new Error("No language codes found");
+    }
+    return codes;
 }
 
 export function getLanguages(): Record<string, string> {
@@ -39,6 +30,28 @@ export function getStaticLangPaths() {
     ];
 }
 
-export function getTranslation(lang: string) {
-    return lang === "zh-tw" ? twLanding : enLanding;
+// Fill keys missing from a locale (new strings not yet translated on Crowdin)
+// with the English source, so the page never renders `undefined`.
+function withFallback<T>(base: T, override: unknown): T {
+    if (
+        typeof base !== "object" ||
+        base === null ||
+        Array.isArray(base) ||
+        typeof override !== "object" ||
+        override === null
+    ) {
+        return (override ?? base) as T;
+    }
+    const merged: Record<string, unknown> = { ...(base as object) };
+    for (const [key, value] of Object.entries(override)) {
+        merged[key] = withFallback(
+            (base as Record<string, unknown>)[key],
+            value,
+        );
+    }
+    return merged as T;
+}
+
+export function getTranslation(lang?: string) {
+    return lang === "zh-tw" ? withFallback(enLanding, twLanding) : enLanding;
 }

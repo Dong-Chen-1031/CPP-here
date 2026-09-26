@@ -32,6 +32,10 @@ export function UploadButton({
             const content = e.target?.result;
             if (typeof content === "string") {
                 setCode(content);
+                window.posthog?.capture("code_uploaded", {
+                    file_name: file.name,
+                    file_size: file.size,
+                });
             }
         };
         reader.readAsText(file);
@@ -63,7 +67,8 @@ export function UploadButton({
                         variant="outline"
                         className={className}
                         aria-label={t("headerActions.uploadCodeTip")}
-                        onClick={handleClick}>
+                        onClick={handleClick}
+                    >
                         <Upload />
                         <span className="inline md:hidden lg:inline">
                             {t("headerActions.uploadCode")}

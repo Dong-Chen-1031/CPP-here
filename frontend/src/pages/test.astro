@@ -13,8 +13,6 @@ import { PlayIcon } from "@lucide/astro";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import "@/styles/landing.css";
 import HeroCard from "@/components/landing/heroCard.astro";
-import config from "@/config/constants";
-import { transformer } from "astro:schema";
 ---
 
 <!-- 
@@ -86,10 +84,8 @@ import { transformer } from "astro:schema";
 </Layout>
 
 <div style="position:relative">
-    <div
-        style="width: 100%;position:absolute;top: -195px;text-align: center;pointer-events: none">
-        <div
-            style="margin-left: auto; margin-right: auto; width: 200px; height: 120px;border-color:var(--color-info);color:var(--color-info);border-width: 2px;border-style: solid;border-radius: 12px;">
+    <div style="width: 100%;position:absolute;top: -195px;text-align: center;pointer-events: none">
+        <div style="margin-left: auto; margin-right: auto; width: 200px; height: 120px;border-color:var(--color-info);color:var(--color-info);border-width: 2px;border-style: solid;border-radius: 12px;">
             可以幫我們投個票嗎 🙏
         </div>
     </div>

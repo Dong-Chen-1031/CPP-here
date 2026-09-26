@@ -1,0 +1,33 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { getTranslation } from "@/lib/langList";
+
+const t = getTranslation().notFound;
+---
+
+<Layout title={t.title} noindex={true}>
+    <meta
+        slot="head"
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
+    <div class="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <p class="text-6xl font-semibold tracking-tight">404</p>
+        <h1 class="text-xl font-medium">{t.heading}</h1>
+        <p class="text-sm text-muted-foreground max-w-md">{t.description}</p>
+        <div class="flex gap-3 mt-2">
+            <a
+                href="/"
+                class="text-sm underline underline-offset-4 hover:opacity-80 transition-opacity"
+            >
+                {t.home}
+            </a>
+            <a
+                href="/editor"
+                class="text-sm underline underline-offset-4 hover:opacity-80 transition-opacity"
+            >
+                {t.editor}
+            </a>
+        </div>
+    </div>
+</Layout>

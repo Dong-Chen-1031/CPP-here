@@ -1,5 +1,6 @@
 import * as React from "react";
 import "@/lib/i18n";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 
@@ -27,6 +28,7 @@ export function CppVersionSelect({
     className?: string;
     size?: typeof Button.prototype.props.size;
 }) {
+    const { t } = useTranslation(["editor"]);
     const [cppVersion, setCppVersion] = useAtom(cppVersionStore);
     const [cppVersionClient, setCppVersionClient] = React.useState("c++17");
     useEffect(() => {
@@ -39,16 +41,18 @@ export function CppVersionSelect({
             onValueChange={(version) => {
                 setCppVersion(version);
                 onSelect?.(version);
-            }}>
+            }}
+        >
             <SelectTrigger
                 className={cn("w-full max-w-48", className)}
                 size={size}
-                aria-label="C++ Version">
-                <SelectValue placeholder="C++ Version" />
+                aria-label={t("settings.cppVersion")}
+            >
+                <SelectValue placeholder={t("settings.cppVersion")} />
             </SelectTrigger>
             <SelectContent position="popper">
                 <SelectGroup>
-                    <SelectLabel>C++ Version</SelectLabel>
+                    <SelectLabel>{t("settings.cppVersion")}</SelectLabel>
                     <SelectItem value="c++98">C++ 98</SelectItem>
                     <SelectItem value="c++14">C++ 14</SelectItem>
                     <SelectItem value="c++17">C++ 17</SelectItem>

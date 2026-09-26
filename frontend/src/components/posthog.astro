@@ -1,0 +1,78 @@
+---
+// components/PostHog.astro
+import {
+    PUBLIC_POSTHOG_HOST,
+    PUBLIC_POSTHOG_PROJECT_TOKEN,
+} from "astro:env/client";
+---
+
+<script
+    is:inline
+    define:vars={{
+        token: PUBLIC_POSTHOG_PROJECT_TOKEN,
+        host: PUBLIC_POSTHOG_HOST,
+    }}
+>
+    !(function (t, e) {
+        var o, n, p, r;
+        e.__SV ||
+            ((window.posthog = e),
+            (e._i = []),
+            (e.init = function (i, s, a) {
+                function g(t, e) {
+                    var o = e.split(".");
+                    2 == o.length && ((t = t[o[0]]), (e = o[1]));
+                    t[e] = function () {
+                        t.push(
+                            [e].concat(
+                                Array.prototype.slice.call(arguments, 0),
+                            ),
+                        );
+                    };
+                }
+                var u = e;
+                void 0 !== a ? (u = e[a] = []) : (a = "posthog");
+                u.people = u.people || [];
+                u.toString = function (t) {
+                    var e = "posthog";
+                    "posthog" !== a && (e += "." + a);
+                    t || (e += " (stub)");
+                    return e;
+                };
+                u.people.toString = function () {
+                    return u.toString(1) + ".people (stub)";
+                };
+                o =
+                    "capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(
+                        " ",
+                    );
+                for (n = 0; n < o.length; n++) g(u, o[n]);
+                e._i.push([i, s, a]);
+            }),
+            (e.__SV = 1));
+    })(document, window.posthog || []);
+
+    posthog.init(token, { api_host: host });
+</script>
+
+<script>
+    import posthog from "posthog-js/dist/module.full.no-external";
+    import {
+        PUBLIC_API_URL,
+        PUBLIC_POSTHOG_HOST,
+        PUBLIC_POSTHOG_PROJECT_TOKEN,
+    } from "astro:env/client";
+
+    // tracing_headers matches exact hostnames, not URLs. An empty PUBLIC_API_URL
+    // means the API is same-origin, which resolves to this page's hostname.
+    const apiHostname = new URL(PUBLIC_API_URL || "/", location.href).hostname;
+
+    posthog.init(PUBLIC_POSTHOG_PROJECT_TOKEN, {
+        api_host: PUBLIC_POSTHOG_HOST,
+        defaults: "2026-01-30",
+        ui_host: "https://us.posthog.com",
+        tracing_headers: [apiHostname, "localhost"],
+    });
+
+    (window as any).posthog = posthog;
+</script>

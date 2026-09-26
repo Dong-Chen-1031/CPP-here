@@ -1,9 +1,4 @@
-import * as React from "react";
 import "@/lib/i18n";
-
-import { SiGithub } from "@icons-pack/react-simple-icons";
-
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { useAtom } from "jotai";
@@ -12,7 +7,6 @@ import { loadedCountStore, loadedStore } from "@/store/atom";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect } from "react";
 import { Commands } from "@/components/Commands";
-import config from "@/config/constants";
 import { RunButton } from "@/components/header/runBtn";
 import { UndoRedo } from "@/components/header/undoRedo";
 import { ResetButton } from "@/components/header/resetBtn";
@@ -21,6 +15,7 @@ import { ShareButton } from "@/components/header/shareBtn";
 import { DownloadButton } from "@/components/header/downloadBtn";
 import { UploadButton } from "@/components/header/uploadBtn";
 import { SettingsButton } from "@/components/header/SettingsBtn";
+import { PUBLIC_SHARE } from "astro:env/client";
 
 export default function HeaderActions() {
     const [loaded] = useAtom(loadedStore);
@@ -36,7 +31,8 @@ export default function HeaderActions() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}>
+                        transition={{ duration: 0.3 }}
+                    >
                         <Skeleton className="w-[490px] h-7" />
                     </motion.div>
                 ) : (
@@ -46,11 +42,12 @@ export default function HeaderActions() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}>
+                        transition={{ duration: 0.3 }}
+                    >
                         <UndoRedo />
                         <UploadButton />
                         <DownloadButton />
-                        {config.share && <ShareButton />}
+                        {PUBLIC_SHARE && <ShareButton />}
                         <SettingsButton />
                         <FormatButton />
                         <ResetButton />
@@ -77,13 +74,15 @@ export function HeaderActionsMobile() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}>
+                        transition={{ duration: 0.3 }}
+                    >
                         <Skeleton className="w-61.25 h-7" />
                     </motion.div>
                 ) : (
                     <motion.div
                         key="actions"
-                        className="flex flex-row-reverse flex-wrap justify-start items-center content-start gap-1">
+                        className="flex flex-row-reverse flex-wrap justify-start items-center content-start gap-1"
+                    >
                         <RunButton className="shrink-0" />
                         <Commands className="shrink-0" />
                         <div className="shrink-0 flex items-center">

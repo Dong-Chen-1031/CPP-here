@@ -1,7 +1,8 @@
 ---
 import { ZapIcon, FileTextIcon, DatabaseIcon, ClockIcon } from "@lucide/astro";
 import Hr from "@/components/landing/hr.astro";
-import config from "@/config/constants";
+import { PUBLIC_SKIP_API_FETCH } from "astro:env/client";
+import { PRIVATE_BUILD_TIME_STATUS_URL } from "astro:env/server";
 
 interface Props {
     lang?: string;
@@ -56,10 +57,10 @@ function formatDuration(seconds: number | undefined): string {
 }
 
 let apiData: StatusResponse | null = null;
-if (!config.skipApiFetch) {
+if (!PUBLIC_SKIP_API_FETCH) {
     try {
-        console.log(`Fetching stats from ${config.buildTimeAPIEndpoint}`);
-        const res = await fetch(`${config.buildTimeAPIEndpoint}/status`);
+        console.log(`Fetching stats from ${PRIVATE_BUILD_TIME_STATUS_URL}`);
+        const res = await fetch(PRIVATE_BUILD_TIME_STATUS_URL);
         if (res.ok) apiData = await res.json();
 
         if (!apiData) {
@@ -68,7 +69,7 @@ if (!config.skipApiFetch) {
         }
     } catch (error) {
         console.error(`Error fetching stats from API: ${error}`);
-        if (config.run_mode === "development") {
+        if (import.meta.env.MODE === "development") {
             console.warn(
                 `Failed to fetch stats from API: ${error}\nSkipping API fetch in development mode.`,
             );
@@ -118,40 +119,37 @@ const stats = [
 <section class="px-6 md:px-20 py-24 w-full relative">
     <Hr />
     <div class="max-w-2xl mx-auto text-center mb-16">
-        <p
-            class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
-            <span class="mr-1 tracking-widest">//</span>stats
+        <p class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
+            <span class="mr-1 tracking-widest">//</span>
+            {t?.label}
         </p>
-        <h2
-            class="text-[min(3rem,9vw)] leading-[1.05] font-bold tracking-tighter text-balance">
-            Real numbers.<br />
-            <span class="text-muted-foreground">Real usage.</span>
+        <h2 class="text-[min(3rem,9vw)] leading-[1.05] font-bold tracking-tighter text-balance">
+            {t?.heading}
+            <br />
+            <span class="text-muted-foreground">{t?.subheading}</span>
         </h2>
     </div>
 
-    <div
-        class="grid grid-cols-2 lg:grid-cols-4 gap-px bg-foreground/10 border border-foreground/10 rounded-xl overflow-hidden">
-        {
-            stats.map(({ icon: Icon, value, label, desc }) => (
-                <div class="stat-card group relative bg-background sm:p-8 p-5">
-                    <div class="relative z-10">
-                        <div class="flex items-center justify-center size-10 rounded-md border border-foreground/15 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-all duration-300 mb-5">
-                            <Icon class="size-5 text-foreground/80 group-hover:text-foreground transition-colors" />
-                        </div>
-                        <p class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter tabular-nums">
-                            {value}
-                        </p>
-                        <p class="text-sm font-semibold mt-2 tracking-tight">
-                            {label}
-                        </p>
-                        {/* <p class="text-sm leading-relaxed text-muted-foreground mt-1">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-px bg-foreground/10 border border-foreground/10 rounded-xl overflow-hidden">
+        {stats.map(({ icon: Icon, value, label, desc }) => (
+            <div class="stat-card group relative bg-background sm:p-8 p-5">
+                <div class="relative z-10">
+                    <div class="flex items-center justify-center size-10 rounded-md border border-foreground/15 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-all duration-300 mb-5">
+                        <Icon class="size-5 text-foreground/80 group-hover:text-foreground transition-colors" />
+                    </div>
+                    <p class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter tabular-nums">
+                        {value}
+                    </p>
+                    <p class="text-sm font-semibold mt-2 tracking-tight">
+                        {label}
+                    </p>
+                    {/* <p class="text-sm leading-relaxed text-muted-foreground mt-1">
                             {desc}
                         </p> */}
-                    </div>
-                    <div class="spotlight pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </div>
-            ))
-        }
+                <div class="spotlight pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            </div>
+        ))}
     </div>
 </section>
 

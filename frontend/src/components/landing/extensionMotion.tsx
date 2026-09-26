@@ -87,7 +87,8 @@ export function RotatingCircle({
                 height: size,
                 translate: `-30px `,
             }}
-            ref={anchorRef}>
+            ref={anchorRef}
+        >
             {logos.map((logo, i) => {
                 const angle = (i + now) * step;
                 return (
@@ -95,7 +96,8 @@ export function RotatingCircle({
                         key={i}
                         className="absolute inset-0"
                         animate={{ rotate: angle }}
-                        transition={{ duration: 0.5, ease: "easeInOut" }}>
+                        transition={{ duration: 0.5, ease: "easeInOut" }}
+                    >
                         <motion.img
                             src={logo.src}
                             alt={logo.alt}
@@ -171,7 +173,8 @@ export function RotatingCircleMobile({
                 height: size,
                 translate: "0px 90px",
             }}
-            ref={anchorRef}>
+            ref={anchorRef}
+        >
             {logos.map((logo, i) => {
                 const angle = (i + now) * step + 17;
                 const angleForOpacity = angle;
@@ -180,7 +183,8 @@ export function RotatingCircleMobile({
                         key={i}
                         className="absolute inset-0"
                         animate={{ rotate: angle }}
-                        transition={{ duration: 0.5, ease: "easeInOut" }}>
+                        transition={{ duration: 0.5, ease: "easeInOut" }}
+                    >
                         <motion.img
                             src={logo.src}
                             alt={logo.alt}
@@ -211,7 +215,22 @@ export function RotatingCircleMobile({
     );
 }
 
-export function ExtensionAlert({ now }: { now: number }) {
+export interface ExtensionDemoText {
+    title: string;
+    descriptionBefore: string;
+    descriptionAfter: string;
+    cancel: string;
+    overwrite: string;
+    insert: string;
+}
+
+export function ExtensionAlert({
+    now,
+    t,
+}: {
+    now: number;
+    t?: ExtensionDemoText;
+}) {
     return (
         <div
             role="alertdialog"
@@ -223,21 +242,25 @@ export function ExtensionAlert({ now }: { now: number }) {
             data-size="default"
             className="group/alert-dialog-content z-50 grid w-full gap-4 rounded-xl bg-popover p-4 text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95"
             tabIndex={-1}
-            style={{ pointerEvents: "none" }}>
+            style={{ pointerEvents: "none" }}
+        >
             <div
                 data-slot="alert-dialog-header"
-                className="grid grid-rows-[auto_1fr] place-items-center gap-1.5 text-center has-data-[slot=alert-dialog-media]:grid-rows-[auto_auto_1fr] has-data-[slot=alert-dialog-media]:gap-x-4 sm:group-data-[size=default]/alert-dialog-content:place-items-start sm:group-data-[size=default]/alert-dialog-content:text-left sm:group-data-[size=default]/alert-dialog-content:has-data-[slot=alert-dialog-media]:grid-rows-[auto_1fr]">
+                className="grid grid-rows-[auto_1fr] place-items-center gap-1.5 text-center has-data-[slot=alert-dialog-media]:grid-rows-[auto_auto_1fr] has-data-[slot=alert-dialog-media]:gap-x-4 sm:group-data-[size=default]/alert-dialog-content:place-items-start sm:group-data-[size=default]/alert-dialog-content:text-left sm:group-data-[size=default]/alert-dialog-content:has-data-[slot=alert-dialog-media]:grid-rows-[auto_1fr]"
+            >
                 <h2
                     id="radix-_r_1_"
                     data-slot="alert-dialog-title"
-                    className="text-base font-medium sm:group-data-[size=default]/alert-dialog-content:group-has-data-[slot=alert-dialog-media]/alert-dialog-content:col-start-2">
-                    Received Test Case from Extension
+                    className="text-base font-medium sm:group-data-[size=default]/alert-dialog-content:group-has-data-[slot=alert-dialog-media]/alert-dialog-content:col-start-2"
+                >
+                    {t?.title}
                 </h2>
                 <p
                     id="radix-_r_2_"
                     data-slot="alert-dialog-description"
-                    className="text-sm text-balance text-muted-foreground md:text-pretty *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground inter">
-                    Test case of{" "}
+                    className="text-sm text-balance text-muted-foreground md:text-pretty *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground inter"
+                >
+                    {t?.descriptionBefore}{" "}
                     <code>
                         <AnimatePresence mode="popLayout">
                             <motion.span
@@ -258,7 +281,8 @@ export function ExtensionAlert({ now }: { now: number }) {
                                     opacity: 0,
                                     filter: "blur(8px)",
                                     scale: 1.08,
-                                }}>
+                                }}
+                            >
                                 {
                                     logos[
                                         (6 - (now % logos.length)) %
@@ -268,45 +292,46 @@ export function ExtensionAlert({ now }: { now: number }) {
                             </motion.span>
                         </AnimatePresence>
                     </code>{" "}
-                    has <br className="sm:hidden" />
-                    been received. Would you like to
-                    <br className="sm:hidden" /> overwrite or insert the new
-                    test cases?
+                    {t?.descriptionAfter}
                 </p>
             </div>
             <div
                 data-slot="alert-dialog-footer"
-                className="-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t border-border bg-muted/50 p-4 group-data-[size=sm]/alert-dialog-content:grid group-data-[size=sm]/alert-dialog-content:grid-cols-2 sm:flex-row sm:justify-end">
+                className="-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t border-border bg-muted/50 p-4 group-data-[size=sm]/alert-dialog-content:grid group-data-[size=sm]/alert-dialog-content:grid-cols-2 sm:flex-row sm:justify-end"
+            >
                 <button
                     type="button"
                     data-slot="alert-dialog-cancel"
                     className="cursor-pointer group/button inline-flex shrink-0 items-center justify-center rounded-md border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([className*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"
                     data-variant="outline"
-                    data-size="default">
-                    Cancel
+                    data-size="default"
+                >
+                    {t?.cancel}
                 </button>
                 <button
                     type="button"
                     data-slot="alert-dialog-action"
                     className="cursor-pointer group/button inline-flex shrink-0 items-center justify-center rounded-md border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([className*='size-'])]:size-4 bg-primary text-primary-foreground [a]:hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"
                     data-variant="default"
-                    data-size="default">
-                    Overwrite
+                    data-size="default"
+                >
+                    {t?.overwrite}
                 </button>
                 <button
                     type="button"
                     data-slot="alert-dialog-action"
                     className="cursor-pointer group/button inline-flex shrink-0 items-center justify-center rounded-md border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([className*='size-'])]:size-4 bg-primary text-primary-foreground [a]:hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"
                     data-variant="default"
-                    data-size="default">
-                    Insert
+                    data-size="default"
+                >
+                    {t?.insert}
                 </button>
             </div>
         </div>
     );
 }
 
-export default function ExtensionMotion() {
+export default function ExtensionMotion({ t }: { t?: ExtensionDemoText }) {
     const startRef = React.useRef(Date.now());
     const hiddenAtRef = React.useRef<number | null>(null);
     const [now, setNow] = React.useState(0);
@@ -338,7 +363,7 @@ export default function ExtensionMotion() {
             <RotatingCircleMobile className="block md:hidden" now={now} />
             <div className="flex justify-center items-center">
                 <RotatingCircle className="hidden md:block" now={now} />
-                <ExtensionAlert now={now} />
+                <ExtensionAlert now={now} t={t} />
             </div>
         </>
     );

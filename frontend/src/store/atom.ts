@@ -1,12 +1,14 @@
 import { atom } from "jotai";
+import i18next from "@/lib/i18n";
 import { atomWithStorage, RESET, useResetAtom } from "jotai/utils";
 import { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import type { RefObject } from "react";
 import type { TurnstileInstance } from "@marsidev/react-turnstile";
-import type { CodeWorker } from "@/api/run";
+import type { CodeWorker } from "@/service/run";
 import type { AlertDialogOptions } from "@/components/Alert";
 import type { EditDialogOptions } from "@/components/panel/TestEditDialog";
 import { defCodeStore } from "./configStore";
+import { clearOutputBuffer, outputStore } from "./outputStore";
 export interface TestCase {
     id: string;
     name: string;
@@ -14,27 +16,18 @@ export interface TestCase {
     expectedOutput?: string;
 }
 
-export interface OutputCase {
-    type?: "stdout" | "err";
-    testCaseId?: string;
-    testCaseName?: string;
-    expectedOutput?: string;
-    content: string;
-    status?: "running" | "ac" | "error" | "wa" | "finished";
-}
-
 export type PanelDrawerView = "input" | "testCases" | "output";
 
-export const alertStore = atom<
-    {
-        title: string;
-        description: string;
-        variant?: "default" | "destructive";
-        className?: string;
-        id: string;
-        icon?: React.ReactNode;
-    }[]
->([]);
+export type Alert = {
+    title: string;
+    description: string;
+    variant?: "default" | "destructive";
+    className?: string;
+    id: string;
+    icon?: React.ReactNode;
+};
+
+export const alertStore = atom<Alert[]>([]);
 
 export const loadedCountStore = atom(0);
 
@@ -80,17 +73,21 @@ export const cppVersionStore = atomWithStorage<string>(
 export const inputStore = atomWithStorage<string>("input", "", undefined, {
     getOnInit: true,
 });
-export const outputStore = atomWithStorage<OutputCase[]>("output", []);
 export const runModeStore = atomWithStorage<"single" | "all">(
     "runMode",
     "single",
 );
 export const runStatusStore = atom<"idle" | "building" | "running">("idle");
-export const testCasesStore = atomWithStorage<TestCase[]>("testCases", [
-    { id: "example-1", name: "Test Case 1", input: "Example input 1" },
-    { id: "example-2", name: "Test Case 2", input: "Example input 2" },
-    { id: "example-3", name: "Test Case 3", input: "Example input 3" },
-]);
+export const testCasesStore = atomWithStorage<TestCase[]>(
+    "testCases",
+    [1, 2, 3].map((index) => ({
+        id: `example-${index}`,
+        name: i18next.t("editor:testCase.defaultName", { index }),
+        input: i18next.t("editor:testCase.exampleInput", { index }),
+    })),
+    undefined,
+    { getOnInit: true },
+);
 export const codeWorkersStore = atom<CodeWorker[]>([]);
 
 export const verifyJwtStore = atom<string | null>(null);
@@ -113,6 +110,7 @@ export function useResetEditorAtoms() {
         resetCppVersion();
         resetInput();
         resetOutput();
+        clearOutputBuffer();
         resetRunMode();
         resetTestCases();
         resetEditorErrors();

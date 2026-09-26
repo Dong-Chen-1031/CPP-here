@@ -41,7 +41,7 @@
         "copyThisCaseTip": "複製此測資的輸出",
         "clearTip": "清除輸出",
         "noOutput": "尚無輸出結果",
-        "truncated": "Output is too long to show in full. Use copy to get the full output."
+        "truncated": "輸出過長，未完整顯示。完整內容請使用複製。"
     },
     "testCase": {
         "label": "測資",
@@ -94,13 +94,13 @@
         "resetBtn": "重置",
         "shareCode": "分享",
         "shareCodeTip": "分享你的程式碼、輸入輸出、及測資給其他人",
-        "shareSuccessTitle": "Share Successful",
-        "shareSuccessDescription": "Share URL has been copied to clipboard. You can share it with others now!",
-        "shareLinkReadyTitle": "Share Link Ready",
-        "shareLinkReadyDescription": "Share URL: {{shareUrl}}",
-        "shareFailedTitle": "Share Failed",
-        "shareFailedDescription": "An error occurred while sharing your code. Please try again later.",
-        "shareFailedUnexpectedDescription": "An unexpected error occurred while sharing your code. Please try again later.",
+        "shareSuccessTitle": "分享成功",
+        "shareSuccessDescription": "分享連結已複製到剪貼簿，現在可以分享給其他人了！",
+        "shareLinkReadyTitle": "分享連結已建立",
+        "shareLinkReadyDescription": "分享連結：{{shareUrl}}",
+        "shareFailedTitle": "分享失敗",
+        "shareFailedDescription": "分享程式碼時發生錯誤，請稍後再試。",
+        "shareFailedUnexpectedDescription": "分享程式碼時發生未預期錯誤，請稍後再試。",
         "settings": "設定",
         "formatCode": "格式化",
         "formatCodeTip": "格式化程式碼",
@@ -138,8 +138,8 @@
         "codeFormatStyle": "格式化風格",
         "codeFormatStyleDesc": "選擇一個程式碼格式化風格。",
         "cppVersion": "C++ 版本",
-        "timeLimit": "Time Limit (s)",
-        "timeLimitDesc": "Stop the program after this many seconds. Enter -1 for no limit."
+        "timeLimit": "時間限制（秒）",
+        "timeLimitDesc": "程式執行超過此秒數會被強制停止。輸入 -1 表示不限制。"
     },
     "resize": {
         "loadingEditor": "正在載入編輯器",
@@ -181,16 +181,16 @@
     },
     "limit": {
         "time": {
-            "title": "Time Limit Exceeded",
-            "description": "The program ran longer than {{seconds}} s and was stopped."
+            "title": "執行超時（TLE）",
+            "description": "程式執行超過 {{seconds}} 秒，已強制停止。"
         },
         "output": {
-            "title": "Output Limit Exceeded",
-            "description": "The program printed more than {{size}} MiB and was stopped."
+            "title": "輸出超過上限（OLE）",
+            "description": "程式輸出超過 {{size}} MiB，已強制停止。"
         },
         "memory": {
-            "title": "Memory Limit Exceeded",
-            "description": "The program used more than {{size}} MiB of memory and was stopped."
+            "title": "記憶體超過上限（MLE）",
+            "description": "程式使用超過 {{size}} MiB 記憶體，已強制停止。"
         }
     }
 }

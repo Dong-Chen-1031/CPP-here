@@ -4,7 +4,7 @@ import { PlayIcon } from "@lucide/astro";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import "@/styles/landing.css";
 import HeroCard from "@/components/landing/heroCard.astro";
-import config from "@/config/constants";
+import { PUBLIC_GITHUB_LINK } from "astro:env/client";
 
 interface Props {
     lang?: string;
@@ -19,8 +19,8 @@ const { t } = Astro.props as Props;
         class="pointer-events-none absolute inset-0 opacity-100 -z-10
                     bg-[linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)]
                     bg-size-[64px_64px]
-                    mask-[radial-gradient(ellipse_80%_600px_at_center_top,black_20%,transparent_100%)]">
-    </div>
+                    mask-[radial-gradient(ellipse_80%_600px_at_center_top,black_20%,transparent_100%)]"
+    ></div>
     <!-- <div
                 class="rounded-full px-3 py-1 flex justify-center items-center bg-accent/40 border-border border mt-25">
                 <p
@@ -29,33 +29,32 @@ const { t } = Astro.props as Props;
                 </p>
             </div> -->
     <div class="mt-40">
-        <p
-            class="text-[min(4.5rem,7vw)] leading-none font-bold text-balance text-center tracking-tighter">
+        <p class="text-[min(4.5rem,7vw)] leading-none font-bold text-balance text-center tracking-tighter">
             {t?.title}
-            <br />{t?.title2 ? t?.title2 : "online C++ editor."}
+            <br />
+            {t?.title2 ? t?.title2 : "online C++ editor."}
         </p>
-        <p
-            class="text-muted-foreground text-center mt-5 md:text-lg text-balance px-5">
-            {
-                t?.description ||
-                    "An open-source, lightweight yet powerful online C++ editor built for competitive programming"
-            }
+        <p class="text-muted-foreground text-center mt-5 md:text-lg text-balance px-5">
+            {t?.description ||
+                "An open-source, lightweight yet powerful online C++ editor built for competitive programming"}
         </p>
     </div>
     <div class="flex items-center justify-center mt-13 gap-5 *:text-[0.9rem]">
-        <a href={config.editorLink}>
+        <a href={"/editor"} id="hero-start-coding-btn">
             <Button
                 className="hover:bg-primary/80 transition ml-3 "
-                size={"xl"}>
+                size={"xl"}
+            >
                 <PlayIcon class="size-4" />
                 <p>{t?.startCoding}</p>
             </Button>
         </a>
-        <a href={config.githubLink} target="_blank" rel="noopener noreferrer">
+        <a href={PUBLIC_GITHUB_LINK} target="_blank" rel="noopener noreferrer">
             <Button
                 className="hover:bg-primary/80 "
                 variant={"outline"}
-                size="xl">
+                size="xl"
+            >
                 <SiGithub className="size-4" />
                 <p class="ml-1">{t?.starOnGithub}</p>
             </Button>
@@ -65,3 +64,13 @@ const { t } = Astro.props as Props;
     <HeroCard />
     <div class="h-4"></div>
 </section>
+
+<script is:inline>
+    document
+        .getElementById("hero-start-coding-btn")
+        ?.addEventListener("click", function () {
+            window.posthog?.capture("start_coding_clicked", {
+                location: "hero",
+            });
+        });
+</script>

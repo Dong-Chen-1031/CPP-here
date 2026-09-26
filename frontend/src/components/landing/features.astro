@@ -12,8 +12,8 @@ import {
 } from "@lucide/astro";
 
 import { SiGithub } from "@icons-pack/react-simple-icons";
-import config from "@/config/constants";
 import Hr from "@/components/landing/hr.astro";
+import { PUBLIC_GITHUB_LINK } from "astro:env/client";
 
 interface Props {
     lang?: string;
@@ -62,57 +62,53 @@ const features: Feature[] = translatedList.map(
 <section class="relative w-full px-6 md:px-20 py-24">
     <Hr />
     <div class="max-w-2xl mx-auto text-center mb-16">
-        <p
-            class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
-            <span class="mr-1 tracking-widest">//</span>features
+        <p class="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">
+            <span class="mr-1 tracking-widest">//</span>
+            {t?.label}
         </p>
-        <h2
-            class="text-[min(3rem,7vw)] leading-[1.05] font-bold tracking-tighter text-balance">
-            {t?.heading}<br />
+        <h2 class="text-[min(3rem,7vw)] leading-[1.05] font-bold tracking-tighter text-balance">
+            {t?.heading}
+            <br />
             <span class="text-muted-foreground">{t?.subheading}</span>
         </h2>
         <p class="text-muted-foreground mt-5 md:text-lg text-balance px-2">
-            {
-                t?.description ||
-                    "A focused toolkit that turns the browser into a powerful C++ workspace."
-            }
+            {t?.description ||
+                "A focused toolkit that turns the browser into a powerful C++ workspace."}
         </p>
     </div>
 
-    <div
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-foreground/10 border border-foreground/10 rounded-xl overflow-hidden">
-        {
-            features.map(({ icon: Icon, title, desc }) => (
-                <div class="feature-card group relative bg-background p-8">
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-3 mb-5">
-                            <div class="flex items-center justify-center size-10 rounded-md border border-foreground/15 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-all duration-300">
-                                <Icon class="size-5 text-foreground/80 group-hover:text-foreground transition-colors" />
-                            </div>
-                            <h3 class="text-lg font-semibold tracking-tight flex-1">
-                                {title}
-                            </h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-foreground/10 border border-foreground/10 rounded-xl overflow-hidden">
+        {features.map(({ icon: Icon, title, desc }) => (
+            <div class="feature-card group relative bg-background p-8">
+                <div class="relative z-10">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="flex items-center justify-center size-10 rounded-md border border-foreground/15 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-all duration-300">
+                            <Icon class="size-5 text-foreground/80 group-hover:text-foreground transition-colors" />
                         </div>
-                        <p
-                            class="text-sm leading-relaxed text-muted-foreground"
-                            set:html={desc}>
-                            {/* This is a bit dangerous, but I think it's safe in this context */}
-                        </p>
+                        <h3 class="text-lg font-semibold tracking-tight flex-1">
+                            {title}
+                        </h3>
                     </div>
-                    <div class="spotlight pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <p
+                        class="text-sm leading-relaxed text-muted-foreground"
+                        set:html={desc}
+                    >
+                        {/* This is a bit dangerous, but I think it's safe in this context */}
+                    </p>
                 </div>
-            ))
-        }
+                <div class="spotlight pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            </div>
+        ))}
     </div>
 
     <a
-        href={config.githubLink}
+        href={PUBLIC_GITHUB_LINK}
         target="_blank"
         rel="noopener noreferrer"
-        class="mt-6 flex items-center justify-between gap-4 p-6 md:p-8 border border-foreground/20 rounded-xl hover:bg-foreground/4 hover:border-foreground/25 transition-all duration-300 group">
+        class="mt-6 flex items-center justify-between gap-4 p-6 md:p-8 border border-foreground/20 rounded-xl hover:bg-foreground/4 hover:border-foreground/25 transition-all duration-300 group"
+    >
         <div class="flex items-center gap-4 md:gap-5">
-            <div
-                class="flex items-center justify-center shrink-0 size-10 rounded-md border border-foreground/20 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-colors">
+            <div class="flex items-center justify-center shrink-0 size-10 rounded-md border border-foreground/20 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-colors">
                 <SiGithub className="size-5 text-foreground/80" />
             </div>
             <div>
@@ -120,15 +116,12 @@ const features: Feature[] = translatedList.map(
                     {t?.openSourceLabel}
                 </h3>
                 <p class="text-sm text-muted-foreground mt-0.5">
-                    {
-                        t?.openSourceDescription ||
-                            "Audit it, fork it, ship it. MIT licensed."
-                    }
+                    {t?.openSourceDescription ||
+                        "Audit it, fork it, ship it. MIT licensed."}
                 </p>
             </div>
         </div>
-        <span
-            class="text-sm text-muted-foreground group-hover:text-foreground transition-colors whitespace-nowrap hidden sm:inline">
+        <span class="text-sm text-muted-foreground group-hover:text-foreground transition-colors whitespace-nowrap hidden sm:inline">
             {t?.starGithub}
         </span>
     </a>

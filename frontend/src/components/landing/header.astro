@@ -1,8 +1,8 @@
 ---
 import { Button } from "@/components/ui/button";
-import config from "@/config/constants";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import { CodeIcon } from "@lucide/astro";
+import { PUBLIC_GITHUB_LINK } from "astro:env/client";
 
 interface Props {
     lang?: string;
@@ -12,8 +12,7 @@ interface Props {
 const { t } = Astro.props as Props;
 ---
 
-<header
-    class="w-full absolute h-16 py-4 px-5 border-b-2 border-border flex items-center bg-background/50 backdrop-blur-md z-100">
+<header class="w-full absolute h-16 py-4 px-5 border-b-2 border-border flex items-center bg-background/50 backdrop-blur-md z-100">
     <CodeIcon class="size-5" />
     <p class="ml-2 font-bold text-md tracking-normal">C++ Here</p>
     <div class="flex-1"></div>
@@ -23,13 +22,13 @@ const { t } = Astro.props as Props;
             > -->
     <div class="flex-1"></div>
 
-    <a href={config.githubLink} target="_blank" rel="noopener noreferrer">
+    <a href={PUBLIC_GITHUB_LINK} target="_blank" rel="noopener noreferrer">
         <Button className="hover:bg-primary/80 " variant={"outline"}>
             <SiGithub />
-            <p class="ml-1">Github</p>
+            <p class="ml-1">{t?.github}</p>
         </Button>
     </a>
-    <a href={config.editorLink}>
+    <a href="/editor">
         <Button className="hover:bg-primary/80 transition ml-3">
             {t?.openEditor}
         </Button>

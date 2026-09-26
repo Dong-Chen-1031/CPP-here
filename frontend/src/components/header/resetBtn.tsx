@@ -29,7 +29,8 @@ export function ResetButton({
                     onClick={(e) => {
                         resetAll();
                         onClick(e);
-                    }}>
+                    }}
+                >
                     <RotateCcw />
                     {t("headerActions.resetBtn")}
                 </Button>

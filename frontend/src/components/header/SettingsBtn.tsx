@@ -24,7 +24,8 @@ export function SettingsButton({
             onClick={(e) => {
                 onClick && onClick?.(e);
                 setSettingsOpen(true);
-            }}>
+            }}
+        >
             <SettingsIcon />
             <span className="inline md:hidden lg:inline">
                 {t("headerActions.settings")}

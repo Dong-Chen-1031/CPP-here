@@ -1,11 +1,13 @@
 import asyncio
-from typing import AsyncContextManager
+from contextlib import AbstractAsyncContextManager
 
 import aiodocker
 from fastapi import FastAPI
 from fastapi.concurrency import asynccontextmanager
+
 from utils.cache import init_db
 from utils.log import logger
+from utils.posthog import setup_posthog_logging
 from utils.scheduler import scheduler
 
 
@@ -14,7 +16,7 @@ class AsyncResourceManager:
         self.resources = []
         self.docker: aiodocker.Docker
 
-    async def track(self, resource_cm: AsyncContextManager):
+    async def track(self, resource_cm: AbstractAsyncContextManager):
         obj = await resource_cm.__aenter__()
         self.resources.append(resource_cm)
         return obj
@@ -34,6 +36,7 @@ track = resource_manager.track
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    posthog_log = setup_posthog_logging(logger)
     resource_manager.docker = await track(aiodocker.Docker())
     await init_db()
     scheduler.start()
@@ -49,3 +52,6 @@ async def lifespan(app: FastAPI):
     finally:
         await container_pool.shutdown()
         await resource_manager.close_all()
+        if posthog_log:
+            posthog_log.force_flush(timeout_millis=5000)
+            posthog_log.shutdown()

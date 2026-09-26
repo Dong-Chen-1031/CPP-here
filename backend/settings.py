@@ -1,61 +1,225 @@
+import asyncio
+import logging
 import os
 import secrets
+from typing import Any, ClassVar
 
+import httpx
 from dotenv import load_dotenv
+from prometheus_client import Counter
+from pydantic import Field, model_validator
+from pydantic.fields import FieldInfo
+from pydantic_settings import (
+    BaseSettings,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+)
+from rich import print
 
 load_dotenv()
 
-_yes = ("true", "1", "t", "yes", "y")
+_VERSION = "0.8.0"
 
-DEV_MODE = os.getenv("DEV", "false").lower() in _yes
+CENTER_URL = os.getenv("CENTER_URL", "")
+CENTER_TOKEN = os.getenv("CENTER_TOKEN", "")
+# Compare against "true" so ENABLE_CENTER_CONSOLE="false" doesn't turn it on.
+ENABLE_CENTER_CONSOLE = os.getenv(
+    "ENABLE_CENTER_CONSOLE", ""
+).lower() == "true" and bool(CENTER_URL and CENTER_TOKEN)
 
-PORT = int(os.getenv("PORT", 8000))
+# Startup (and every reload_settings()) blocks on this request, so keep it short.
+CENTER_CONSOLE_TIMEOUT = float(os.getenv("CENTER_CONSOLE_TIMEOUT", "3.0"))
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:4321")
-
-BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
-
-ALLOW_ORIGINS = (
-    FRONTEND_URL,
-    FRONTEND_URL.replace("127.0.0.1", "localhost"),
+CENTER_CONSOLE_FETCH_FAILURES = Counter(
+    "center_console_fetch_failures_total",
+    "Number of failed Center Console configuration fetches",
 )
 
-BUILD_VERSION = "0.1.0"
-
-CACHE_LIMIT = 100
-
-CACHE_EXPIRY = 24 * 3600 * 7
-
-CACHE_PATH = "cache"
-
-HOST_CACHE_PATH = os.getenv("HOST_CACHE_PATH", os.path.abspath(CACHE_PATH))
-
-CACHE_SQLITE_PATH = f"sqlite+aiosqlite:///{CACHE_PATH}/cache.db"
-
-TURNSTILE_SECRET = os.getenv("TURNSTILE_SECRET", "")
-
-JWT_SECRET = os.getenv("JWT_SECRET", "") or secrets.token_urlsafe(32)
-
-JWT_EXPIRY_SECONDS = 3600
-
-DOCKER_POOL_SIZE = 4
+if ENABLE_CENTER_CONSOLE:
+    print(f"[green]Center Console is enabled, using settings from {CENTER_URL}")
+else:
+    print(
+        "[yellow]Center Console is disabled, using settings from .env or environment variables"
+    )
 
 
-S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL", "")
+class CenterConsoleSettingsSource(PydanticBaseSettingsSource):
+    center_json: ClassVar[dict[str, Any]] = {}
 
-S3_ACCESS_KEY_ID = os.getenv("S3_ACCESS_KEY_ID", "")
+    def get_field_value(
+        self, field: FieldInfo, field_name: str
+    ) -> tuple[Any, str, bool]:
+        field_value = self.center_json.get(field_name)
+        return field_value, field_name, False
 
-S3_SECRET_ACCESS_KEY = os.getenv("S3_SECRET_ACCESS_KEY", "")
+    def prepare_field_value(
+        self, field_name: str, field: FieldInfo, value: Any, value_is_complex: bool
+    ) -> Any:
+        return value
 
-S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "")
+    def __call__(self) -> dict[str, Any]:
+        d: dict[str, Any] = {}
 
-SHARE = os.getenv("SHARE", "false").lower() in _yes and all(
-    [
-        S3_ENDPOINT_URL,
-        S3_ACCESS_KEY_ID,
-        S3_SECRET_ACCESS_KEY,
-        S3_BUCKET_NAME,
-    ]
-)
+        if not ENABLE_CENTER_CONSOLE:
+            return d
 
-BYPASS_CAPTCHA = os.getenv("BYPASS_CAPTCHA", "false").lower() in _yes
+        try:
+            _ = httpx.get(
+                f"{CENTER_URL}/center-api/v1/config",
+                headers={"Authorization": f"Bearer {CENTER_TOKEN}"},
+                timeout=CENTER_CONSOLE_TIMEOUT,
+            ).json()
+            if not isinstance(_, dict):
+                raise ValueError(f"Center Console returned non-dict JSON: {_!r}")
+            self.__class__.center_json = _
+        except Exception as e:
+            CENTER_CONSOLE_FETCH_FAILURES.inc()
+            print(
+                f"[red]Failed to fetch settings from Center Console ({e!r}), "
+                "using env / .env instead"
+            )
+            return d
+
+        for field_name, field in self.settings_cls.model_fields.items():
+            field_value, field_key, value_is_complex = self.get_field_value(
+                field, field_name
+            )
+            field_value = self.prepare_field_value(
+                field_name, field, field_value, value_is_complex
+            )
+            if field_value is not None:
+                d[field_key] = field_value
+
+        return d
+
+
+class Settings(BaseSettings):
+    # Documented for deployers in backend/.env.example and docker/docker-compose.yml.
+    model_config = SettingsConfigDict(env_file_encoding="utf-8")
+
+    SERVICE_NAME: str = Field(default="C++ Here Backend")
+
+    DEV_MODE: bool = Field(default=False)
+
+    LOG_LEVEL: int = Field(default=logging.INFO)
+
+    PORT: int = Field(default=8000)
+
+    # Reported as "service.version" in logs and PostHog. Tracks the release, so
+    # it is bumped with _VERSION rather than set per deployment.
+    VERSION: str = Field(default=_VERSION)
+
+    FRONTEND_URL: str = Field(default="http://localhost:4321")
+
+    BACKEND_URL: str = Field(default="http://localhost:8000")
+
+    ALLOW_ORIGINS: list[str] = Field(default_factory=list)
+
+    # Part of the build cache key: bump it whenever the emcc flags or
+    # assets/worker.js change so stale cached builds aren't served.
+    # Not a deployment setting, so it is left out of the .env templates.
+    BUILD_VERSION: str = Field(default="0.2.0")
+
+    CACHE_LIMIT: int = Field(default=100)
+
+    CACHE_EXPIRY: int = Field(default=24 * 3600 * 7)
+
+    CACHE_PATH: str = Field(default="cache")
+
+    HOST_CACHE_PATH: str = Field(default="")
+
+    CACHE_SQLITE_PATH: str = Field(default="")
+
+    # Cloudflare's always-pass test secret, so a fresh deployment verifies out of the
+    # box and matches the frontend's PRIVATE_TURNSTILE_SECRET_KEY default. It accepts
+    # any token, so production must replace it with a real key.
+    TURNSTILE_SECRET: str = Field(default="1x0000000000000000000000000000000AA")
+
+    JWT_SECRET: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
+
+    JWT_EXPIRY_SECONDS: int = Field(default=3600)
+
+    DOCKER_POOL_SIZE: int = Field(default=15)
+
+    DOCKER_WORKER_TTL: int = Field(default=1800)
+
+    DOCKER_ORPHAN_SWEEP: bool = Field(default=True)
+
+    S3_ENDPOINT_URL: str = Field(default="")
+
+    S3_ACCESS_KEY_ID: str = Field(default="")
+
+    S3_SECRET_ACCESS_KEY: str = Field(default="")
+
+    S3_BUCKET_NAME: str = Field(default="")
+
+    SHARE: bool = Field(default=False)
+
+    BYPASS_CAPTCHA: bool = Field(default=False)
+
+    CAPTCHA_TEST_TOKEN: str | None = Field(default=None)
+
+    POSTHOG_API_KEY: str | None = Field(default=None)
+
+    POSTHOG_BASE_URL: str = Field(default="https://us.i.posthog.com")
+
+    @model_validator(mode="after")
+    def _derive_defaults(self) -> "Settings":
+        if not self.JWT_SECRET:
+            self.JWT_SECRET = secrets.token_urlsafe(32)
+
+        if not self.ALLOW_ORIGINS:
+            self.ALLOW_ORIGINS = [
+                self.FRONTEND_URL,
+                self.FRONTEND_URL.replace("127.0.0.1", "localhost"),
+            ]
+
+        if not self.HOST_CACHE_PATH:
+            self.HOST_CACHE_PATH = os.path.abspath(self.CACHE_PATH)
+
+        if not self.CACHE_SQLITE_PATH:
+            self.CACHE_SQLITE_PATH = f"sqlite+aiosqlite:///{self.CACHE_PATH}/cache.db"
+
+        if self.SHARE:
+            if not all(
+                [
+                    self.S3_ENDPOINT_URL,
+                    self.S3_ACCESS_KEY_ID,
+                    self.S3_SECRET_ACCESS_KEY,
+                    self.S3_BUCKET_NAME,
+                ]
+            ):
+                print(
+                    "[yellow]SHARE is enabled, but S3 credentials are missing. Disabling SHARE."
+                )
+                self.SHARE = False
+
+        return self
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            CenterConsoleSettingsSource(settings_cls),
+            env_settings,
+            dotenv_settings,
+            file_secret_settings,
+        )
+
+
+settings = Settings()
+
+
+async def reload_settings_async():
+    await asyncio.to_thread(settings.__init__)
+
+
+def reload_settings():
+    settings.__init__()
