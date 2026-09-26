@@ -13,12 +13,12 @@ from opentelemetry import trace
 from prometheus_client import Counter, Histogram
 from pydantic import BaseModel, Field
 
-from router.direct_api.verify import need_token
 from services.build import BuildError, build
 from settings import settings
 from utils import cache
 from utils.cache import add_build_stats
 from utils.log import logger
+from utils.verify import need_token
 
 router = APIRouter()
 tracer = trace.get_tracer(__name__)
@@ -171,7 +171,7 @@ async def _lookup_cache(case_id: str) -> BuildResponse | None:
     return None
 
 
-@router.post("/build")
+@router.post("/api/build")
 @log_build_request
 async def build_cpp(
     request: BuildRequest, token: bool = Depends(need_token)

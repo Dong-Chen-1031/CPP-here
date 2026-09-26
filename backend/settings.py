@@ -101,6 +101,8 @@ class Settings(BaseSettings):
 
     DEV_MODE: bool = Field(default=False)
 
+    DIRECT_MODE: bool = Field(default=True)
+
     LOG_LEVEL: int = Field(default=logging.INFO)
 
     PORT: int = Field(default=8000)
