@@ -9,7 +9,8 @@
         "panelsGroup": "Panels",
         "input": "Input",
         "testCase": "Test Case",
-        "output": "Output"
+        "output": "Output",
+        "starOnGithub": "Star on GitHub"
     },
     "drawer": {
         "openBtn": "Open Drawer",
@@ -39,13 +40,15 @@
         "copyTip": "Copy first output",
         "copyThisCaseTip": "Copy output of this test case",
         "clearTip": "Clear output",
-        "noOutput": "No output yet."
+        "noOutput": "No output yet.",
+        "truncated": "Output is too long to show in full. Use copy to get the full output."
     },
     "testCase": {
         "label": "Test Case",
         "addTip": "Add new test case",
         "addBtn": "Add",
         "defaultName": "Test Case {{index}}",
+        "exampleInput": "Example input {{index}}",
         "noTestCase": "No test case yet.",
         "setInputTip": "Set Input to this Test Case",
         "runTip": "Run this Test Case",
@@ -91,6 +94,13 @@
         "resetBtn": "Reset",
         "shareCode": "Share",
         "shareCodeTip": "Share your code, input/output, and test cases with others",
+        "shareSuccessTitle": "Share Successful",
+        "shareSuccessDescription": "Share URL has been copied to clipboard. You can share it with others now!",
+        "shareLinkReadyTitle": "Share Link Ready",
+        "shareLinkReadyDescription": "Share URL: {{shareUrl}}",
+        "shareFailedTitle": "Share Failed",
+        "shareFailedDescription": "An error occurred while sharing your code. Please try again later.",
+        "shareFailedUnexpectedDescription": "An unexpected error occurred while sharing your code. Please try again later.",
         "settings": "Settings",
         "formatCode": "Format",
         "formatCodeTip": "Format code",
@@ -127,10 +137,32 @@
         "resetSettingsBtn": "Reset",
         "codeFormatStyle": "Code Format Style",
         "codeFormatStyleDesc": "Select a code formatting style.",
-        "cppVersion": "C++ Version"
+        "cppVersion": "C++ Version",
+        "timeLimit": "Time Limit (s)",
+        "timeLimitDesc": "Stop the program after this many seconds. Enter -1 for no limit."
     },
     "resize": {
-        "loadingEditor": "Loading Editor"
+        "loadingEditor": "Loading Editor",
+        "movedTitle": "We have moved!",
+        "movedDescription": "Please use the new url cpp.doong.me"
+    },
+    "run": {
+        "errorTitle": "Error",
+        "errorDescription": "An error occurred. Please check output for details.",
+        "runtimeErrorIn": "Runtime Error in {{testCaseName}}",
+        "runtimeErrorTitle": "Runtime Error",
+        "runtimeErrorDescription": "An error occurred during code execution. Please check output for details.",
+        "buildFailedTitle": "Build Failed",
+        "buildFailedDescription": "Failed to build the code. Please check output for details.",
+        "buildFailedOutput": "Build failed with errors:",
+        "noTestCasesTitle": "No Test Cases",
+        "noTestCasesDescription": "There are no test cases to run. Please add some test cases first.",
+        "verificationFailed": "Verification failed. Please try again.",
+        "workersUnsupported": "Web Workers are not supported in this environment."
+    },
+    "auth": {
+        "unauthorizedTitle": "Unauthorized",
+        "unauthorizedDescription": "Your verification has expired and is being renewed automatically."
     },
     "shareReceive": {
         "title": "Receive Shared Code",
@@ -146,5 +178,19 @@
         "receiveFailedDesc": "An error occurred while receiving the shared code. Please try again later.",
         "receiveSuccess": "Receive Successful",
         "receiveSuccessDesc": "The shared code has been received and applied to your editor."
+    },
+    "limit": {
+        "time": {
+            "title": "Time Limit Exceeded",
+            "description": "The program ran longer than {{seconds}} s and was stopped."
+        },
+        "output": {
+            "title": "Output Limit Exceeded",
+            "description": "The program printed more than {{size}} MiB and was stopped."
+        },
+        "memory": {
+            "title": "Memory Limit Exceeded",
+            "description": "The program used more than {{size}} MiB of memory and was stopped."
+        }
     }
 }
