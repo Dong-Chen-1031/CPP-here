@@ -27,14 +27,14 @@ export function parseTimeLimit(value: unknown): number | null {
 
 /**
  * Hard cap on stdout + stderr per run. Enforced at the source by
- * docker/js_lib/stdout_lib.js in the safe-cpp2wasm image (keep the two in
- * sync); checked again here as a second line of defence.
+ * builder/docker/js_lib/stdout_lib.js (the builder regression test fails when
+ * the two differ); checked again here as a second line of defence.
  */
 export const OUTPUT_LIMIT_BYTES = 32 * 1024 * 1024;
 
 /**
  * wasm heap cap, only used in messages: the real limit is -sMAXIMUM_MEMORY in
- * backend/services/build.py.
+ * builder/docker/cpp-here-build.
  */
 export const MEMORY_LIMIT_MIB = 512;
 

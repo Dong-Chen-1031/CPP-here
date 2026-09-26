@@ -116,7 +116,8 @@ class Settings(BaseSettings):
     ALLOW_ORIGINS: list[str] = Field(default_factory=list)
 
     # Part of the build cache key: bump it whenever the emcc flags or
-    # assets/worker.js change so stale cached builds aren't served.
+    # assets/worker.js change so stale cached builds aren't served. (The
+    # builder image tag is already part of the key.)
     # Not a deployment setting, so it is left out of the .env templates.
     BUILD_VERSION: str = Field(default="0.2.0")
 

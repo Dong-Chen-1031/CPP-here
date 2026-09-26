@@ -1,0 +1,168 @@
+name: Builder Docker Build, Test & Push
+
+# The image the backend compiles user code in (builder/). Tagged with the git
+# tree hash of builder/docker, which is known before merging, so a PR can pin
+# the new tag in backend/services/build.py itself (checked by ci.yml).
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - "builder/**"
+            - "backend/assets/worker.js"
+            - "frontend/src/config/runLimits.ts"
+            - ".github/workflows/builder-docker.yml"
+    pull_request:
+        paths:
+            - "builder/**"
+            - "backend/assets/worker.js"
+            - "frontend/src/config/runLimits.ts"
+            - ".github/workflows/builder-docker.yml"
+    workflow_dispatch:
+
+env:
+    REGISTRY: ghcr.io
+    IMAGE_NAME: dong-chen-1031/safe-cpp2wasm
+    # Pushed for main and for pull requests from this repository (not forks),
+    # so a PR's backend image (backend-docker.yml pushes pr-N) can pull the
+    # builder tag it pins. tree-<hash> tags are content-addressed, so pushing
+    # them early is safe; latest only moves on main.
+    PUSH: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+
+jobs:
+    build:
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - platform: linux/amd64
+                      runner: ubuntu-latest
+                    - platform: linux/arm64
+                      runner: ubuntu-24.04-arm
+        runs-on: ${{ matrix.runner }}
+        permissions:
+            contents: read
+            packages: write
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Log in to GitHub Container Registry
+              if: ${{ env.PUSH == 'true' }}
+              uses: docker/login-action@v3
+              with:
+                  registry: ${{ env.REGISTRY }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Extract metadata
+              id: meta
+              uses: docker/metadata-action@v5
+              with:
+                  images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            # Build into the local Docker daemon first so the regression test
+            # runs against exactly this platform's image before anything is pushed
+            - name: Build image for testing
+              uses: docker/build-push-action@v6
+              with:
+                  context: ./builder/docker
+                  platforms: ${{ matrix.platform }}
+                  load: true
+                  tags: safe-cpp2wasm:test
+                  cache-from: type=gha,scope=builder-${{ matrix.platform }}
+                  cache-to: type=gha,mode=max,scope=builder-${{ matrix.platform }}
+
+            - name: Regression test
+              run: builder/test/regression/run.sh safe-cpp2wasm:test
+
+            # Same inputs as the test build, so every layer comes from the cache
+            - name: Build and push image by digest
+              if: ${{ env.PUSH == 'true' }}
+              id: build
+              uses: docker/build-push-action@v6
+              with:
+                  context: ./builder/docker
+                  platforms: ${{ matrix.platform }}
+                  push: true
+                  outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true
+                  labels: ${{ steps.meta.outputs.labels }}
+                  cache-from: type=gha,scope=builder-${{ matrix.platform }}
+                  cache-to: type=gha,mode=max,scope=builder-${{ matrix.platform }}
+
+            - name: Export digest
+              if: ${{ env.PUSH == 'true' }}
+              run: |
+                  mkdir -p /tmp/digests
+                  digest="${{ steps.build.outputs.digest }}"
+                  touch "/tmp/digests/${digest#sha256:}"
+
+            - name: Upload digest artifact
+              if: ${{ env.PUSH == 'true' }}
+              uses: actions/upload-artifact@v4
+              with:
+                  name: builder-digest-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
+                  path: /tmp/digests/*
+                  if-no-files-found: error
+                  retention-days: 1
+
+    merge:
+        runs-on: ubuntu-latest
+        needs: build
+        # Same condition as env.PUSH (the env context isn't available here)
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        permissions:
+            contents: read
+            packages: write
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Tree hash of builder/docker
+              id: tree
+              run: echo "hash=$(git rev-parse --short=12 HEAD:builder/docker)" >> "$GITHUB_OUTPUT"
+
+            - name: Download digests
+              uses: actions/download-artifact@v4
+              with:
+                  path: /tmp/digests
+                  pattern: builder-digest-*
+                  merge-multiple: true
+
+            - name: Log in to GitHub Container Registry
+              uses: docker/login-action@v3
+              with:
+                  registry: ${{ env.REGISTRY }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Extract metadata
+              id: meta
+              uses: docker/metadata-action@v5
+              with:
+                  images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+                  tags: |
+                      type=raw,value=latest,enable={{is_default_branch}}
+                      type=raw,value=tree-${{ steps.tree.outputs.hash }}
+                      type=ref,event=pr
+                      type=sha,prefix=sha-
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Create and push multi-platform manifest
+              working-directory: /tmp/digests
+              run: |
+                  docker buildx imagetools create \
+                    $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+                    $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
+
+            - name: Inspect final manifest
+              run: |
+                  docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:tree-${{ steps.tree.outputs.hash }}

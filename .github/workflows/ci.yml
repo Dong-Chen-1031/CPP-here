@@ -49,6 +49,28 @@ jobs:
                   mkdir -p cache logs
                   python -c "import main"
 
+    builder-pin:
+        name: Builder image pin matches builder/docker
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            # The builder image is tagged with the tree hash of builder/docker
+            # (builder-docker.yml), so a change to the image must update the pin
+            # in the same commit, or the backend would keep running the old one
+            - name: Check pins
+              run: |
+                  expected="ghcr.io/dong-chen-1031/safe-cpp2wasm:tree-$(git rev-parse --short=12 HEAD:builder/docker)"
+                  status=0
+                  for file in backend/services/build.py docker/docker-compose.yml docker/backend/docker-compose.yml; do
+                      if ! grep -qF "$expected" "$file"; then
+                          echo "::error file=$file::builder image pin is not $expected"
+                          status=1
+                      fi
+                  done
+                  exit $status
+
     frontend:
         name: Frontend format & type check
         runs-on: ubuntu-latest

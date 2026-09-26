@@ -1,4 +1,5 @@
 import asyncio
+import re
 import shlex
 import shutil
 import time
@@ -14,10 +15,17 @@ from settings import settings
 from utils.log import logger
 from utils.scheduler import scheduler
 
-BUILDER_IMAGE = "ghcr.io/dong-chen-1031/safe-cpp2wasm:sha-58d3586"
+# Built from builder/ and tagged with the git tree hash of builder/docker
+# (`git rev-parse --short=12 HEAD:builder/docker`); ci.yml checks this pin and
+# the ones in docker/**/docker-compose.yml against the current tree
+BUILDER_IMAGE = "ghcr.io/dong-chen-1031/safe-cpp2wasm:tree-0b67a8c42a28"
 WORKER_NAME_PREFIX = "cpp-here-worker-"
 
 INSTANCE_ID = uuid.uuid4().hex
+
+# Only for the trace attribute: cpp-here-build makes the actual decision to use
+# the precompiled bits/stdc++.h
+INCLUDES_STDCXX = re.compile(r"^\s*#\s*include\s*[<\"]bits/stdc\+\+\.h[>\"]", re.M)
 
 TTL_SAFETY_MARGIN = 120
 MAINTENANCE_INTERVAL = 60
@@ -238,10 +246,16 @@ class ContainerPool:
                 pass
             self._maintenance_job = None
 
-        for task in list(self._replenish_tasks):
-            task.cancel()
+        # Let in-flight replenishes finish instead of cancelling them: a cancel
+        # after Docker received the create request leaks the container (nothing
+        # holds it any more), while _replenish itself destroys what it creates
+        # once _closing is set. Cancel only what is still stuck after a while.
         if self._replenish_tasks:
-            await asyncio.gather(*self._replenish_tasks, return_exceptions=True)
+            _, pending = await asyncio.wait(list(self._replenish_tasks), timeout=10)
+            for task in pending:
+                task.cancel()
+            if pending:
+                await asyncio.gather(*pending, return_exceptions=True)
         while True:
             try:
                 container = self.pool.get_nowait()
@@ -263,39 +277,13 @@ async def build(
     if output_dir is None:
         output_dir = Path.cwd() / "output"
 
+    # How the code is compiled (emcc flags, PCH, timeout) is defined in one
+    # place, builder/docker/cpp-here-build, which the builder image installs
     cmd = (
         f"mkdir -p /tmp/out && "
         f"printf '%s' {shlex.quote(code)} > /tmp/source.cpp && "
-        f"timeout 30s emcc /tmp/source.cpp -o /tmp/out/{shlex.quote(name)} "
-    ) + " ".join(
-        [
-            f"-std={cpp_version} ",
-            "-ftemplate-depth=50 ",
-            # EMCC_CORES doesn't reach wasm-ld's own thread pool, which is what
-            # actually blew up under load; cap it to match the container's 1 CPU.
-            "-Wl,--threads=1 ",
-            "-sMODULARIZE=1 ",
-            # "-sMINIMAL_RUNTIME=1  "
-            '-sEXPORT_NAME="createMyModule" ',
-            '-sENVIRONMENT="worker" ',
-            "-sEXIT_RUNTIME=1 ",
-            "-sFILESYSTEM=0 ",
-            "--js-library /tmp/stdin_lib.js ",
-            # 取代逐位元組的 stdout 緩衝並限制輸出量（OLE），檔案在
-            # safe-cpp2wasm 映像的 docker/js_lib/stdout_lib.js
-            "--js-library /tmp/stdout_lib.js ",
-            # '-sINCOMING_MODULE_JS_API=\'["print","printErr","stdin","instantiateWasm","onRuntimeInitialized"]\' '
-            # '-sINCOMING_MODULE_JS_API=\'["wasm", "stdin", "print", "printErr"]\' '
-            "-fconstexpr-depth=50 ",
-            "-fmacro-backtrace-limit=10 ",
-            "-sSTACK_SIZE=8388608 ",  # 8 MB stack
-            "-sINITIAL_MEMORY=33554432 ",  # 初始 32 MB
-            "-sALLOW_MEMORY_GROWTH=1 ",  # 按需成長
-            "-sMAXIMUM_MEMORY=536870912 ",  # 上限 512 MB（MLE）
-            # 超過上限時直接 abort 並回報 OOM，而不是讓 malloc 回傳 NULL；
-            # 開啟記憶體成長時預設是關閉的，所以要明確設定
-            "-sABORTING_MALLOC=1 ",
-        ]
+        f"cpp-here-build {shlex.quote(cpp_version)} /tmp/source.cpp "
+        f"/tmp/out/{shlex.quote(name)}"
     )
 
     # Initialised up front: the DockerError handler below reports it even when
@@ -312,6 +300,9 @@ async def build(
             # so it is raised after this span closes and doesn't mark it failed.
             with tracer.start_as_current_span("build.emcc") as span:
                 span.set_attribute("build.cpp_version", cpp_version)
+                span.set_attribute(
+                    "build.includes_stdcxx", bool(INCLUDES_STDCXX.search(code))
+                )
                 execute = await container.exec(
                     ["sh", "-c", cmd],
                     stdout=True,
