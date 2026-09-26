@@ -18,18 +18,56 @@ import {
     clearOutputBuffer,
 } from "@/store/outputStore";
 import Dexie, { liveQuery } from "dexie";
-import { DISPLAY_LIMIT_CHARS, DISPLAY_LIMIT_LINES } from "@/config/runLimits";
+import {
+    DISPLAY_LIMIT_CHARS,
+    DISPLAY_LIMIT_LINES,
+    DISPLAY_LIMIT_LINE_CHARS,
+} from "@/config/runLimits";
 
-function clipToBudget(text: string, chars: number, lines: number) {
-    let kept = text.length > chars ? text.slice(0, chars) : text;
+/**
+ * `lineChars` is the length of the current unterminated line from earlier
+ * chunks; the updated value is returned. Lines past DISPLAY_LIMIT_LINE_CHARS
+ * are cut (lineClipped) but later lines still render.
+ */
+function clipToBudget(
+    text: string,
+    chars: number,
+    lines: number,
+    lineChars: number,
+) {
+    let clipped = text.length > chars;
+    const src = clipped ? text.slice(0, chars) : text;
+    let kept = "";
     let newlines = 0;
-    for (let i = kept.indexOf("\n"); i !== -1; i = kept.indexOf("\n", i + 1)) {
+    let lineClipped = false;
+    let start = 0;
+    for (;;) {
+        const nl = src.indexOf("\n", start);
+        const end = nl === -1 ? src.length : nl;
+        const room = DISPLAY_LIMIT_LINE_CHARS - lineChars;
+        if (end - start <= room) {
+            kept += src.slice(start, end);
+        } else {
+            if (room > 0) {
+                let cut = start + room;
+                // don't split a surrogate pair
+                const c = src.charCodeAt(cut - 1);
+                if (c >= 0xd800 && c <= 0xdbff) cut--;
+                kept += src.slice(start, cut) + "…";
+            }
+            lineClipped = true;
+        }
+        lineChars += end - start;
+        if (nl === -1) break;
+        kept += "\n";
+        lineChars = 0;
+        start = nl + 1;
         if (++newlines >= lines) {
-            kept = kept.slice(0, i + 1);
+            clipped ||= start < src.length;
             break;
         }
     }
-    return { kept, newlines, clipped: kept.length < text.length };
+    return { kept, newlines, clipped, lineChars, lineClipped };
 }
 
 interface OutputCaseJSXProps {
@@ -57,6 +95,7 @@ function OutputCaseJSX({
         let cancelled = false;
         let renderedChars = 0;
         let renderedLines = 0;
+        let lineChars = 0;
         let isTruncated = false;
 
         const sub = liveQuery(async () => ({
@@ -84,6 +123,7 @@ function OutputCaseJSX({
                     firstRenderedId = undefined;
                     renderedChars = 0;
                     renderedLines = 0;
+                    lineChars = 0;
                     isTruncated = false;
                     setTruncated(false);
                     if (firstId === undefined) return;
@@ -101,16 +141,20 @@ function OutputCaseJSX({
                         }
                         continue;
                     }
-                    const { kept, newlines, clipped } = clipToBudget(
+                    const clip = clipToBudget(
                         chunk.content,
                         DISPLAY_LIMIT_CHARS - renderedChars,
                         DISPLAY_LIMIT_LINES - renderedLines,
+                        lineChars,
                     );
+                    const { kept, newlines, clipped } = clip;
                     renderedChars += kept.length;
                     renderedLines += newlines;
+                    lineChars = clip.lineChars;
                     if (kept) {
                         html += outputChunkToHtml({ ...chunk, content: kept });
                     }
+                    if (clip.lineClipped) setTruncated(true);
                     if (
                         clipped ||
                         renderedChars >= DISPLAY_LIMIT_CHARS ||
