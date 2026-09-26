@@ -69,14 +69,14 @@ async def http_exception_handler(request, exc):
     logger.error(
         f"Unhandled exception (trace_id={trace_id})",
         exc_info=exc,
-        extra={"trace_id": trace_id, "path": str(request.url)},
+        extra={"traceId": trace_id, "path": str(request.url)},
     )
     if posthog:
-        posthog.capture_exception(exc, properties={"trace_id": trace_id})
+        posthog.capture_exception(exc, properties={"traceId": trace_id})
 
     message = str(exc) if settings.DEV_MODE else "Internal server error"
     return JSONResponse(
-        status_code=500, content={"message": message, "trace_id": trace_id}
+        status_code=500, content={"message": message, "traceId": trace_id}
     )
 
 
