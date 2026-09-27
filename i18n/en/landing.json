@@ -42,7 +42,7 @@
             },
             {
                 "title": "Smart Autocomplete",
-                "description": "Context-aware suggestions for STL containers and algorithms — write C++ faster without leaving the flow."
+                "description": "Context-aware suggestions for STL containers, algorithms, and your own symbols — write C++ faster without leaving the flow."
             },
             {
                 "title": "Any Screen, Any Device",
