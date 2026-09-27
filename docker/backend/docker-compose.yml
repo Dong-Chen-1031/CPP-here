@@ -3,7 +3,7 @@
 # value inside Docker differs and the comment says why.
 # BACKEND_PORT and FRONTEND_PORT are read by the Docker CLI on the host, not by the service;
 # set them in a .env next to this file or in your shell.
-# Last synced 2026-09-21 at commit 0f82c44
+# Last synced 2026-09-27 at commit 1f91b19
 services:
     backend:
         image: ghcr.io/dong-chen-1031/cpp-here/backend:latest
@@ -41,6 +41,15 @@ services:
             # (/docs, /redoc) are turned off.
             # Default: false
             # - DEV_MODE=false
+
+            # Serve the browser-facing API (/api/verify, /api/status, /api/health, /api/share) and
+            # accept the JWTs this backend issues. Keep true here: the frontend calls this
+            # backend directly at PUBLIC_API_URL. Set to false only when this is the builder node
+            # behind a Worker frontend's /api/build proxy: then only /api/build is served, it accepts
+            # nothing but CAPTCHA_TEST_TOKEN (the frontend's PRIVATE_BUILDER_NODE_KEY) or
+            # BYPASS_CAPTCHA, and TURNSTILE_SECRET, JWT_* and SHARE have no effect.
+            # Default: true
+            # - DIRECT_MODE=true
 
             # Port the backend listens on inside the container. Changing it also means changing the
             # container side of the ports mapping below; use BACKEND_PORT to move the host port.
