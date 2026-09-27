@@ -56,9 +56,19 @@ export interface API<
     POST: APIRoute;
 }
 
-function fail(status: number, message: string, details?: unknown) {
+function fail(
+    status: number,
+    message: string,
+    others?: { traceId?: string; details?: unknown },
+): Response {
+    const { traceId, details } = others ?? {};
     return Response.json(
-        { success: false, error: message, details },
+        {
+            success: false,
+            error: message,
+            details: details,
+            traceId: traceId,
+        },
         { status },
     );
 }
@@ -92,21 +102,21 @@ export function makeAPI<
         },
         POST: async (context) => {
             let raw: unknown;
+            const traceId = crypto.randomUUID();
 
             try {
                 raw = await context.request.json();
             } catch {
-                return fail(400, "Invalid JSON");
+                return fail(400, "Invalid JSON", { traceId });
             }
 
             const parseResult = await payloadSchema.safeParseAsync(raw);
 
             if (!parseResult.success) {
-                return fail(
-                    400,
-                    "Invalid request body",
-                    z.treeifyError(parseResult.error),
-                );
+                return fail(400, "Invalid request body", {
+                    details: z.treeifyError(parseResult.error),
+                    traceId,
+                });
             }
 
             try {
@@ -127,8 +137,9 @@ export function makeAPI<
                     console.error(
                         "Response validation failed:",
                         z.treeifyError(validated.error),
+                        { traceId },
                     );
-                    return fail(500, "Internal Server Error");
+                    return fail(500, "Internal Server Error", { traceId });
                 }
 
                 return Response.json(
@@ -140,10 +151,13 @@ export function makeAPI<
             } catch (error) {
                 if (error instanceof Response) throw error;
                 if (error instanceof APIError) {
-                    return fail(error.status, error.message, error.details);
+                    return fail(error.status, error.message, {
+                        details: error.details,
+                        traceId,
+                    });
                 }
-                console.error("API handler error:", error);
-                return fail(500, "Internal Server Error");
+                console.error("API handler error:", error, { traceId });
+                return fail(500, "Internal Server Error", { traceId });
             }
         },
     };

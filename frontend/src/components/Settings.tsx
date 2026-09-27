@@ -317,7 +317,7 @@ export function Settings({ allLangs }: SettingsProps) {
                             </FieldContent>
                             <ButtonGroup
                                 orientation="horizontal"
-                                aria-label="Media controls"
+                                aria-label={t("settings.defaultCode")}
                                 className="h-fit"
                             >
                                 <Button
@@ -353,7 +353,9 @@ export function Settings({ allLangs }: SettingsProps) {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectGroup>
-                                        <SelectLabel>Format Style</SelectLabel>
+                                        <SelectLabel>
+                                            {t("settings.codeFormatStyle")}
+                                        </SelectLabel>
                                         {[
                                             "LLVM",
                                             "Google",
@@ -385,7 +387,7 @@ export function Settings({ allLangs }: SettingsProps) {
                             </FieldContent>
                             <ButtonGroup
                                 orientation="horizontal"
-                                aria-label="Media controls"
+                                aria-label={t("settings.resetSettings")}
                                 className="h-fit"
                             >
                                 <Button

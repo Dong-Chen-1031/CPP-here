@@ -6,6 +6,6 @@ export default {
     "backend/**/*.py": [
         `${ruff} check --fix`,
         `${ruff} format`,
-        () => `${ty} check --project backend`,
+        () => `${ty} check --project backend --python .venv`,
     ],
 };

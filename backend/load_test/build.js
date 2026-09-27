@@ -127,7 +127,7 @@ export default function () {
     const uniqueCode = `// run-id: ${uuidv4()}\n${sample.code}`;
     const payload = JSON.stringify({
         code: uniqueCode,
-        cpp_version: sample.cpp_version,
+        cppVersion: sample.cpp_version,
     });
 
     const res = http.post(`${BASE_URL}/api/build`, payload, {

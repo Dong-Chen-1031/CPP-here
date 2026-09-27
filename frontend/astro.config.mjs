@@ -25,7 +25,9 @@ export default defineConfig({
         react(),
         sitemap({
             filter: (page) =>
-                !page.includes("/editor") && !page.includes("/test"),
+                !page.includes("/editor") &&
+                !page.includes("/test") &&
+                !page.includes("/reset"),
         }),
         // starlight({
         //     title: "C++ Here Docs",
@@ -104,7 +106,7 @@ export default defineConfig({
                 access: "public",
                 optional: true,
                 url: true,
-                default: "https://status.doong.me/status/cpp-here",
+                default: "https://cpp-status.doong.me/",
             }),
             PUBLIC_SHARE: envField.boolean({
                 context: "client",

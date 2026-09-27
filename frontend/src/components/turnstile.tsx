@@ -16,11 +16,18 @@ import type { verifyAPI } from "@/pages/api/verify";
 const RESET_BUFFER_MS = 10000;
 
 export default function TurnstileWidget() {
-    if (PUBLIC_BYPASS_CAPTCHA) {
-        const [, setJwt] = useAtom(verifyJwtStore);
+    return PUBLIC_BYPASS_CAPTCHA ? <BypassTurnstile /> : <TurnstileChallenge />;
+}
+
+function BypassTurnstile() {
+    const [, setJwt] = useAtom(verifyJwtStore);
+    useEffect(() => {
         setJwt("bypass-captcha");
-        return null;
-    }
+    }, []);
+    return null;
+}
+
+function TurnstileChallenge() {
     const turnstileRef = useRef<TurnstileInstance | null>(null);
     const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [, setJwt] = useAtom(verifyJwtStore);

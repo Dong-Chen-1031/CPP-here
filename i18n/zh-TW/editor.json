@@ -9,7 +9,8 @@
         "panelsGroup": "面板",
         "input": "輸入",
         "testCase": "測資",
-        "output": "輸出"
+        "output": "輸出",
+        "starOnGithub": "在 GitHub 上 Star"
     },
     "drawer": {
         "openBtn": "開啟抽屜",
@@ -40,13 +41,14 @@
         "copyThisCaseTip": "複製此測資的輸出",
         "clearTip": "清除輸出",
         "noOutput": "尚無輸出結果",
-        "truncated": "輸出過長，僅顯示前段。完整內容請使用複製。"
+        "truncated": "輸出過長，未完整顯示。完整內容請使用複製。"
     },
     "testCase": {
         "label": "測資",
         "addTip": "新增測資",
         "addBtn": "新增",
         "defaultName": "測資 {{index}}",
+        "exampleInput": "範例輸入 {{index}}",
         "noTestCase": "尚無測資",
         "setInputTip": "將輸入設為此測資",
         "runTip": "運行此測資",
@@ -84,7 +86,7 @@
         "runAllTestCases": "運行所有測資",
         "runCurrentInput": "運行現有輸入",
         "verifying": "驗證中",
-        "building": "建置中",
+        "building": "編譯中",
         "stop": "停止",
         "run": "運行",
         "runAll": "全部運行",
@@ -140,7 +142,27 @@
         "timeLimitDesc": "程式執行超過此秒數會被強制停止。輸入 -1 表示不限制。"
     },
     "resize": {
-        "loadingEditor": "正在載入編輯器"
+        "loadingEditor": "正在載入編輯器",
+        "movedTitle": "我們搬家了！",
+        "movedDescription": "請改用新網址 cpp.doong.me"
+    },
+    "run": {
+        "errorTitle": "錯誤",
+        "errorDescription": "發生錯誤，詳細資訊請查看輸出。",
+        "runtimeErrorIn": "{{testCaseName}} 發生執行期錯誤",
+        "runtimeErrorTitle": "執行期錯誤",
+        "runtimeErrorDescription": "程式執行時發生錯誤，詳細資訊請查看輸出。",
+        "buildFailedTitle": "編譯失敗",
+        "buildFailedDescription": "程式碼編譯失敗，詳細資訊請查看輸出。",
+        "buildFailedOutput": "編譯失敗，錯誤如下：",
+        "noTestCasesTitle": "沒有測資",
+        "noTestCasesDescription": "目前沒有可執行的測資，請先新增測資。",
+        "verificationFailed": "驗證失敗，請再試一次。",
+        "workersUnsupported": "此環境不支援 Web Workers。"
+    },
+    "auth": {
+        "unauthorizedTitle": "未授權",
+        "unauthorizedDescription": "你的驗證已過期，正在自動更新。"
     },
     "shareReceive": {
         "title": "接收分享的程式碼",

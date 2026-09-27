@@ -33,6 +33,7 @@ const LOCALES: Record<string, string> = { en: "en", "zh-tw": "zh-TW" };
 const localeSegment =
     Astro.url.pathname.split("/").filter(Boolean)[0]?.toLowerCase() ?? "";
 const htmlLang = lang ?? LOCALES[localeSegment] ?? Astro.currentLocale ?? "en";
+const ogLocale = htmlLang === "zh-TW" ? "zh_TW" : "en_US";
 ---
 
 <!doctype html>
@@ -85,7 +86,7 @@ const htmlLang = lang ?? LOCALES[localeSegment] ?? Astro.currentLocale ?? "en";
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content={ogImageAlt} />
         <meta property="og:site_name" content="C++ Here" />
-        <meta property="og:locale" content="en_US" />
+        <meta property="og:locale" content={ogLocale} />
 
         <!-- Twitter Card -->
         <meta name="twitter:card" content="summary_large_image" />

@@ -97,7 +97,7 @@ int main() {
     std::cout << "Sum 1..100 = " << sum << std::endl;
     return 0;
 }`,
-            cpp_version: "c++20",
+            cppVersion: "c++20",
         });
 
         const r = http.post(`${BASE_URL}/api/build`, payload, {

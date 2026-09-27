@@ -41,7 +41,7 @@ async function buildCode(code: string, cppVersion: string) {
             wasm_url: "",
             errors: [
                 isAuthError(error)
-                    ? "Verification failed. Please try again."
+                    ? i18next.t("editor:run.verificationFailed")
                     : String(error),
             ],
             success: false,
@@ -151,7 +151,7 @@ export async function runCode(
     }: RunOptions,
 ) {
     if (typeof Worker === "undefined") {
-        const errorMsg = "Web Workers are not supported in this environment.";
+        const errorMsg = i18next.t("editor:run.workersUnsupported");
         console.error(errorMsg);
         onError && onError(errorMsg);
         onExit && onExit();
@@ -280,11 +280,12 @@ export function showError(err: string, options?: ShowErrorOptions) {
     const title =
         options?.title ||
         (options?.testCaseName
-            ? `Runtime Error in ${options.testCaseName}`
-            : "Error");
+            ? i18next.t("editor:run.runtimeErrorIn", {
+                  testCaseName: options.testCaseName,
+              })
+            : i18next.t("editor:run.errorTitle"));
     const description =
-        options?.description ||
-        "An error occurred. Please check output for details.";
+        options?.description || i18next.t("editor:run.errorDescription");
 
     addAlert({
         title,
@@ -353,12 +354,16 @@ export async function handleRun({
             cpp_version: cppVersion,
             mode: "single",
         });
-        showError("Build failed with errors:\n" + response.errors[0], {
-            title: "Build Failed",
-            description:
-                "Failed to build the code. Please check output for details.",
-            replaceOutput: true,
-        });
+        showError(
+            i18next.t("editor:run.buildFailedOutput") +
+                "\n" +
+                response.errors[0],
+            {
+                title: i18next.t("editor:run.buildFailedTitle"),
+                description: i18next.t("editor:run.buildFailedDescription"),
+                replaceOutput: true,
+            },
+        );
         store.set(runStatusStore, "idle");
         return;
     }
@@ -380,9 +385,8 @@ export async function handleRun({
         onStderr: (output) => addSingleOutput("stderr", output),
         onError(error) {
             showError(error, {
-                title: "Runtime Error",
-                description:
-                    "An error occurred during code execution. Please check output for details.",
+                title: i18next.t("editor:run.runtimeErrorTitle"),
+                description: i18next.t("editor:run.runtimeErrorDescription"),
             });
         },
         onLimit(kind) {
@@ -437,9 +441,8 @@ export async function handleRunAll() {
 
     if (testCases.length === 0) {
         addAlert({
-            title: "No Test Cases",
-            description:
-                "There are no test cases to run. Please add some test cases first.",
+            title: i18next.t("editor:run.noTestCasesTitle"),
+            description: i18next.t("editor:run.noTestCasesDescription"),
             variant: "destructive",
         });
         return;
@@ -457,12 +460,16 @@ export async function handleRunAll() {
             mode: "all",
             test_case_count: testCases.length,
         });
-        showError("Build failed with errors:\n" + response.errors[0], {
-            title: "Build Failed",
-            description:
-                "Failed to build the code. Please check output for details.",
-            replaceOutput: true,
-        });
+        showError(
+            i18next.t("editor:run.buildFailedOutput") +
+                "\n" +
+                response.errors[0],
+            {
+                title: i18next.t("editor:run.buildFailedTitle"),
+                description: i18next.t("editor:run.buildFailedDescription"),
+                replaceOutput: true,
+            },
+        );
         store.set(runStatusStore, "idle");
         return;
     }

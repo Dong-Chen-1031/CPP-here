@@ -1,93 +1,132 @@
 {
+    "meta": {
+        "title": "C++ Here - 新世代的線上 C++ 編輯器",
+        "description": "一個開源、輕量但強大的線上 C++ 編輯器，專為競賽程式設計而生。將 C++ 編譯為 WebAssembly、執行測資、格式化程式碼 —— 全部在瀏覽器中完成。"
+    },
     "header": {
-        "openEditor": "立即開啟"
+        "openEditor": "立即開啟",
+        "github": "GitHub"
     },
     "hero": {
         "title": "新世代的",
         "title2": "線上 C++ 編輯器。",
         "description": "一個開源、輕量但強大的線上 C++ 編輯器，專為競賽程式設計而生",
-        "startCoding": "Start Coding",
+        "startCoding": "開始寫程式",
         "starOnGithub": "在 GitHub 上 Star"
     },
     "features": {
+        "label": "功能",
         "heading": "功能齊全。",
         "subheading": "卻不臃腫。",
         "description": "瀏覽器，就是你的開發環境。",
         "list": [
             {
                 "title": "WebAssembly 技術",
-                "description": "Compiles C++ code into WebAssembly and executes them directly in the browser — fast, no resource limitations."
+                "description": "將 C++ 程式碼編譯為 WebAssembly，並直接在瀏覽器中執行 —— 快速，且沒有資源限制。"
             },
             {
                 "title": "錯誤高亮提示",
-                "description": "Compiler errors are parsed and pinned to the exact line they occur — clear, actionable diagnostics without the noise."
+                "description": "解析編譯器錯誤並標示在發生錯誤的確切行數 —— 清楚、可立即處理的診斷訊息，沒有多餘雜訊。"
             },
             {
                 "title": "內建測資系統",
-                "description": "Define, run, and compare multiple test cases side-by-side. Designed for the way competitive programmers actually work."
+                "description": "定義、執行並並排比較多筆測資。依照競賽選手真正的工作方式而設計。"
             },
             {
                 "title": "自動程式碼格式化",
-                "description": "Clang-format integrated. One shortcut to keep your style consistent — with support for multiple code style presets."
+                "description": "整合 Clang-format。一個快捷鍵就能保持一致的程式碼風格 —— 並支援多種風格預設。"
             },
             {
                 "title": "多語言支援",
-                "description": "First-class support for English and Traditional Chinese, with more languages on the way. You can help translate on <a href='https://crowdin.com/project/cpp-here' class='underline hover:text-foreground transition' target='_blank' rel='noopener noreferrer'>Crowdin</a>!"
+                "description": "完整支援英文與繁體中文，更多語言即將推出。歡迎到 <a href='https://crowdin.com/project/cpp-here' class='underline hover:text-foreground transition' target='_blank' rel='noopener noreferrer'>Crowdin</a> 協助翻譯！"
             },
             {
                 "title": "程式碼補全",
-                "description": "Context-aware suggestions for STL containers, algorithms, and your own symbols — write C++ faster without leaving the flow."
+                "description": "針對 STL 容器與演算法提供情境感知的建議 —— 更快地寫 C++，不打斷思緒。"
             },
             {
-                "title": "任何螢幕, 任何裝置",
-                "description": "The interface adapts seamlessly to any screen size. Works on any screen, any device. Code comfortably wherever you are."
+                "title": "任何螢幕，任何裝置",
+                "description": "介面能無縫適應各種螢幕尺寸。在任何螢幕、任何裝置上都能使用，隨時隨地舒適地寫程式。"
             },
             {
                 "title": "安全，從設計開始",
-                "description": "Cloudflare Turnstile blocks bots. Every compilation runs in an isolated, single-use Docker container — secure by default."
+                "description": "Cloudflare Turnstile 阻擋機器人。每次編譯都在隔離、一次性的 Docker 容器中執行 —— 預設即安全。"
             },
             {
                 "title": "一鍵分享",
-                "description": "Share your code, test cases, input, and results with a single link — instantly, no setup required."
+                "description": "只要一個連結，就能分享你的程式碼、測資、輸入與結果 —— 即時完成，無需任何設定。"
             }
         ],
         "openSourceLabel": "開源、免費",
-        "openSourceDescription": "Audit it, fork it, ship it. MIT licensed.",
-        "starGithub": "在 Github 上 Star →"
+        "openSourceDescription": "審查它、Fork 它、發布它。MIT 授權。",
+        "starGithub": "在 GitHub 上 Star →"
     },
     "extension": {
         "label": "瀏覽器擴充",
         "heading1": "一鍵匯入。",
         "heading2": "所有測資。",
         "title": "不再複製貼上",
-        "description": "Import test cases directly from your browser with our extension. Support over 100 competitive programming platforms.",
+        "description": "透過我們的擴充功能，直接從瀏覽器匯入測資。支援超過 100 個競賽程式平台。",
         "comingSoon": "即將推出",
-        "sourceCode": "原始碼"
+        "sourceCode": "原始碼",
+        "demoDialog": {
+            "title": "已收到來自擴充功能的測資",
+            "descriptionBefore": "",
+            "descriptionAfter": "的測資已收到。你想要覆寫現有測資，還是插入新的測資？",
+            "cancel": "取消",
+            "overwrite": "覆寫",
+            "insert": "插入"
+        }
     },
     "stats": {
+        "label": "數據",
+        "heading": "真實數據。",
+        "subheading": "真實使用。",
         "compilations": "總編譯次數",
-        "compilationsDescription": "C++ programs compiled and executed directly in the browser.",
+        "compilationsDescription": "直接在瀏覽器中編譯並執行的 C++ 程式數量。",
         "linesCompiled": "編譯總行數",
-        "lineCompiledDescription": "Lines of C++ code processed through the WebAssembly pipeline.",
+        "lineCompiledDescription": "經由 WebAssembly 流程處理的 C++ 程式碼行數。",
         "wasmCompiled": "總編譯大小",
-        "wasmCompiledDescription": "Total size of source code submitted and compiled by users.",
+        "wasmCompiledDescription": "使用者提交並編譯的原始碼總大小。",
         "totalTimeCompiled": "編譯總時長",
-        "totalTimeCompiledDescription": "Cumulative CPU time spent compiling across all users."
+        "totalTimeCompiledDescription": "所有使用者累計花費在編譯上的 CPU 時間。"
     },
     "cta": {
         "label": "讓我們開始吧",
         "heading": "不再切換工具。",
         "subheading": "你需要的，都在這裡。",
         "description1": "無需安裝、無需登入。",
-        "description2": "Just open a tab and get your AC.",
-        "startCoding": "Start Coding",
-        "starOnGithub": "Star on GitHub"
+        "description2": "打開分頁，直接拿 AC。",
+        "startCoding": "開始寫程式",
+        "starOnGithub": "在 GitHub 上 Star"
     },
     "footer": {
-        "mitLicensed": "MIT Licensed",
-        "editor": "Editor",
+        "mitLicensed": "MIT 授權",
+        "editor": "編輯器",
         "github": "GitHub",
-        "status": "Status",
+        "status": "服務狀態",
         "author": "Dong-Chen-1031"
+    },
+    "editorPage": {
+        "title": "編輯器 - C++ Here",
+        "description": "線上 C++ 編輯器 —— 直接在瀏覽器中編譯、執行並測試 C++ 程式碼。"
+    },
+    "notFound": {
+        "title": "404 - 找不到頁面 | C++ Here",
+        "heading": "找不到頁面",
+        "description": "你要找的頁面不存在或已被移動。",
+        "home": "回到首頁",
+        "editor": "開啟編輯器"
+    },
+    "reset": {
+        "title": "重設 - C++ Here",
+        "heading": "重設本機資料",
+        "description": "這會刪除 C++ Here 儲存在此瀏覽器中的所有資料，包含你的程式碼、測資與設定（localStorage 和 IndexedDB）。此操作無法復原。",
+        "button": "刪除所有本機資料",
+        "confirm": "確定要刪除所有本機資料嗎？此操作無法復原。",
+        "partialFailure": "部分資料無法刪除：{{errors}}",
+        "success": "所有本機資料已刪除。",
+        "home": "回到首頁",
+        "editor": "開啟編輯器"
     }
 }

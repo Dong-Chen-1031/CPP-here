@@ -42,6 +42,9 @@ export const MEMORY_LIMIT_MIB = 512;
 export const DISPLAY_LIMIT_CHARS = 2 * 1024 * 1024;
 export const DISPLAY_LIMIT_LINES = 5000;
 
+/** A longer line is cut in the display */
+export const DISPLAY_LIMIT_LINE_CHARS = 10_000;
+
 /** How often buffered output is written to IndexedDB. */
 export const OUTPUT_FLUSH_INTERVAL_MS = 100;
 

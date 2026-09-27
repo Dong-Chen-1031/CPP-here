@@ -25,7 +25,7 @@ const { t } = Astro.props as Props;
     <a href={PUBLIC_GITHUB_LINK} target="_blank" rel="noopener noreferrer">
         <Button className="hover:bg-primary/80 " variant={"outline"}>
             <SiGithub />
-            <p class="ml-1">Github</p>
+            <p class="ml-1">{t?.github}</p>
         </Button>
     </a>
     <a href="/editor">

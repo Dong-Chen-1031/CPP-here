@@ -28,6 +28,7 @@ s3 = boto3.client(
 SHARE_HASH_PREFIX = "v2.0.0;"
 SHARE_ID_MIN_LEN = 5
 SHARE_KEY_PREFIX = "share/"
+SHARE_HASH_METADATA_KEY = "fullhash"
 
 _B58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
@@ -48,7 +49,7 @@ class TestCase(BaseModel):
     id: str
     name: str
     input: str
-    expectedOutput: str | None
+    expectedOutput: str | None = None
 
 
 class OutputCase(BaseModel):
@@ -102,27 +103,26 @@ def head_share(share_id: str) -> dict[str, str] | None:
     return {k.lower(): v for k, v in res.get("Metadata", {}).items()}
 
 
-def store_share(serialized: str) -> str:
+def store_share(serialized: str) -> str | None:
+    """Store the share and return its id, or None if every id length is taken."""
     full_share_id = hash_share_object(serialized)
-    length = SHARE_ID_MIN_LEN
 
-    while True:
+    for length in range(SHARE_ID_MIN_LEN, len(full_share_id) + 1):
         share_id = full_share_id[:length]
         metadata = head_share(share_id)
         if metadata is None:
-            break
-        if metadata.get("fullhash") == full_share_id:
+            s3.put_object(
+                Bucket=settings.S3_BUCKET_NAME,
+                Key=f"{SHARE_KEY_PREFIX}{share_id}",
+                Body=serialized.encode(),
+                ContentType="application/json",
+                Metadata={SHARE_HASH_METADATA_KEY: full_share_id},
+            )
             return share_id
-        length += 1
+        if metadata.get(SHARE_HASH_METADATA_KEY) == full_share_id:
+            return share_id
 
-    s3.put_object(
-        Bucket=settings.S3_BUCKET_NAME,
-        Key=f"{SHARE_KEY_PREFIX}{share_id}",
-        Body=serialized.encode(),
-        ContentType="application/json",
-        Metadata={"fullHash": full_share_id},
-    )
-    return share_id
+    return None
 
 
 @router.post("/share")
@@ -130,10 +130,6 @@ async def share(
     request: Request,
     token: bool = Depends(need_token),
 ):
-    if not settings.SHARE:
-        logger.warning("Someone want to share but sharing is disabled")
-        return fail(501, "The 'share' feature is not enabled on this server.")
-
     try:
         raw = await request.json()
     except ValueError:
@@ -152,5 +148,8 @@ async def share(
     logger.info(f"Sharing code with content length {len(serialized)}", extra={})
 
     share_id = await asyncio.to_thread(store_share, serialized)
+    if share_id is None:
+        logger.error("Every share id length is taken for this payload")
+        return fail(500, "Could not allocate a share id")
 
     return {"success": True, "shareId": share_id}

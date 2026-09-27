@@ -5,6 +5,11 @@
     "compatibility_flags": ["nodejs_compat"],
     "routes": [
         {
+            "pattern": "cpp.doong.me",
+            "zone_name": "doong.me",
+            "custom_domain": true,
+        },
+        {
             "pattern": "cpp-insiders.doong.me",
             "zone_name": "doong.me",
             "custom_domain": true,

@@ -63,11 +63,15 @@ import {
         PUBLIC_POSTHOG_PROJECT_TOKEN,
     } from "astro:env/client";
 
+    // tracing_headers matches exact hostnames, not URLs. An empty PUBLIC_API_URL
+    // means the API is same-origin, which resolves to this page's hostname.
+    const apiHostname = new URL(PUBLIC_API_URL || "/", location.href).hostname;
+
     posthog.init(PUBLIC_POSTHOG_PROJECT_TOKEN, {
         api_host: PUBLIC_POSTHOG_HOST,
         defaults: "2026-01-30",
         ui_host: "https://us.posthog.com",
-        tracing_headers: [PUBLIC_API_URL, "localhost"],
+        tracing_headers: [apiHostname, "localhost"],
     });
 
     (window as any).posthog = posthog;

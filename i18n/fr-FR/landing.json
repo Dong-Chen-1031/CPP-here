@@ -1,6 +1,11 @@
 {
+    "meta": {
+        "title": "C++ Here - Next-generation online C++ editor.",
+        "description": "An open-source, lightweight yet powerful online C++ editor built for competitive programming. Compile C++ to WebAssembly, run test cases, and format code — all in your browser."
+    },
     "header": {
-        "openEditor": "Open Editor"
+        "openEditor": "Open Editor",
+        "github": "GitHub"
     },
     "hero": {
         "title": "Next-generation",
@@ -10,6 +15,7 @@
         "starOnGithub": "Star on Github"
     },
     "features": {
+        "label": "features",
         "heading": "Everything you need.",
         "subheading": "Nothing you don't.",
         "description": "A focused toolkit that turns the browser into a powerful C++ workspace.",
@@ -62,9 +68,20 @@
         "title": "Skip the copy-paste",
         "description": "Import test cases directly from your browser with our extension. Support over 100 competitive programming platforms.",
         "comingSoon": "Coming Soon",
-        "sourceCode": "Source Code"
+        "sourceCode": "Source Code",
+        "demoDialog": {
+            "title": "Received Test Case from Extension",
+            "descriptionBefore": "Test case of",
+            "descriptionAfter": "has been received. Would you like to overwrite or insert the new test cases?",
+            "cancel": "Cancel",
+            "overwrite": "Overwrite",
+            "insert": "Insert"
+        }
     },
     "stats": {
+        "label": "stats",
+        "heading": "Real numbers.",
+        "subheading": "Real usage.",
         "compilations": "Compilations",
         "compilationsDescription": "C++ programs compiled and executed directly in the browser.",
         "linesCompiled": "Lines Compiled",
@@ -89,5 +106,27 @@
         "github": "GitHub",
         "status": "Status",
         "author": "Dong-Chen-1031"
+    },
+    "editorPage": {
+        "title": "Editor - C++ Here",
+        "description": "Online C++ editor — compile, run, and test C++ code directly in your browser."
+    },
+    "notFound": {
+        "title": "404 - Page not found | C++ Here",
+        "heading": "Page not found",
+        "description": "The page you are looking for does not exist or has been moved.",
+        "home": "Go to home page",
+        "editor": "Open the editor"
+    },
+    "reset": {
+        "title": "Reset - C++ Here",
+        "heading": "Reset local data",
+        "description": "This deletes everything C++ Here stores in this browser, including your code, test cases and settings (localStorage and IndexedDB). This cannot be undone.",
+        "button": "Delete all local data",
+        "confirm": "Delete all local data? This cannot be undone.",
+        "partialFailure": "Some data could not be deleted: {{errors}}",
+        "success": "All local data has been deleted.",
+        "home": "Go to home page",
+        "editor": "Open the editor"
     }
 }

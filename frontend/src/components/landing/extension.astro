@@ -28,7 +28,7 @@ const { t } = Astro.props as Props;
         class="relative lg:grid lg:grid-cols-2 lg:gap-10 max-[48rem]:flex max-[48rem]:flex-col max-[48rem]:items-center max-[48rem]:justify-center"
         id="extension-relative"
     >
-        <ExtensionMotion client:only="react" />
+        <ExtensionMotion client:only="react" t={t?.demoDialog} />
         <div
             class="relative lg:flex lg:ml-0 lg:flex-col lg:justify-center mt-6 lg:mt-0 max-[48rem]:pl-0! lg:pl-0! max-w-md md:max-w-2xl md:mx-0"
             id="target"

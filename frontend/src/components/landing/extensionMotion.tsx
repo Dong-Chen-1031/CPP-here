@@ -215,7 +215,22 @@ export function RotatingCircleMobile({
     );
 }
 
-export function ExtensionAlert({ now }: { now: number }) {
+export interface ExtensionDemoText {
+    title: string;
+    descriptionBefore: string;
+    descriptionAfter: string;
+    cancel: string;
+    overwrite: string;
+    insert: string;
+}
+
+export function ExtensionAlert({
+    now,
+    t,
+}: {
+    now: number;
+    t?: ExtensionDemoText;
+}) {
     return (
         <div
             role="alertdialog"
@@ -238,14 +253,14 @@ export function ExtensionAlert({ now }: { now: number }) {
                     data-slot="alert-dialog-title"
                     className="text-base font-medium sm:group-data-[size=default]/alert-dialog-content:group-has-data-[slot=alert-dialog-media]/alert-dialog-content:col-start-2"
                 >
-                    Received Test Case from Extension
+                    {t?.title}
                 </h2>
                 <p
                     id="radix-_r_2_"
                     data-slot="alert-dialog-description"
                     className="text-sm text-balance text-muted-foreground md:text-pretty *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground inter"
                 >
-                    Test case of{" "}
+                    {t?.descriptionBefore}{" "}
                     <code>
                         <AnimatePresence mode="popLayout">
                             <motion.span
@@ -277,10 +292,7 @@ export function ExtensionAlert({ now }: { now: number }) {
                             </motion.span>
                         </AnimatePresence>
                     </code>{" "}
-                    has <br className="sm:hidden" />
-                    been received. Would you like to
-                    <br className="sm:hidden" /> overwrite or insert the new
-                    test cases?
+                    {t?.descriptionAfter}
                 </p>
             </div>
             <div
@@ -294,7 +306,7 @@ export function ExtensionAlert({ now }: { now: number }) {
                     data-variant="outline"
                     data-size="default"
                 >
-                    Cancel
+                    {t?.cancel}
                 </button>
                 <button
                     type="button"
@@ -303,7 +315,7 @@ export function ExtensionAlert({ now }: { now: number }) {
                     data-variant="default"
                     data-size="default"
                 >
-                    Overwrite
+                    {t?.overwrite}
                 </button>
                 <button
                     type="button"
@@ -312,14 +324,14 @@ export function ExtensionAlert({ now }: { now: number }) {
                     data-variant="default"
                     data-size="default"
                 >
-                    Insert
+                    {t?.insert}
                 </button>
             </div>
         </div>
     );
 }
 
-export default function ExtensionMotion() {
+export default function ExtensionMotion({ t }: { t?: ExtensionDemoText }) {
     const startRef = React.useRef(Date.now());
     const hiddenAtRef = React.useRef<number | null>(null);
     const [now, setNow] = React.useState(0);
@@ -351,7 +363,7 @@ export default function ExtensionMotion() {
             <RotatingCircleMobile className="block md:hidden" now={now} />
             <div className="flex justify-center items-center">
                 <RotatingCircle className="hidden md:block" now={now} />
-                <ExtensionAlert now={now} />
+                <ExtensionAlert now={now} t={t} />
             </div>
         </>
     );

@@ -117,7 +117,7 @@ export function Commands({ className = "" }: { className?: string }) {
                                 }}
                             >
                                 <SiGithub className="size-4 mr-2" />
-                                Star on GitHub
+                                {t("commands.starOnGithub")}
                             </CommandItem>
                         </CommandGroup>
                     </CommandList>
