@@ -11,7 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { addAlert } from "@/lib/alert";
 
 import Tip from "@/components/ui/tips";
-import IconMotion from "@/components/IconMotion";
+import { EzIconMotion } from "@/components/IconMotion";
 import { shareCode } from "@/service/share";
 
 export function ShareButton({
@@ -23,7 +23,7 @@ export function ShareButton({
 }) {
     const { t } = useTranslation(["editor"]);
     const [sharing, setSharing] = React.useState(false);
-    const [shared, setShared] = React.useState(false);
+    const [sharedTimes, setSharedTimes] = React.useState(0);
 
     return (
         <ButtonGroup>
@@ -93,8 +93,7 @@ export function ShareButton({
                                           ),
                                 });
 
-                                setShared(true);
-                                setTimeout(() => setShared(false), 1500);
+                                setSharedTimes((p) => p + 1);
                             } else {
                                 rejectUrl(new Error("share_failed"));
                                 console.error(
@@ -127,10 +126,10 @@ export function ShareButton({
                         }
                     }}
                 >
-                    <IconMotion
-                        show={shared}
-                        HideIcon={sharing ? Spinner : Share2Icon}
-                        ShowIcon={ClipboardCheckIcon}
+                    <EzIconMotion
+                        trigger={sharedTimes}
+                        icon1={sharing ? Spinner : Share2Icon}
+                        icon2={ClipboardCheckIcon}
                         className="size-3"
                     />
                     <span className="inline md:hidden lg:inline">

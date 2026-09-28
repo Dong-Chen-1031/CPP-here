@@ -6,7 +6,7 @@ import Tip from "../ui/tips";
 import { useAtom } from "jotai";
 import { runStatusStore } from "@/store/atom";
 import { cn } from "@/lib/utils";
-import IconMotion from "../IconMotion";
+import { EzIconMotion } from "../IconMotion";
 import { Spinner } from "../ui/spinner";
 import { useTranslation } from "react-i18next";
 import {
@@ -72,9 +72,9 @@ function clipToBudget(
 
 interface OutputCaseJSXProps {
     line: OutputCase;
-    copiedCases: Record<string, boolean>;
+    copiedCases: Record<string, string>;
     setCopiedCases: React.Dispatch<
-        React.SetStateAction<Record<string, boolean>>
+        React.SetStateAction<Record<string, string>>
     >;
 }
 
@@ -105,7 +105,7 @@ function OutputCaseJSX({
                     .equals(tid)
                     .limit(1)
                     .primaryKeys()
-            )[0] as number | undefined,
+            )[0],
             newChunks: await outputdb.outputChunks
                 .where("[testCaseId+id]")
                 .between([tid, lastId], [tid, Dexie.maxKey], false, true)
@@ -131,7 +131,7 @@ function OutputCaseJSX({
 
                 let html = "";
                 for (const chunk of newChunks) {
-                    const id = chunk.id as number;
+                    const id = chunk.id;
                     if (id <= lastId) continue;
                     firstRenderedId ??= id;
                     lastId = id;
@@ -202,23 +202,14 @@ function OutputCaseJSX({
                                 );
                                 setCopiedCases({
                                     ...copiedCases,
-                                    [line.testCaseId as string]: true,
+                                    [line.testCaseId]: crypto.randomUUID(),
                                 });
-
-                                setTimeout(
-                                    () =>
-                                        setCopiedCases((prev) => ({
-                                            ...prev,
-                                            [line.testCaseId as string]: false,
-                                        })),
-                                    1500,
-                                );
                             }}
                         >
-                            <IconMotion
-                                show={copiedCases[line.testCaseId]}
-                                HideIcon={ClipboardCopy}
-                                className="w-3 h-3 "
+                            <EzIconMotion
+                                trigger={copiedCases[line.testCaseId]}
+                                icon1={ClipboardCopy}
+                                className="w-3 h-3"
                             />
                         </div>
                     </Tip>
@@ -236,19 +227,13 @@ function OutputCaseJSX({
 
 export default function OutputPanel({ drawer = false }: { drawer?: boolean }) {
     const [output, setOutput] = useAtom(outputStore);
-    const [copied, setCopied] = React.useState(false);
-    const [copiedCases, setCopiedCases] = React.useState(
-        {} as Record<string, boolean>,
+    const [copied, setCopied] = React.useState("");
+    const [copiedCasesTimes, setCopiedCasesTimes] = React.useState(
+        {} as Record<string, string>,
     );
-    const [cleared, setCleared] = React.useState(false);
+    const [cleared, setCleared] = React.useState("");
     const [runStatus] = useAtom(runStatusStore);
     const { t } = useTranslation(["editor", "common"]);
-    useEffect(() => {
-        const values = Object.values(copiedCases);
-        if (values.length > 0 && values.every((v) => !v)) {
-            setCopiedCases({});
-        }
-    }, [copiedCases, output]);
     return (
         <div
             className={cn(
@@ -270,13 +255,12 @@ export default function OutputPanel({ drawer = false }: { drawer?: boolean }) {
                                 ),
                             );
                             navigator.clipboard.writeText(texts.join("\n"));
-                            setCopied(true);
-                            setTimeout(() => setCopied(false), 1500);
+                            setCopied(crypto.randomUUID());
                         }}
                         className="px-2"
                         disabled={output.length === 0}
                     >
-                        <IconMotion show={copied} HideIcon={ClipboardCopy} />{" "}
+                        <EzIconMotion trigger={copied} icon1={ClipboardCopy} />{" "}
                         <span className="hidden @[250px]:inline ml-2">
                             {t("common:copy")}
                         </span>
@@ -288,13 +272,12 @@ export default function OutputPanel({ drawer = false }: { drawer?: boolean }) {
                         onClick={() => {
                             setOutput([]);
                             clearOutputBuffer();
-                            setCleared(true);
-                            setTimeout(() => setCleared(false), 1500);
+                            setCleared(crypto.randomUUID());
                         }}
                         className="px-2"
                         disabled={output.length === 0}
                     >
-                        <IconMotion show={cleared} HideIcon={Trash} />
+                        <EzIconMotion trigger={cleared} icon1={Trash} />
                         <span className="hidden @[250px]:inline">
                             {t("common:clear")}
                         </span>
@@ -327,8 +310,8 @@ export default function OutputPanel({ drawer = false }: { drawer?: boolean }) {
                         <OutputCaseJSX
                             line={line}
                             key={line.testCaseId}
-                            setCopiedCases={setCopiedCases}
-                            copiedCases={copiedCases}
+                            setCopiedCases={setCopiedCasesTimes}
+                            copiedCases={copiedCasesTimes}
                         ></OutputCaseJSX>
                     ))}
                 </div>
