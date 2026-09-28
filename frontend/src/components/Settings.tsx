@@ -33,7 +33,7 @@ import {
     ComboboxItem,
     ComboboxList,
 } from "@/components/ui/combobox-fix";
-import { useTranslation, withSSR } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import React, { useEffect, useRef, useState } from "react";
 import { ButtonGroup } from "./ui/button-group";
 import { ListRestart, MinusIcon, PlusIcon } from "lucide-react";
@@ -135,7 +135,6 @@ function NumberFieldTemplate({ field }: { field: NumberField }) {
     };
     return (
         <Input
-            id="settings-time-limit"
             type="number"
             inputMode="numeric"
             min={min}
