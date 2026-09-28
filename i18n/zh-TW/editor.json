@@ -182,7 +182,7 @@
     "limit": {
         "time": {
             "title": "執行超時（TLE）",
-            "description": "程式執行超過 {{seconds}} 秒，已強制停止。"
+            "description": "程式執行超過 {{seconds}} 秒，已強制停止。可在設定中調整時間限制。"
         },
         "output": {
             "title": "輸出超過上限（OLE）",
