@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
 import { CircleCheckBig, type LucideIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import type { ElementType } from "react";
+import { useEffect, useRef, useState, type ElementType } from "react";
 
-export default function IconMotion({
+function IconMotion({
     show,
     ShowIcon = CircleCheckBig,
     HideIcon,
@@ -53,3 +53,42 @@ export default function IconMotion({
         </div>
     );
 }
+
+export const EzIconMotion = ({
+    icon1,
+    icon2 = CircleCheckBig,
+    trigger,
+    duration = 1500,
+    className,
+}: {
+    icon1: ElementType;
+    icon2?: ElementType;
+    trigger: any;
+    duration?: number;
+    className?: string;
+}) => {
+    const [show2, setShow2] = useState(false);
+    const [oldTrigger, setOldTrigger] = useState<any>(trigger);
+    const timeOutRef = useRef<NodeJS.Timeout | null>(null);
+    useEffect(() => {
+        if (oldTrigger !== trigger) {
+            setShow2(true);
+            setOldTrigger(trigger);
+            if (timeOutRef.current) {
+                clearTimeout(timeOutRef.current);
+            }
+            timeOutRef.current = setTimeout(() => {
+                setShow2(false);
+            }, duration);
+        }
+    }, [trigger]);
+
+    return (
+        <IconMotion
+            show={show2}
+            ShowIcon={icon2}
+            HideIcon={icon1}
+            className={className}
+        />
+    );
+};

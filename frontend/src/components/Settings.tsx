@@ -37,7 +37,7 @@ import { useTranslation } from "react-i18next";
 import React, { useEffect, useRef } from "react";
 import { ButtonGroup } from "./ui/button-group";
 import { ListRestart, MinusIcon, PlusIcon } from "lucide-react";
-import IconMotion from "./IconMotion";
+import { EzIconMotion } from "./IconMotion";
 import { codeFormatStyle } from "@/store/configStore";
 import {
     Select,
