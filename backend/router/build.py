@@ -20,7 +20,7 @@ from utils.cache import add_build_stats
 from utils.log import logger
 from utils.verify import need_token
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 tracer = trace.get_tracer(__name__)
 
 label_names = ["status", "cpp_version"]
@@ -78,10 +78,8 @@ class BuildResponse(BaseModel):
     wasm_url: str
     errors: list[str] = []
 
-    metric_status: Literal["success", "failure", "cache"] = Field(
-        "success", exclude=True
-    )
-    wasm_size_bytes: int | None = Field(default=0, exclude=True)
+    metric_status: Literal["success", "failure", "cache"] = Field("success")
+    wasm_size_bytes: int | None = Field(default=0)
 
 
 WORKER_CODE = ""
@@ -171,7 +169,7 @@ async def _lookup_cache(case_id: str) -> BuildResponse | None:
     return None
 
 
-@router.post("/api/build")
+@router.post("/build")
 @log_build_request
 async def build_cpp(
     request: BuildRequest, token: bool = Depends(need_token)

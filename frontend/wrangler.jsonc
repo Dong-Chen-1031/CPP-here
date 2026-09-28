@@ -29,6 +29,9 @@
             "bucket_name": "cpp-here",
         },
     ],
+    "analytics_engine_datasets": [
+        { "binding": "ANALYTICS", "dataset": "cpp-here" },
+    ],
     // Everything instance-specific lives in Cloudflare, not in this public repo. Both sets
     // are documented with their defaults in frontend/.env.example:
     //   - The PRIVATE_* secrets (JWT_SECRET, TURNSTILE_SECRET_KEY, TURNSTILE_CHECK_IP,

@@ -12,18 +12,7 @@ export const NO_TIME_LIMIT = -1;
 
 // Not a policy cap: setTimeout overflows past 2^31-1 ms (~24.8 days) and would
 // fire immediately, reporting TLE the moment the program starts.
-const MAX_TIMEOUT_S = Math.floor((2 ** 31 - 1) / 1000);
-
-/**
- * Returns the value as a valid time limit (NO_TIME_LIMIT, or a positive whole
- * number of seconds), or null if it isn't one.
- */
-export function parseTimeLimit(value: unknown): number | null {
-    const n = typeof value === "string" ? Number(value.trim()) : value;
-    if (typeof n !== "number" || !Number.isInteger(n)) return null;
-    if (n === NO_TIME_LIMIT) return n;
-    return n >= 1 && n <= MAX_TIMEOUT_S ? n : null;
-}
+export const MAX_TIMEOUT_S = Math.floor((2 ** 31 - 1) / 1000);
 
 /**
  * Hard cap on stdout + stderr per run. Enforced at the source by
