@@ -80,6 +80,7 @@ export function Settings({ allLangs }: SettingsProps) {
         setTimeLimit(value);
     };
     const resetSettingsAtoms = useResetSettingsAtoms();
+    const [resetTimes, setResetTimes] = React.useState(0);
 
     const matchedLang =
         Object.keys(allLangs).find(
@@ -392,11 +393,14 @@ export function Settings({ allLangs }: SettingsProps) {
                             >
                                 <Button
                                     variant="outline"
-                                    onClick={resetSettingsAtoms}
+                                    onClick={() => {
+                                        resetSettingsAtoms();
+                                        setResetTimes((p) => p + 1);
+                                    }}
                                 >
-                                    <IconMotion
-                                        show={false}
-                                        HideIcon={ListRestart}
+                                    <EzIconMotion
+                                        trigger={resetTimes}
+                                        icon1={ListRestart}
                                     />
                                     {t("settings.resetSettingsBtn")}
                                 </Button>
