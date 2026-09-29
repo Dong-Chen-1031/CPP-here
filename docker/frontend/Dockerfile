@@ -1,6 +1,6 @@
 # Only PUBLIC_SKIP_API_FETCH is baked into the image; every other variable the
 # frontend reads is set per deployment in docker/frontend/docker-compose.yml.
-# Last synced 2026-09-22 at commit 4728ba4
+# Last synced 2026-09-27 at commit 1f91b19
 FROM oven/bun:1
 
 RUN apt-get update && apt-get install -y caddy && rm -rf /var/lib/apt/lists/*

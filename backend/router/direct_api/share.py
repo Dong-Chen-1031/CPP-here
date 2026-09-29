@@ -9,9 +9,9 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, ValidationError
 
-from router.direct_api.verify import need_token
 from settings import settings
 from utils.log import logger
+from utils.verify import need_token
 
 router = APIRouter()
 

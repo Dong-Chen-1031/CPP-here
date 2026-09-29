@@ -13,14 +13,14 @@ from opentelemetry import trace
 from prometheus_client import Counter, Histogram
 from pydantic import BaseModel, Field
 
-from router.direct_api.verify import need_token
 from services.build import BuildError, build
 from settings import settings
 from utils import cache
 from utils.cache import add_build_stats
 from utils.log import logger
+from utils.verify import need_token
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 tracer = trace.get_tracer(__name__)
 
 label_names = ["status", "cpp_version"]
@@ -78,10 +78,8 @@ class BuildResponse(BaseModel):
     wasm_url: str
     errors: list[str] = []
 
-    metric_status: Literal["success", "failure", "cache"] = Field(
-        "success", exclude=True
-    )
-    wasm_size_bytes: int | None = Field(default=0, exclude=True)
+    metric_status: Literal["success", "failure", "cache"] = Field("success")
+    wasm_size_bytes: int | None = Field(default=0)
 
 
 WORKER_CODE = ""

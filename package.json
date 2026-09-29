@@ -11,6 +11,7 @@
         "build:static": "npm run copy-i18n && npm run copy-docker && npm run logo && cd frontend && npm run build:static",
         "preview": "npm run copy-i18n && npm run logo && cd frontend && npm run preview",
         "deploy": "npm run copy-i18n && cd frontend && npm run deploy",
+        "deploy:preview": "npm run copy-i18n && cd frontend && npm run deploy:preview",
         "astro": "npm run copy-i18n && npm run logo && cd frontend && npm run astro --",
         "ext:chrome": "cd extensions && npm run dev:chrome",
         "ext:firefox": "cd extensions && npm run dev:firefox",

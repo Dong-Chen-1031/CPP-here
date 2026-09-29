@@ -3,7 +3,7 @@
 # value inside Docker differs and the comment says why.
 # BACKEND_PORT and FRONTEND_PORT are read by the Docker CLI on the host, not by the service;
 # set them in a .env next to this file or in your shell.
-# Last synced 2026-09-22 at commit 4728ba4
+# Last synced 2026-09-27 at commit 1f91b19
 services:
   frontend:
     image: ghcr.io/dong-chen-1031/cpp-here/frontend:latest
@@ -73,8 +73,8 @@ services:
 
       # Status page link shown in the footer.
       # Scope: build-time
-      # Default: "https://status.doong.me/status/cpp-here"
-      # - PUBLIC_STATUS_PAGE=https://status.doong.me/status/cpp-here
+      # Default: "https://cpp-status.doong.me/"
+      # - PUBLIC_STATUS_PAGE=https://cpp-status.doong.me/
 
       # PostHog project token for browser analytics. It is inlined into the client bundle and
       # so is visible to anyone who opens devtools — never put a personal API key here.

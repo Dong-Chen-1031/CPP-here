@@ -19,7 +19,6 @@ import {
     MEMORY_LIMIT_MIB,
     NO_TIME_LIMIT,
     OUTPUT_LIMIT_BYTES,
-    parseTimeLimit,
 } from "@/config/runLimits";
 import { timeLimitStore } from "@/store/configStore";
 import i18next from "i18next";
@@ -126,11 +125,8 @@ export class CodeWorker extends (typeof Worker !== "undefined"
     }
 }
 
-/** The user's time limit in seconds, falling back to the default if invalid. */
 function getTimeLimit() {
-    return (
-        parseTimeLimit(defaultStore.get(timeLimitStore)) ?? DEFAULT_TIME_LIMIT_S
-    );
+    return Number(defaultStore.get(timeLimitStore)) || DEFAULT_TIME_LIMIT_S;
 }
 
 export async function runCode(

@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from router import direct_api
+from router import build, direct_api
 from services.resource_manager import lifespan
 from utils.log import logger
 from utils.posthog import add_posthog_middleware, posthog, setup_posthog_tracer
@@ -29,7 +29,6 @@ app = FastAPI(
     redoc_url="/redoc" if settings.DEV_MODE else None,
     openapi_url="/openapi.json" if settings.DEV_MODE else None,
 )
-
 
 Instrumentator().instrument(app).expose(app)
 
@@ -47,8 +46,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+if settings.DIRECT_MODE:
+    logger.info("🔋 Direct mode is enabled")
+    app.include_router(direct_api.router)
 
-app.include_router(direct_api.router)
+app.include_router(build.router)
 app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=6)
 
 if settings.POSTHOG_API_KEY:

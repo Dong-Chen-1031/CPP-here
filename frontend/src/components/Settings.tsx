@@ -15,7 +15,7 @@ import {
     useResetSettingsAtoms,
 } from "@/store/configStore";
 import { Input } from "@/components/ui/input";
-import { parseTimeLimit } from "@/config/runLimits";
+import { MAX_TIMEOUT_S, NO_TIME_LIMIT } from "@/config/runLimits";
 import { useAtom } from "jotai";
 import {
     Field,
@@ -34,9 +34,15 @@ import {
     ComboboxList,
 } from "@/components/ui/combobox-fix";
 import { useTranslation } from "react-i18next";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ButtonGroup } from "./ui/button-group";
-import { ListRestart, MinusIcon, PlusIcon } from "lucide-react";
+import {
+    FileCodeIcon,
+    ListRestart,
+    ListRestartIcon,
+    MinusIcon,
+    PlusIcon,
+} from "lucide-react";
 import { EzIconMotion } from "./IconMotion";
 import { codeFormatStyle } from "@/store/configStore";
 import {
@@ -54,6 +60,192 @@ interface SettingsProps {
     allLangs: Record<string, string>;
 }
 
+type SettingType =
+    "Select" | "Number" | "Button" | "Custom" | "NumberWithButtons";
+
+interface ValueFieldProps<V> {
+    value: V;
+    setValue: (value: V) => void;
+}
+
+interface BaseSettingsField<T extends SettingType> {
+    type: T;
+    label: string;
+    description?: string;
+}
+
+interface SelectField
+    extends BaseSettingsField<"Select">, ValueFieldProps<string> {}
+
+interface NumberField
+    extends BaseSettingsField<"Number">, ValueFieldProps<number> {
+    max?: number;
+    min?: number;
+    step?: number;
+    allowZero?: boolean;
+}
+
+interface NumberWithButtonsField extends Omit<NumberField, "type"> {
+    type: "NumberWithButtons";
+    max?: number;
+    min?: number;
+    step?: number;
+    withButtons?: boolean;
+    decreaseButtonAriaLabel?: string;
+    increaseButtonAriaLabel?: string;
+}
+
+interface CustomField extends BaseSettingsField<"Custom"> {
+    render: () => React.ReactNode;
+}
+
+interface ButtonField extends BaseSettingsField<"Button"> {
+    onClick?: () => void;
+    icon?: React.ReactNode;
+    disabled?: boolean;
+    buttonText?: string;
+}
+
+type SettingsField =
+    | SelectField
+    | NumberField
+    | ButtonField
+    | CustomField
+    | NumberWithButtonsField;
+
+function NumberFieldTemplate({ field }: { field: NumberField }) {
+    const { value, setValue } = field;
+    const step = field.step ?? 1;
+    const min = field.min ?? -Infinity;
+    const max = field.max ?? Infinity;
+    const [valueDraft, setValueDraft] = React.useState(String(value));
+    useEffect(() => {
+        setValueDraft(String(value));
+    }, [value]);
+
+    function parseDarftValue(value: unknown): number | null {
+        const n = typeof value === "string" ? Number(value.trim()) : value;
+        if (typeof n !== "number" || !(n % step == 0)) return null;
+        if (field.allowZero === false && n === 0) return null;
+        return n >= min && n <= max ? n : null;
+    }
+
+    const commitValue = () => {
+        if (valueDraft === String(value)) return;
+        const parsedValue = parseDarftValue(valueDraft);
+        if (parsedValue === null) {
+            setValueDraft(String(value));
+            return;
+        }
+        setValue(parsedValue);
+    };
+    return (
+        <Input
+            type="number"
+            inputMode="numeric"
+            min={min}
+            step={step}
+            max={max}
+            className="w-20 shrink-0"
+            value={valueDraft}
+            onChange={(e) => setValueDraft(e.target.value)}
+            onBlur={commitValue}
+            onKeyDown={(e) => {
+                if (e.key === "Enter") commitValue();
+            }}
+        />
+    );
+}
+
+function NumberWithButtonsFieldTemplate({
+    field,
+}: {
+    field: NumberWithButtonsField;
+}) {
+    const { value, setValue, label } = field;
+    const min = field.min ?? -Infinity;
+    const max = field.max ?? Infinity;
+    const decreaseButtonAriaLabel = field.decreaseButtonAriaLabel ?? "Decrease";
+    const increaseButtonAriaLabel = field.increaseButtonAriaLabel ?? "Increase";
+    const step = field.step ?? 1;
+
+    return (
+        <ButtonGroup
+            orientation="horizontal"
+            aria-label={label}
+            className="h-fit"
+        >
+            <Button
+                variant="outline"
+                size="icon"
+                aria-label={decreaseButtonAriaLabel}
+                onClick={() => setValue(Math.max(value - step, min))}
+                disabled={value <= min}
+            >
+                <MinusIcon />
+            </Button>
+            <Button
+                variant="outline"
+                size="icon"
+                aria-label={`${field.label}: ${field.value}`}
+                className="bg-input/30! cursor-default"
+            >
+                {field.value}
+            </Button>
+            <Button
+                variant="outline"
+                size="icon"
+                aria-label={increaseButtonAriaLabel}
+                onClick={() => setValue(Math.min(value + step, max))}
+                disabled={value >= max}
+            >
+                <PlusIcon />
+            </Button>
+        </ButtonGroup>
+    );
+}
+
+function ButtonFieldTemplate({ field }: { field: ButtonField }) {
+    return (
+        <ButtonGroup
+            orientation="horizontal"
+            aria-label={field.label}
+            className="h-fit"
+        >
+            <Button
+                variant="outline"
+                onClick={field.onClick}
+                disabled={field.disabled}
+            >
+                {field.icon}
+                {field.buttonText ?? field.label}
+            </Button>
+        </ButtonGroup>
+    );
+}
+
+export function SettingFieldTemplate({ field }: { field: SettingsField }) {
+    return (
+        <Field orientation="horizontal" className="items-center!">
+            <FieldContent>
+                <FieldLabel>{field.label}</FieldLabel>
+                <FieldDescription className="text-xs">
+                    {field.description}
+                </FieldDescription>
+            </FieldContent>
+            {field.type === "Custom" ? (
+                field.render()
+            ) : field.type === "NumberWithButtons" ? (
+                <NumberWithButtonsFieldTemplate field={field} />
+            ) : field.type === "Button" ? (
+                <ButtonFieldTemplate field={field} />
+            ) : field.type === "Number" ? (
+                <NumberFieldTemplate field={field} />
+            ) : null}
+        </Field>
+    );
+}
+
 export function Settings({ allLangs }: SettingsProps) {
     const [open, setOpen] = useAtom(settingsPanelStore);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -63,34 +255,17 @@ export function Settings({ allLangs }: SettingsProps) {
     const [code, setCode] = useAtom(codeStore);
     const [tabSize, setTabSize] = useAtom(editorTabSizeStore);
     const [timeLimit, setTimeLimit] = useAtom(timeLimitStore);
-    // Edited as free text and only committed when valid, so typing "-" on the
-    // way to "-1" doesn't get rejected mid-edit.
-    const [timeLimitDraft, setTimeLimitDraft] = React.useState(
-        String(timeLimit),
-    );
-    useEffect(() => {
-        setTimeLimitDraft(String(timeLimit));
-    }, [timeLimit]);
-    const commitTimeLimit = () => {
-        const value = parseTimeLimit(timeLimitDraft);
-        if (value === null) {
-            setTimeLimitDraft(String(timeLimit));
-            return;
-        }
-        setTimeLimit(value);
-    };
     const resetSettingsAtoms = useResetSettingsAtoms();
-    const [resetTimes, setResetTimes] = React.useState(0);
+    const [resetTimes, setResetTimes] = useState(0);
+    const [setCodeTimes, setSetCodeTimes] = useState(0);
 
     const matchedLang =
         Object.keys(allLangs).find(
             (code: string) => allLangs[code] === i18n.language,
         ) || null;
 
-    const [localLang, setLocalLang] = React.useState<string | null>(
-        matchedLang,
-    );
-    const [comboOpen, setComboOpen] = React.useState(false);
+    const [localLang, setLocalLang] = useState<string | null>(matchedLang);
+    const [comboOpen, setComboOpen] = useState(false);
     const [formatStyle, setFormatStyle] = useAtom(codeFormatStyle);
     useEffect(() => {
         setLocalLang(matchedLang);
@@ -116,6 +291,141 @@ export function Settings({ allLangs }: SettingsProps) {
         }, 10);
     }, [open]);
 
+    const SettingsFields: SettingsField[] = [
+        {
+            type: "Custom",
+            label: t("settings.cppVersion"),
+            render: () => <CppVersionSelect size={"default"} />,
+        },
+        {
+            type: "Custom",
+            label: t("settings.language"),
+            render: () => (
+                <Combobox
+                    open={comboOpen}
+                    onOpenChange={setComboOpen}
+                    items={Object.keys(allLangs)}
+                    onValueChange={handleLanguageChange}
+                    value={localLang}
+                >
+                    <ComboboxInput
+                        placeholder={t("settings.selectLanguage")}
+                        autoFocus={false}
+                        ref={inputRef}
+                    />
+                    <ComboboxContent container={portalContainer}>
+                        <ComboboxEmpty>
+                            {t("settings.noLanguage")}
+                        </ComboboxEmpty>
+                        <ComboboxList className="max-h-75 overflow-y-auto">
+                            {(item) => (
+                                <ComboboxItem
+                                    key={item}
+                                    value={item}
+                                    autoFocus={false}
+                                    onPointerDown={(e) => e.preventDefault()}
+                                    onPointerUp={() =>
+                                        handleLanguageChange(item)
+                                    }
+                                >
+                                    {item}
+                                </ComboboxItem>
+                            )}
+                        </ComboboxList>
+                    </ComboboxContent>
+                </Combobox>
+            ),
+        },
+        {
+            label: t("settings.fontSize"),
+            type: "NumberWithButtons",
+            value: fontSize,
+            setValue: setFontSize,
+            min: 5,
+            max: 50,
+            step: 1,
+            decreaseButtonAriaLabel: t("settings.decreaseFontSize"),
+            increaseButtonAriaLabel: t("settings.increaseFontSize"),
+        },
+        {
+            label: t("settings.tabSize"),
+            type: "NumberWithButtons",
+            value: tabSize,
+            setValue: setTabSize,
+            min: 1,
+            max: 50,
+            step: 1,
+            decreaseButtonAriaLabel: t("settings.decreaseTabSize"),
+            increaseButtonAriaLabel: t("settings.increaseTabSize"),
+        },
+        {
+            label: t("settings.timeLimit"),
+            description: t("settings.timeLimitDesc"),
+            type: "Number",
+            min: NO_TIME_LIMIT,
+            step: 1,
+            value: timeLimit,
+            setValue: setTimeLimit,
+            allowZero: false,
+            max: MAX_TIMEOUT_S,
+        },
+        {
+            label: t("settings.defaultCode"),
+            type: "Button",
+            description: t("settings.defaultCodeDesc"),
+            buttonText: t("settings.defaultCodeBtn"),
+            icon: <EzIconMotion icon1={FileCodeIcon} trigger={setCodeTimes} />,
+            onClick: () => {
+                setDefCode(code);
+                setSetCodeTimes((p) => p + 1);
+            },
+            disabled: code === defCode,
+        },
+        {
+            label: t("settings.codeFormatStyle"),
+            type: "Custom",
+            description: t("settings.codeFormatStyleDesc"),
+            render: () => (
+                <Select value={formatStyle} onValueChange={setFormatStyle}>
+                    <SelectTrigger className="w-full max-w-30">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup>
+                            <SelectLabel>
+                                {t("settings.codeFormatStyle")}
+                            </SelectLabel>
+                            {[
+                                "LLVM",
+                                "Google",
+                                "Chromium",
+                                "Mozilla",
+                                "WebKit",
+                                "Microsoft",
+                                "GNU",
+                            ].map((item) => (
+                                <SelectItem key={item} value={item}>
+                                    {item}
+                                </SelectItem>
+                            ))}
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+            ),
+        },
+        {
+            label: t("settings.resetSettings"),
+            type: "Button",
+            description: t("settings.resetSettingsDesc"),
+            buttonText: t("settings.resetSettingsBtn"),
+            icon: <EzIconMotion icon1={ListRestartIcon} trigger={resetTimes} />,
+            onClick: () => {
+                resetSettingsAtoms();
+                setResetTimes((p) => p + 1);
+            },
+        },
+    ];
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="max-w-120 w-[calc(100%-2rem)]">
@@ -124,288 +434,9 @@ export function Settings({ allLangs }: SettingsProps) {
                 </DialogHeader>
                 <FieldSet>
                     <FieldGroup>
-                        <Field
-                            orientation="horizontal"
-                            className="items-center!"
-                        >
-                            <FieldContent>
-                                <FieldLabel>
-                                    {t("settings.cppVersion")}
-                                </FieldLabel>
-                                {/* <FieldDescription></FieldDescription> */}
-                            </FieldContent>
-
-                            <CppVersionSelect size={"default"} />
-                        </Field>
-                        <Field
-                            orientation="horizontal"
-                            className="items-center!"
-                        >
-                            <FieldContent>
-                                <FieldLabel>
-                                    {t("settings.language")}
-                                </FieldLabel>
-                                {/* <FieldDescription></FieldDescription> */}
-                            </FieldContent>
-                            <Combobox
-                                open={comboOpen}
-                                onOpenChange={setComboOpen}
-                                items={Object.keys(allLangs)}
-                                onValueChange={handleLanguageChange}
-                                value={localLang}
-                            >
-                                <ComboboxInput
-                                    placeholder={t("settings.selectLanguage")}
-                                    autoFocus={false}
-                                    ref={inputRef}
-                                />
-                                <ComboboxContent container={portalContainer}>
-                                    <ComboboxEmpty>
-                                        {t("settings.noLanguage")}
-                                    </ComboboxEmpty>
-                                    <ComboboxList className="max-h-75 overflow-y-auto">
-                                        {(item) => (
-                                            <ComboboxItem
-                                                key={item}
-                                                value={item}
-                                                autoFocus={false}
-                                                onPointerDown={(e) =>
-                                                    e.preventDefault()
-                                                }
-                                                onPointerUp={() =>
-                                                    handleLanguageChange(item)
-                                                }
-                                            >
-                                                {item}
-                                            </ComboboxItem>
-                                        )}
-                                    </ComboboxList>
-                                </ComboboxContent>
-                            </Combobox>
-                        </Field>
-                        <Field
-                            orientation="horizontal"
-                            className="items-center!"
-                        >
-                            <FieldContent>
-                                <FieldLabel>
-                                    {t("settings.fontSize")}
-                                </FieldLabel>
-                                {/* <FieldDescription></FieldDescription> */}
-                            </FieldContent>
-                            <ButtonGroup
-                                orientation="horizontal"
-                                aria-label={t("settings.fontSize")}
-                                className="h-fit"
-                            >
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    aria-label={t("settings.decreaseFontSize")}
-                                    onClick={() =>
-                                        setFontSize((p) => Math.max(p - 1, 5))
-                                    }
-                                    disabled={fontSize <= 5}
-                                >
-                                    <MinusIcon />
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    aria-label={`${t("settings.fontSize")}: ${fontSize}`}
-                                    className="bg-input/30! cursor-default"
-                                >
-                                    {fontSize}
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    aria-label={t("settings.increaseFontSize")}
-                                    onClick={() =>
-                                        setFontSize((p) => Math.min(p + 1, 50))
-                                    }
-                                    disabled={fontSize >= 50}
-                                >
-                                    <PlusIcon />
-                                </Button>
-                            </ButtonGroup>
-                        </Field>
-                        <Field
-                            orientation="horizontal"
-                            className="items-center!"
-                        >
-                            <FieldContent>
-                                <FieldLabel>{t("settings.tabSize")}</FieldLabel>
-                                {/* <FieldDescription></FieldDescription> */}
-                            </FieldContent>
-                            <ButtonGroup
-                                orientation="horizontal"
-                                aria-label={t("settings.tabSize")}
-                                className="h-fit"
-                            >
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    aria-label={t("settings.decreaseTabSize")}
-                                    onClick={() =>
-                                        setTabSize((p) => Math.max(p - 1, 1))
-                                    }
-                                    disabled={tabSize <= 1}
-                                >
-                                    <MinusIcon />
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    aria-label={`${t("settings.tabSize")}: ${tabSize}`}
-                                    className="bg-input/30! cursor-default"
-                                >
-                                    {tabSize}
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    aria-label={t("settings.increaseTabSize")}
-                                    onClick={() =>
-                                        setTabSize((p) => Math.min(p + 1, 50))
-                                    }
-                                    disabled={tabSize >= 50}
-                                >
-                                    <PlusIcon />
-                                </Button>
-                            </ButtonGroup>
-                        </Field>
-                        <Field
-                            orientation="horizontal"
-                            className="items-center!"
-                        >
-                            <FieldContent>
-                                <FieldLabel htmlFor="settings-time-limit">
-                                    {t("settings.timeLimit")}
-                                </FieldLabel>
-                                <FieldDescription className="text-xs">
-                                    {t("settings.timeLimitDesc")}
-                                </FieldDescription>
-                            </FieldContent>
-                            <Input
-                                id="settings-time-limit"
-                                type="number"
-                                inputMode="numeric"
-                                min={-1}
-                                step={1}
-                                className="w-20 shrink-0"
-                                value={timeLimitDraft}
-                                onChange={(e) =>
-                                    setTimeLimitDraft(e.target.value)
-                                }
-                                onBlur={commitTimeLimit}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") commitTimeLimit();
-                                }}
-                            />
-                        </Field>
-                        <Field
-                            orientation="horizontal"
-                            className="items-center!"
-                        >
-                            <FieldContent>
-                                <FieldLabel>
-                                    {t("settings.defaultCode")}
-                                </FieldLabel>
-                                <FieldDescription className="text-xs">
-                                    {t("settings.defaultCodeDesc")}
-                                </FieldDescription>
-                            </FieldContent>
-                            <ButtonGroup
-                                orientation="horizontal"
-                                aria-label={t("settings.defaultCode")}
-                                className="h-fit"
-                            >
-                                <Button
-                                    variant="outline"
-                                    // size="icon"
-                                    onClick={() => setDefCode(code)}
-                                    disabled={code === defCode}
-                                >
-                                    {t("settings.defaultCodeBtn")}
-                                </Button>
-                            </ButtonGroup>
-                        </Field>
-
-                        <Field
-                            orientation="horizontal"
-                            className="items-center!"
-                        >
-                            <FieldContent>
-                                <FieldLabel>
-                                    {t("settings.codeFormatStyle")}
-                                </FieldLabel>
-                                <FieldDescription>
-                                    {t("settings.codeFormatStyleDesc")}
-                                </FieldDescription>
-                            </FieldContent>
-
-                            <Select
-                                value={formatStyle}
-                                onValueChange={setFormatStyle}
-                            >
-                                <SelectTrigger className="w-full max-w-30">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        <SelectLabel>
-                                            {t("settings.codeFormatStyle")}
-                                        </SelectLabel>
-                                        {[
-                                            "LLVM",
-                                            "Google",
-                                            "Chromium",
-                                            "Mozilla",
-                                            "WebKit",
-                                            "Microsoft",
-                                            "GNU",
-                                        ].map((item) => (
-                                            <SelectItem key={item} value={item}>
-                                                {item}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                        </Field>
-                        <Field
-                            orientation="horizontal"
-                            className="items-center!"
-                        >
-                            <FieldContent>
-                                <FieldLabel>
-                                    {t("settings.resetSettings")}
-                                </FieldLabel>
-                                <FieldDescription className="text-xs">
-                                    {t("settings.resetSettingsDesc")}
-                                </FieldDescription>
-                            </FieldContent>
-                            <ButtonGroup
-                                orientation="horizontal"
-                                aria-label={t("settings.resetSettings")}
-                                className="h-fit"
-                            >
-                                <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                        resetSettingsAtoms();
-                                        setResetTimes((p) => p + 1);
-                                    }}
-                                >
-                                    <EzIconMotion
-                                        trigger={resetTimes}
-                                        icon1={ListRestart}
-                                    />
-                                    {t("settings.resetSettingsBtn")}
-                                </Button>
-                            </ButtonGroup>
-                        </Field>
+                        {SettingsFields.map((field, index) => (
+                            <SettingFieldTemplate key={index} field={field} />
+                        ))}
                     </FieldGroup>
                 </FieldSet>
                 <div ref={setPortalContainer} className="absolute" />
