@@ -11,7 +11,7 @@ self.onmessage = async (e) => {
     let pending = [];
     let pendingType = "stdout";
     let pendingBytes = 0;
-    let lastFlush = performance.now();
+    let lastFlush = -Infinity;
 
     function flush() {
         if (pending.length) {

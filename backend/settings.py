@@ -121,7 +121,7 @@ class Settings(BaseSettings):
     # assets/worker.js change so stale cached builds aren't served. (The
     # builder image tag is already part of the key.)
     # Not a deployment setting, so it is left out of the .env templates.
-    BUILD_VERSION: str = Field(default="0.2.0")
+    BUILD_VERSION: str = Field(default="0.2.1")
 
     CACHE_LIMIT: int = Field(default=100)
 
