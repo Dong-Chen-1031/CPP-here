@@ -182,7 +182,7 @@
     "limit": {
         "time": {
             "title": "執行超時（TLE）",
-            "description": "The program ran longer than {{seconds}} s and was stopped."
+            "description": "The program ran longer than {{seconds}} s and was stopped. You can change the time limit in Settings."
         },
         "output": {
             "title": "輸出超過上限（OLE）",
