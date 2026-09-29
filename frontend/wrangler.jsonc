@@ -17,8 +17,26 @@
             "enabled": false,
         },
     ],
-    // Astro's Cloudflare adapter binds sessions to `SESSION`; without the id here
-    // `wrangler deploy` drops it from the remote config and only inherits it.
+    "previews": {
+        "d1_databases": [
+            {
+                "binding": "D1",
+                "database_id": "c27d93e5-2925-4547-b28a-44a4a1795089",
+            },
+        ],
+        "r2_buckets": [
+            {
+                "binding": "R2_BUCKET",
+                "bucket_name": "cpp-here",
+            },
+        ],
+        "kv_namespaces": [
+            {
+                "binding": "SESSION",
+                "id": "00418d0d89144e979ab8cd851db8eb8e",
+            },
+        ],
+    },
     "kv_namespaces": [
         {
             "binding": "SESSION",
