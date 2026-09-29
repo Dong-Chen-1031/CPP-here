@@ -10,7 +10,7 @@
         "input": "輸入",
         "testCase": "測資",
         "output": "輸出",
-        "starOnGithub": "在 GitHub 上 Star"
+        "starOnGithub": "Star on GitHub"
     },
     "drawer": {
         "openBtn": "開啟抽屜",
@@ -41,14 +41,14 @@
         "copyThisCaseTip": "複製此測資的輸出",
         "clearTip": "清除輸出",
         "noOutput": "尚無輸出結果",
-        "truncated": "輸出過長，未完整顯示。完整內容請使用複製。"
+        "truncated": "Output is too long to show in full. Use copy to get the full output."
     },
     "testCase": {
         "label": "測資",
         "addTip": "新增測資",
         "addBtn": "新增",
         "defaultName": "測資 {{index}}",
-        "exampleInput": "範例輸入 {{index}}",
+        "exampleInput": "Example input {{index}}",
         "noTestCase": "尚無測資",
         "setInputTip": "將輸入設為此測資",
         "runTip": "運行此測資",
@@ -86,7 +86,7 @@
         "runAllTestCases": "運行所有測資",
         "runCurrentInput": "運行現有輸入",
         "verifying": "驗證中",
-        "building": "編譯中",
+        "building": "建置中",
         "stop": "停止",
         "run": "運行",
         "runAll": "全部運行",
@@ -94,13 +94,13 @@
         "resetBtn": "重置",
         "shareCode": "分享",
         "shareCodeTip": "分享你的程式碼、輸入輸出、及測資給其他人",
-        "shareSuccessTitle": "分享成功",
-        "shareSuccessDescription": "分享連結已複製到剪貼簿，現在可以分享給其他人了！",
-        "shareLinkReadyTitle": "分享連結已建立",
-        "shareLinkReadyDescription": "分享連結：{{shareUrl}}",
-        "shareFailedTitle": "分享失敗",
-        "shareFailedDescription": "分享程式碼時發生錯誤，請稍後再試。",
-        "shareFailedUnexpectedDescription": "分享程式碼時發生未預期錯誤，請稍後再試。",
+        "shareSuccessTitle": "Share Successful",
+        "shareSuccessDescription": "Share URL has been copied to clipboard. You can share it with others now!",
+        "shareLinkReadyTitle": "Share Link Ready",
+        "shareLinkReadyDescription": "Share URL: {{shareUrl}}",
+        "shareFailedTitle": "Share Failed",
+        "shareFailedDescription": "An error occurred while sharing your code. Please try again later.",
+        "shareFailedUnexpectedDescription": "An unexpected error occurred while sharing your code. Please try again later.",
         "settings": "設定",
         "formatCode": "格式化",
         "formatCodeTip": "格式化程式碼",
@@ -138,31 +138,31 @@
         "codeFormatStyle": "格式化風格",
         "codeFormatStyleDesc": "選擇一個程式碼格式化風格。",
         "cppVersion": "C++ 版本",
-        "timeLimit": "時間限制（秒）",
-        "timeLimitDesc": "程式執行超過此秒數會被強制停止。輸入 -1 表示不限制。"
+        "timeLimit": "Time Limit (s)",
+        "timeLimitDesc": "Stop the program after this many seconds. Enter -1 for no limit."
     },
     "resize": {
         "loadingEditor": "正在載入編輯器",
-        "movedTitle": "我們搬家了！",
-        "movedDescription": "請改用新網址 cpp.doong.me"
+        "movedTitle": "We have moved!",
+        "movedDescription": "Please use the new url cpp.doong.me"
     },
     "run": {
-        "errorTitle": "錯誤",
-        "errorDescription": "發生錯誤，詳細資訊請查看輸出。",
-        "runtimeErrorIn": "{{testCaseName}} 發生執行期錯誤",
-        "runtimeErrorTitle": "執行期錯誤",
-        "runtimeErrorDescription": "程式執行時發生錯誤，詳細資訊請查看輸出。",
-        "buildFailedTitle": "編譯失敗",
-        "buildFailedDescription": "程式碼編譯失敗，詳細資訊請查看輸出。",
-        "buildFailedOutput": "編譯失敗，錯誤如下：",
-        "noTestCasesTitle": "沒有測資",
-        "noTestCasesDescription": "目前沒有可執行的測資，請先新增測資。",
-        "verificationFailed": "驗證失敗，請再試一次。",
-        "workersUnsupported": "此環境不支援 Web Workers。"
+        "errorTitle": "Error",
+        "errorDescription": "An error occurred. Please check output for details.",
+        "runtimeErrorIn": "Runtime Error in {{testCaseName}}",
+        "runtimeErrorTitle": "Runtime Error",
+        "runtimeErrorDescription": "An error occurred during code execution. Please check output for details.",
+        "buildFailedTitle": "Build Failed",
+        "buildFailedDescription": "Failed to build the code. Please check output for details.",
+        "buildFailedOutput": "Build failed with errors:",
+        "noTestCasesTitle": "No Test Cases",
+        "noTestCasesDescription": "There are no test cases to run. Please add some test cases first.",
+        "verificationFailed": "Verification failed. Please try again.",
+        "workersUnsupported": "Web Workers are not supported in this environment."
     },
     "auth": {
-        "unauthorizedTitle": "未授權",
-        "unauthorizedDescription": "你的驗證已過期，正在自動更新。"
+        "unauthorizedTitle": "Unauthorized",
+        "unauthorizedDescription": "Your verification has expired and is being renewed automatically."
     },
     "shareReceive": {
         "title": "接收分享的程式碼",
@@ -182,15 +182,15 @@
     "limit": {
         "time": {
             "title": "執行超時（TLE）",
-            "description": "程式執行超過 {{seconds}} 秒，已強制停止。"
+            "description": "The program ran longer than {{seconds}} s and was stopped."
         },
         "output": {
             "title": "輸出超過上限（OLE）",
-            "description": "程式輸出超過 {{size}} MiB，已強制停止。"
+            "description": "The program printed more than {{size}} MiB and was stopped."
         },
         "memory": {
             "title": "記憶體超過上限（MLE）",
-            "description": "程式使用超過 {{size}} MiB 記憶體，已強制停止。"
+            "description": "The program used more than {{size}} MiB of memory and was stopped."
         }
     }
 }
