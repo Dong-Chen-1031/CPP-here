@@ -7,13 +7,13 @@ import Tip from "../ui/tips";
 import { useAtom } from "jotai";
 import { inputStore } from "@/store/atom";
 import { cn } from "@/lib/utils";
-import IconMotion from "../IconMotion";
+import { EzIconMotion } from "../IconMotion";
 import { useTranslation } from "react-i18next";
 
 export default function InputPanel({ drawer = false }: { drawer?: boolean }) {
     const [input, setInput] = useAtom(inputStore);
-    const [pasted, setPasted] = React.useState(false);
-    const [cleared, setCleared] = React.useState(false);
+    const [pastedTimes, setPastedTimes] = React.useState(0);
+    const [clearedTimes, setClearedTimes] = React.useState(0);
     const { t } = useTranslation(["editor", "common"]);
     return (
         <div
@@ -31,12 +31,14 @@ export default function InputPanel({ drawer = false }: { drawer?: boolean }) {
                         variant="outline"
                         onClick={async () => {
                             setInput(await navigator.clipboard.readText());
-                            setPasted(true);
-                            setTimeout(() => setPasted(false), 1500);
+                            setPastedTimes((p) => p + 1);
                         }}
                         className="px-2"
                     >
-                        <IconMotion show={pasted} HideIcon={ClipboardPaste} />
+                        <EzIconMotion
+                            trigger={pastedTimes}
+                            icon1={ClipboardPaste}
+                        />
                         <span className="hidden @[250px]:inline">
                             {t("input.pasteBtn")}
                         </span>
@@ -47,13 +49,12 @@ export default function InputPanel({ drawer = false }: { drawer?: boolean }) {
                         variant="outline"
                         onClick={() => {
                             setInput("");
-                            setCleared(true);
-                            setTimeout(() => setCleared(false), 1500);
+                            setClearedTimes((p) => p + 1);
                         }}
                         disabled={input.length === 0}
                         className="px-2"
                     >
-                        <IconMotion show={cleared} HideIcon={Trash} />
+                        <EzIconMotion trigger={clearedTimes} icon1={Trash} />
                         <span className="hidden @[250px]:inline">
                             {t("common:clear")}
                         </span>

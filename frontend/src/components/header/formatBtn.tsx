@@ -15,7 +15,7 @@ import { optionsKeyIcon, shiftKeyIcon } from "@/lib/utils";
 import { Kbd } from "@/components/ui/kbd";
 import { ensureFormatterInit, formatCode } from "@/lib/format";
 
-import IconMotion from "@/components/IconMotion";
+import { EzIconMotion } from "@/components/IconMotion";
 export function FormatButton({
     className = "",
     onClick = () => {},
@@ -26,7 +26,7 @@ export function FormatButton({
     const [code, setCode] = useAtom(codeStore);
     const { t } = useTranslation(["editor"]);
     const [formatting, setFormatting] = React.useState(false);
-    const [formatted, setFormatted] = React.useState(false);
+    const [formattedTimes, setFormattedTimes] = React.useState(0);
 
     return (
         <ButtonGroup>
@@ -51,8 +51,7 @@ export function FormatButton({
                             clearTimeout(toSetFormatting);
                             setCode(formatted);
                             setFormatting(false);
-                            setFormatted(true);
-                            setTimeout(() => setFormatted(false), 1500);
+                            setFormattedTimes((p) => p + 1);
                             window.posthog?.capture("code_formatted");
                         });
                         onClick(e);
@@ -61,12 +60,11 @@ export function FormatButton({
                         ensureFormatterInit();
                     }}
                 >
-                    <IconMotion
-                        show={formatted}
-                        HideIcon={formatting ? Spinner : FormIcon}
+                    <EzIconMotion
+                        trigger={formattedTimes}
+                        icon1={formatting ? Spinner : FormIcon}
                         className="size-3"
                     />
-
                     {t("headerActions.formatCode")}
                 </Button>
             </Tip>
