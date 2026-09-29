@@ -35,6 +35,7 @@ class ContainerPool:
     def __init__(self):
         self.pool: asyncio.Queue = asyncio.Queue()
         self._replenish_tasks: set[asyncio.Task] = set()
+        self._destroy_tasks: set[asyncio.Task] = set()
         # Container id -> monotonic creation time, so expiry is checked locally
         # instead of costing an inspect call on every acquire.
         self._born: dict[str, float] = {}
@@ -86,6 +87,13 @@ class ContainerPool:
                 logger.warning(f"Failed to delete worker {container.id[:12]}: {e}")
         except Exception as e:
             logger.warning(f"Failed to delete worker {container.id[:12]}: {e}")
+
+    def _spawn_destroy(self, container):
+        """Delete a worker in the background so the caller doesn't wait on Docker."""
+        self._born.pop(container.id, None)
+        task = asyncio.create_task(self._destroy(container))
+        self._destroy_tasks.add(task)
+        task.add_done_callback(self._destroy_tasks.discard)
 
     def _is_usable(self, container) -> bool:
         """Whether the worker will outlive a build that starts right now."""
@@ -220,14 +228,13 @@ class ContainerPool:
                     span.set_attribute("build.container.source", "pool")
                 else:
                     expired += 1
-                    await self._destroy(candidate)
+                    self._spawn_destroy(candidate)
             span.set_attribute("build.pool.expired_discarded", expired)
             span.set_attribute("build.container.id", container.id[:12])
         try:
             yield container
         finally:
-            with tracer.start_as_current_span("build.release_container"):
-                await self._destroy(container)
+            self._spawn_destroy(container)
 
     async def shutdown(self):
         self._closing = True
@@ -248,6 +255,8 @@ class ContainerPool:
             except asyncio.QueueEmpty:
                 break
             await self._destroy(container)
+        if self._destroy_tasks:
+            await asyncio.gather(*self._destroy_tasks, return_exceptions=True)
         logger.info("Container pool shutdown complete")
 
 

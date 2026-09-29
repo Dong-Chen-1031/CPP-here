@@ -14,8 +14,6 @@ import { GithubLink } from "./header/githubLink";
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const desktop = urlParams.get("desktop");
-        console.log("desktop:", desktop);
-        console.log("urlParams:", urlParams.toString());
         if (desktop === "true") {
             document.documentElement.classList.add("desktop");
         }

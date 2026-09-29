@@ -36,7 +36,13 @@ import {
 import { useTranslation } from "react-i18next";
 import React, { useEffect, useRef, useState } from "react";
 import { ButtonGroup } from "./ui/button-group";
-import { ListRestart, MinusIcon, PlusIcon } from "lucide-react";
+import {
+    FileCodeIcon,
+    ListRestart,
+    ListRestartIcon,
+    MinusIcon,
+    PlusIcon,
+} from "lucide-react";
 import { EzIconMotion } from "./IconMotion";
 import { codeFormatStyle } from "@/store/configStore";
 import {
@@ -250,16 +256,16 @@ export function Settings({ allLangs }: SettingsProps) {
     const [tabSize, setTabSize] = useAtom(editorTabSizeStore);
     const [timeLimit, setTimeLimit] = useAtom(timeLimitStore);
     const resetSettingsAtoms = useResetSettingsAtoms();
+    const [resetTimes, setResetTimes] = useState(0);
+    const [setCodeTimes, setSetCodeTimes] = useState(0);
 
     const matchedLang =
         Object.keys(allLangs).find(
             (code: string) => allLangs[code] === i18n.language,
         ) || null;
 
-    const [localLang, setLocalLang] = React.useState<string | null>(
-        matchedLang,
-    );
-    const [comboOpen, setComboOpen] = React.useState(false);
+    const [localLang, setLocalLang] = useState<string | null>(matchedLang);
+    const [comboOpen, setComboOpen] = useState(false);
     const [formatStyle, setFormatStyle] = useAtom(codeFormatStyle);
     useEffect(() => {
         setLocalLang(matchedLang);
@@ -368,8 +374,11 @@ export function Settings({ allLangs }: SettingsProps) {
             type: "Button",
             description: t("settings.defaultCodeDesc"),
             buttonText: t("settings.defaultCodeBtn"),
-            // icon: <ListRestart />, // TODO: Add a motion effect to this icon when clicked
-            onClick: () => setDefCode(code),
+            icon: <EzIconMotion icon1={FileCodeIcon} trigger={setCodeTimes} />,
+            onClick: () => {
+                setDefCode(code);
+                setSetCodeTimes((p) => p + 1);
+            },
             disabled: code === defCode,
         },
         {
@@ -409,8 +418,11 @@ export function Settings({ allLangs }: SettingsProps) {
             type: "Button",
             description: t("settings.resetSettingsDesc"),
             buttonText: t("settings.resetSettingsBtn"),
-            icon: <ListRestart />, // TODO: Add a motion effect to this icon when clicked
-            onClick: resetSettingsAtoms,
+            icon: <EzIconMotion icon1={ListRestartIcon} trigger={resetTimes} />,
+            onClick: () => {
+                resetSettingsAtoms();
+                setResetTimes((p) => p + 1);
+            },
         },
     ];
 
