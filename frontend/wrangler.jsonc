@@ -3,6 +3,7 @@
     "name": "cpp-here",
     "compatibility_date": "2026-06-19",
     "compatibility_flags": ["nodejs_compat"],
+    "preview_urls": true,
     "routes": [
         {
             "pattern": "cpp.doong.me",
@@ -11,8 +12,9 @@
         },
         {
             "pattern": "cpp-insiders.doong.me",
-            "zone_name": "doong.me",
             "custom_domain": true,
+            "previews_enabled": true,
+            "enabled": false,
         },
     ],
     // Astro's Cloudflare adapter binds sessions to `SESSION`; without the id here
