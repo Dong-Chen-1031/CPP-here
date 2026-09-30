@@ -208,6 +208,17 @@ def host_load() -> float | None:
             return None
 
 
+def finite_or_none(obj):
+    """把 NaN / inf 換成 None（遞迴處理 dict 與 list），讓報告是合法的 JSON。"""
+    if isinstance(obj, float) and not math.isfinite(obj):
+        return None
+    if isinstance(obj, dict):
+        return {k: finite_or_none(v) for k, v in obj.items()}
+    if isinstance(obj, list | tuple):
+        return [finite_or_none(v) for v in obj]
+    return obj
+
+
 def pct(values: list[float], p: float) -> float:
     if not values:
         return math.nan
@@ -245,17 +256,20 @@ async def measure_containers(pool: B.ContainerPool, parallel: int) -> dict:
 
     # 記憶體：容器上限（backend 設定的）、閒置容器、編譯最重的程式時的峰值
     # （cgroup v2 的 memory.peak，包含 page cache，只當作參考）
-    c = containers[0]
-    limit = (await c.show())["HostConfig"].get("Memory") or 0
-    idle = await exec_in(c, "cat /sys/fs/cgroup/memory.current 2>/dev/null")
-    code = HEAVIEST[3].replace("'", "'\\''")
-    peak = await exec_in(
-        c,
-        f"printf '%s' '{code}' > /tmp/s.cpp && "
-        f"cpp-here-build {HEAVIEST[1]} /tmp/s.cpp /tmp/o.js >/dev/null 2>&1; "
-        "cat /sys/fs/cgroup/memory.peak 2>/dev/null",
-    )
-    await asyncio.gather(*[pool._destroy(x) for x in containers])
+    # 量測失敗也要刪掉：這些容器不在 pool 裡，remove_leftovers 也清不到
+    try:
+        c = containers[0]
+        limit = (await c.show())["HostConfig"].get("Memory") or 0
+        idle = await exec_in(c, "cat /sys/fs/cgroup/memory.current 2>/dev/null")
+        code = HEAVIEST[3].replace("'", "'\\''")
+        peak = await exec_in(
+            c,
+            f"printf '%s' '{code}' > /tmp/s.cpp && "
+            f"cpp-here-build {HEAVIEST[1]} /tmp/s.cpp /tmp/o.js >/dev/null 2>&1; "
+            "cat /sys/fs/cgroup/memory.peak 2>/dev/null",
+        )
+    finally:
+        await asyncio.gather(*[pool._destroy(x) for x in containers])
 
     def as_int(s: str) -> int | None:
         s = s.strip().splitlines()[-1] if s.strip() else ""
@@ -304,17 +318,21 @@ async def measure_raw_compile(
             container,
             f"printf '%s' '{code}' > /tmp/s.cpp && "
             "cpp-here-build c++17 /tmp/s.cpp /tmp/w.js >/dev/null 2>&1; "
-            f"for p in 1 {parallel}; do n=$((p*4)); s=$(date +%s%N); "
+            f"for p in {' '.join(map(str, sorted({1, parallel})))}; do "
+            "n=$((p*4)); s=$(date +%s%N); "
             "seq $n | xargs -P $p -I{} sh -c "
             "'mkdir -p /tmp/{} && cpp-here-build c++17 /tmp/s.cpp /tmp/{}/o.js >/dev/null 2>&1'; "
-            'echo "$p $n $(( ($(date +%s%N)-s)/1000000 ))"; done',
+            'echo "RATE $p $n $(( ($(date +%s%N)-s)/1000000 ))"; done',
         )
     finally:
         await container.delete(force=True)
+    # exec_in 會把 stderr 一起收進來（例如 xargs 在編譯被 OOM kill 時印的
+    # 訊息），所以只讀有 RATE 前綴的行
     rates = {}
-    for line in out.strip().splitlines():
-        p, n, ms = (int(x) for x in line.split())
-        rates[p] = n / ms * 60_000
+    for line in out.splitlines():
+        match line.split():
+            case ["RATE", p, n, ms] if int(ms) > 0:
+                rates[int(p)] = int(n) / int(ms) * 60_000
     return {
         "single_per_min": rates.get(1, math.nan),
         "parallel": parallel,
@@ -595,12 +613,21 @@ async def main() -> int:
         single = results[0]
         build_rate = rec["throughput_per_min"] / 60
         pool_size = min(rec["concurrency"], worst_cap)
-        overhead = 1 - peak / raw["parallel_per_min"]
+        # 純編譯量測沒有結果（編譯全部失敗）時是 NaN
+        overhead = (
+            1 - peak / raw["parallel_per_min"]
+            if raw["parallel_per_min"] > 0
+            else math.nan
+        )
 
+        # 第 1 級沒有成功的編譯時（全部失敗，或 --quick 在慢主機上時間內一次都
+        # 沒完成）p50 是 NaN，分數也算不出來
         score = (
             1000
             * (rec["throughput_per_min"] / REF_THROUGHPUT) ** 0.7
             * (REF_LATENCY / single["p50_s"]) ** 0.3
+            if single["p50_s"] > 0
+            else math.nan
         )
 
         console.print(sweep_table(results, recommended=rec["concurrency"]))
@@ -620,19 +647,29 @@ async def main() -> int:
             f"[bold green]DOCKER_POOL_SIZE={pool_size}[/]"
             f"  [dim]（{rec['throughput_per_min']:.0f} 次/分鐘，p95 {rec['p95_s']:.2f} s）",
         )
-        color = "green" if score >= 1000 else "yellow" if score >= 500 else "red"
-        summary.add_row(
-            "綜合分數",
-            f"[bold {color}]{score:.0f}[/]"
-            "  [dim]（1000 = Apple M4 10 核 + OrbStack；吞吐量占 70%、延遲占 30%）",
-        )
+        if math.isnan(score):
+            summary.add_row(
+                "綜合分數", "[bold red]無法計算[/]  [dim]（單一編譯沒有成功的結果）"
+            )
+        else:
+            color = "green" if score >= 1000 else "yellow" if score >= 500 else "red"
+            summary.add_row(
+                "綜合分數",
+                f"[bold {color}]{score:.0f}[/]"
+                "  [dim]（1000 = Apple M4 10 核 + OrbStack；吞吐量占 70%、延遲占 30%）",
+            )
         summary.add_row("", "")
         summary.add_row("最高吞吐量", f"{peak:.0f} 次/分鐘")
-        summary.add_row(
-            "純編譯上限",
-            f"{raw['parallel_per_min']:.0f} 次/分鐘"
-            f"  [dim]（容器管理等開銷吃掉 {overhead * 100:.0f}%）",
-        )
+        if math.isnan(overhead):
+            summary.add_row(
+                "純編譯上限", "[bold red]無法計算[/]  [dim]（編譯沒有成功的結果）"
+            )
+        else:
+            summary.add_row(
+                "純編譯上限",
+                f"{raw['parallel_per_min']:.0f} 次/分鐘"
+                f"  [dim]（容器管理等開銷吃掉 {overhead * 100:.0f}%）",
+            )
         summary.add_row("單一編譯延遲", f"p50 {single['p50_s']:.2f} s")
         summary.add_row("", samples)
         console.print(
@@ -699,13 +736,21 @@ async def main() -> int:
             "best_concurrency": rec["concurrency"],
             "peak_throughput_per_min": peak,
             "single_build_p50_s": single["p50_s"],
-            "score": round(score),
+            "score": None if math.isnan(score) else round(score),
             "warnings": warnings,
         }
         if args.out:
             stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
             path = Path(args.out) / f"host_bench-{info.get('Name')}-{stamp}.json"
-            path.write_text(json.dumps(report, indent=2, ensure_ascii=False))
+            # 量不到的值（NaN）存成 null：json.dumps 預設寫出的 NaN 不是合法 JSON
+            path.write_text(
+                json.dumps(
+                    finite_or_none(report),
+                    indent=2,
+                    ensure_ascii=False,
+                    allow_nan=False,
+                )
+            )
             done(f"結果已存到 {path}")
         return 0
     finally:

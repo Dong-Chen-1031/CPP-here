@@ -8,6 +8,7 @@ if [ -z "$1" ]; then
 fi
 
 INPUT_FILE="$1"
+BUILDER_DIR=$(cd "$(dirname "$0")" && pwd)
 FILENAME=$(basename "$INPUT_FILE")
 BASENAME="${FILENAME%.*}"
 
@@ -21,7 +22,7 @@ cat "$INPUT_FILE" | docker run \
   --network none \
   --cpus="1.0" \
   --memory="1g" \
-  --pids-limit 50 \
+  --pids-limit 256 \
   --ulimit fsize=50000000:50000000 \
   --cap-drop ALL \
   --security-opt no-new-privileges:true \
@@ -41,6 +42,11 @@ if [ $EXIT_CODE -eq 0 ]; then
     chmod -x output/${BASENAME}.* 2>/dev/null
     echo "📂 Output files are located in the output/ directory:"
     ls -lh "output/$BASENAME."*
+    # Built exactly like the backend does, so it only runs inside C++ Here's
+    # web worker (-sENVIRONMENT=worker, stdin/stdout from worker.js); runner.mjs
+    # simulates that worker in node
+    echo "▶️  Run it (stdin from input.txt):"
+    echo "   node $BUILDER_DIR/test/regression/runner.mjs output/$BASENAME.js output/$BASENAME.wasm $(dirname "$BUILDER_DIR")/backend/assets/worker.js < input.txt"
 elif [ $EXIT_CODE -eq 124 ]; then
     echo "⏱️ 🚨 Compilation failed: Timeout exceeded (30 seconds)!"
 else

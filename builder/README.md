@@ -14,7 +14,7 @@ that drives it, and the tests change together.
 
 - **Isolated sandbox**: runs as a non-root user with no network access, strict CPU/memory limits, and all Linux capabilities dropped. Only the Emscripten cache is writable; the compiler is not.
 - **One definition of the build**: [`docker/cpp-here-build`](docker/cpp-here-build) holds the emcc flags, the PCH choice, and the 30-second timeout. The backend, the image's own warm-up, and the tests all call it.
-- **Fast `bits/stdc++.h`**: precompiled once per `-std` (c++11 to c++23), which makes typical competitive-programming builds 2 to 3 times faster.
+- **Fast `bits/stdc++.h`**: precompiled once per `-std` (c++11 to c++23), which makes typical competitive-programming builds 2 to 3 times faster. Used only when the source starts with `#include <bits/stdc++.h>` (comments and `#pragma GCC optimize/target` may come first), since the PCH is loaded before the first line.
 - **Compile-time guards**: limits on template depth, constexpr depth, and macro backtrace prevent runaway compilation.
 - **Small**: about 360 MB to pull. Multi-threaded and sanitizer library variants, Closure Compiler, and the apt toolchain of the official emsdk image are left out.
 
@@ -42,7 +42,13 @@ in the same change; `ci.yml` fails when the pin doesn't match:
 git rev-parse --short=12 HEAD:builder/docker   # after committing
 ```
 
-The image is pushed when the change reaches `main`.
+The image is pushed for `main` and for pull requests from this repository
+(not forks), so a pull request's backend image can pull the builder tag it
+pins; pull requests also get a `pr-<number>` tag, and `main` moves `latest`.
+A `tree-<hash>` tag is written once and never moved: a later run with the same
+`builder/docker` (a change to the tests or this README, a re-run) tags the
+existing image instead of its own rebuild, because the backend's build cache
+is keyed on the tag. To rebuild the image, change something in `builder/docker`.
 
 ## Regression Tests
 
@@ -52,7 +58,7 @@ program is built with `cpp-here-build` and run through the real
 `backend/assets/worker.js` in a simulated browser worker (`runner.mjs`), and
 its stdout is compared with `NAME.out`. It also checks that:
 
-- sources with `<bits/stdc++.h>` produce the same `.wasm` with and without the PCH
+- sources that get the PCH produce the same `.wasm` with and without it
 - no build writes to the Emscripten cache (all library variants are prebuilt)
 - the compiler is read-only for `sandbox_user`
 - the output limit in `stdout_lib.js` matches `frontend/src/config/runLimits.ts`
@@ -65,7 +71,7 @@ builder/test/regression/run.sh safe-cpp2wasm
 To add a case, drop `NAME.cpp` (plus `NAME.in` / `NAME.out`) into `cases/`;
 see the top of `inner.sh` for the `// @std:` and `// @expect:` directives.
 CI builds the image for amd64 and arm64, runs the suite on each, and only
-pushes when it passes. Pull requests run the suite without pushing.
+pushes when it passes. Pull requests from forks run the suite without pushing.
 
 ## Compile a Local File
 
@@ -74,7 +80,16 @@ docker build -t safe-cpp2wasm builder/docker
 builder/build.sh path/to/source.cpp            # CPP_STD=c++20 to change -std
 ```
 
-The output goes to `output/` as `<source>.js` and `<source>.wasm`.
+The output goes to `output/` as `<source>.js` and `<source>.wasm`. It is built
+exactly like the backend builds user code, so it only runs inside C++ Here's
+web worker (`-sENVIRONMENT=worker`, stdin and stdout wired up by
+`backend/assets/worker.js`), not with plain `node` or in a page. To run it
+locally, use the regression test's runner, which simulates that worker:
+
+```bash
+node builder/test/regression/runner.mjs output/source.js output/source.wasm \
+    backend/assets/worker.js < input.txt
+```
 
 ## Security Model
 
