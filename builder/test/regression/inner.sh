@@ -2,8 +2,8 @@
 # Runs inside the builder image (see run.sh). For every case in cases/ and
 # every -std it lists: compile with cpp-here-build (what the backend runs),
 # run the output through the real worker.js with runner.mjs, and check the
-# result. Sources that include <bits/stdc++.h> (which cpp-here-build compiles
-# with the PCH) are also built with --no-pch: the two .wasm must be identical.
+# result. Sources cpp-here-build compiles with the PCH (see --uses-pch) are also
+# built with --no-pch: the two .wasm must be identical.
 #
 # Directives in the first lines of a case (all optional):
 #   // @std: c++17 c++20             default: c++11 c++14 c++17 c++20 c++23
@@ -68,14 +68,11 @@ for src in "$TESTS"/cases/*.cpp; do
     input=/dev/null
     [ -f "$TESTS/cases/$name.in" ] && input="$TESTS/cases/$name.in"
 
-    uses_bits=""
-    grep -qE '^\s*#\s*include\s*[<"]bits/stdc\+\+\.h[>"]' "$src" && uses_bits=1
-
     for std in $stds; do
         label="$name [$std]"
         echo "== $label"
         modes=(default)
-        [ -n "$uses_bits" ] && [ -f "$PCH_DIR/stdc++-$std.pch" ] && modes+=(no-pch)
+        cpp-here-build --uses-pch "$std" "$src" && modes+=(no-pch)
 
         for mode in "${modes[@]}"; do
             out="$WORK/$name-$std-$mode"
@@ -138,6 +135,8 @@ done
 echo "== cache"
 written=$(find "$CACHE" -newer "$WORK/stamp" -type f ! -name cache.lock)
 [ -z "$written" ] && ok || bad "builds wrote to the emscripten cache (missing library variant or stale symbol list / PCH flags?)" "$written"
+echo "== pch"
+[ ${#time_pch[@]} -gt 0 ] && ok || bad "no case was built with the PCH (cpp-here-build --uses-pch always fails?)"
 
 echo
 echo "compile time of <bits/stdc++.h> cases (sum, ms):"

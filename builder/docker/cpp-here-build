@@ -9,6 +9,7 @@
 # Usage:
 #   cpp-here-build <std> <source.cpp> <output.js> [--no-pch]
 #   cpp-here-build --make-pch <std> <output.pch>
+#   cpp-here-build --uses-pch <std> <source.cpp>   exit 0 if a build would use the PCH
 set -euo pipefail
 
 JS_LIB=/usr/local/share/cpp-here
@@ -48,8 +49,64 @@ LINK_FLAGS=(
     -sABORTING_MALLOC=1
 )
 
+# Whether the first thing in the source, past comments and blank lines, is
+# #include <bits/stdc++.h>. -include-pch loads the header before line 1, which
+# only means the same as the source when nothing comes before its #include:
+# a #define in front of it (NDEBUG, _LIBCPP_ENABLE_CXX17_REMOVED_FEATURES, ...)
+# would no longer reach the header, and an #include inside /* */ or #if 0
+# isn't one at all (the header would pollute the global namespace: y1, j0, ...).
+# `#pragma GCC optimize/target` may come first: clang ignores them, and
+# competitive programmers put them there all the time.
+# backend/services/build.py mirrors this for a trace attribute.
+starts_with_stdcxx() {
+    awk '
+        NR == 1 { sub(/^\357\273\277/, "") }    # UTF-8 BOM
+        {
+            line = $0; out = ""
+            if (lc) {                           # // comment continued by a trailing backslash
+                lc = (line ~ /\\\r?$/); next
+            }
+            while (line != "") {
+                if (bc) {                       # inside /* */
+                    i = index(line, "*/")
+                    if (!i) { line = ""; break }
+                    line = substr(line, i + 2); bc = 0
+                    continue
+                }
+                b = index(line, "/*"); l = index(line, "//")
+                if (l && (!b || l < b)) {
+                    out = out substr(line, 1, l - 1)
+                    lc = (line ~ /\\\r?$/); line = ""
+                } else if (b) {
+                    out = out substr(line, 1, b - 1) " "
+                    line = substr(line, b + 2); bc = 1
+                } else {
+                    out = out line; line = ""
+                }
+            }
+            if (out ~ /^[ \t]*#[ \t]*pragma[ \t]+GCC[ \t]+(optimize|target)[ \t]*\(/) next
+            if (out ~ /[^ \t\r]/) {
+                found = (out ~ /^[ \t]*#[ \t]*include[ \t]*[<"]bits\/stdc[+][+]\.h[>"][ \t\r]*$/)
+                exit
+            }
+        }
+        END { exit !found }
+    ' "$1"
+}
+
+# Use the precompiled bits/stdc++.h only when the source starts by including
+# it (see above). -std values without a PCH (c++98) just compile normally.
+uses_pch() {
+    [ -f "$PCH_DIR/stdc++-$1.pch" ] && starts_with_stdcxx "$2"
+}
+
 if [ "${1:-}" = --make-pch ]; then
     exec emcc -x c++-header "$STDCXX" -o "$3" -std="$2" "${COMPILE_FLAGS[@]}"
+fi
+
+if [ "${1:-}" = --uses-pch ]; then
+    uses_pch "$2" "$3"
+    exit
 fi
 
 if [ $# -lt 3 ]; then
@@ -58,13 +115,8 @@ if [ $# -lt 3 ]; then
 fi
 std=$1 src=$2 out=$3 mode=${4:-}
 
-# Use the precompiled bits/stdc++.h only when the source includes it:
-# -include-pch injects the whole header, which would otherwise pollute the
-# global namespace of programs that don't (y1, j0, ...). -std values without
-# a PCH (c++98) just compile normally.
 pch=()
-if [ "$mode" != --no-pch ] && [ -f "$PCH_DIR/stdc++-$std.pch" ] &&
-    grep -qE '^\s*#\s*include\s*[<"]bits/stdc\+\+\.h[>"]' "$src"; then
+if [ "$mode" != --no-pch ] && uses_pch "$std" "$src"; then
     pch=(-include-pch "$PCH_DIR/stdc++-$std.pch")
 fi
 

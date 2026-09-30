@@ -18,14 +18,36 @@ from utils.scheduler import scheduler
 # Built from builder/ and tagged with the git tree hash of builder/docker
 # (`git rev-parse --short=12 HEAD:builder/docker`); ci.yml checks this pin and
 # the ones in docker/**/docker-compose.yml against the current tree
-BUILDER_IMAGE = "ghcr.io/dong-chen-1031/safe-cpp2wasm:tree-0b67a8c42a28"
+BUILDER_IMAGE = "ghcr.io/dong-chen-1031/safe-cpp2wasm:tree-b515a3055e3c"
 WORKER_NAME_PREFIX = "cpp-here-worker-"
 
 INSTANCE_ID = uuid.uuid4().hex
 
-# Only for the trace attribute: cpp-here-build makes the actual decision to use
-# the precompiled bits/stdc++.h
-INCLUDES_STDCXX = re.compile(r"^\s*#\s*include\s*[<\"]bits/stdc\+\+\.h[>\"]", re.M)
+# Only for the trace attribute: cpp-here-build (starts_with_stdcxx) makes the
+# actual decision to use the precompiled bits/stdc++.h, and this mirrors its
+# rule: past comments, blank lines and `#pragma GCC optimize/target`, the first
+# line is `#include <bits/stdc++.h>`. -std values without a PCH (c++98) aside.
+_COMMENT = re.compile(r"//(?:[^\n]*\\\r?\n)*[^\n]*|/\*.*?(?:\*/|$)", re.S)
+_SKIPPED = re.compile(r"[ \t]*#[ \t]*pragma[ \t]+GCC[ \t]+(?:optimize|target)[ \t]*\(")
+_STDCXX = re.compile(r"[ \t]*#[ \t]*include[ \t]*[<\"]bits/stdc\+\+\.h[>\"][ \t\r]*")
+
+
+def _strip_comment(m: re.Match) -> str:
+    # As in cpp-here-build: a block comment becomes a space, a line comment
+    # nothing, and the newlines inside either are kept so lines stay apart
+    text = m.group()
+    return (" " if text.startswith("/*") else "") + "\n" * text.count("\n")
+
+
+def starts_with_stdcxx(code: str) -> bool:
+    code = _COMMENT.sub(_strip_comment, code.removeprefix("\ufeff"))
+    for line in code.split("\n"):
+        if _SKIPPED.match(line):
+            continue
+        if line.strip(" \t\r"):
+            return bool(_STDCXX.fullmatch(line))
+    return False
+
 
 TTL_SAFETY_MARGIN = 120
 MAINTENANCE_INTERVAL = 60
@@ -309,9 +331,7 @@ async def build(
             # so it is raised after this span closes and doesn't mark it failed.
             with tracer.start_as_current_span("build.emcc") as span:
                 span.set_attribute("build.cpp_version", cpp_version)
-                span.set_attribute(
-                    "build.includes_stdcxx", bool(INCLUDES_STDCXX.search(code))
-                )
+                span.set_attribute("build.includes_stdcxx", starts_with_stdcxx(code))
                 execute = await container.exec(
                     ["sh", "-c", cmd],
                     stdout=True,
