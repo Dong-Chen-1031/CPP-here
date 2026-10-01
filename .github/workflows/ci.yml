@@ -63,9 +63,14 @@ jobs:
               run: |
                   expected="ghcr.io/dong-chen-1031/safe-cpp2wasm:tree-$(git rev-parse --short=12 HEAD:builder/docker)"
                   status=0
+                  # The image actually used: BUILDER_IMAGE = "..." in build.py,
+                  # `image:` in the compose files. Compared whole, so a longer
+                  # hash or a matching comment next to a stale pin doesn't pass.
                   for file in backend/services/build.py docker/docker-compose.yml docker/backend/docker-compose.yml; do
-                      if ! grep -qF "$expected" "$file"; then
-                          echo "::error file=$file::builder image pin is not $expected"
+                      pins=$(grep -E '^[[:space:]]*(BUILDER_IMAGE[[:space:]]*=|image:)' "$file" |
+                          grep -oE '[^"[:space:]]*safe-cpp2wasm[^"[:space:]]*' || true)
+                      if [ "$pins" != "$expected" ]; then
+                          echo "::error file=$file::builder image pin is not $expected (found: ${pins:-none})"
                           status=1
                       fi
                   done

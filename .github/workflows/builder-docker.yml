@@ -11,12 +11,14 @@ on:
         paths:
             - "builder/**"
             - "backend/assets/worker.js"
+            - "backend/utils/stdcxx.py"
             - "frontend/src/config/runLimits.ts"
             - ".github/workflows/builder-docker.yml"
     pull_request:
         paths:
             - "builder/**"
             - "backend/assets/worker.js"
+            - "backend/utils/stdcxx.py"
             - "frontend/src/config/runLimits.ts"
             - ".github/workflows/builder-docker.yml"
     workflow_dispatch:
@@ -81,9 +83,25 @@ jobs:
             - name: Regression test
               run: builder/test/regression/run.sh safe-cpp2wasm:test
 
+            # When tree-<hash> already exists the merge job only re-tags it (see
+            # there), so pushing this build would just leave an untagged
+            # manifest behind in the registry
+            - name: Look for an existing tree-<hash> image
+              if: ${{ env.PUSH == 'true' }}
+              id: existing
+              run: |
+                  ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:tree-$(git rev-parse --short=12 HEAD:builder/docker)
+                  if out=$(docker buildx imagetools inspect "$ref" 2>&1); then
+                      echo "$ref exists, not pushing this build"
+                      echo "ref=$ref" >> "$GITHUB_OUTPUT"
+                  elif ! grep -qi 'not found' <<< "$out"; then
+                      echo "$out" >&2
+                      exit 1
+                  fi
+
             # Same inputs as the test build, so every layer comes from the cache
             - name: Build and push image by digest
-              if: ${{ env.PUSH == 'true' }}
+              if: ${{ env.PUSH == 'true' && steps.existing.outputs.ref == '' }}
               id: build
               uses: docker/build-push-action@v6
               with:
@@ -96,14 +114,14 @@ jobs:
                   cache-to: type=gha,mode=max,scope=builder-${{ matrix.platform }}
 
             - name: Export digest
-              if: ${{ env.PUSH == 'true' }}
+              if: ${{ env.PUSH == 'true' && steps.existing.outputs.ref == '' }}
               run: |
                   mkdir -p /tmp/digests
                   digest="${{ steps.build.outputs.digest }}"
                   touch "/tmp/digests/${digest#sha256:}"
 
             - name: Upload digest artifact
-              if: ${{ env.PUSH == 'true' }}
+              if: ${{ env.PUSH == 'true' && steps.existing.outputs.ref == '' }}
               uses: actions/upload-artifact@v4
               with:
                   name: builder-digest-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
@@ -116,6 +134,13 @@ jobs:
         needs: build
         # Same condition as env.PUSH (the env context isn't available here)
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        # The tree-<hash> check below and the push after it are not atomic: two
+        # runs of the same ref (a quick follow-up commit, a re-run) could both
+        # see no tag and the later one would move it. Queue them instead; a
+        # newer run replacing a still-pending one only skips an older commit.
+        concurrency:
+            group: builder-docker-merge-${{ github.ref }}
+            cancel-in-progress: false
         permissions:
             contents: read
             packages: write
@@ -127,13 +152,6 @@ jobs:
             - name: Tree hash of builder/docker
               id: tree
               run: echo "hash=$(git rev-parse --short=12 HEAD:builder/docker)" >> "$GITHUB_OUTPUT"
-
-            - name: Download digests
-              uses: actions/download-artifact@v4
-              with:
-                  path: /tmp/digests
-                  pattern: builder-digest-*
-                  merge-multiple: true
 
             - name: Log in to GitHub Container Registry
               uses: docker/login-action@v3
@@ -174,8 +192,16 @@ jobs:
                       exit 1
                   fi
 
+            # The build jobs only push digests when the tag didn't exist yet
+            - name: Download digests
+              if: ${{ steps.existing.outputs.ref == '' }}
+              uses: actions/download-artifact@v4
+              with:
+                  path: /tmp/digests
+                  pattern: builder-digest-*
+                  merge-multiple: true
+
             - name: Create and push multi-platform manifest
-              working-directory: /tmp/digests
               env:
                   EXISTING: ${{ steps.existing.outputs.ref }}
               run: |
@@ -184,7 +210,7 @@ jobs:
                       sources=$EXISTING
                   else
                       tags=$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")
-                      sources=$(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
+                      sources=$(cd /tmp/digests && printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
                   fi
                   docker buildx imagetools create $tags $sources
 
