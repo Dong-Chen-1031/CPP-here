@@ -19,7 +19,7 @@ from utils.stdcxx import starts_with_stdcxx
 # Built from builder/ and tagged with the git tree hash of builder/docker
 # (`git rev-parse --short=12 HEAD:builder/docker`); ci.yml checks this pin and
 # the ones in docker/**/docker-compose.yml against the current tree
-BUILDER_IMAGE = "ghcr.io/dong-chen-1031/safe-cpp2wasm:tree-b515a3055e3c"
+BUILDER_IMAGE = "ghcr.io/dong-chen-1031/safe-cpp2wasm:tree-72c2864063e6"
 WORKER_NAME_PREFIX = "cpp-here-worker-"
 
 INSTANCE_ID = uuid.uuid4().hex

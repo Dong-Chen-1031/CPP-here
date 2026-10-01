@@ -7,6 +7,9 @@ int main() {
     unsigned u1 = 12, u2 = 18;
     cout << __gcd(a, b) << ' ' << __gcd(u1, u2) << ' ' << __gcd(12L, 8L) << ' ' << __gcd(12ULL, 30ULL) << '\n';
     cout << (long long)__gcd((__int128)a, (__int128)b) << ' ' << (int)__gcd((short)9, (short)6) << '\n';
+    // A template like GCC's: explicit arguments work, the result keeps the type
+    cout << __gcd<long long>(12, 18) << '\n';
+    static_assert(is_same<decltype(__gcd('a', 'b')), char>::value, "__gcd(char, char) is char");
 #if __cplusplus >= 201402L
     static_assert(__gcd(12, 18) == 6, "constexpr __gcd");
 #endif

@@ -29,6 +29,16 @@
 #ifndef _CPP_HERE_BITS_STDCXX_H
 #define _CPP_HERE_BITS_STDCXX_H
 
+// libc++'s internal std::__gcd (C++17 on, unsigned types only) would clash
+// with GCC's std::__gcd defined at the end of this file, so rename it while
+// the libc++ headers are included; libc++'s own callers (std::gcd) are renamed
+// with it. Not possible when the source included it before this header: see
+// the end of the file.
+#if !defined(_LIBCPP___NUMERIC_GCD_LCM_H) || _LIBCPP_STD_VER < 17
+#define _CPP_HERE_RENAMED_GCD
+#define __gcd __cpp_here_libcpp_gcd
+#endif
+
  // 17.4.1.2 Headers
   
  // C
@@ -177,12 +187,34 @@
 #endif
 #endif
 
-// GCC's std::__gcd accepts any integer type, but libc++'s internal __gcd
-// only accepts unsigned types (and is only declared from C++17 on), so the
-// common `__gcd(a, b)` on int / long long fails to compile. Add non-template
-// overloads for every integer type: same-type calls prefer them over libc++'s
-// template, including libc++'s own calls from std::gcd, which give the same
-// results. The body copies GCC's (negative inputs give the same results as GCC).
+// GCC's std::__gcd, which competitive programmers use on any integer type.
+// libc++'s internal one only accepts unsigned types (and is only declared from
+// C++17 on), so `__gcd(a, b)` on int / long long would not compile.
+#ifdef _CPP_HERE_RENAMED_GCD
+#undef __gcd
+#undef _CPP_HERE_RENAMED_GCD
+// The same template as GCC's, so it behaves the same: a user's own
+// non-template __gcd wins over it, `__gcd<long long>(a, b)` works and the
+// result has the arguments' type.
+namespace std {
+template <typename _EuclideanRingElement>
+inline _LIBCPP_CONSTEXPR_SINCE_CXX14 _EuclideanRingElement
+__gcd(_EuclideanRingElement __m, _EuclideanRingElement __n) {
+  while (__n != 0) {
+    _EuclideanRingElement __t = __m % __n;
+    __m = __n;
+    __n = __t;
+  }
+  return __m;
+}
+} // namespace std
+#else
+// The source included libc++'s __gcd before this header (C++17 on), so its
+// template can't be renamed or replaced. Add non-template overloads for the
+// signed integer types instead: same-type calls prefer them over libc++'s
+// template, which keeps handling the unsigned ones with the same results.
+// Unlike GCC, a user's own non-template __gcd on one of these types is then
+// ambiguous, but only in sources that include e.g. <numeric> first.
 namespace std {
 #define _CPP_HERE_GCD(_Tp)                                                \
   inline _LIBCPP_CONSTEXPR_SINCE_CXX14 _Tp __gcd(_Tp __m, _Tp __n) {      \
@@ -193,21 +225,17 @@ namespace std {
     }                                                                     \
     return __m;                                                           \
   }
+_CPP_HERE_GCD(char)
 _CPP_HERE_GCD(signed char)
 _CPP_HERE_GCD(short)
 _CPP_HERE_GCD(int)
 _CPP_HERE_GCD(long)
 _CPP_HERE_GCD(long long)
-_CPP_HERE_GCD(unsigned char)
-_CPP_HERE_GCD(unsigned short)
-_CPP_HERE_GCD(unsigned int)
-_CPP_HERE_GCD(unsigned long)
-_CPP_HERE_GCD(unsigned long long)
 #ifdef __SIZEOF_INT128__
 _CPP_HERE_GCD(__int128)
-_CPP_HERE_GCD(unsigned __int128)
 #endif
 #undef _CPP_HERE_GCD
 } // namespace std
+#endif
 
 #endif // _CPP_HERE_BITS_STDCXX_H
