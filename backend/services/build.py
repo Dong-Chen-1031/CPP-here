@@ -18,7 +18,8 @@ from utils.stdcxx import starts_with_stdcxx
 
 # Built from builder/ and tagged with the git tree hash of builder/docker
 # (`git rev-parse --short=12 HEAD:builder/docker`); ci.yml checks this pin and
-# the ones in docker/**/docker-compose.yml against the current tree
+# the ones in docker/**/docker-compose.yml against the current tree. After
+# changing builder/docker, `npm run pin-builder` updates all three.
 BUILDER_IMAGE = "ghcr.io/dong-chen-1031/safe-cpp2wasm:tree-72c2864063e6"
 WORKER_NAME_PREFIX = "cpp-here-worker-"
 

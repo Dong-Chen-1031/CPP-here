@@ -70,7 +70,7 @@ jobs:
                       pins=$(grep -E '^[[:space:]]*(BUILDER_IMAGE[[:space:]]*=|image:)' "$file" |
                           grep -oE '[^"[:space:]]*safe-cpp2wasm[^"[:space:]]*' || true)
                       if [ "$pins" != "$expected" ]; then
-                          echo "::error file=$file::builder image pin is not $expected (found: ${pins:-none})"
+                          echo "::error file=$file::builder image pin is not $expected (found: ${pins:-none}); run npm run pin-builder"
                           status=1
                       fi
                   done
