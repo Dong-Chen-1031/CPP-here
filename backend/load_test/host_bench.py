@@ -146,7 +146,6 @@ WORKLOAD = [
     ("small_iostream", "c++17", 15, SMALL_IOSTREAM),
     ("template_heavy", "c++20", 20, TEMPLATE_HEAVY),
 ]
-HEAVIEST = WORKLOAD[3]
 
 # 綜合分數的基準：1000 分 = Apple M4（10 核，OrbStack 預設 8 GB），workload v1
 REF_THROUGHPUT = 165.0  # 建議 pool 數下的持續吞吐量（次/分鐘）
@@ -254,35 +253,46 @@ async def measure_containers(pool: B.ContainerPool, parallel: int) -> dict:
     )
     create_rate = parallel / (time.monotonic() - t)
 
-    # 記憶體：容器上限（backend 設定的）、閒置容器、編譯最重的程式時的峰值
-    # （cgroup v2 的 memory.peak，包含 page cache，只當作參考）
-    # 量測失敗也要刪掉：這些容器不在 pool 裡，remove_leftovers 也清不到
+    # 記憶體：容器上限（backend 設定的）、閒置容器、編譯時的峰值
+    # （cgroup v2 的 memory.peak，包含 page cache，只當作參考）。哪個樣本最吃
+    # 記憶體不好猜，所以每個樣本各用一個新容器編譯一次（memory.peak 是整個
+    # 容器的最高點），取最大值。
+    # 這些容器不在 pool 裡，所以在這裡刪；萬一沒刪到，remove_leftovers 會依
+    # owner 標籤清掉
+    probes = []
     try:
+        probes = await asyncio.gather(*[pool._create_container() for _ in WORKLOAD])
         c = containers[0]
         limit = (await c.show())["HostConfig"].get("Memory") or 0
         idle = await exec_in(c, "cat /sys/fs/cgroup/memory.current 2>/dev/null")
-        code = HEAVIEST[3].replace("'", "'\\''")
-        peak = await exec_in(
-            c,
-            f"printf '%s' '{code}' > /tmp/s.cpp && "
-            f"cpp-here-build {HEAVIEST[1]} /tmp/s.cpp /tmp/o.js >/dev/null 2>&1; "
-            "cat /sys/fs/cgroup/memory.peak 2>/dev/null",
-        )
+        peaks = {}
+        for probe, (name, std, _, source) in zip(probes, WORKLOAD, strict=True):
+            code = source.replace("'", "'\\''")
+            peaks[name] = await exec_in(
+                probe,
+                f"printf '%s' '{code}' > /tmp/s.cpp && "
+                f"cpp-here-build {std} /tmp/s.cpp /tmp/o.js >/dev/null 2>&1; "
+                "cat /sys/fs/cgroup/memory.peak 2>/dev/null",
+            )
     finally:
-        await asyncio.gather(*[pool._destroy(x) for x in containers])
+        await asyncio.gather(*[pool._destroy(x) for x in [*containers, *probes]])
 
     def as_int(s: str) -> int | None:
         s = s.strip().splitlines()[-1] if s.strip() else ""
         return int(s) if s.isdigit() else None
 
+    measured = {n: v for n, v in ((n, as_int(p)) for n, p in peaks.items()) if v}
+    heaviest = max(measured, key=measured.__getitem__, default=None)
     return {
         "container_memory_limit_bytes": limit,
         "cold_start_s": statistics.median(create_s),
         "create_rate_per_s": create_rate,
         "idle_memory_bytes": as_int(idle),
         # 讀不到（cgroup v1）時用容器上限當保守估計
-        "build_peak_memory_bytes": as_int(peak) or limit or 1024**3,
-        "memory_measured": as_int(peak) is not None,
+        "build_peak_memory_bytes": measured[heaviest] if heaviest else limit or 1024**3,
+        "build_peak_memory_by_sample": measured,
+        "heaviest_sample": heaviest,
+        "memory_measured": heaviest is not None,
     }
 
 
@@ -292,9 +302,35 @@ async def measure_raw_compile(
     """不經過容器管理的純編譯上限：在一個容器裡用 xargs 平行跑 cpp-here-build。
 
     和完整流程的差距，就是 docker exec、每次 build 建立與刪除容器、補充 pool
-    的開銷。
+    的開銷。編的是和掃描同一組加權負載，否則負載本身的差異也會被算成開銷：
+    每個樣本編一樣多次、記下各自的耗時，再依權重換算成「p 個同時、持續編譯
+    這組負載」的吞吐量 p / Σ 權重 × 平均耗時。
     """
-    code = TYPICAL_CPP17.replace("'", "'\\''")
+    files = " && ".join(
+        "printf '%s' '{}' > /tmp/s{}.cpp".format(w[3].replace("'", "'\\''"), i)
+        for i, w in enumerate(WORKLOAD)
+    )
+    # 先每個樣本編一次暖身（page cache 等），結果不算
+    warm = "; ".join(
+        f"cpp-here-build {w[1]} /tmp/s{i}.cpp /tmp/w.js >/dev/null 2>&1"
+        for i, w in enumerate(WORKLOAD)
+    )
+    # 一行一個工作：<std> <樣本> <平行數>；每個工作印出 JOB <平行數> <樣本> <rc> <ms>
+    job = (
+        'd=$(mktemp -d); s=$(date +%s%N); cpp-here-build "$1" /tmp/s$2.cpp $d/o.js '
+        '>/dev/null 2>&1; rc=$?; rm -rf "$d"; '
+        'echo "JOB $3 $2 $rc $(( ($(date +%s%N)-s)/1000000 ))"'
+    )
+    runs = "; ".join(
+        "printf '{}\\n' | xargs -P {} -L 1 sh -c '{}' _".format(
+            "\\n".join(
+                f"{w[1]} {i} {p}" for _ in range(p) for i, w in enumerate(WORKLOAD)
+            ),
+            p,
+            job,
+        )
+        for p in sorted({1, parallel})
+    )
     container = await docker.containers.run(
         config={
             "Image": B.BUILDER_IMAGE,
@@ -314,31 +350,41 @@ async def measure_raw_compile(
         name=f"{B.WORKER_NAME_PREFIX}bench-{os.urandom(4).hex()}",
     )
     try:
-        out = await exec_in(
-            container,
-            f"printf '%s' '{code}' > /tmp/s.cpp && "
-            "cpp-here-build c++17 /tmp/s.cpp /tmp/w.js >/dev/null 2>&1; "
-            f"for p in {' '.join(map(str, sorted({1, parallel})))}; do "
-            "n=$((p*4)); s=$(date +%s%N); "
-            "seq $n | xargs -P $p -I{} sh -c "
-            "'mkdir -p /tmp/{} && cpp-here-build c++17 /tmp/s.cpp /tmp/{}/o.js >/dev/null 2>&1'; "
-            'echo "RATE $p $n $(( ($(date +%s%N)-s)/1000000 ))"; done',
-        )
+        out = await exec_in(container, f"{files} && {{ {warm}; }}; {runs}")
     finally:
         await container.delete(force=True)
     # exec_in 會把 stderr 一起收進來（例如 xargs 在編譯被 OOM kill 時印的
-    # 訊息），所以只讀有 RATE 前綴的行
-    rates = {}
+    # 訊息），所以只讀有 JOB 前綴的行
+    times: dict[int, dict[int, list[int]]] = {}
+    failed: dict[int, int] = {}
     for line in out.splitlines():
         match line.split():
-            case ["RATE", p, n, ms] if int(ms) > 0:
-                rates[int(p)] = int(n) / int(ms) * 60_000
+            case ["JOB", p, i, rc, ms]:
+                if rc == "0":
+                    times.setdefault(int(p), {}).setdefault(int(i), []).append(int(ms))
+                else:
+                    # 失敗（例如被 OOM kill）的編譯不算完成：那一級沒有結果
+                    failed[int(p)] = failed.get(int(p), 0) + 1
+
+    total_weight = sum(w[2] for w in WORKLOAD)
+
+    def rate(p: int) -> float:
+        by_sample = times.get(p, {})
+        if failed.get(p) or len(by_sample) < len(WORKLOAD):
+            return math.nan
+        mean_ms = sum(
+            w[2] / total_weight * statistics.mean(by_sample[i])
+            for i, w in enumerate(WORKLOAD)
+        )
+        return p * 60_000 / mean_ms if mean_ms > 0 else math.nan
+
     return {
-        "single_per_min": rates.get(1, math.nan),
+        "single_per_min": rate(1),
         "parallel": parallel,
-        "parallel_per_min": rates.get(parallel, math.nan),
+        "parallel_per_min": rate(parallel),
         # 平行時比單一快了幾倍，約等於實際能用的 CPU 數
-        "effective_cpus": rates.get(parallel, math.nan) / rates.get(1, math.nan),
+        "effective_cpus": rate(parallel) / rate(1),
+        "failed_builds": sum(failed.values()),
     }
 
 
@@ -484,7 +530,12 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument("--out", default="", help="把 JSON 結果存到這個目錄")
     p.add_argument("--seed", type=int, default=1)
-    return p.parse_args()
+    args = p.parse_args()
+    if args.duration <= 0:
+        p.error("--duration 必須大於 0")
+    if args.max < 0:
+        p.error("--max 不能是負數")
+    return args
 
 
 async def main() -> int:
@@ -542,7 +593,11 @@ async def main() -> int:
             f"容器：冷啟動 [bold]{cont['cold_start_s'] * 1000:.0f} ms[/]、"
             f"並行建立 [bold]{cont['create_rate_per_s']:.1f}[/] 個/秒、"
             f"編譯峰值記憶體 [bold]{fmt_bytes(cont['build_peak_memory_bytes'])}[/]"
-            + ("" if cont["memory_measured"] else "（讀不到，以上限估計）")
+            + (
+                f"（{cont['heaviest_sample']}）"
+                if cont["memory_measured"]
+                else "（讀不到，以上限估計）"
+            )
         )
 
         # 掃描範圍用實測的峰值估計；建議值則用容器的記憶體上限算最壞情況
@@ -551,7 +606,8 @@ async def main() -> int:
         limit = cont["container_memory_limit_bytes"] or 1024**3
         worst_cap = max(1, int(mem_total * 0.8 // limit))
         max_c = args.max or min(2 * ncpu, mem_cap)
-        levels = [c for c in LEVEL_CANDIDATES if c <= max_c] or [1]
+        # 上限本身一定要測到，「測到上限仍未飽和」的判斷才有意義
+        levels = sorted({c for c in LEVEL_CANDIDATES if c < max_c} | {max_c})
         done(
             f"記憶體：最壞情況（每個編譯用滿 {fmt_bytes(limit)}）最多同時 "
             f"[bold]{worst_cap}[/] 個；測試級距 {', '.join(map(str, levels))}"
@@ -596,11 +652,17 @@ async def main() -> int:
             # 平行數受 CPU 與記憶體（實測峰值）限制，否則小記憶體的主機會 OOM
             raw_parallel = max(1, min(ncpu, mem_cap))
             raw = await measure_raw_compile(docker, raw_parallel, int(mem_total * 0.8))
-        done(
-            f"純編譯上限：1 個同時 [bold]{raw['single_per_min']:.0f}[/] 次/分鐘、"
-            f"{raw_parallel} 個同時 [bold]{raw['parallel_per_min']:.0f}[/] 次/分鐘"
-            f"（約 {raw['effective_cpus']:.1f} 顆 CPU 的效果）"
-        )
+        if raw["failed_builds"]:
+            console.print(
+                f"[red]! 純編譯量測有 {raw['failed_builds']} 次編譯失敗"
+                "（常見原因是記憶體不足被 OOM kill），沒有結果"
+            )
+        else:
+            done(
+                f"純編譯上限：1 個同時 [bold]{raw['single_per_min']:.0f}[/] 次/分鐘、"
+                f"{raw_parallel} 個同時 [bold]{raw['parallel_per_min']:.0f}[/] 次/分鐘"
+                f"（約 {raw['effective_cpus']:.1f} 顆 CPU 的效果）"
+            )
         console.print()
 
         # 建議 pool 數：沒有錯誤、吞吐量達到最高值 90% 的最小同時編譯數
@@ -613,7 +675,7 @@ async def main() -> int:
         single = results[0]
         build_rate = rec["throughput_per_min"] / 60
         pool_size = min(rec["concurrency"], worst_cap)
-        # 純編譯量測沒有結果（編譯全部失敗）時是 NaN
+        # 純編譯量測有編譯失敗時沒有結果（NaN）
         overhead = (
             1 - peak / raw["parallel_per_min"]
             if raw["parallel_per_min"] > 0
@@ -661,9 +723,7 @@ async def main() -> int:
         summary.add_row("", "")
         summary.add_row("最高吞吐量", f"{peak:.0f} 次/分鐘")
         if math.isnan(overhead):
-            summary.add_row(
-                "純編譯上限", "[bold red]無法計算[/]  [dim]（編譯沒有成功的結果）"
-            )
+            summary.add_row("純編譯上限", "[bold red]無法計算[/]  [dim]（有編譯失敗）")
         else:
             summary.add_row(
                 "純編譯上限",
