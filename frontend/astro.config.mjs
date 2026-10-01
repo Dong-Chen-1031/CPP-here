@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig, envField } from "astro/config";
+import { defineConfig, envField, fontProviders } from "astro/config";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
@@ -48,6 +48,34 @@ export default defineConfig({
     build: {
         inlineStylesheets: "auto",
     },
+    fonts: [
+        {
+            provider: fontProviders.local(),
+            name: "iA Writer Quattro",
+            cssVariable: "--font-ia-writer-quattro",
+            // No fallbacks here: landing.css appends the stacks each element
+            // used before, so CJK text keeps its old fonts.
+            fallbacks: [],
+            options: {
+                variants: [
+                    {
+                        src: [
+                            "./src/assets/fonts/ia-writer-quattro/iAWriterQuattroV.woff2",
+                        ],
+                        weight: "400 700",
+                        style: "normal",
+                    },
+                    {
+                        src: [
+                            "./src/assets/fonts/ia-writer-quattro/iAWriterQuattroV-Italic.woff2",
+                        ],
+                        weight: "400 700",
+                        style: "italic",
+                    },
+                ],
+            },
+        },
+    ],
     env: {
         schema: {
             PUBLIC_TURNSTILE_SITE_KEY: envField.string({

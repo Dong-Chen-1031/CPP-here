@@ -1,4 +1,5 @@
 ---
+import { Font } from "astro:assets";
 import Layout from "@/layouts/Layout.astro";
 import "@/styles/landing.css";
 import Header from "@/components/landing/header.astro";
@@ -37,6 +38,11 @@ const t = getTranslation(lang);
 7. footer V
 -->
 <Layout title={t.meta.title} description={t.meta.description}>
+    <Font
+        slot="head"
+        cssVariable="--font-ia-writer-quattro"
+        preload={[{ style: "normal" }]}
+    />
     <meta
         slot="head"
         name="viewport"
@@ -78,7 +84,7 @@ const t = getTranslation(lang);
             height: 100%;
         }
     </style>
-    <div class="mono tracking-tight">
+    <div class="landing-font tracking-tight">
         <Header lang={lang} t={t.header} />
         <Hero lang={lang} t={t.hero} />
         <Features lang={lang} t={t.features} />
