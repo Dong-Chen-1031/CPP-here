@@ -1,3 +1,7 @@
 files:
   - source: /i18n/en/*.json
     translation: /i18n/%locale%/%file_name%.%file_extension%
+    # Leave untranslated strings out of exported files. Otherwise Crowdin fills
+    # them with the English source, and once that source changes the stale
+    # English copy is imported back as a "translation" for every language.
+    skip_untranslated_strings: true
