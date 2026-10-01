@@ -1,6 +1,6 @@
 {
     "meta": {
-        "title": "C++ Here - Next-generation online C++ editor.",
+        "title": "C++ Here ─ 新世代的線上 C++ 編輯器",
         "description": "An open-source, lightweight yet powerful online C++ editor built for competitive programming. Compile C++ to WebAssembly, run test cases, and format code — all in your browser."
     },
     "header": {
