@@ -23,12 +23,15 @@ fi
 # backend/utils/stdcxx.py copies cpp-here-build's rule for when the PCH is
 # used (for a trace attribute); they must agree on every case and on the edge
 # cases in pch_rule/
-files=("$DIR"/cases/*.cpp "$DIR"/pch_rule/*.cpp)
-py=$(python3 "$ROOT/backend/utils/stdcxx.py" "${files[@]}" | sed "s|$DIR/|/tests/|")
-sh=$(docker run --rm --network none -v "$DIR:/tests:ro" --entrypoint bash "$IMAGE" -c '
+# Relative paths, and the same list on both sides (glob order depends on the
+# locale, which differs between the host and the image)
+cd "$DIR"
+files=(cases/*.cpp pch_rule/*.cpp)
+py=$(python3 "$ROOT/backend/utils/stdcxx.py" "${files[@]}")
+sh=$(docker run --rm --network none -v "$DIR:/tests:ro" -w /tests --entrypoint bash "$IMAGE" -c '
     for f in "$@"; do
         if cpp-here-build --uses-pch c++17 "$f"; then echo "1 $f"; else echo "0 $f"; fi
-    done' _ "${files[@]/#$DIR//tests}")
+    done' _ "${files[@]}")
 if [ "$py" != "$sh" ]; then
     echo "✗ backend/utils/stdcxx.py and cpp-here-build disagree on when the PCH is used:" >&2
     diff <(echo "$py") <(echo "$sh") | sed 's/^/    /' >&2

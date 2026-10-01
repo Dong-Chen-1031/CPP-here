@@ -265,6 +265,16 @@ async def measure_containers(pool: B.ContainerPool, parallel: int) -> dict:
         c = containers[0]
         limit = (await c.show())["HostConfig"].get("Memory") or 0
         idle = await exec_in(c, "cat /sys/fs/cgroup/memory.current 2>/dev/null")
+        # page cache 算在第一個讀到檔案的容器頭上：先在另一個容器把每個樣本都
+        # 編一次，否則第一個量的樣本會連 PCH 和標頭檔一起算，永遠看起來最重
+        await exec_in(
+            c,
+            "; ".join(
+                "printf '%s' '{}' > /tmp/s.cpp && cpp-here-build {} /tmp/s.cpp "
+                "/tmp/o.js >/dev/null 2>&1".format(w[3].replace("'", "'\\''"), w[1])
+                for w in WORKLOAD
+            ),
+        )
         peaks = {}
         for probe, (name, std, _, source) in zip(probes, WORKLOAD, strict=True):
             code = source.replace("'", "'\\''")
@@ -650,13 +660,16 @@ async def main() -> int:
         # 放在掃描之後：這段會把所有 CPU 吃滿，放在前面會拖慢掃描（筆電還會降頻）
         with console.status("量測純編譯上限（不含容器管理開銷）…"):
             # 平行數受 CPU 與記憶體（實測峰值）限制，否則小記憶體的主機會 OOM
-            raw_parallel = max(1, min(ncpu, mem_cap))
+            # 也不超過掃描的上限（--max），否則開銷是拿不同的同時數在比
+            raw_parallel = max(1, min(ncpu, mem_cap, max_c))
             raw = await measure_raw_compile(docker, raw_parallel, int(mem_total * 0.8))
-        if raw["failed_builds"]:
-            console.print(
-                f"[red]! 純編譯量測有 {raw['failed_builds']} 次編譯失敗"
-                "（常見原因是記憶體不足被 OOM kill），沒有結果"
+        if math.isnan(raw["single_per_min"]) or math.isnan(raw["parallel_per_min"]):
+            reason = (
+                f"有 {raw['failed_builds']} 次編譯失敗（常見原因是記憶體不足被 OOM kill）"
+                if raw["failed_builds"]
+                else "沒有讀到結果"
             )
+            console.print(f"[red]! 純編譯量測{reason}，無法計算")
         else:
             done(
                 f"純編譯上限：1 個同時 [bold]{raw['single_per_min']:.0f}[/] 次/分鐘、"
@@ -723,7 +736,9 @@ async def main() -> int:
         summary.add_row("", "")
         summary.add_row("最高吞吐量", f"{peak:.0f} 次/分鐘")
         if math.isnan(overhead):
-            summary.add_row("純編譯上限", "[bold red]無法計算[/]  [dim]（有編譯失敗）")
+            summary.add_row(
+                "純編譯上限", "[bold red]無法計算[/]  [dim]（見上面的量測）"
+            )
         else:
             summary.add_row(
                 "純編譯上限",

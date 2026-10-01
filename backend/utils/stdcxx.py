@@ -25,7 +25,7 @@ def _strip_comment(m: re.Match) -> str:
 
 
 def starts_with_stdcxx(code: str) -> bool:
-    code = _COMMENT.sub(_strip_comment, code.removeprefix("﻿"))
+    code = _COMMENT.sub(_strip_comment, code.removeprefix("\ufeff"))
     for line in code.split("\n"):
         if _SKIPPED.match(line):
             continue

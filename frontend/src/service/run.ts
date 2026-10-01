@@ -170,18 +170,21 @@ export async function runCode(
         let draining = false;
 
         const stopForLimit = (kind: LimitKind) => {
-            worker.terminate();
             if (kind !== "time") {
+                worker.terminate();
                 onLimit && onLimit(kind);
                 onExit && onExit();
                 return;
             }
             // Output the worker posted before the time limit may still be
-            // queued on this thread (busy rendering earlier output). Let it
-            // through first, then report the TLE.
+            // queued on this thread (busy rendering earlier output), and
+            // terminate() discards it. Let it through first, then stop.
             draining = true;
             setTimeout(() => {
                 draining = false;
+                // Stopped by the user in the meantime
+                if (!worker.running) return;
+                worker.terminate();
                 onLimit && onLimit(kind);
                 onExit && onExit();
             }, 0);
@@ -196,17 +199,17 @@ export async function runCode(
         }
 
         worker.onerror = (event) => {
-            if (!worker.running) return;
+            if (!worker.running || draining) return;
             worker.terminate();
             onError && onError(event.message);
             onExit && onExit();
         };
         worker.onmessage = (event) => {
             const { type, content } = event.data;
-            if (draining) {
-                // Only output still counts; the run is already over
-                if (type !== "stdout" && type !== "stderr") return;
-            } else if (!worker.running) return;
+            if (!worker.running) return;
+            // Past the time limit only output still counts: the TLE is
+            // reported even if the program exits in the meantime
+            if (draining && type !== "stdout" && type !== "stderr") return;
             onEvent && onEvent(event);
             switch (type) {
                 case "stdout":
