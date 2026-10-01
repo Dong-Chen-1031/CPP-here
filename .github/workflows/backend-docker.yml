@@ -84,9 +84,17 @@ jobs:
     merge:
         runs-on: ubuntu-latest
         needs: build
+        # Waiting for the builder image can take minutes, so merge jobs of
+        # consecutive commits would otherwise run side by side and the older
+        # one could tag latest last. Queue them; the check further down also
+        # covers jobs queued out of order.
+        concurrency:
+            group: backend-docker-merge-${{ github.ref }}
+            cancel-in-progress: false
         permissions:
             contents: read
             packages: write
+            pull-requests: read
 
         steps:
             - name: Checkout
@@ -142,13 +150,37 @@ jobs:
                   echo "::error::$ref was not pushed within 20 minutes (did builder-docker.yml fail?)"
                   exit 1
 
+            # latest and pr-N follow the newest commit. If the branch or PR has
+            # moved on while this job waited, its run tags them instead; this
+            # one only pushes its own sha- tag.
+            - name: Check that this is still the newest commit
+              id: newest
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  if [ "${{ github.event_name }}" = pull_request ]; then
+                      mine=${{ github.event.pull_request.head.sha }}
+                      head=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" --jq .head.sha)
+                  else
+                      mine=$GITHUB_SHA
+                      head=$(git ls-remote origin "$GITHUB_REF" | cut -f1)
+                  fi
+                  if [ "$head" = "$mine" ]; then
+                      echo "newest=true" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "::notice::$GITHUB_REF is now at $head, not $mine: only pushing the sha- tag"
+                      echo "newest=false" >> "$GITHUB_OUTPUT"
+                  fi
+
             - name: Create and push multi-platform manifest
               working-directory: /tmp/digests
+              env:
+                  NEWEST: ${{ steps.newest.outputs.newest }}
               run: |
                   docker buildx imagetools create \
-                    $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+                    $(jq -cr --arg newest "$NEWEST" '.tags | map(select($newest == "true" or contains(":sha-"))) | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
                     $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
 
             - name: Inspect final manifest
               run: |
-                  docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+                  docker buildx imagetools inspect "$(jq -r '.tags[] | select(contains(":sha-"))' <<< "$DOCKER_METADATA_OUTPUT_JSON")"

@@ -292,6 +292,9 @@ async def measure_containers(pool: B.ContainerPool, parallel: int) -> dict:
         return int(s) if s.isdigit() else None
 
     measured = {n: v for n, v in ((n, as_int(p)) for n, p in peaks.items()) if v}
+    # 有樣本讀不到時，剩下的最大值可能偏低（讀不到的那個也許最重），所以和
+    # 全部讀不到一樣改用上限估計
+    unmeasured = [n for n in peaks if n not in measured]
     heaviest = max(measured, key=measured.__getitem__, default=None)
     return {
         "container_memory_limit_bytes": limit,
@@ -299,10 +302,13 @@ async def measure_containers(pool: B.ContainerPool, parallel: int) -> dict:
         "create_rate_per_s": create_rate,
         "idle_memory_bytes": as_int(idle),
         # 讀不到（cgroup v1）時用容器上限當保守估計
-        "build_peak_memory_bytes": measured[heaviest] if heaviest else limit or 1024**3,
+        "build_peak_memory_bytes": measured[heaviest]
+        if heaviest and not unmeasured
+        else limit or 1024**3,
         "build_peak_memory_by_sample": measured,
         "heaviest_sample": heaviest,
-        "memory_measured": heaviest is not None,
+        "memory_measured": heaviest is not None and not unmeasured,
+        "memory_unmeasured_samples": unmeasured,
     }
 
 
@@ -606,6 +612,8 @@ async def main() -> int:
             + (
                 f"（{cont['heaviest_sample']}）"
                 if cont["memory_measured"]
+                else f"（{'、'.join(cont['memory_unmeasured_samples'])} 讀不到，以上限估計）"
+                if cont["build_peak_memory_by_sample"]
                 else "（讀不到，以上限估計）"
             )
         )
