@@ -8,15 +8,16 @@
 // stdout: everything the program printed to stdout
 // stderr: the program's stderr, then a last line "STATUS: <status>" where
 //         <status> is exit | limit:output | limit:memory | error:<message>
+// Output is written the moment worker.js posts it, so when the program hangs
+// and the runner is killed (a TLE, where the page terminates the worker), what
+// was written is exactly what the page would have shown; no STATUS line then.
 
-import { readFileSync } from "node:fs";
+import { readFileSync, writeSync } from "node:fs";
 import vm from "node:vm";
 
 const [jsPath, wasmPath, workerPath] = process.argv.slice(2);
 const inputData = readFileSync(0, "utf8");
 
-const stdout = [];
-const stderr = [];
 let finish;
 const finished = new Promise((resolve) => (finish = resolve));
 
@@ -34,11 +35,12 @@ const context = vm.createContext({
     clearTimeout,
     URL,
     postMessage({ type, content }) {
-        if (type === "stdout") stdout.push(content);
-        else if (type === "stderr") stderr.push(content);
+        if (type === "stdout") writeSync(1, content);
+        else if (type === "stderr") writeSync(2, content);
         else if (type === "status" && content === "exit") finish("exit");
         else if (type === "limit") finish(`limit:${content}`);
-        else if (type === "error") finish(`error:${String(content).split("\n")[0]}`);
+        else if (type === "error")
+            finish(`error:${String(content).split("\n")[0]}`);
     },
 });
 context.self = context;
@@ -54,5 +56,4 @@ const module_ = await WebAssembly.compile(readFileSync(wasmPath));
 context.self.onmessage({ data: { taskId: 1, inputData, module_ } });
 
 const status = await finished;
-process.stdout.write(stdout.join(""));
-process.stderr.write(stderr.join("") + `\nSTATUS: ${status}\n`);
+writeSync(2, `\nSTATUS: ${status}\n`);

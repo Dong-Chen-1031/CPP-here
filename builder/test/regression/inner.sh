@@ -11,6 +11,8 @@
 #   // @expect: compile-error <ERE>  compiler output must match <ERE>
 #   // @expect: runtime-error <ERE>  runner's error message must match <ERE>
 #   // @expect: limit-output | limit-memory
+#   // @expect: tle                  still running after 3 s; what it printed
+#                                    by then must equal NAME.out (and NAME.err)
 # NAME.in, if present, is fed to stdin.
 set -u
 
@@ -36,8 +38,10 @@ ms() { echo $((($(date +%s%N) - $1) / 1000000)); }
 # ---------- image checks ----------
 echo "== image"
 [ "$(id -u)" = 1001 ] && ok || bad "runs as uid 1001 (got $(id -u))"
-touch /emsdk/upstream/bin/clang 2>/dev/null && bad "compiler must not be writable by sandbox_user" || ok
-touch "$CACHE/.probe" 2>/dev/null && { rm -f "$CACHE/.probe"; ok; } || bad "cache must be writable by sandbox_user"
+# if/else rather than `a && bad || ok`: bad can return non-zero, which would
+# also count a pass
+if touch /emsdk/upstream/bin/clang 2>/dev/null; then bad "compiler must not be writable by sandbox_user"; else ok; fi
+if touch "$CACHE/.probe" 2>/dev/null; then rm -f "$CACHE/.probe"; ok; else bad "cache must be writable by sandbox_user"; fi
 for std in c++11 c++14 c++17 c++20 c++23; do
     [ -f "$PCH_DIR/stdc++-$std.pch" ] && ok || bad "missing $PCH_DIR/stdc++-$std.pch"
 done
@@ -98,7 +102,9 @@ for src in "$TESTS"/cases/*.cpp; do
                 fi
             fi
 
-            timeout 20s node "$TESTS/runner.mjs" "$out.js" "$out.wasm" "$WORKER_JS" <"$input" >"$out.stdout" 2>"$out.stderr"
+            limit=20s
+            [ "$kind" = tle ] && limit=3s
+            timeout "$limit" node "$TESTS/runner.mjs" "$out.js" "$out.wasm" "$WORKER_JS" <"$input" >"$out.stdout" 2>"$out.stderr"
             rc=$?
             status=$(grep -oP '^STATUS: \K.*' "$out.stderr" | tail -1)
             [ $rc = 124 ] && status="timeout"
@@ -114,6 +120,15 @@ for src in "$TESTS"/cases/*.cpp; do
             limit-output | limit-memory)
                 want="limit:${kind#limit-}"
                 [ "$status" = "$want" ] && ok || bad "$label ($mode): expected $want, got $status"
+                ;;
+            tle)
+                if [ "$status" != timeout ]; then
+                    bad "$label ($mode): expected to still be running, got $status"
+                elif ! diff -q "$TESTS/cases/$name.out" "$out.stdout" >/dev/null; then
+                    bad "$label ($mode): wrong stdout before the TLE" "$(diff "$TESTS/cases/$name.out" "$out.stdout" | head -20)"
+                elif [ -f "$TESTS/cases/$name.err" ] && ! diff -q "$TESTS/cases/$name.err" "$out.stderr" >/dev/null; then
+                    bad "$label ($mode): wrong stderr before the TLE" "$(diff "$TESTS/cases/$name.err" "$out.stderr" | head -20)"
+                else ok; fi
                 ;;
             runtime-error)
                 if [[ "$status" == error:* ]] && grep -qE "$pattern" <<<"${status#error:}"; then ok
