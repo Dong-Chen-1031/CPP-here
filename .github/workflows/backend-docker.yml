@@ -89,6 +89,9 @@ jobs:
             packages: write
 
         steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
             - name: Download digests
               uses: actions/download-artifact@v4
               with:
@@ -115,6 +118,29 @@ jobs:
 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3
+
+            # builder-docker.yml pushes the builder image this backend pins only
+            # after its regression tests pass, which takes longer than this
+            # build. Tag the backend once that image exists, so a deploy never
+            # pulls a backend whose builder image isn't there (every build would
+            # fail); give up if it never shows up (the builder tests failed).
+            - name: Wait for the pinned builder image
+              run: |
+                  ref=$(grep -oE '^BUILDER_IMAGE = "[^"]+"' backend/services/build.py | cut -d'"' -f2)
+                  [ -n "$ref" ] || { echo "BUILDER_IMAGE not found in backend/services/build.py" >&2; exit 1; }
+                  for _ in $(seq 40); do
+                      if out=$(docker buildx imagetools inspect "$ref" 2>&1); then
+                          echo "$ref exists"
+                          exit 0
+                      elif ! grep -qi 'not found' <<< "$out"; then
+                          echo "$out" >&2
+                          exit 1
+                      fi
+                      echo "Waiting for $ref ..."
+                      sleep 30
+                  done
+                  echo "::error::$ref was not pushed within 20 minutes (did builder-docker.yml fail?)"
+                  exit 1
 
             - name: Create and push multi-platform manifest
               working-directory: /tmp/digests

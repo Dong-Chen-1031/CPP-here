@@ -1,7 +1,7 @@
 import asyncio
-import re
-import shlex
+import io
 import shutil
+import tarfile
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -14,6 +14,7 @@ from services.resource_manager import resource_manager
 from settings import settings
 from utils.log import logger
 from utils.scheduler import scheduler
+from utils.stdcxx import starts_with_stdcxx
 
 # Built from builder/ and tagged with the git tree hash of builder/docker
 # (`git rev-parse --short=12 HEAD:builder/docker`); ci.yml checks this pin and
@@ -22,32 +23,6 @@ BUILDER_IMAGE = "ghcr.io/dong-chen-1031/safe-cpp2wasm:tree-b515a3055e3c"
 WORKER_NAME_PREFIX = "cpp-here-worker-"
 
 INSTANCE_ID = uuid.uuid4().hex
-
-# Only for the trace attribute: cpp-here-build (starts_with_stdcxx) makes the
-# actual decision to use the precompiled bits/stdc++.h, and this mirrors its
-# rule: past comments, blank lines and `#pragma GCC optimize/target`, the first
-# line is `#include <bits/stdc++.h>`. -std values without a PCH (c++98) aside.
-_COMMENT = re.compile(r"//(?:[^\n]*\\\r?\n)*[^\n]*|/\*.*?(?:\*/|$)", re.S)
-_SKIPPED = re.compile(r"[ \t]*#[ \t]*pragma[ \t]+GCC[ \t]+(?:optimize|target)[ \t]*\(")
-_STDCXX = re.compile(r"[ \t]*#[ \t]*include[ \t]*[<\"]bits/stdc\+\+\.h[>\"][ \t\r]*")
-
-
-def _strip_comment(m: re.Match) -> str:
-    # As in cpp-here-build: a block comment becomes a space, a line comment
-    # nothing, and the newlines inside either are kept so lines stay apart
-    text = m.group()
-    return (" " if text.startswith("/*") else "") + "\n" * text.count("\n")
-
-
-def starts_with_stdcxx(code: str) -> bool:
-    code = _COMMENT.sub(_strip_comment, code.removeprefix("\ufeff"))
-    for line in code.split("\n"):
-        if _SKIPPED.match(line):
-            continue
-        if line.strip(" \t\r"):
-            return bool(_STDCXX.fullmatch(line))
-    return False
-
 
 TTL_SAFETY_MARGIN = 120
 MAINTENANCE_INTERVAL = 60
@@ -71,6 +46,7 @@ class ContainerPool:
         self._born: dict[str, float] = {}
         self._closing = False
         self._maintenance_job = None
+        self._pull_lock = asyncio.Lock()
 
     @property
     def docker(self):
@@ -100,10 +76,17 @@ class ContainerPool:
                 "SecurityOpt": ["no-new-privileges:true"],
             },
         }
-        container = await self.docker.containers.create(
-            config=config,
-            name=f"{WORKER_NAME_PREFIX}{str(uuid.uuid4())[:12].replace('-', '')}",
-        )
+        name = f"{WORKER_NAME_PREFIX}{str(uuid.uuid4())[:12].replace('-', '')}"
+        try:
+            container = await self.docker.containers.create(config=config, name=name)
+        except DockerError as e:
+            # The image isn't there: the startup pull failed, e.g. because this
+            # backend was deployed before builder-docker.yml pushed the tag it
+            # pins. Pull now rather than fail every build until a restart.
+            if e.status != 404:
+                raise
+            await self._ensure_image()
+            container = await self.docker.containers.create(config=config, name=name)
         await container.start()
         self._born[container.id] = time.monotonic()
         return container
@@ -145,10 +128,13 @@ class ContainerPool:
         except Exception as e:
             logger.error(f"Failed to replenish container pool: {e}")
 
-    def _spawn_replenish(self):
+    def _spawn_replenish(self) -> asyncio.Task:
+        # Every replenish runs as a tracked task, so shutdown() can wait for the
+        # ones still creating a container
         task = asyncio.create_task(self._replenish())
         self._replenish_tasks.add(task)
         task.add_done_callback(self._replenish_tasks.discard)
+        return task
 
     async def _sweep_orphans(self):
         """Delete workers left running by a previous process that died uncleanly.
@@ -197,23 +183,30 @@ class ContainerPool:
             else:
                 await self._destroy(container)
         for container in keep:
-            self.pool.put_nowait(container)
+            # shutdown() may have emptied the pool while this awaited a delete
+            if self._closing:
+                await self._destroy(container)
+            else:
+                self.pool.put_nowait(container)
 
         needed = max(0, settings.DOCKER_POOL_SIZE - self.pool.qsize())
         if needed > 0:
-            await asyncio.gather(*[self._replenish() for _ in range(needed)])
+            await asyncio.gather(*[self._spawn_replenish() for _ in range(needed)])
 
     async def _ensure_image(self):
-        """Pull the builder image once at startup instead of on the failure path.
+        """Pull the builder image if it isn't there.
 
-        The per-request 404 recovery could never run: the image is resolved in
-        _create_container(), which is called outside the build()'s try block.
+        Called at startup and again by _create_container() when Docker reports
+        the image missing. The lock makes concurrent callers share one pull.
         """
-        try:
-            await self.docker.images.inspect(BUILDER_IMAGE)
-        except DockerError:
-            logger.info(f"Builder image {BUILDER_IMAGE} not found locally, pulling...")
-            await self.docker.images.pull(BUILDER_IMAGE)
+        async with self._pull_lock:
+            try:
+                await self.docker.images.inspect(BUILDER_IMAGE)
+            except DockerError:
+                logger.info(
+                    f"Builder image {BUILDER_IMAGE} not found locally, pulling..."
+                )
+                await self.docker.images.pull(BUILDER_IMAGE)
 
     async def startup(self):
         try:
@@ -227,7 +220,7 @@ class ContainerPool:
 
         needed = max(0, settings.DOCKER_POOL_SIZE - self.pool.qsize())
         if needed > 0:
-            await asyncio.gather(*[self._replenish() for _ in range(needed)])
+            await asyncio.gather(*[self._spawn_replenish() for _ in range(needed)])
 
         self._maintenance_job = scheduler.add_job(
             self._maintain,
@@ -293,10 +286,42 @@ class ContainerPool:
             await self._destroy(container)
         if self._destroy_tasks:
             await asyncio.gather(*self._destroy_tasks, return_exceptions=True)
+        await self._remove_own_containers()
         logger.info("Container pool shutdown complete")
+
+    async def _remove_own_containers(self):
+        """Delete whatever still carries this instance's owner label.
+
+        The safety net for anything the steps above missed: a create that was
+        cancelled after Docker received it, a worker an interrupted _maintain()
+        was holding. Runs before resource_manager closes the Docker session.
+        """
+        try:
+            leftovers = await self.docker.containers.list(
+                all=True, filters={"label": [f"owner={INSTANCE_ID}"]}
+            )
+        except Exception as e:
+            logger.warning(f"Failed to list leftover workers: {e}")
+            return
+        if leftovers:
+            logger.info(f"Deleting {len(leftovers)} leftover worker container(s)")
+            await asyncio.gather(*[self._destroy(c) for c in leftovers])
 
 
 container_pool = ContainerPool()
+
+
+def _source_archive(code: str) -> bytes:
+    """A tar holding source.cpp, for put_archive into the build container."""
+    # A lone surrogate (valid JSON, not valid UTF-8) can't be encoded as is
+    data = code.encode(errors="replace")
+    info = tarfile.TarInfo("source.cpp")
+    info.size = len(data)
+    info.mode = 0o644
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w") as tar:
+        tar.addfile(info, io.BytesIO(data))
+    return buf.getvalue()
 
 
 async def build(
@@ -309,13 +334,17 @@ async def build(
         output_dir = Path.cwd() / "output"
 
     # How the code is compiled (emcc flags, PCH, timeout) is defined in one
-    # place, builder/docker/cpp-here-build, which the builder image installs
-    cmd = (
-        f"mkdir -p /tmp/out && "
-        f"printf '%s' {shlex.quote(code)} > /tmp/source.cpp && "
-        f"cpp-here-build {shlex.quote(cpp_version)} /tmp/source.cpp "
-        f"/tmp/out/{shlex.quote(name)}"
-    )
+    # place, builder/docker/cpp-here-build, which the builder image installs.
+    # The source goes in as a file (put_archive below), not as an argument:
+    # Linux caps a single argument at 128 KiB, which a 50,000-character source
+    # of CJK text or quotes can exceed.
+    cmd = [
+        "sh",
+        "-c",
+        'mkdir -p /tmp/out && exec cpp-here-build "$0" /tmp/source.cpp "/tmp/out/$1"',
+        cpp_version,
+        name,
+    ]
 
     # Initialised up front: the DockerError handler below reports it even when
     # the failure happens before the build logs are collected.
@@ -332,11 +361,8 @@ async def build(
             with tracer.start_as_current_span("build.emcc") as span:
                 span.set_attribute("build.cpp_version", cpp_version)
                 span.set_attribute("build.includes_stdcxx", starts_with_stdcxx(code))
-                execute = await container.exec(
-                    ["sh", "-c", cmd],
-                    stdout=True,
-                    stderr=True,
-                )
+                await container.put_archive("/tmp", _source_archive(code))
+                execute = await container.exec(cmd, stdout=True, stderr=True)
 
                 async def _drain():
                     async with execute.start(detach=False) as stream:
