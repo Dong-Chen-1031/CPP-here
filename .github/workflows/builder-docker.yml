@@ -46,10 +46,17 @@ jobs:
         permissions:
             contents: read
             packages: write
+        # Both legs give the same hash; the merge job queues on it
+        outputs:
+            tree: ${{ steps.tree.outputs.hash }}
 
         steps:
             - name: Checkout
               uses: actions/checkout@v4
+
+            - name: Tree hash of builder/docker
+              id: tree
+              run: echo "hash=$(git rev-parse --short=12 HEAD:builder/docker)" >> "$GITHUB_OUTPUT"
 
             - name: Log in to GitHub Container Registry
               if: ${{ env.PUSH == 'true' }}
@@ -90,7 +97,7 @@ jobs:
               if: ${{ env.PUSH == 'true' }}
               id: existing
               run: |
-                  ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:tree-$(git rev-parse --short=12 HEAD:builder/docker)
+                  ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:tree-${{ steps.tree.outputs.hash }}
                   if out=$(docker buildx imagetools inspect "$ref" 2>&1); then
                       echo "$ref exists, not pushing this build"
                       echo "ref=$ref" >> "$GITHUB_OUTPUT"
@@ -135,24 +142,21 @@ jobs:
         # Same condition as env.PUSH (the env context isn't available here)
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         # The tree-<hash> check below and the push after it are not atomic: two
-        # runs of the same ref (a quick follow-up commit, a re-run) could both
-        # see no tag and the later one would move it. Queue them instead; a
-        # newer run replacing a still-pending one only skips an older commit.
+        # runs with the same builder/docker (a follow-up commit, a re-run, a PR
+        # and main after merging it, a workflow_dispatch) could both see no tag
+        # and the later one would move it. They queue on the tree hash, from
+        # every ref; runs with a different tree don't wait. GitHub keeps one
+        # pending run per group, so a third run of the same tree within a merge
+        # replaces the pending one, which then skips its own latest / sha- /
+        # pr- tags (rare: a merge takes seconds).
         concurrency:
-            group: builder-docker-merge-${{ github.ref }}
+            group: builder-docker-tree-${{ needs.build.outputs.tree }}
             cancel-in-progress: false
         permissions:
             contents: read
             packages: write
 
         steps:
-            - name: Checkout
-              uses: actions/checkout@v4
-
-            - name: Tree hash of builder/docker
-              id: tree
-              run: echo "hash=$(git rev-parse --short=12 HEAD:builder/docker)" >> "$GITHUB_OUTPUT"
-
             - name: Log in to GitHub Container Registry
               uses: docker/login-action@v3
               with:
@@ -167,7 +171,7 @@ jobs:
                   images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
                   tags: |
                       type=raw,value=latest,enable={{is_default_branch}}
-                      type=raw,value=tree-${{ steps.tree.outputs.hash }}
+                      type=raw,value=tree-${{ needs.build.outputs.tree }}
                       type=ref,event=pr
                       type=sha,prefix=sha-
 
@@ -183,7 +187,7 @@ jobs:
             - name: Look for an existing tree-<hash> image
               id: existing
               run: |
-                  ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:tree-${{ steps.tree.outputs.hash }}
+                  ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:tree-${{ needs.build.outputs.tree }}
                   if out=$(docker buildx imagetools inspect "$ref" 2>&1); then
                       echo "Reusing $ref"
                       echo "ref=$ref" >> "$GITHUB_OUTPUT"
@@ -214,6 +218,16 @@ jobs:
                   fi
                   docker buildx imagetools create $tags $sources
 
-            - name: Inspect final manifest
+            # Every tag above was created from the same source in one command, so
+            # tree-<hash> must still point where this run's sha- tag does. If
+            # anything moved it anyway, fail instead of letting it go unnoticed.
+            - name: Check that tree-<hash> wasn't moved
               run: |
-                  docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:tree-${{ steps.tree.outputs.hash }}
+                  digest() { docker buildx imagetools inspect "$1" --format '{{json .Manifest}}' | jq -r .digest; }
+                  tree=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:tree-${{ needs.build.outputs.tree }}
+                  sha=$(jq -r '.tags[] | select(contains(":sha-"))' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+                  docker buildx imagetools inspect "$tree"
+                  if [ "$(digest "$tree")" != "$(digest "$sha")" ]; then
+                      echo "::error::$tree no longer points at what this run tagged ($sha)"
+                      exit 1
+                  fi
