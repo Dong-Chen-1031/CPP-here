@@ -36,10 +36,13 @@ CI ([`.github/workflows/builder-docker.yml`](../.github/workflows/builder-docker
 tags every image with `tree-<hash>`, the git tree hash of `builder/docker`.
 The hash is known before merging, so a pull request that changes the image
 pins the new tag in `backend/services/build.py` and `docker/**/docker-compose.yml`
-in the same change; `ci.yml` fails when the pin doesn't match:
+in the same change; `ci.yml` fails when the pin doesn't match. After changing
+`builder/docker`, run this before committing: it stages `builder/docker`,
+computes the hash from the index, and updates and stages all three pins.
 
 ```bash
-git rev-parse --short=12 HEAD:builder/docker   # after committing
+npm run pin-builder
+git rev-parse --short=12 HEAD:builder/docker   # the same hash, after committing
 ```
 
 The image is pushed for `main` and for pull requests from this repository

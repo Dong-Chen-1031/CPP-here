@@ -3,6 +3,7 @@
     "scripts": {
         "copy-i18n": "shx cp -r ./i18n ./frontend/public/",
         "copy-docker": "mkdir -p ./frontend/public/script && cp -r ./docker/* ./frontend/public/script",
+        "pin-builder": "git add builder/docker && tree=$(git write-tree --prefix=builder/docker/ | cut -c1-12) && perl -pi -e \"s/safe-cpp2wasm:tree-[0-9a-f]+/safe-cpp2wasm:tree-$tree/\" backend/services/build.py docker/docker-compose.yml docker/backend/docker-compose.yml && git add backend/services/build.py docker/docker-compose.yml docker/backend/docker-compose.yml && echo \"builder pin: safe-cpp2wasm:tree-$tree\"",
         "logo": "node frontend/src/lib/printLogo.js",
         "frontend": "npm run copy-i18n && npm run logo && cd frontend && npm run dev",
         "backend": "cd backend && python main.py",

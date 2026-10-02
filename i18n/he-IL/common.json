@@ -1,11 +1,1 @@
-{
-  "copy": "Copy",
-  "clear": "Clear",
-  "save": "Save",
-  "create": "Create",
-  "cancel": "Cancel",
-  "runStatus": {
-    "running": "Running",
-    "building": "Building"
-  }
-}
+{}
