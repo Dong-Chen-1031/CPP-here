@@ -62,7 +62,7 @@ export function ShareReceiveDialog() {
                     </AlertDialogTitle>
                     <AlertDialogDescription asChild>
                         <div>
-                            <p className="sans">
+                            <p className="font-quattro">
                                 {t("shareReceive.description")}
                                 <br />
                                 {t("shareReceive.descriptionSub")}

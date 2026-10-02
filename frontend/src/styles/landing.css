@@ -2,18 +2,6 @@ html {
     overflow-x: hidden;
 }
 
-.landing-font {
-    font-family:
-        var(--font-ia-writer-quattro), "JetBrains Mono", "JetBrainsMono",
-        "Consolas", "Liberation Mono", ui-monospace, monospace;
-    font-variant-numeric: tabular-nums;
-}
-
-.landing-font .inter {
-    font-family:
-        var(--font-ia-writer-quattro), "GlowSansTC", "Noto Sans TC", sans-serif;
-}
-
 /* FAQ answers stay mounted (so they are in the HTML), so they animate by grid
    rows instead of Radix's measured --radix-accordion-content-height. The
    collapse keeps them visible until the animation ends. */

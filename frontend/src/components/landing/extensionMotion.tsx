@@ -258,7 +258,7 @@ export function ExtensionAlert({
                 <p
                     id="radix-_r_2_"
                     data-slot="alert-dialog-description"
-                    className="text-sm text-balance text-muted-foreground md:text-pretty *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground inter"
+                    className="text-sm text-balance text-muted-foreground md:text-pretty *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground"
                 >
                     {t?.descriptionBefore}{" "}
                     <code>

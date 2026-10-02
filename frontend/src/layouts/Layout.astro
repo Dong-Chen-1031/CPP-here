@@ -1,4 +1,5 @@
 ---
+import { Font } from "astro:assets";
 import "@/styles/global.css";
 import PostHog from "@/components/posthog.astro";
 
@@ -9,6 +10,8 @@ interface Props {
     ogImageAlt?: string;
     noindex?: boolean;
     lang?: string;
+    /** The family the page is mostly set in, preloaded so its text renders sooner. */
+    font?: "jetbrains" | "quattro";
 }
 
 const {
@@ -18,6 +21,7 @@ const {
     ogImageAlt = "C++ Here — next-generation online C++ editor for competitive programming",
     noindex = false,
     lang,
+    font = "jetbrains",
 } = Astro.props;
 
 const siteUrl = "https://cpp.doong.me";
@@ -39,14 +43,17 @@ const ogLocale = htmlLang === "zh-TW" ? "zh_TW" : "en_US";
 <!doctype html>
 <html class="neutral dark bg-background text-foreground" lang={htmlLang}>
     <head>
-        <link
-            rel="preconnect"
-            href="https://fonts.googleapis.com"
-            crossorigin
-        />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link rel="preconnect" href="https://font.emtech.cc" crossorigin />
         <meta charset="UTF-8" />
+        <Font
+            cssVariable="--font-jetbrains-mono"
+            preload={
+                font === "jetbrains" && [{ style: "normal", subset: "latin" }]
+            }
+        />
+        <Font
+            cssVariable="--font-ia-writer-quattro"
+            preload={font === "quattro" && [{ style: "normal" }]}
+        />
 
         <slot name="head" />
 
@@ -95,37 +102,9 @@ const ogLocale = htmlLang === "zh-TW" ? "zh_TW" : "en_US";
         <meta name="twitter:image" content={ogImageURL} />
         <meta name="twitter:image:alt" content={ogImageAlt} />
 
-        <link
-            href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@100..700&family=JetBrains+Mono:wght@100..800&family=Noto+Sans+TC:wght@100..900&display=swap"
-            rel="stylesheet"
-        />
-        <!-- <link
-            href="https://font.emtech.cc/css/GlowSansTC/400"
-            rel="stylesheet"
-        />
-        <link
-            href="https://font.emtech.cc/css/GlowSansTC/700"
-            rel="stylesheet"
-        /> -->
-
         <!-- PostHog analytics -->
         <PostHog />
 
-        <!-- Google tag (gtag.js) -->
-        <script
-            async
-            src="https://www.googletagmanager.com/gtag/js?id=G-L3FP34GYD3"
-        ></script>
-        <script>
-            // @ts-nocheck
-            window.dataLayer = window.dataLayer || [];
-            function gtag() {
-                dataLayer.push(arguments);
-            }
-            gtag("js", new Date());
-
-            gtag("config", "G-L3FP34GYD3");
-        </script>
         <!-- <script is:inline>
       const getThemePreference = () => {
         if (

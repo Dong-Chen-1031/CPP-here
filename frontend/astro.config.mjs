@@ -48,13 +48,29 @@ export default defineConfig({
     build: {
         inlineStylesheets: "auto",
     },
+    // No fallbacks on either family: the font-jetbrains / font-quattro
+    // utilities in global.css append the full stacks, CJK fonts included.
     fonts: [
+        {
+            provider: fontProviders.fontsource(),
+            name: "JetBrains Mono",
+            cssVariable: "--font-jetbrains-mono",
+            weights: ["100 800"],
+            styles: ["normal", "italic"],
+            subsets: [
+                "latin",
+                "latin-ext",
+                "cyrillic",
+                "cyrillic-ext",
+                "greek",
+                "vietnamese",
+            ],
+            fallbacks: [],
+        },
         {
             provider: fontProviders.local(),
             name: "iA Writer Quattro",
             cssVariable: "--font-ia-writer-quattro",
-            // No fallbacks here: landing.css appends the stacks each element
-            // used before, so CJK text keeps its old fonts.
             fallbacks: [],
             options: {
                 variants: [
