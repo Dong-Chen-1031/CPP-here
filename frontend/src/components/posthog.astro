@@ -39,7 +39,9 @@
             tracing_headers: [apiHostname, "localhost"],
         });
 
-        window.posthog = posthog;
+        // Same class at runtime; the two bundles just ship separate,
+        // structurally incompatible type declarations.
+        window.posthog = posthog as unknown as PostHog;
         for (const args of queued.splice(0)) posthog.capture(...args);
     }
 
