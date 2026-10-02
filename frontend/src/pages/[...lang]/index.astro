@@ -17,10 +17,18 @@ export { getStaticLangPaths as getStaticPaths };
 const { lang } = Astro.params;
 
 const t = getTranslation(lang);
+
+// "/" and "/en/" serve the same English page, so "/" is the one to index.
+const canonical = lang === "zh-tw" ? "/zh-tw/" : "/";
+const alternates = [
+    { hreflang: "en", path: "/" },
+    { hreflang: "zh-TW", path: "/zh-tw/" },
+    { hreflang: "x-default", path: "/" },
+];
 // console.log(t);
 ---
 
-<!--
+{/*
 1. header v
 2. hero v
 3. features v
@@ -36,8 +44,14 @@ const t = getTranslation(lang);
 5. data V
 6. CAT V
 7. footer V
--->
-<Layout title={t.meta.title} description={t.meta.description} font="quattro">
+*/}
+<Layout
+    title={t.meta.title}
+    description={t.meta.description}
+    font="quattro"
+    {canonical}
+    {alternates}
+>
     <meta
         slot="head"
         name="viewport"
@@ -49,7 +63,7 @@ const t = getTranslation(lang);
             "@type": "SoftwareApplication",
             "name": "C++ Here",
             "url": "https://cpp.doong.me",
-            "description": "An open-source, lightweight yet powerful online C++ editor built for competitive programming.",
+            "description": "An open-source, lightweight yet powerful online C++ compiler built for competitive programming.",
             "applicationCategory": "DeveloperApplication",
             "operatingSystem": "Web Browser",
             "offers": {

@@ -1,7 +1,7 @@
 {
     "meta": {
-        "title": "C++ Here - Next-generation online C++ editor.",
-        "description": "An open-source, lightweight yet powerful online C++ editor built for competitive programming. Compile C++ to WebAssembly, run test cases, and format code — all in your browser."
+        "title": "Online C++ Compiler for Competitive Programming | C++ Here",
+        "description": "Free, open-source online C++ compiler built for competitive programming. Compile C++ to WebAssembly and run test cases in your browser. No install, no login."
     },
     "header": {
         "openEditor": "Open Editor",
@@ -9,10 +9,11 @@
     },
     "hero": {
         "title": "Next-generation",
-        "title2": "online C++ editor.",
-        "description": "An open-source, lightweight yet powerful online C++ editor built for competitive programming",
+        "title2": "online C++ compiler.",
+        "description": "An open-source, lightweight yet powerful online C++ compiler built for competitive programming",
         "startCoding": "Start Coding",
-        "starOnGithub": "Star on Github"
+        "starOnGithub": "Star on Github",
+        "imageAlt": "The C++ Here online compiler running a Hello World program against three test cases"
     },
     "features": {
         "label": "features",

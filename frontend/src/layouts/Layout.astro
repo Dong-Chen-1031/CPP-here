@@ -12,20 +12,26 @@ interface Props {
     lang?: string;
     /** The family the page is mostly set in, preloaded so its text renders sooner. */
     font?: "jetbrains" | "quattro";
+    /** Path of the URL search engines should index, when it isn't this one. */
+    canonical?: string;
+    /** Every language version of this page (itself included), as hreflang links. */
+    alternates?: { hreflang: string; path: string }[];
 }
 
 const {
-    title = "C++ Here - Next-generation online C++ editor.",
-    description = "An open-source, lightweight yet powerful online C++ editor built for competitive programming. Compile C++ to WebAssembly, run test cases, and format code — all in your browser.",
+    title = "Online C++ Compiler for Competitive Programming | C++ Here",
+    description = "Free, open-source online C++ compiler built for competitive programming. Compile C++ to WebAssembly and run test cases in your browser. No install, no login.",
     ogImage = "/og-image.png",
     ogImageAlt = "C++ Here — next-generation online C++ editor for competitive programming",
     noindex = false,
     lang,
     font = "jetbrains",
+    canonical,
+    alternates = [],
 } = Astro.props;
 
 const siteUrl = "https://cpp.doong.me";
-const canonicalURL = new URL(Astro.url.pathname, siteUrl).href;
+const canonicalURL = new URL(canonical ?? Astro.url.pathname, siteUrl).href;
 const ogImageURL = ogImage.startsWith("http")
     ? ogImage
     : `${siteUrl}${ogImage}`;
@@ -74,16 +80,23 @@ const ogLocale = htmlLang === "zh-TW" ? "zh_TW" : "en_US";
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="generator" content={Astro.generator} />
 
-        <!-- Primary SEO -->
+        {/* Primary SEO */}
         <title>{title}</title>
         <meta name="description" content={description} />
         <link rel="canonical" href={canonicalURL} />
+        {alternates.map(({ hreflang, path }) => (
+            <link
+                rel="alternate"
+                hreflang={hreflang}
+                href={new URL(path, siteUrl).href}
+            />
+        ))}
         {noindex && <meta name="robots" content="noindex,nofollow" />}
 
-        <!-- Discord / Social theme color -->
+        {/* Discord / Social theme color */}
         <meta name="theme-color" content="#0A0A0A" />
 
-        <!-- Open Graph -->
+        {/* Open Graph */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content={canonicalURL} />
         <meta property="og:title" content={title} />
@@ -95,17 +108,17 @@ const ogLocale = htmlLang === "zh-TW" ? "zh_TW" : "en_US";
         <meta property="og:site_name" content="C++ Here" />
         <meta property="og:locale" content={ogLocale} />
 
-        <!-- Twitter Card -->
+        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={ogImageURL} />
         <meta name="twitter:image:alt" content={ogImageAlt} />
 
-        <!-- PostHog analytics -->
+        {/* PostHog analytics */}
         <PostHog />
 
-        <!-- <script is:inline>
+        {/* <script is:inline>
       const getThemePreference = () => {
         if (
           typeof localStorage !== "undefined" &&
@@ -140,7 +153,7 @@ const ogLocale = htmlLang === "zh-TW" ? "zh_TW" : "en_US";
             );
           }
         });
-    </script> -->
+    </script> */}
     </head>
     <body>
         <main>

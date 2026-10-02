@@ -25,6 +25,8 @@ export default defineConfig({
         react(),
         sitemap({
             filter: (page) =>
+                // Same page as "/", which is the canonical one
+                new URL(page).pathname !== "/en/" &&
                 !page.includes("/editor") &&
                 !page.includes("/test") &&
                 !page.includes("/reset"),
