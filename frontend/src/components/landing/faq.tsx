@@ -26,6 +26,9 @@ export function FaqAccordion({
                 <AccordionItem
                     key={faq.question}
                     value={faq.question}
+                    // Collapsed rows are only 0px tall, so keep their buttons
+                    // out of the tab order and the accessibility tree too.
+                    inert={i >= showCount}
                     className={cn(
                         "grid grid-rows-[1fr] border-b border-foreground/25 motion-safe:transition-all motion-safe:duration-300",
                         i >= showCount && "grid-rows-[0fr] -translate-y-10",
