@@ -19,3 +19,5 @@ opentelemetry-sdk
 opentelemetry-exporter-otlp
 opentelemetry-exporter-otlp-proto-http
 opentelemetry-instrumentation-fastapi
+# load_test/host_bench.py
+rich

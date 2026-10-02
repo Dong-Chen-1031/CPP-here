@@ -1,6 +1,7 @@
 import asyncio
-import shlex
+import io
 import shutil
+import tarfile
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -13,8 +14,13 @@ from services.resource_manager import resource_manager
 from settings import settings
 from utils.log import logger
 from utils.scheduler import scheduler
+from utils.stdcxx import starts_with_stdcxx
 
-BUILDER_IMAGE = "ghcr.io/dong-chen-1031/safe-cpp2wasm:sha-58d3586"
+# Built from builder/ and tagged with the git tree hash of builder/docker
+# (`git rev-parse --short=12 HEAD:builder/docker`); ci.yml checks this pin and
+# the ones in docker/**/docker-compose.yml against the current tree. After
+# changing builder/docker, `npm run pin-builder` updates all three.
+BUILDER_IMAGE = "ghcr.io/dong-chen-1031/safe-cpp2wasm:tree-72c2864063e6"
 WORKER_NAME_PREFIX = "cpp-here-worker-"
 
 INSTANCE_ID = uuid.uuid4().hex
@@ -41,6 +47,7 @@ class ContainerPool:
         self._born: dict[str, float] = {}
         self._closing = False
         self._maintenance_job = None
+        self._pull_lock = asyncio.Lock()
 
     @property
     def docker(self):
@@ -70,10 +77,17 @@ class ContainerPool:
                 "SecurityOpt": ["no-new-privileges:true"],
             },
         }
-        container = await self.docker.containers.create(
-            config=config,
-            name=f"{WORKER_NAME_PREFIX}{str(uuid.uuid4())[:12].replace('-', '')}",
-        )
+        name = f"{WORKER_NAME_PREFIX}{str(uuid.uuid4())[:12].replace('-', '')}"
+        try:
+            container = await self.docker.containers.create(config=config, name=name)
+        except DockerError as e:
+            # The image isn't there: the startup pull failed, e.g. because this
+            # backend was deployed before builder-docker.yml pushed the tag it
+            # pins. Pull now rather than fail every build until a restart.
+            if e.status != 404:
+                raise
+            await self._ensure_image()
+            container = await self.docker.containers.create(config=config, name=name)
         await container.start()
         self._born[container.id] = time.monotonic()
         return container
@@ -115,10 +129,13 @@ class ContainerPool:
         except Exception as e:
             logger.error(f"Failed to replenish container pool: {e}")
 
-    def _spawn_replenish(self):
+    def _spawn_replenish(self) -> asyncio.Task:
+        # Every replenish runs as a tracked task, so shutdown() can wait for the
+        # ones still creating a container
         task = asyncio.create_task(self._replenish())
         self._replenish_tasks.add(task)
         task.add_done_callback(self._replenish_tasks.discard)
+        return task
 
     async def _sweep_orphans(self):
         """Delete workers left running by a previous process that died uncleanly.
@@ -167,23 +184,30 @@ class ContainerPool:
             else:
                 await self._destroy(container)
         for container in keep:
-            self.pool.put_nowait(container)
+            # shutdown() may have emptied the pool while this awaited a delete
+            if self._closing:
+                await self._destroy(container)
+            else:
+                self.pool.put_nowait(container)
 
         needed = max(0, settings.DOCKER_POOL_SIZE - self.pool.qsize())
         if needed > 0:
-            await asyncio.gather(*[self._replenish() for _ in range(needed)])
+            await asyncio.gather(*[self._spawn_replenish() for _ in range(needed)])
 
     async def _ensure_image(self):
-        """Pull the builder image once at startup instead of on the failure path.
+        """Pull the builder image if it isn't there.
 
-        The per-request 404 recovery could never run: the image is resolved in
-        _create_container(), which is called outside the build()'s try block.
+        Called at startup and again by _create_container() when Docker reports
+        the image missing. The lock makes concurrent callers share one pull.
         """
-        try:
-            await self.docker.images.inspect(BUILDER_IMAGE)
-        except DockerError:
-            logger.info(f"Builder image {BUILDER_IMAGE} not found locally, pulling...")
-            await self.docker.images.pull(BUILDER_IMAGE)
+        async with self._pull_lock:
+            try:
+                await self.docker.images.inspect(BUILDER_IMAGE)
+            except DockerError:
+                logger.info(
+                    f"Builder image {BUILDER_IMAGE} not found locally, pulling..."
+                )
+                await self.docker.images.pull(BUILDER_IMAGE)
 
     async def startup(self):
         try:
@@ -197,7 +221,7 @@ class ContainerPool:
 
         needed = max(0, settings.DOCKER_POOL_SIZE - self.pool.qsize())
         if needed > 0:
-            await asyncio.gather(*[self._replenish() for _ in range(needed)])
+            await asyncio.gather(*[self._spawn_replenish() for _ in range(needed)])
 
         self._maintenance_job = scheduler.add_job(
             self._maintain,
@@ -245,10 +269,16 @@ class ContainerPool:
                 pass
             self._maintenance_job = None
 
-        for task in list(self._replenish_tasks):
-            task.cancel()
+        # Let in-flight replenishes finish instead of cancelling them: a cancel
+        # after Docker received the create request leaks the container (nothing
+        # holds it any more), while _replenish itself destroys what it creates
+        # once _closing is set. Cancel only what is still stuck after a while.
         if self._replenish_tasks:
-            await asyncio.gather(*self._replenish_tasks, return_exceptions=True)
+            _, pending = await asyncio.wait(list(self._replenish_tasks), timeout=10)
+            for task in pending:
+                task.cancel()
+            if pending:
+                await asyncio.gather(*pending, return_exceptions=True)
         while True:
             try:
                 container = self.pool.get_nowait()
@@ -257,10 +287,42 @@ class ContainerPool:
             await self._destroy(container)
         if self._destroy_tasks:
             await asyncio.gather(*self._destroy_tasks, return_exceptions=True)
+        await self._remove_own_containers()
         logger.info("Container pool shutdown complete")
+
+    async def _remove_own_containers(self):
+        """Delete whatever still carries this instance's owner label.
+
+        The safety net for anything the steps above missed: a create that was
+        cancelled after Docker received it, a worker an interrupted _maintain()
+        was holding. Runs before resource_manager closes the Docker session.
+        """
+        try:
+            leftovers = await self.docker.containers.list(
+                all=True, filters={"label": [f"owner={INSTANCE_ID}"]}
+            )
+        except Exception as e:
+            logger.warning(f"Failed to list leftover workers: {e}")
+            return
+        if leftovers:
+            logger.info(f"Deleting {len(leftovers)} leftover worker container(s)")
+            await asyncio.gather(*[self._destroy(c) for c in leftovers])
 
 
 container_pool = ContainerPool()
+
+
+def _source_archive(code: str) -> bytes:
+    """A tar holding source.cpp, for put_archive into the build container."""
+    # A lone surrogate (valid JSON, not valid UTF-8) can't be encoded as is
+    data = code.encode(errors="replace")
+    info = tarfile.TarInfo("source.cpp")
+    info.size = len(data)
+    info.mode = 0o644
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w") as tar:
+        tar.addfile(info, io.BytesIO(data))
+    return buf.getvalue()
 
 
 async def build(
@@ -272,40 +334,18 @@ async def build(
     if output_dir is None:
         output_dir = Path.cwd() / "output"
 
-    cmd = (
-        f"mkdir -p /tmp/out && "
-        f"printf '%s' {shlex.quote(code)} > /tmp/source.cpp && "
-        f"timeout 30s emcc /tmp/source.cpp -o /tmp/out/{shlex.quote(name)} "
-    ) + " ".join(
-        [
-            f"-std={cpp_version} ",
-            "-ftemplate-depth=50 ",
-            # EMCC_CORES doesn't reach wasm-ld's own thread pool, which is what
-            # actually blew up under load; cap it to match the container's 1 CPU.
-            "-Wl,--threads=1 ",
-            "-sMODULARIZE=1 ",
-            # "-sMINIMAL_RUNTIME=1  "
-            '-sEXPORT_NAME="createMyModule" ',
-            '-sENVIRONMENT="worker" ',
-            "-sEXIT_RUNTIME=1 ",
-            "-sFILESYSTEM=0 ",
-            "--js-library /tmp/stdin_lib.js ",
-            # 取代逐位元組的 stdout 緩衝並限制輸出量（OLE），檔案在
-            # safe-cpp2wasm 映像的 docker/js_lib/stdout_lib.js
-            "--js-library /tmp/stdout_lib.js ",
-            # '-sINCOMING_MODULE_JS_API=\'["print","printErr","stdin","instantiateWasm","onRuntimeInitialized"]\' '
-            # '-sINCOMING_MODULE_JS_API=\'["wasm", "stdin", "print", "printErr"]\' '
-            "-fconstexpr-depth=50 ",
-            "-fmacro-backtrace-limit=10 ",
-            "-sSTACK_SIZE=8388608 ",  # 8 MB stack
-            "-sINITIAL_MEMORY=33554432 ",  # 初始 32 MB
-            "-sALLOW_MEMORY_GROWTH=1 ",  # 按需成長
-            "-sMAXIMUM_MEMORY=536870912 ",  # 上限 512 MB（MLE）
-            # 超過上限時直接 abort 並回報 OOM，而不是讓 malloc 回傳 NULL；
-            # 開啟記憶體成長時預設是關閉的，所以要明確設定
-            "-sABORTING_MALLOC=1 ",
-        ]
-    )
+    # How the code is compiled (emcc flags, PCH, timeout) is defined in one
+    # place, builder/docker/cpp-here-build, which the builder image installs.
+    # The source goes in as a file (put_archive below), not as an argument:
+    # Linux caps a single argument at 128 KiB, which a 50,000-character source
+    # of CJK text or quotes can exceed.
+    cmd = [
+        "sh",
+        "-c",
+        'mkdir -p /tmp/out && exec cpp-here-build "$0" /tmp/source.cpp "/tmp/out/$1"',
+        cpp_version,
+        name,
+    ]
 
     # Initialised up front: the DockerError handler below reports it even when
     # the failure happens before the build logs are collected.
@@ -321,11 +361,9 @@ async def build(
             # so it is raised after this span closes and doesn't mark it failed.
             with tracer.start_as_current_span("build.emcc") as span:
                 span.set_attribute("build.cpp_version", cpp_version)
-                execute = await container.exec(
-                    ["sh", "-c", cmd],
-                    stdout=True,
-                    stderr=True,
-                )
+                span.set_attribute("build.includes_stdcxx", starts_with_stdcxx(code))
+                await container.put_archive("/tmp", _source_archive(code))
+                execute = await container.exec(cmd, stdout=True, stderr=True)
 
                 async def _drain():
                     async with execute.start(detach=False) as stream:

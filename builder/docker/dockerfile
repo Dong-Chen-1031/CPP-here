@@ -1,0 +1,70 @@
+# syntax=docker/dockerfile:1
+
+# ---------- Stage 1: trim the official emsdk image ----------
+# Everything done here (chown, deletions) stays in this stage's layers and is
+# never shipped; only the final /emsdk tree is copied into the runtime image.
+FROM emscripten/emsdk:5.0.2 AS emsdk
+
+# Custom headers (bits/stdc++.h) go into the libc++ include path
+COPY inner/ /emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/
+# Same paths as in the runtime image: the warm-up below bakes them into the
+# symbol list cache key
+COPY js_lib/ /usr/local/share/cpp-here/
+COPY cpp-here-build /usr/local/bin/cpp-here-build
+
+RUN set -eux; \
+    cd /emsdk/upstream; \
+    # 1. Keep only the single-threaded library variants without sanitizers:
+    #    builds never use -pthread / wasm workers / -fsanitize (~430 MB)
+    find emscripten/cache/sysroot/lib/wasm32-emscripten -mindepth 1 -maxdepth 1 \
+        \( -type d -o -name '*-mt*' -o -name '*-ww*' -o -name '*san*' \) \
+        -exec rm -rf {} +; \
+    # 2. Closure Compiler is only used with --closure (~100 MB)
+    rm -rf emscripten/node_modules/google-closure-compiler*; \
+    # 3. Tests and LLVM/Binaryen tools the build never calls
+    rm -rf emscripten/test; \
+    rm -f bin/clang-scan-deps bin/llvm-dwp bin/llvm-cov bin/llvm-profdata \
+          bin/wasm-reduce bin/wasm-fuzz-* bin/wasm-shell; \
+    rm -f /emsdk/hello.c /emsdk/hello.o; \
+    # 4. Build once so symbol_lists/*.json (keyed on the -s settings and the
+    #    JS libraries) is not regenerated in every new container
+    printf '#include <iostream>\nint main(){std::cout<<1;}' > /tmp/w.cpp; \
+    cpp-here-build c++17 /tmp/w.cpp /tmp/w.js; \
+    rm -f /tmp/w.*; \
+    # 5. Precompile bits/stdc++.h once per -std: parsing it takes most of the
+    #    compile time. cpp-here-build uses them when the source includes it.
+    mkdir -p /emsdk/pch; \
+    for std in c++11 c++14 c++17 c++20 c++23; do \
+        cpp-here-build --make-pch $std /emsdk/pch/stdc++-$std.pch; \
+    done; \
+    rm -f emscripten/cache/cache.lock; \
+    # 6. Only the cache must be writable by sandbox_user (uid 1001, created
+    #    below): sanity.txt, cache.lock, building missing variants on demand.
+    #    The compiler itself stays owned by root.
+    chown -R 1001:1001 emscripten/cache; \
+    chmod -R 755 emscripten/cache
+
+# ---------- Stage 2: minimal runtime image ----------
+FROM ubuntu:24.04
+
+# emcc is a Python script; node, clang, and binaryen all come with /emsdk
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -m -u 1001 -s /bin/bash sandbox_user
+
+# A single copy of the already trimmed and chowned tree: no duplicate layers
+COPY --from=emsdk /emsdk /emsdk
+COPY --from=emsdk /usr/local/share/cpp-here /usr/local/share/cpp-here
+COPY --from=emsdk /usr/local/bin/cpp-here-build /usr/local/bin/cpp-here-build
+
+ENV EMSDK=/emsdk \
+    EM_CONFIG=/emsdk/.emscripten \
+    PATH=/emsdk:/emsdk/upstream/emscripten:/emsdk/node/22.16.0_64bit/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+USER sandbox_user
+
+WORKDIR /src
+
+CMD ["/bin/bash"]

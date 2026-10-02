@@ -13,7 +13,7 @@ from opentelemetry import trace
 from prometheus_client import Counter, Histogram
 from pydantic import BaseModel, Field
 
-from services.build import BuildError, build
+from services.build import BUILDER_IMAGE, BuildError, build
 from settings import settings
 from utils import cache
 from utils.cache import add_build_stats
@@ -60,6 +60,11 @@ BUILD_DURATION = Histogram(
 )
 
 
+# Appended to every compiled program (see build_cpp); read once at import
+WORKER_CODE = pathlib.Path("assets/worker.js").read_text()
+WORKER_HASH = sha256(WORKER_CODE.encode()).hexdigest()
+
+
 class BuildRequest(BaseModel):
     code: str = Field(max_length=50_000)
     cpp_version: Literal["c++98", "c++11", "c++14", "c++17", "c++20", "c++23"] = Field(
@@ -67,8 +72,16 @@ class BuildRequest(BaseModel):
     )
 
     def hash(self) -> str:
+        # BUILDER_IMAGE and worker.js are part of the key so changing either
+        # never serves output built with the previous one (the cached .js has
+        # worker.js appended, and cache hits extend its expiry)
         return sha256(
-            (str(self.model_dump()) + settings.BUILD_VERSION).encode()
+            (
+                str(self.model_dump())
+                + settings.BUILD_VERSION
+                + BUILDER_IMAGE
+                + WORKER_HASH
+            ).encode()
         ).hexdigest()
 
 
@@ -82,7 +95,6 @@ class BuildResponse(BaseModel):
     wasm_size_bytes: int | None = Field(default=0)
 
 
-WORKER_CODE = ""
 _in_flight: dict[str, asyncio.Event] = {}
 
 # How many times a request may wait on someone else's in-flight build before it
@@ -174,7 +186,6 @@ async def _lookup_cache(case_id: str) -> BuildResponse | None:
 async def build_cpp(
     request: BuildRequest, token: bool = Depends(need_token)
 ) -> BuildResponse:
-    global WORKER_CODE
     case_id = request.hash()
     trace.get_current_span().set_attribute("build.case_id", case_id)
 
@@ -232,10 +243,6 @@ async def build_cpp(
             )
 
         with tracer.start_as_current_span("build.finalize"):
-            if not WORKER_CODE:
-                async with aiofiles.open("assets/worker.js") as f:
-                    WORKER_CODE = await f.read()
-
             worker_code = f"\n\n// Worker code\n{WORKER_CODE}"
             async with aiofiles.open(f"{output_path}/{js_name}") as f:
                 js_code = await f.read()

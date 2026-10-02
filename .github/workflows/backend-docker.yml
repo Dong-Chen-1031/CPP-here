@@ -84,11 +84,22 @@ jobs:
     merge:
         runs-on: ubuntu-latest
         needs: build
+        # Waiting for the builder image can take minutes, so merge jobs of
+        # consecutive commits would otherwise run side by side and the older
+        # one could tag latest last. Queue them; the check further down also
+        # covers jobs queued out of order.
+        concurrency:
+            group: backend-docker-merge-${{ github.ref }}
+            cancel-in-progress: false
         permissions:
             contents: read
             packages: write
+            pull-requests: read
 
         steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
             - name: Download digests
               uses: actions/download-artifact@v4
               with:
@@ -116,13 +127,70 @@ jobs:
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3
 
+            # builder-docker.yml pushes the builder image this backend pins only
+            # after its regression tests pass, which takes longer than this
+            # build. Tag the backend once that image exists, so a deploy never
+            # pulls a backend whose builder image isn't there (every build would
+            # fail); give up if it never shows up (the builder tests failed).
+            - name: Wait for the pinned builder image
+              run: |
+                  ref=$(grep -oE '^BUILDER_IMAGE = "[^"]+"' backend/services/build.py | cut -d'"' -f2)
+                  [ -n "$ref" ] || { echo "BUILDER_IMAGE not found in backend/services/build.py" >&2; exit 1; }
+                  for _ in $(seq 40); do
+                      if out=$(docker buildx imagetools inspect "$ref" 2>&1); then
+                          echo "$ref exists"
+                          exit 0
+                      elif ! grep -qi 'not found' <<< "$out"; then
+                          echo "$out" >&2
+                          exit 1
+                      fi
+                      echo "Waiting for $ref ..."
+                      sleep 30
+                  done
+                  echo "::error::$ref was not pushed within 20 minutes (did builder-docker.yml fail?)"
+                  exit 1
+
+            # latest and pr-N follow the newest commit. If the branch or PR has
+            # moved on while this job waited and the newer commits change what
+            # this workflow builds, their run tags them instead; this one only
+            # pushes its own sha- tag. Newer commits outside those paths (e.g.
+            # frontend only) start no run of this workflow, so this one still
+            # tags: its image is what the newest commit would build.
+            - name: Check that this is still the newest commit
+              id: newest
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  if [ "${{ github.event_name }}" = pull_request ]; then
+                      mine=${{ github.event.pull_request.head.sha }}
+                      head=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" --jq .head.sha)
+                  else
+                      mine=$GITHUB_SHA
+                      head=$(git ls-remote origin "$GITHUB_REF" | cut -f1)
+                  fi
+                  if [ "$head" = "$mine" ]; then
+                      echo "newest=true" >> "$GITHUB_OUTPUT"
+                  # Same paths as the push / pull_request filters at the top.
+                  # Only the two trees are needed, so depth 1 is enough; if the
+                  # fetch fails, assume a newer run is coming.
+                  elif git fetch --quiet --no-tags --depth=1 origin "$mine" "$head" &&
+                      git diff --quiet "$mine" "$head" -- backend docker .github/workflows/backend-docker.yml; then
+                      echo "::notice::$GITHUB_REF is now at $head, but nothing this workflow builds changed since $mine: tagging it anyway"
+                      echo "newest=true" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "::notice::$GITHUB_REF is now at $head, not $mine: only pushing the sha- tag"
+                      echo "newest=false" >> "$GITHUB_OUTPUT"
+                  fi
+
             - name: Create and push multi-platform manifest
               working-directory: /tmp/digests
+              env:
+                  NEWEST: ${{ steps.newest.outputs.newest }}
               run: |
                   docker buildx imagetools create \
-                    $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+                    $(jq -cr --arg newest "$NEWEST" '.tags | map(select($newest == "true" or contains(":sha-"))) | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
                     $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
 
             - name: Inspect final manifest
               run: |
-                  docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+                  docker buildx imagetools inspect "$(jq -r '.tags[] | select(contains(":sha-"))' <<< "$DOCKER_METADATA_OUTPUT_JSON")"

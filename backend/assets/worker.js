@@ -11,32 +11,33 @@ self.onmessage = async (e) => {
     let pending = [];
     let pendingType = "stdout";
     let pendingBytes = 0;
-    let lastFlush = performance.now();
+    let lastFlush = -Infinity;
 
+    // Only a flush that sends something starts a new interval: otherwise the
+    // flush on a stdout/stderr switch, with nothing pending, would hold back
+    // the first write to the other stream, which a TLE then loses.
     function flush() {
-        if (pending.length) {
-            self.postMessage({
-                type: pendingType,
-                taskId,
-                content: pending.join(""),
-            });
-        }
+        if (!pending.length) return;
+        self.postMessage({
+            type: pendingType,
+            taskId,
+            content: pending.join(""),
+        });
         pending = [];
         pendingBytes = 0;
         lastFlush = performance.now();
     }
 
     function write(type, text) {
+        // Decided before the switch flush below, which restarts the interval
+        const due = performance.now() - lastFlush >= FLUSH_INTERVAL_MS;
         if (type !== pendingType) {
             flush();
             pendingType = type;
         }
         pending.push(text);
         pendingBytes += text.length;
-        if (
-            pendingBytes >= FLUSH_BYTES ||
-            performance.now() - lastFlush >= FLUSH_INTERVAL_MS
-        ) {
+        if (due || pendingBytes >= FLUSH_BYTES) {
             flush();
         }
     }
