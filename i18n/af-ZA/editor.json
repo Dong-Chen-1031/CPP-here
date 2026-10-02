@@ -182,7 +182,7 @@
     "limit": {
         "time": {
             "title": "Time Limit Exceeded",
-            "description": "The program ran longer than {{seconds}} s and was stopped. You can change the time limit in Settings."
+            "description": "The program ran longer than {{seconds}} s and was stopped. Because it did not exit normally, some of its output may be missing. You can change the time limit in Settings."
         },
         "output": {
             "title": "Output Limit Exceeded",
