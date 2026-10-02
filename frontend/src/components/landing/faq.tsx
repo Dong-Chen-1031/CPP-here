@@ -30,7 +30,7 @@ export function FaqAccordion({
                     // out of the tab order and the accessibility tree too.
                     inert={i >= showCount}
                     className={cn(
-                        "grid grid-rows-[1fr] border-b border-foreground/25 motion-safe:transition-all motion-safe:duration-300",
+                        "grid grid-rows-[1fr] border-b border-foreground/13 motion-safe:transition-all motion-safe:duration-300",
                         i >= showCount && "grid-rows-[0fr] -translate-y-10",
                         i >= showCount - 1 && "border-b-0!",
                     )}
