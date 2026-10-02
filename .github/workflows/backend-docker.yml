@@ -151,8 +151,11 @@ jobs:
                   exit 1
 
             # latest and pr-N follow the newest commit. If the branch or PR has
-            # moved on while this job waited, its run tags them instead; this
-            # one only pushes its own sha- tag.
+            # moved on while this job waited and the newer commits change what
+            # this workflow builds, their run tags them instead; this one only
+            # pushes its own sha- tag. Newer commits outside those paths (e.g.
+            # frontend only) start no run of this workflow, so this one still
+            # tags: its image is what the newest commit would build.
             - name: Check that this is still the newest commit
               id: newest
               env:
@@ -166,6 +169,13 @@ jobs:
                       head=$(git ls-remote origin "$GITHUB_REF" | cut -f1)
                   fi
                   if [ "$head" = "$mine" ]; then
+                      echo "newest=true" >> "$GITHUB_OUTPUT"
+                  # Same paths as the push / pull_request filters at the top.
+                  # Only the two trees are needed, so depth 1 is enough; if the
+                  # fetch fails, assume a newer run is coming.
+                  elif git fetch --quiet --no-tags --depth=1 origin "$mine" "$head" &&
+                      git diff --quiet "$mine" "$head" -- backend docker .github/workflows/backend-docker.yml; then
+                      echo "::notice::$GITHUB_REF is now at $head, but nothing this workflow builds changed since $mine: tagging it anyway"
                       echo "newest=true" >> "$GITHUB_OUTPUT"
                   else
                       echo "::notice::$GITHUB_REF is now at $head, not $mine: only pushing the sha- tag"
