@@ -11,6 +11,7 @@ import CTA from "@/components/landing/CTA.astro";
 import Footer from "@/components/landing/footer.astro";
 
 import { getStaticLangPaths, getTranslation } from "@/lib/langList";
+import Faq from "@/components/landing/faq.astro";
 
 export { getStaticLangPaths as getStaticPaths };
 
@@ -90,6 +91,7 @@ const t = getTranslation(lang);
         <Features lang={lang} t={t.features} />
         <Extension lang={lang} t={t.extension} />
         <Stats lang={lang} t={t.stats} />
+        <Faq lang={lang} t={t.faq} />
         <CTA lang={lang} t={t.cta} />
         <Footer lang={lang} t={t.footer} />
     </div>
