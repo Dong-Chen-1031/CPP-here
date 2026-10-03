@@ -20,7 +20,7 @@ Store listings for Chrome and Firefox are on the way. Until then, build the exte
 - **Right-click the toolbar button → Parse with**: picks a parser by hand, for pages the extension doesn't recognize.
 - **Options page**:
   - **Custom rules**: always use a specific parser for URLs that match a regular expression.
-  - **Target URL**: the C++ Here editor that problems are sent to. Change it only when running C++ Here locally, for example `http://localhost:4321/editor/*`.
+  - **Target URL**: the C++ Here editor that problems are sent to. Change it only to test a local dev server (any port on `localhost` or `127.0.0.1`) or a preview deployment on `*.cpp-insiders.doong.me`, for example `http://localhost:4321/editor/*`. Other URLs are not allowed, because the extension can only request access to hosts listed in its manifest.
   - **Debug mode**: also logs the parsed data to the console of the problem page.
 
 If a C++ Here editor tab is already open, the extension reuses it; otherwise it opens a new one. When the editor already has test cases, it asks whether to replace them or add the new ones.
@@ -206,6 +206,8 @@ Third-party libraries that can be found in the minified extension:
 - [jszip 3.10.1](https://github.com/Stuk/jszip/blob/v3.10.1/dist/jszip.js)
 - [cyrillic-to-translit-js 3.2.1](https://github.com/greybax/cyrillic-to-translit-js/blob/05f02e9e1df6d338f35258443f2e9c910bd8ccd4/CyrillicToTranslit.js)
 - [p-limit 7.3.0](https://github.com/sindresorhus/p-limit/blob/v7.3.0/index.js)
+
+The options page uses the [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) font (latin subset from [Fontsource](https://fontsource.org/fonts/jetbrains-mono)), licensed under the [SIL Open Font License](./media/fonts/OFL.txt).
 
 To build the submitted source: run `bun install` in the repository root (the lockfile is the root `bun.lock`), then `cd extensions && npm run package:firefox`. The result is in `extensions/dist/`.
 

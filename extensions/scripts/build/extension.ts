@@ -20,8 +20,13 @@ await Promise.all(
         const packageJson = JSON.parse(packageJsonContent);
 
         const optionalHostPermissions = [
-          // A custom target URL pointing at a local C++ Here dev server (any port)
-          ...new Set([...Object.values(requiredPermissions), 'http://localhost/*', 'http://127.0.0.1/*']),
+          // Custom target URLs: a local C++ Here dev server (any port), or a cpp-insiders preview deployment
+          ...new Set([
+            ...Object.values(requiredPermissions),
+            'http://localhost/*',
+            'http://127.0.0.1/*',
+            'https://*.cpp-insiders.doong.me/*',
+          ]),
         ];
 
         const manifest: Record<string, any> = {
@@ -111,6 +116,10 @@ await Promise.all(
     {
       from: path.resolve(projectRoot, 'media/icons'),
       to: path.resolve(buildDirectory, 'icons'),
+    },
+    {
+      from: path.resolve(projectRoot, 'media/fonts'),
+      to: path.resolve(buildDirectory, 'fonts'),
     },
     {
       from: path.resolve(projectRoot, 'src/options.html'),

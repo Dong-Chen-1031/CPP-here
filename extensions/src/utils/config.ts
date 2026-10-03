@@ -1,4 +1,5 @@
 import { browser } from './browser';
+import { DEFAULT_TARGET_URL } from './target';
 
 interface ConfigItems {
   customRules: [string, string][];
@@ -10,7 +11,7 @@ class Config {
   private readonly defaults: Partial<ConfigItems> = {
     customRules: [],
     debugMode: false,
-    targetUrl: 'https://cpp.doong.me/editor/*',
+    targetUrl: DEFAULT_TARGET_URL,
   };
 
   public async get<T extends keyof ConfigItems>(key: T): Promise<ConfigItems[T]> {

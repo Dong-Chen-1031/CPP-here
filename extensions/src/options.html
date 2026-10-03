@@ -5,18 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>C++ Here Options</title>
     <style>
+      @font-face {
+        font-family: 'JetBrains Mono';
+        src: url('fonts/JetBrainsMono-latin.woff2') format('woff2');
+        font-weight: 100 800;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      /* The C++ Here editor's shadcn "neutral" palette, see frontend/src/styles/global.css */
       :root {
-        --bg-page: #f8fafc;
-        --bg-card: #ffffff;
-        --text-main: #0f172a;
-        --text-muted: #64748b;
-        --primary: #3b82f6;
-        --primary-hover: #2563eb;
-        --danger: #ef4444;
-        --danger-bg: #fee2e2;
-        --danger-hover: #fca5a5;
-        --border: #e2e8f0;
-        --ring: #bfdbfe;
+        color-scheme: dark;
+        --background: oklch(0.145 0 0);
+        --panel: oklch(0.175 0 0);
+        --foreground: oklch(0.985 0 0);
+        --muted-foreground: oklch(0.708 0 0);
+        --accent: oklch(0.269 0 0);
+        --primary: oklch(0.922 0 0);
+        --primary-foreground: oklch(0.205 0 0);
+        --destructive: oklch(0.704 0.191 22.216);
+        --border: oklch(1 0 0 / 10%);
+        --input: oklch(1 0 0 / 15%);
+        --input-background: oklch(1 0 0 / 4.5%);
+        --ring: oklch(0.556 0 0);
+        --radius: 0.625rem;
+      }
+
+      @media (prefers-color-scheme: light) {
+        :root {
+          color-scheme: light;
+          --background: oklch(1 0 0);
+          --panel: oklch(0.985 0 0);
+          --foreground: oklch(0.145 0 0);
+          --muted-foreground: oklch(0.556 0 0);
+          --accent: oklch(0.97 0 0);
+          --primary: oklch(0.205 0 0);
+          --primary-foreground: oklch(0.985 0 0);
+          --destructive: oklch(0.577 0.245 27.325);
+          --border: oklch(0.922 0 0);
+          --input: oklch(0.922 0 0);
+          --input-background: transparent;
+          --ring: oklch(0.708 0 0);
+        }
       }
 
       * {
@@ -25,227 +55,403 @@
 
       body {
         margin: 0;
-        padding: 2rem 1rem;
-        font-family:
-          Arial,
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          'Segoe UI',
-          Roboto,
-          sans-serif;
-        background-color: var(--bg-page);
-        color: var(--text-main);
+        background-color: var(--background);
+        color: var(--foreground);
+        font-family: 'JetBrains Mono', Consolas, 'Liberation Mono', ui-monospace, monospace;
+        font-size: 0.875rem;
         line-height: 1.5;
+        font-variant-numeric: tabular-nums;
+        font-variant-ligatures: none;
       }
 
-      .container {
-        max-width: 800px;
+      .page {
+        width: 600px;
+        max-width: 100%;
         margin: 0 auto;
+        padding: 1.5rem 1rem;
+      }
+
+      .icon {
+        width: 1rem;
+        height: 1rem;
+        flex-shrink: 0;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
 
       .header {
-        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .header .icon {
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+
+      .brand {
+        font-size: 1.125rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
       }
 
       .badge {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        background-color: #e0e7ff;
-        color: #4338ca;
+        padding: 0.125rem 0.5rem;
+        border: 1px solid var(--border);
         border-radius: 9999px;
+        color: var(--muted-foreground);
         font-size: 0.75rem;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        margin-bottom: 0.5rem;
       }
 
-      .header h1 {
-        margin: 0;
-        font-size: 1.875rem;
-        font-weight: 700;
-        color: #1e293b;
-      }
-
-      .header p {
-        margin: 0.5rem 0 0;
-        color: var(--text-muted);
-      }
-
-      .card {
-        background-color: var(--bg-card);
+      .panel {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background-color: var(--panel);
         border: 1px solid var(--border);
-        border-radius: 0.75rem;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
+        border-radius: calc(var(--radius) + 4px);
       }
 
-      h2 {
-        margin: 0 0 1rem;
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: #0f172a;
-      }
-
-      label {
-        display: block;
+      .panel-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0 0 0.25rem;
         font-size: 0.875rem;
         font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: #334155;
-      }
-
-      input[type='text'],
-      input[type='number'],
-      .custom-rules-row > input,
-      select {
-        width: 100%;
-        padding: 0.625rem 0.875rem;
-        border: 1px solid var(--border);
-        border-radius: 0.5rem;
-        font-size: 0.875rem;
-        transition: all 0.2s;
-        background-color: #fff;
-        color: #1e293b;
-      }
-
-      input[type='text']:focus,
-      input[type='number']:focus,
-      .custom-rules-row > input:focus,
-      select:focus {
-        outline: none;
-        border-color: var(--primary);
       }
 
       .description {
-        margin: 0.75rem 0 0;
-        font-size: 0.875rem;
-        color: var(--text-muted);
+        margin: 0 0 0.75rem;
+        color: var(--muted-foreground);
+        font-size: 0.8rem;
+      }
+
+      .description:last-child {
+        margin-bottom: 0;
+      }
+
+      code {
+        padding: 1px 3px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background-color: var(--accent);
+        font-family: inherit;
+        font-size: 0.855em;
+      }
+
+      .input,
+      .select {
+        height: 2rem;
+        width: 100%;
+        min-width: 0;
+        padding: 0.25rem 0.625rem;
+        border: 1px solid var(--input);
+        border-radius: calc(var(--radius) - 2px);
+        background-color: var(--input-background);
+        color: var(--foreground);
+        font: inherit;
+        font-size: 0.8rem;
+        outline: none;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+      }
+
+      .input::placeholder {
+        color: var(--muted-foreground);
+      }
+
+      .input:focus-visible,
+      .select:focus-visible {
+        border-color: var(--ring);
+        box-shadow: 0 0 0 3px oklch(from var(--ring) l c h / 50%);
+      }
+
+      .input[aria-invalid='true'] {
+        border-color: oklch(from var(--destructive) l c h / 60%);
+        box-shadow: 0 0 0 3px oklch(from var(--destructive) l c h / 20%);
+      }
+
+      .select {
+        appearance: none;
+        padding-right: 1.75rem;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a1a1a1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.5rem center;
+        background-size: 0.875rem;
+        cursor: pointer;
+      }
+
+      .select option {
+        background-color: var(--panel);
+        color: var(--foreground);
+      }
+
+      .field-row {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .button,
+      .icon-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+        flex-shrink: 0;
+        height: 2rem;
+        padding: 0 0.625rem;
+        border: 1px solid var(--border);
+        border-radius: calc(var(--radius) - 2px);
+        background-color: var(--input-background);
+        color: var(--foreground);
+        font: inherit;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: background-color 0.15s;
+      }
+
+      .button:hover,
+      .icon-button:hover {
+        background-color: var(--accent);
+      }
+
+      .button:focus-visible,
+      .icon-button:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px oklch(from var(--ring) l c h / 50%);
+      }
+
+      .icon-button {
+        width: 2rem;
+        padding: 0;
+      }
+
+      .icon-button:hover {
+        color: var(--destructive);
+      }
+
+      .icon-button .icon {
+        width: 0.875rem;
+        height: 0.875rem;
       }
 
       .error {
+        display: flex;
+        gap: 0.375rem;
         margin: 0.5rem 0 0;
-        color: var(--danger);
-        font-size: 0.875rem;
-        font-weight: 500;
+        color: var(--destructive);
+        font-size: 0.8rem;
+      }
+
+      .error .icon {
+        width: 0.875rem;
+        height: 0.875rem;
+        margin-top: 0.2rem;
       }
 
       .hidden {
         display: none !important;
       }
 
+      #custom-rules-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
       .custom-rules-row {
         display: flex;
-        gap: 0.75rem;
-        margin-top: 0.75rem;
-      }
-
-      .custom-rules-row > input {
-        flex: 1;
-      }
-
-      .custom-rules-row > select {
-        width: 200px;
-      }
-
-      .custom-rules-row > button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 2.5rem;
-        padding: 0;
-        background-color: var(--danger-bg);
-        color: var(--danger);
-        border: none;
-        border-radius: 0.5rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background-color 0.2s;
-      }
-
-      .custom-rules-row > button:hover {
-        background-color: var(--danger-hover);
-      }
-
-      .toggle-wrapper {
-        display: inline-flex;
-        align-items: center;
         gap: 0.5rem;
-        padding: 0.5rem;
-        margin-top: 0.5rem;
-        background-color: #f8fafc;
-        border: 1px solid var(--border);
-        border-radius: 0.5rem;
       }
 
-      .toggle-wrapper input[type='checkbox'] {
-        width: 1.125rem;
-        height: 1.125rem;
-        accent-color: var(--primary);
+      .custom-rules-row > .select {
+        width: 13rem;
+        flex-shrink: 0;
+      }
+
+      .custom-rules-row > .icon-button.invisible {
+        visibility: hidden;
+      }
+
+      .switch-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .switch-row label {
         cursor: pointer;
-        margin: 0;
       }
 
-      .toggle-wrapper label {
-        margin: 0;
+      .switch {
+        position: relative;
+        flex-shrink: 0;
+        width: 2rem;
+        height: 1.15rem;
+        margin: 0.125rem 0 0;
+        appearance: none;
+        border: 1px solid transparent;
+        border-radius: 9999px;
+        background-color: var(--input);
         cursor: pointer;
+        transition: background-color 0.15s;
       }
 
-      @media (max-width: 640px) {
+      .switch::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 1px;
+        width: 0.9rem;
+        height: 0.9rem;
+        border-radius: 9999px;
+        background-color: var(--foreground);
+        transform: translateY(-50%);
+        transition: transform 0.15s;
+      }
+
+      .switch:checked {
+        background-color: var(--primary);
+      }
+
+      .switch:checked::before {
+        background-color: var(--primary-foreground);
+        transform: translate(0.85rem, -50%);
+      }
+
+      .switch:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px oklch(from var(--ring) l c h / 50%);
+      }
+
+      @media (max-width: 480px) {
+        .field-row,
         .custom-rules-row {
-          flex-direction: column;
+          flex-wrap: wrap;
         }
-        .custom-rules-row > select,
-        .custom-rules-row > button {
-          width: 100%;
+
+        .custom-rules-row > .input {
+          flex-basis: 100%;
         }
-        .custom-rules-row > button {
-          padding: 0.625rem;
+
+        .custom-rules-row > .select {
+          flex: 1;
+          width: auto;
         }
       }
     </style>
   </head>
   <body>
-    <div class="container">
-      <div class="header">
-        <div class="badge">C++ Here</div>
-        <h1>Options Center</h1>
-        <p>Configure parser selection, the editor URL, and debug mode.</p>
-      </div>
+    <main class="page">
+      <header class="header">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m16 18 6-6-6-6" />
+          <path d="m8 6-6 6 6 6" />
+        </svg>
+        <span class="brand">C++ Here</span>
+        <span class="badge">Extension options</span>
+      </header>
 
-      <div class="card">
-        <h2>Custom rules</h2>
-        <div id="custom-rules-container"></div>
-        <p id="custom-rules-error" class="error hidden"></p>
+      <section class="panel">
+        <h2 class="panel-title">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </svg>
+          <label for="target-url">Target URL</label>
+        </h2>
         <p class="description">
-          Custom rules can be used to override the parser selection. When a rule's regular expression matches with the
-          url of the problem that is being parsed, the parser configured in that rule is used instead of the default
-          parser.
+          The C++ Here editor that parsed problems are sent to. Only change this to test a local dev server (any port on
+          <code>localhost</code> or <code>127.0.0.1</code>) or a preview deployment on
+          <code>*.cpp-insiders.doong.me</code>.
         </p>
-      </div>
-
-      <div class="card">
-        <h2>Target URL</h2>
-        <label for="target-url">Target URL</label>
-        <input type="text" id="target-url" placeholder="https://cpp.doong.me/editor/*" />
-        <p class="description">
-          The C++ Here editor that parsed problems are sent to. Only change this when running C++ Here locally, for
-          example <code>http://localhost:4321/editor/*</code>.
-        </p>
-      </div>
-
-      <div class="card">
-        <h2>Debugging</h2>
-        <div class="toggle-wrapper">
-          <input type="checkbox" id="debug-mode" />
-          <label for="debug-mode">Debug mode</label>
+        <div class="field-row">
+          <input
+            type="text"
+            id="target-url"
+            class="input"
+            spellcheck="false"
+            autocomplete="off"
+            placeholder="https://cpp.doong.me/editor/*"
+            aria-describedby="target-url-error"
+          />
+          <button type="button" id="target-url-reset" class="button" title="Use https://cpp.doong.me/editor/*">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+            Reset
+          </button>
         </div>
-        <p class="description">
-          If debug mode is enabled, all the JSON data that is sent is logged to the console as well.
+        <p id="target-url-error" class="error hidden" role="alert">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" x2="12" y1="8" y2="12" />
+            <line x1="12" x2="12.01" y1="16" y2="16" />
+          </svg>
+          <span><span id="target-url-error-message"></span> This URL is not saved.</span>
         </p>
-      </div>
-    </div>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M17 3v10" />
+            <path d="m12.67 5.5 8.66 5" />
+            <path d="m12.67 10.5 8.66-5" />
+            <path d="M9 17a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2z" />
+          </svg>
+          Custom rules
+        </h2>
+        <p class="description">
+          Use a specific parser for pages whose URL matches a regular expression, instead of the parser C++ Here picks
+          automatically.
+        </p>
+        <div id="custom-rules-container"></div>
+        <p id="custom-rules-error" class="error hidden" role="alert"></p>
+      </section>
+
+      <section class="panel">
+        <div class="switch-row">
+          <div>
+            <h2 class="panel-title">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m8 2 1.88 1.88" />
+                <path d="M14.12 3.88 16 2" />
+                <path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1" />
+                <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6" />
+                <path d="M12 20v-9" />
+                <path d="M6.53 9C4.6 8.8 3 7.1 3 5" />
+                <path d="M6 13H2" />
+                <path d="M3 21c0-2.1 1.7-3.9 3.8-4" />
+                <path d="M20.97 5c0 2.1-1.6 3.8-3.5 4" />
+                <path d="M22 13h-4" />
+                <path d="M17.2 17c2.1.1 3.8 1.9 3.8 4" />
+              </svg>
+              <label for="debug-mode">Debug mode</label>
+            </h2>
+            <p class="description">Also log the parsed problem data to the console of the problem page.</p>
+          </div>
+          <input type="checkbox" id="debug-mode" class="switch" role="switch" />
+        </div>
+      </section>
+    </main>
+
+    <template id="trash-icon">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 6h18" />
+        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+      </svg>
+    </template>
 
     <script src="js/options.js"></script>
   </body>

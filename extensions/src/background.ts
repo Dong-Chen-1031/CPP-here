@@ -5,13 +5,15 @@ import { config } from './utils/config';
 import { sendToContent } from './utils/messaging';
 import { noop } from './utils/noop';
 import { request, requiredPermissions } from './utils/request';
+import { checkTargetUrl, DEFAULT_TARGET_URL } from './utils/target';
 
 declare global {
   const PARSER_NAMES: string[];
 }
 
-const DEFAULT_TARGET_URL = 'https://cpp.doong.me/editor/*';
-let targetPermissionPattern = DEFAULT_TARGET_URL;
+// permissions.request() only works synchronously within the click's user gesture, so the configured target URL is
+// kept in memory instead of being read from storage when the toolbar button is clicked
+let targetUrlSetting = DEFAULT_TARGET_URL;
 
 function createContextMenu(): void {
   browser.contextMenus.create({
@@ -71,14 +73,41 @@ async function loadContentScript(tab: Tabs.Tab, parserName: string): Promise<voi
   sendToContent(tab.id, MessageAction.Parse, { parserName });
 }
 
+/**
+ * Shows an error on the problem page. Errors thrown before the content script is loaded would otherwise only appear
+ * in the background console, so clicking the toolbar button would seem to do nothing.
+ */
+async function showErrorOnTab(tabId: number, message: string): Promise<void> {
+  console.error(message);
+
+  try {
+    await browser.scripting.executeScript({
+      target: { tabId },
+      args: [message],
+      func: (errorMessage: string): void => {
+        alert(errorMessage);
+      },
+    });
+  } catch {
+    // Pages the extension can't script, like the browser's own pages; the console error above is all we can do
+  }
+}
+
+function parseTab(tab: Tabs.Tab, parserName: string): void {
+  loadContentScript(tab, parserName).catch(err => {
+    const message = err instanceof Error ? err.message : `${err}`;
+    void showErrorOnTab(tab.id, `C++ Here could not parse this page. ${message}`);
+  });
+}
+
 function onAction(tab: Tabs.Tab): void {
-  void loadContentScript(tab, null);
+  parseTab(tab, null);
 }
 
 function onContextMenu(info: Menus.OnClickData, tab: Tabs.Tab): void {
   if (info.menuItemId.toString().startsWith('parse-with-')) {
     const parserName = info.menuItemId.toString().split('parse-with-').pop();
-    void loadContentScript(tab, parserName);
+    parseTab(tab, parserName);
   }
 }
 
@@ -186,39 +215,45 @@ async function dispatchExtEvent(tabId: number, payload: unknown): Promise<void> 
   throw new Error('Could not send the problem data to the C++ Here editor tab.');
 }
 
-function normalizeTargetUrl(rawTargetUrl: string): { pattern: string; entry: string } {
-  const trimmed = rawTargetUrl.trim();
-  const fallback = DEFAULT_TARGET_URL;
-  const candidate = trimmed.length > 0 ? trimmed : fallback;
+function getTargetUrl(targetUrl: string): { pattern: string; entry: string } {
+  const target = checkTargetUrl(targetUrl);
 
-  const entry = candidate.endsWith('/*') ? candidate.slice(0, -1) : candidate;
-  const pattern = entry.endsWith('/*') ? entry : `${entry.replace(/\/$/, '')}/*`;
+  if ('error' in target) {
+    throw new Error(`${target.error} Change the target URL in the C++ Here extension options.`);
+  }
 
-  return { pattern, entry: entry.replace(/\/$/, '') + '/' };
+  return target;
 }
 
 async function ensurePermissionsOnGesture(origins: string[]): Promise<void> {
-  const combinedOrigins = [...new Set([...origins, targetPermissionPattern])];
+  // Must not await anything before permissions.request(), or the user gesture is lost
+  const combinedOrigins = [...new Set([...origins, getTargetUrl(targetUrlSetting).pattern])];
   const granted = await browser.permissions.request({ origins: combinedOrigins });
 
   if (!granted) {
-    throw new Error(`User denied host permissions for ${combinedOrigins.join(', ')}`);
+    throw new Error(
+      `C++ Here needs access to ${combinedOrigins.join(', ')} to send problems to the editor. Click the button again and allow access.`,
+    );
   }
 }
 
-async function refreshTargetPermissionPattern(): Promise<void> {
-  const configuredTargetUrl = await config.get('targetUrl');
-  targetPermissionPattern = normalizeTargetUrl(configuredTargetUrl).pattern;
+async function refreshTargetUrlSetting(): Promise<void> {
+  targetUrlSetting = await config.get('targetUrl');
 }
 
-void refreshTargetPermissionPattern().catch(noop);
+void refreshTargetUrlSetting().catch(noop);
+
+browser.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'local' && 'targetUrl' in changes) {
+    void refreshTargetUrlSetting().catch(noop);
+  }
+});
 
 async function sendTask(tabId: number, messageId: string, data: string): Promise<void> {
   try {
     const parsedData = JSON.parse(data);
-    const configuredTargetUrl = await config.get('targetUrl');
-    const { pattern: targetUrl, entry: targetEntry } = normalizeTargetUrl(configuredTargetUrl);
-    targetPermissionPattern = targetUrl;
+    targetUrlSetting = await config.get('targetUrl');
+    const { pattern: targetUrl, entry: targetEntry } = getTargetUrl(targetUrlSetting);
     const eventPayload = parsedData.eventPayload ?? parsedData;
 
     let targetTabId: number;
