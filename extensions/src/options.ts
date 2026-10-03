@@ -1,13 +1,15 @@
 import { config } from './utils/config';
 import { noop } from './utils/noop';
+import { checkTargetUrl, DEFAULT_TARGET_URL } from './utils/target';
 
-const customPortsInput = document.querySelector<HTMLInputElement>('#custom-ports');
 const customRulesContainer = document.querySelector<HTMLDivElement>('#custom-rules-container');
-const requestTimeoutInput = document.querySelector<HTMLInputElement>('#request-timeout');
 const targetUrlInput = document.querySelector<HTMLInputElement>('#target-url');
+const targetUrlResetButton = document.querySelector<HTMLButtonElement>('#target-url-reset');
+const targetUrlError = document.querySelector<HTMLParagraphElement>('#target-url-error');
+const targetUrlErrorMessage = document.querySelector<HTMLSpanElement>('#target-url-error-message');
 const debugModeInput = document.querySelector<HTMLInputElement>('#debug-mode');
 
-const DEFAULT_TARGET_URL = 'https://cpp.doong.me/editor/*';
+const trashIconTemplate = document.querySelector<HTMLTemplateElement>('#trash-icon');
 
 function updateCustomRules(): void {
   const rows = customRulesContainer.querySelectorAll('.custom-rules-row');
@@ -28,7 +30,7 @@ function updateCustomRules(): void {
   });
 
   if (rules[rules.length - 1][0].length > 0) {
-    rows[rows.length - 1].querySelector('button').classList.remove('hidden');
+    rows[rows.length - 1].querySelector('button').classList.remove('invisible');
     addCustomRulesRow();
   }
 
@@ -59,10 +61,13 @@ function addCustomRulesRow(regex?: string, parserName?: string): void {
   row.classList.add('custom-rules-row');
 
   const input = document.createElement('input');
+  input.classList.add('input');
   input.placeholder = 'Regular expression';
+  input.spellcheck = false;
   input.value = regex !== undefined ? regex : '';
 
   const select = document.createElement('select');
+  select.classList.add('select');
   for (const parser of PARSER_NAMES) {
     const option = document.createElement('option');
     option.value = parser;
@@ -77,14 +82,19 @@ function addCustomRulesRow(regex?: string, parserName?: string): void {
   }
 
   const button = document.createElement('button');
-  button.textContent = 'X';
+  button.type = 'button';
+  button.classList.add('icon-button');
+  button.title = 'Remove rule';
+  button.setAttribute('aria-label', 'Remove rule');
+  button.appendChild(trashIconTemplate.content.cloneNode(true));
 
+  // The last row is the empty one for adding a rule, so it has nothing to remove
   if (regex === undefined) {
-    button.classList.add('hidden');
+    button.classList.add('invisible');
   }
 
   button.addEventListener('click', () => {
-    if (!button.classList.contains('hidden')) {
+    if (!button.classList.contains('invisible')) {
       row.remove();
       updateCustomRules();
     }
@@ -100,52 +110,45 @@ function addCustomRulesRow(regex?: string, parserName?: string): void {
   customRulesContainer.appendChild(row);
 }
 
-customPortsInput.addEventListener('input', function (): void {
-  const ports = this.value
-    .split(',')
-    .map(x => x.trim())
-    .filter(x => x.length > 0)
-    .map(x => Number(x));
+/**
+ * Shows whether the target URL can be used. Returns false for URLs the extension can't get access to, which are
+ * not saved: the toolbar button would fail with them.
+ */
+function validateTargetUrl(value: string): boolean {
+  const target = checkTargetUrl(value);
+  const isValid = !('error' in target);
 
-  const uniquePorts = [...new Set(ports)];
+  targetUrlInput.setAttribute('aria-invalid', `${!isValid}`);
+  targetUrlError.classList.toggle('hidden', isValid);
+  targetUrlErrorMessage.textContent = 'error' in target ? target.error : '';
 
-  const errorElem = document.querySelector('#custom-ports-error');
+  return isValid;
+}
 
-  if (uniquePorts.some(isNaN) || uniquePorts.some(x => x < 0)) {
-    errorElem.classList.add('hidden');
-  } else {
-    errorElem.classList.remove('hidden');
-
-    config.set('customPorts', uniquePorts).then(noop).catch(noop);
+function saveTargetUrl(value: string): void {
+  if (!validateTargetUrl(value)) {
+    return;
   }
-});
 
-requestTimeoutInput.addEventListener('input', function (): void {
-  const value = this.valueAsNumber;
-  config
-    .set('requestTimeout', value < 1 ? 1 : value)
-    .then(noop)
-    .catch(noop);
-});
-
-targetUrlInput.addEventListener('input', function (): void {
-  const normalized = this.value.trim();
+  const normalized = value.trim();
   config
     .set('targetUrl', normalized.length > 0 ? normalized : DEFAULT_TARGET_URL)
     .then(noop)
     .catch(noop);
+}
+
+targetUrlInput.addEventListener('input', function (): void {
+  saveTargetUrl(this.value);
+});
+
+targetUrlResetButton.addEventListener('click', () => {
+  targetUrlInput.value = DEFAULT_TARGET_URL;
+  saveTargetUrl(DEFAULT_TARGET_URL);
 });
 
 debugModeInput.addEventListener('input', function (): void {
   config.set('debugMode', this.checked).then(noop).catch(noop);
 });
-
-config
-  .get('customPorts')
-  .then(value => {
-    customPortsInput.value = value.join(',');
-  })
-  .catch(noop);
 
 config
   .get('customRules')
@@ -159,16 +162,11 @@ config
   .catch(noop);
 
 config
-  .get('requestTimeout')
-  .then(value => {
-    requestTimeoutInput.valueAsNumber = value;
-  })
-  .catch(noop);
-
-config
   .get('targetUrl')
   .then(value => {
     targetUrlInput.value = value;
+    // A URL saved before the allowed hosts changed may no longer work
+    validateTargetUrl(value);
   })
   .catch(noop);
 
