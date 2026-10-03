@@ -10,6 +10,7 @@ import { Settings } from "@/components/Settings";
 import { getLanguages } from "@/lib/langList";
 import TestEditDialog from "@/components/panel/TestEditDialog";
 import { ShareReceiveDialog } from "@/components/share";
+import { ExtensionReceiver } from "@/components/ExtensionReceiver";
 import { getStaticLangPaths, getTranslation } from "@/lib/langList";
 
 const allLangs = getLanguages();
@@ -68,5 +69,6 @@ const lsVersion = {
         <Settings client:only="react" allLangs={allLangs} />
         <TestEditDialog client:only="react" />
         <ShareReceiveDialog client:only="react" />
+        <ExtensionReceiver client:only="react" />
     </div>
 </Layout>

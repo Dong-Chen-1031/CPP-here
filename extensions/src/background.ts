@@ -1,11 +1,10 @@
 import type { Menus, Runtime, Tabs } from 'webextension-polyfill';
-import { getHosts } from './hosts/hosts';
 import { Message, MessageAction } from './models/messaging';
 import { browser } from './utils/browser';
-import { noop } from './utils/noop';
-import { sendToContent } from './utils/messaging';
-import { request, requiredPermissions } from './utils/request';
 import { config } from './utils/config';
+import { sendToContent } from './utils/messaging';
+import { noop } from './utils/noop';
+import { request, requiredPermissions } from './utils/request';
 
 declare global {
   const PARSER_NAMES: string[];
@@ -83,52 +82,108 @@ function onContextMenu(info: Menus.OnClickData, tab: Tabs.Tab): void {
   }
 }
 
+const TAB_LOAD_TIMEOUT_MS = 30_000;
+const LISTENER_READY_TIMEOUT_MS = 30_000;
+
 function waitForTabLoad(tabId: number): Promise<void> {
-  return new Promise(resolve => {
-    browser.tabs.get(tabId).then(tab => {
-      if (tab.status === 'complete') {
+  return new Promise((resolve, reject) => {
+    const cleanup = (): void => {
+      clearTimeout(timeout);
+      browser.tabs.onUpdated.removeListener(onUpdated);
+      browser.tabs.onRemoved.removeListener(onRemoved);
+    };
+
+    const onUpdated = (updatedTabId: number, changeInfo: Tabs.OnUpdatedChangeInfoType): void => {
+      if (updatedTabId === tabId && changeInfo.status === 'complete') {
+        cleanup();
         resolve();
-      } else {
-        const listener = (updatedTabId: number, changeInfo: any) => {
-          if (updatedTabId === tabId && changeInfo.status === 'complete') {
-            browser.tabs.onUpdated.removeListener(listener);
-            resolve();
-          }
-        };
-        browser.tabs.onUpdated.addListener(listener);
       }
-    });
+    };
+
+    const onRemoved = (removedTabId: number): void => {
+      if (removedTabId === tabId) {
+        cleanup();
+        reject(new Error('The C++ Here tab was closed before it finished loading.'));
+      }
+    };
+
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error(`The C++ Here tab did not finish loading within ${TAB_LOAD_TIMEOUT_MS / 1000} seconds.`));
+    }, TAB_LOAD_TIMEOUT_MS);
+
+    // Listen before checking the current status so a load that completes in between is not missed
+    browser.tabs.onUpdated.addListener(onUpdated);
+    browser.tabs.onRemoved.addListener(onRemoved);
+
+    browser.tabs.get(tabId).then(
+      tab => {
+        if (tab.status === 'complete') {
+          cleanup();
+          resolve();
+        }
+      },
+      err => {
+        cleanup();
+        reject(err);
+      },
+    );
   });
 }
 
-async function dispatchExtEvent(tabId: number, payload: unknown): Promise<void> {
-  await browser.scripting.executeScript({
-    target: { tabId },
-    args: [payload],
-    world: 'MAIN',
-    func: injectedPayload => {
-      function waitForEventListener(): Promise<void> {
-        return new Promise(resolve => {
-          if ((window as any).eventListenerLoaded) {
-            resolve();
-          } else {
-            const checkInterval = setInterval(() => {
-              // console.log(window.eventListenerLoaded);
-              if ((window as any).eventListenerLoaded) {
-                clearInterval(checkInterval);
-                resolve();
-              }
-            }, 50);
-          }
-        });
-      }
+type DispatchResult = 'delivered' | 'rejected' | 'timeout';
 
-      waitForEventListener().then(() => {
-        console.log('Dispatching ext event with payload:', injectedPayload);
-        window.dispatchEvent(new CustomEvent('ext', { detail: injectedPayload }));
+async function dispatchExtEvent(tabId: number, payload: unknown): Promise<void> {
+  // The injected function returns a promise, which executeScript waits for before resolving
+  const [injection] = await browser.scripting.executeScript({
+    target: { tabId },
+    args: [payload, LISTENER_READY_TIMEOUT_MS],
+    world: 'MAIN',
+    func: (injectedPayload: unknown, timeoutMs: number): Promise<DispatchResult> => {
+      const dispatch = (): DispatchResult => {
+        const event = new CustomEvent('ext', { detail: injectedPayload, cancelable: true });
+        // The editor calls preventDefault() once it has accepted the payload,
+        // which makes dispatchEvent() return false
+        return window.dispatchEvent(event) ? 'rejected' : 'delivered';
+      };
+
+      return new Promise(resolve => {
+        if ((window as any).eventListenerLoaded) {
+          resolve(dispatch());
+          return;
+        }
+
+        const startTime = Date.now();
+        const checkInterval = setInterval(() => {
+          if ((window as any).eventListenerLoaded) {
+            clearInterval(checkInterval);
+            resolve(dispatch());
+          } else if (Date.now() - startTime > timeoutMs) {
+            clearInterval(checkInterval);
+            resolve('timeout');
+          }
+        }, 50);
       });
     },
   });
+
+  const result = injection?.result as DispatchResult | undefined;
+
+  if (result === 'delivered') {
+    return;
+  }
+
+  if (result === 'rejected') {
+    throw new Error('The C++ Here editor did not accept the problem data. Try reloading the editor tab.');
+  }
+
+  if (result === 'timeout') {
+    throw new Error(
+      `The C++ Here editor was not ready within ${LISTENER_READY_TIMEOUT_MS / 1000} seconds. Make sure the editor tab has finished loading and try again.`,
+    );
+  }
+
+  throw new Error('Could not send the problem data to the C++ Here editor tab.');
 }
 
 function normalizeTargetUrl(rawTargetUrl: string): { pattern: string; entry: string } {
