@@ -104,3 +104,27 @@ jobs:
               run: |
                   bunx wrangler types
                   bunx astro check
+
+    extension:
+        name: Extension lint & build
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Set up Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: latest
+
+            - name: Install dependencies
+              run: bun install --frozen-lockfile
+
+            # eslint, prettier, tsc, and web-ext lint on the Firefox build
+            - name: Lint
+              working-directory: extensions
+              run: bun run lint
+
+            - name: Build
+              working-directory: extensions
+              run: bun run build
