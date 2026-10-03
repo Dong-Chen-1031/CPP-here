@@ -14,10 +14,13 @@
     // loading and the main thread is idle, keeping it off the LCP critical
     // path. Until then window.posthog is a stub that queues capture() calls
     // (the only method the app uses) and replays them after init.
+    // If the SDK fails to load, nothing will ever drain the queue, so the
+    // stub stops collecting instead of growing for the rest of the session.
     const queued: Parameters<PostHog["capture"]>[] = [];
+    let loadFailed = false;
     window.posthog = {
         capture: (...args: Parameters<PostHog["capture"]>) => {
-            queued.push(args);
+            if (!loadFailed) queued.push(args);
             return undefined;
         },
     } as PostHog;
@@ -45,11 +48,21 @@
         for (const args of queued.splice(0)) posthog.capture(...args);
     }
 
+    // A stale chunk after a deploy, a network error or a blocker can reject
+    // the import, and init() can throw.
+    function startPostHog() {
+        loadPostHog().catch((err: unknown) => {
+            console.warn("PostHog failed to load", err);
+            loadFailed = true;
+            queued.length = 0;
+        });
+    }
+
     function whenIdle() {
         if ("requestIdleCallback" in window) {
-            requestIdleCallback(() => void loadPostHog(), { timeout: 3000 });
+            requestIdleCallback(startPostHog, { timeout: 3000 });
         } else {
-            setTimeout(() => void loadPostHog(), 0);
+            setTimeout(startPostHog, 0);
         }
     }
 
