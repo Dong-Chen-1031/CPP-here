@@ -18,6 +18,8 @@ declare global {
   }
 }
 
+const ISSUES_URL = 'https://github.com/Dong-Chen-1031/CPP-here/issues';
+
 async function getParserToUse(): Promise<Parser> {
   const url = window.location.href;
 
@@ -76,7 +78,7 @@ async function parse(parser: Parser): Promise<void> {
       [
         `Something went wrong while running C++ Here's ${parser.constructor.name}.`,
         'Open the browser console to see the error.',
-        // 'Please open an issue at https://github.com/jmerle/competitive-companion/issues if you think this is a bug (make sure to include a link to this page).',
+        `If you think this is a bug, please open an issue at ${ISSUES_URL} and include a link to this page.`,
       ].join(' '),
     );
   }
@@ -101,7 +103,7 @@ async function handleMessage(message: Message | any, sender: Runtime.MessageSend
             [
               'C++ Here could not determine which parser to parse this page with.',
               'Please right-click on the extension icon and select the parser to use via the "Parse with" context menu.',
-              // 'Please open an issue at https://github.com/jmerle/competitive-companion/issues if you think this is a bug (make sure to include a link to this page).',
+              `If you think this page should be supported, please open an issue at ${ISSUES_URL}.`,
             ].join(' '),
           );
           return;

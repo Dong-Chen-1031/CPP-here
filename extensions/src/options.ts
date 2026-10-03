@@ -1,9 +1,7 @@
 import { config } from './utils/config';
 import { noop } from './utils/noop';
 
-const customPortsInput = document.querySelector<HTMLInputElement>('#custom-ports');
 const customRulesContainer = document.querySelector<HTMLDivElement>('#custom-rules-container');
-const requestTimeoutInput = document.querySelector<HTMLInputElement>('#request-timeout');
 const targetUrlInput = document.querySelector<HTMLInputElement>('#target-url');
 const debugModeInput = document.querySelector<HTMLInputElement>('#debug-mode');
 
@@ -100,34 +98,6 @@ function addCustomRulesRow(regex?: string, parserName?: string): void {
   customRulesContainer.appendChild(row);
 }
 
-customPortsInput.addEventListener('input', function (): void {
-  const ports = this.value
-    .split(',')
-    .map(x => x.trim())
-    .filter(x => x.length > 0)
-    .map(x => Number(x));
-
-  const uniquePorts = [...new Set(ports)];
-
-  const errorElem = document.querySelector('#custom-ports-error');
-
-  if (uniquePorts.some(isNaN) || uniquePorts.some(x => x < 0)) {
-    errorElem.classList.add('hidden');
-  } else {
-    errorElem.classList.remove('hidden');
-
-    config.set('customPorts', uniquePorts).then(noop).catch(noop);
-  }
-});
-
-requestTimeoutInput.addEventListener('input', function (): void {
-  const value = this.valueAsNumber;
-  config
-    .set('requestTimeout', value < 1 ? 1 : value)
-    .then(noop)
-    .catch(noop);
-});
-
 targetUrlInput.addEventListener('input', function (): void {
   const normalized = this.value.trim();
   config
@@ -141,13 +111,6 @@ debugModeInput.addEventListener('input', function (): void {
 });
 
 config
-  .get('customPorts')
-  .then(value => {
-    customPortsInput.value = value.join(',');
-  })
-  .catch(noop);
-
-config
   .get('customRules')
   .then(rules => {
     for (const rule of rules) {
@@ -155,13 +118,6 @@ config
     }
 
     addCustomRulesRow();
-  })
-  .catch(noop);
-
-config
-  .get('requestTimeout')
-  .then(value => {
-    requestTimeoutInput.valueAsNumber = value;
   })
   .catch(noop);
 

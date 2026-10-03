@@ -211,17 +211,7 @@
       <div class="header">
         <div class="badge">C++ Here</div>
         <h1>Options Center</h1>
-        <p>Configure ports, parsing behavior, timeout, and debug mode.</p>
-      </div>
-
-      <div class="card">
-        <h2>Custom tools</h2>
-        <label for="custom-ports">Custom ports</label>
-        <input type="text" id="custom-ports" title="Port numbers" placeholder="Example: 10043, 27121" />
-        <p id="custom-ports-error" class="error hidden">
-          Please make sure all ports are valid, and multiple ports are separated by commas.
-        </p>
-        <p class="description">Specify custom ports to send the parsed data to, separated by commas.</p>
+        <p>Configure parser selection, the editor URL, and debug mode.</p>
       </div>
 
       <div class="card">
@@ -236,22 +226,13 @@
       </div>
 
       <div class="card">
-        <h2>Request timeout</h2>
-        <label for="request-timeout">Request timeout (ms)</label>
-        <input type="number" id="request-timeout" min="1" />
-        <p class="description">
-          When a problem is sent to the ports a tool could possibly be listening on, a timeout is set so requests sent
-          to ports with no listening tools aren't kept alive for too long. You should not change this value unless you
-          are facing issues with your tools not receiving the problem data after clicking the "+" button when they
-          should be.
-        </p>
-      </div>
-
-      <div class="card">
         <h2>Target URL</h2>
         <label for="target-url">Target URL</label>
         <input type="text" id="target-url" placeholder="https://cpp.doong.me/editor/*" />
-        <p class="description">Configure the target URL used for task injection (symbol: targetUrl).</p>
+        <p class="description">
+          The C++ Here editor that parsed problems are sent to. Only change this when running C++ Here locally, for
+          example <code>http://localhost:4321/editor/*</code>.
+        </p>
       </div>
 
       <div class="card">

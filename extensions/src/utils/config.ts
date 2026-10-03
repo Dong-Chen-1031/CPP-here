@@ -1,18 +1,14 @@
 import { browser } from './browser';
 
 interface ConfigItems {
-  customPorts: number[];
   customRules: [string, string][];
-  requestTimeout: number;
   debugMode: boolean;
   targetUrl: string;
 }
 
 class Config {
   private readonly defaults: Partial<ConfigItems> = {
-    customPorts: [],
     customRules: [],
-    requestTimeout: 500,
     debugMode: false,
     targetUrl: 'https://cpp.doong.me/editor/*',
   };
