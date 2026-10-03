@@ -1,7 +1,7 @@
 {
     "meta": {
-        "title": "C++ Here ─ 新世代的線上 C++ 編輯器",
-        "description": "An open-source, lightweight yet powerful online C++ editor built for competitive programming. Compile C++ to WebAssembly, run test cases, and format code — all in your browser."
+        "title": "Online C++ Compiler for Competitive Programming | C++ Here",
+        "description": "Free, open-source online C++ compiler built for competitive programming. Compile C++ to WebAssembly and run test cases in your browser. No install, no login."
     },
     "header": {
         "openEditor": "立即開啟",
@@ -9,10 +9,11 @@
     },
     "hero": {
         "title": "新世代的",
-        "title2": "線上 C++ 編輯器。",
-        "description": "一個開源、輕量但強大的線上 C++ 編輯器，專為競賽程式設計而生",
+        "title2": "online C++ compiler.",
+        "description": "An open-source, lightweight yet powerful online C++ compiler built for competitive programming",
         "startCoding": "Start Coding",
-        "starOnGithub": "在 GitHub 上 Star"
+        "starOnGithub": "在 GitHub 上 Star",
+        "imageAlt": "The C++ Here online compiler running a Hello World program against three test cases"
     },
     "features": {
         "label": "features",
@@ -99,6 +100,85 @@
         "description2": "Just open a tab and get your AC.",
         "startCoding": "Start Coding",
         "starOnGithub": "Star on GitHub"
+    },
+    "faq": {
+        "label": "faq",
+        "heading": "Got questions?",
+        "subheading": "We've got answers.",
+        "list": [
+            {
+                "question": "Is C++ Here free to use?",
+                "answer": "Yes. C++ Here is completely free, with no ads, no paid plans, and no feature limits. The full source code is on GitHub under the MIT license."
+            },
+            {
+                "question": "Do I need to install anything or create an account?",
+                "answer": "No. There is nothing to download and no sign-up or login. Open the editor in any modern browser and start writing C++ right away."
+            },
+            {
+                "question": "Which C++ versions are supported?",
+                "answer": "You can pick C++98, C++14, C++17, C++20, or C++23 from the version menu in the editor. C++17 is the default."
+            },
+            {
+                "question": "Can I use #include <bits/stdc++.h>?",
+                "answer": "Yes. bits/stdc++.h works even though Clang doesn't normally ship it. It is precompiled for every C++ version, so programs that start with #include <bits/stdc++.h> compile 2 to 3 times faster."
+            },
+            {
+                "question": "How do I give input to my program?",
+                "answer": "Type the input into a test case. cin, scanf, getline, and other standard input functions read from it exactly as they would read from stdin on an online judge. You can add as many test cases as you like and run them all at once."
+            },
+            {
+                "question": "Is C++ Here good for competitive programming?",
+                "answer": "Yes, it was built for it. Multiple test cases, a configurable time limit, bits/stdc++.h support, and one-shortcut formatting match how you work on Codeforces, AtCoder, CSES, and other online judges, without setting up a local IDE."
+            },
+            {
+                "question": "What are the time and memory limits?",
+                "answer": "Each run has a 10-second time limit by default, which you can change or turn off in Settings. Programs can use up to 512 MB of memory with an 8 MB stack, and up to 32 MB of output. Compilation itself times out after 30 seconds."
+            },
+            {
+                "question": "Can I use C++ Here on my phone or tablet?",
+                "answer": "Yes. The editor adapts to any screen size, so you can write and run C++ on an iPhone, iPad, Android phone, Chromebook, or any device with a modern browser."
+            },
+            {
+                "question": "Is my code saved automatically?",
+                "answer": "Yes. Your code, test cases, and settings are saved automatically in your browser's local storage, so they are still there when you come back. They stay on that device and browser only, so back up anything important."
+            },
+            {
+                "question": "Can I share my code with others?",
+                "answer": "Yes. Click Share to get a link that contains your code, test cases, input, and output. Anyone who opens the link sees exactly what you saw, which is handy for asking for help or explaining a solution."
+            },
+            {
+                "question": "How do I run C++ code online with C++ Here?",
+                "answer": "Open the editor, write or paste your code, type your input into a test case, and press Ctrl + Enter (⌘ + Enter on macOS). Your code is compiled to WebAssembly and the output appears next to the test case within seconds."
+            },
+            {
+                "question": "Can I import test cases from Codeforces or AtCoder automatically?",
+                "answer": "A browser extension that imports sample test cases from over 100 competitive programming sites, including Codeforces, AtCoder, and CSES, with one click is coming soon."
+            },
+            {
+                "question": "Why is C++ Here faster than other online C++ compilers?",
+                "answer": "Most online compilers run your program on a shared server and make you wait in a queue. C++ Here only compiles on the server, then runs the WebAssembly program on your own device, so execution speed isn't limited by server load. Recent builds are cached, so running the same code again skips compilation."
+            },
+            {
+                "question": "Is it safe to run code on C++ Here?",
+                "answer": "Yes. Compilation happens in an isolated, single-use Docker container with no network access, and your program then runs inside the browser's WebAssembly sandbox, which cannot touch your files or system. Cloudflare Turnstile keeps bots out."
+            },
+            {
+                "question": "How do I format my C++ code?",
+                "answer": "Press Shift + Alt + F (Shift + Option + F on macOS) to format your code with clang-format. You can choose the LLVM, Google, Chromium, Mozilla, WebKit, Microsoft, or GNU style and set the indent width in Settings."
+            },
+            {
+                "question": "Which compiler does C++ Here use?",
+                "answer": "C++ Here compiles your code with Emscripten, which is based on Clang and LLVM and uses the libc++ standard library. The result is a WebAssembly program that runs in your browser."
+            },
+            {
+                "question": "Which languages is the interface available in?",
+                "answer": "C++ Here is available in English and Traditional Chinese, with more languages on the way. Anyone can help translate it on Crowdin."
+            },
+            {
+                "question": "What is C++ Here?",
+                "answer": "C++ Here is a free, open-source online C++ compiler and editor built for competitive programming. You write C++ in your browser, compile it to WebAssembly, and run it against your own test cases, with error highlighting, code formatting, and autocomplete built in."
+            }
+        ]
     },
     "footer": {
         "mitLicensed": "MIT Licensed",
