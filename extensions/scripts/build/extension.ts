@@ -20,7 +20,8 @@ await Promise.all(
         const packageJson = JSON.parse(packageJsonContent);
 
         const optionalHostPermissions = [
-          ...new Set([...Object.values(requiredPermissions), 'http://127.0.0.1:4321/*']),
+          // A custom target URL pointing at a local C++ Here dev server (any port)
+          ...new Set([...Object.values(requiredPermissions), 'http://localhost/*', 'http://127.0.0.1/*']),
         ];
 
         const manifest: Record<string, any> = {
@@ -31,9 +32,10 @@ await Promise.all(
           version: packageJson.version,
 
           author: packageJson.author,
-          homepage_url: packageJson.repository,
+          homepage_url: packageJson.homepage,
 
-          permissions: ['activeTab', 'contextMenus', 'storage', 'scripting', 'tabs', 'windows'],
+          // Tabs are found by URL through host permissions, so the broader 'tabs' permission isn't needed
+          permissions: ['activeTab', 'contextMenus', 'storage', 'scripting'],
           host_permissions: ['https://cpp.doong.me/*'],
 
           icons: {
@@ -94,7 +96,7 @@ await Promise.all(
 
           manifest.browser_specific_settings = {
             gecko: {
-              id: '{74e326aa-c645-4495-9287-b6febc5565a7}',
+              id: 'cpp-here@doong.me',
               data_collection_permissions: {
                 required: ['websiteContent'],
               },
