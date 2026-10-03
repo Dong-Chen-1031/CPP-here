@@ -4,20 +4,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
-html,
-.mono {
-    font-family:
-        "JetBrains Mono", "JetBrainsMono", "Consolas", "Liberation Mono",
-        ui-monospace, monospace;
+html {
+    @apply font-jetbrains;
 
     font-variant-numeric: tabular-nums;
     font-style: normal;
-}
-
-.inter,
-.sans {
-    font-family: "IBM Plex Sans", "GlowSansTC", "Noto Sans TC", sans-serif;
-    font-optical-sizing: auto;
 }
 
 code {
@@ -149,6 +140,14 @@ code {
 }
 
 @theme inline {
+    /* Families come from the Astro Fonts API (astro.config.mjs fonts); these
+       add the fallback stacks. Use them as font-jetbrains / font-quattro. */
+    --font-jetbrains:
+        var(--font-jetbrains-mono), "Consolas", "Liberation Mono", ui-monospace,
+        monospace;
+    --font-quattro:
+        var(--font-ia-writer-quattro), "PingFang TC", "Microsoft JhengHei",
+        "Noto Sans TC", sans-serif;
     --color-background: var(--background);
     --color-foreground: var(--foreground);
     --color-card: var(--card);

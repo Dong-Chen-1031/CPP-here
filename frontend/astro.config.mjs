@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig, envField } from "astro/config";
+import { defineConfig, envField, fontProviders } from "astro/config";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
@@ -25,6 +25,8 @@ export default defineConfig({
         react(),
         sitemap({
             filter: (page) =>
+                // Same page as "/", which is the canonical one
+                new URL(page).pathname !== "/en/" &&
                 !page.includes("/editor") &&
                 !page.includes("/test") &&
                 !page.includes("/reset"),
@@ -48,6 +50,50 @@ export default defineConfig({
     build: {
         inlineStylesheets: "auto",
     },
+    // No fallbacks on either family: the font-jetbrains / font-quattro
+    // utilities in global.css append the full stacks, CJK fonts included.
+    fonts: [
+        {
+            provider: fontProviders.fontsource(),
+            name: "JetBrains Mono",
+            cssVariable: "--font-jetbrains-mono",
+            weights: ["100 800"],
+            styles: ["normal", "italic"],
+            subsets: [
+                "latin",
+                "latin-ext",
+                "cyrillic",
+                "cyrillic-ext",
+                "greek",
+                "vietnamese",
+            ],
+            fallbacks: [],
+        },
+        {
+            provider: fontProviders.local(),
+            name: "iA Writer Quattro",
+            cssVariable: "--font-ia-writer-quattro",
+            fallbacks: [],
+            options: {
+                variants: [
+                    {
+                        src: [
+                            "./src/assets/fonts/ia-writer-quattro/iAWriterQuattroV.woff2",
+                        ],
+                        weight: "400 700",
+                        style: "normal",
+                    },
+                    {
+                        src: [
+                            "./src/assets/fonts/ia-writer-quattro/iAWriterQuattroV-Italic.woff2",
+                        ],
+                        weight: "400 700",
+                        style: "italic",
+                    },
+                ],
+            },
+        },
+    ],
     env: {
         schema: {
             PUBLIC_TURNSTILE_SITE_KEY: envField.string({

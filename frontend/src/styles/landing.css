@@ -1,3 +1,26 @@
 html {
     overflow-x: hidden;
 }
+
+/* FAQ answers stay mounted (so they are in the HTML), so they animate by grid
+   rows instead of Radix's measured --radix-accordion-content-height. The
+   collapse keeps them visible until the animation ends. */
+@keyframes faq-open {
+    from {
+        grid-template-rows: 0fr;
+    }
+    to {
+        grid-template-rows: 1fr;
+    }
+}
+
+@keyframes faq-close {
+    from {
+        grid-template-rows: 1fr;
+        visibility: visible;
+    }
+    to {
+        grid-template-rows: 0fr;
+        visibility: visible;
+    }
+}

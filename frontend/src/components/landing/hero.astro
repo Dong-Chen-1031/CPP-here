@@ -21,22 +21,21 @@ const { t } = Astro.props as Props;
                     bg-size-[64px_64px]
                     mask-[radial-gradient(ellipse_80%_600px_at_center_top,black_20%,transparent_100%)]"
     ></div>
-    <!-- <div
+    {/* <div
                 class="rounded-full px-3 py-1 flex justify-center items-center bg-accent/40 border-border border mt-25">
                 <p
                     class="text-center text-xs md:text-sm text-muted-foreground uppercase">
                     Support 1,000+ competitive programming websites!
                 </p>
-            </div> -->
+            </div> */}
     <div class="mt-40">
-        <p class="text-[min(4.5rem,7vw)] leading-none font-bold text-balance text-center tracking-tighter">
+        <h1 class="text-[min(4.5rem,7vw)] leading-none font-bold text-balance text-center tracking-tighter">
             {t?.title}
             <br />
-            {t?.title2 ? t?.title2 : "online C++ editor."}
-        </p>
+            {t?.title2}
+        </h1>
         <p class="text-muted-foreground text-center mt-5 md:text-lg text-balance px-5">
-            {t?.description ||
-                "An open-source, lightweight yet powerful online C++ editor built for competitive programming"}
+            {t?.description}
         </p>
     </div>
     <div class="flex items-center justify-center mt-13 gap-5 *:text-[0.9rem]">
@@ -61,7 +60,7 @@ const { t } = Astro.props as Props;
         </a>
     </div>
 
-    <HeroCard />
+    <HeroCard alt={t?.imageAlt} />
     <div class="h-4"></div>
 </section>
 

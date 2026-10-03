@@ -108,7 +108,7 @@ export function AlertDialogGood() {
                         <AlertDialogTitle>
                             {alertDialog?.title}
                         </AlertDialogTitle>
-                        <AlertDialogDescription className="inter">
+                        <AlertDialogDescription className="font-quattro">
                             {alertDialog?.descriptionNode ||
                                 alertDialog?.description ||
                                 t("editor:alert.defaultDescription")}

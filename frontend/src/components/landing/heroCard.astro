@@ -2,6 +2,12 @@
 import { getImage } from "astro:assets";
 import heroImg from "@/assets/hero.png";
 import heroPhone from "@/assets/hero-phone.png";
+
+interface Props {
+    alt?: string;
+}
+
+const { alt } = Astro.props as Props;
 ``;
 const isProd = import.meta.env.PROD;
 const formats = isProd ? (["avif", "webp"] as const) : (["webp"] as const);
@@ -187,7 +193,7 @@ const fallback = await getImage({
         {/* fallback */}
         <img
             src={fallback.src}
-            alt="Hero"
+            alt={alt}
             width={heroImg.width}
             height={heroImg.height}
             loading="eager"

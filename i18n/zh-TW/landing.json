@@ -1,7 +1,7 @@
 {
     "meta": {
-        "title": "C++ Here - 新世代的線上 C++ 編輯器",
-        "description": "一個開源、輕量但強大的線上 C++ 編輯器，專為競賽程式設計而生。將 C++ 編譯為 WebAssembly、執行測資、格式化程式碼 —— 全部在瀏覽器中完成。"
+        "title": "線上 C++ 編譯器，專為競賽程式設計打造 | C++ Here",
+        "description": "免費、開源的線上 C++ 編譯器，專為競賽程式設計打造。將 C++ 編譯為 WebAssembly，直接在瀏覽器中執行測資。免安裝、免登入。"
     },
     "header": {
         "openEditor": "立即開啟",
@@ -9,10 +9,11 @@
     },
     "hero": {
         "title": "新世代的",
-        "title2": "線上 C++ 編輯器。",
-        "description": "一個開源、輕量但強大的線上 C++ 編輯器，專為競賽程式設計而生",
+        "title2": "線上 C++ 編譯器。",
+        "description": "一個開源、輕量但強大的線上 C++ 編譯器，專為競賽程式設計而生",
         "startCoding": "開始寫程式",
-        "starOnGithub": "在 GitHub 上 Star"
+        "starOnGithub": "在 GitHub 上 Star",
+        "imageAlt": "C++ Here 線上編譯器以三筆測資執行 Hello World 程式"
     },
     "features": {
         "label": "功能",
@@ -99,6 +100,85 @@
         "description2": "打開分頁，直接拿 AC。",
         "startCoding": "開始寫程式",
         "starOnGithub": "在 GitHub 上 Star"
+    },
+    "faq": {
+        "label": "常見問題",
+        "heading": "有疑問嗎？",
+        "subheading": "這裡有解答。",
+        "list": [
+            {
+                "question": "C++ Here 是免費的嗎？",
+                "answer": "是的。C++ Here 完全免費，沒有廣告、沒有付費方案，也沒有功能限制。完整原始碼以 MIT 授權公開在 GitHub 上。"
+            },
+            {
+                "question": "需要安裝軟體或註冊帳號嗎？",
+                "answer": "不需要。不用下載任何東西，也不用註冊或登入。用任何現代瀏覽器打開編輯器，就能馬上開始寫 C++。"
+            },
+            {
+                "question": "支援哪些 C++ 版本？",
+                "answer": "你可以在編輯器的版本選單中選擇 C++98、C++14、C++17、C++20 或 C++23，預設為 C++17。"
+            },
+            {
+                "question": "可以使用 #include <bits/stdc++.h> 嗎？",
+                "answer": "可以。雖然 Clang 原本不提供 bits/stdc++.h，在 C++ Here 上一樣能用。它已針對每個 C++ 版本預先編譯，所以開頭寫 #include <bits/stdc++.h> 的程式，編譯速度會快 2 到 3 倍。"
+            },
+            {
+                "question": "要怎麼輸入資料給程式？",
+                "answer": "把輸入內容填進測資即可。cin、scanf、getline 等標準輸入函式會從測資讀取，就跟在線上評測系統（Online Judge）上從 stdin 讀取一樣。你可以新增任意數量的測資，並一次全部運行。"
+            },
+            {
+                "question": "C++ Here 適合用來練習競賽程式嗎？",
+                "answer": "適合，它就是為此而設計的。多筆測資、可調整的時間限制、bits/stdc++.h 支援，以及一個快捷鍵就能格式化，都符合你在 Codeforces、AtCoder、CSES 等線上評測系統解題的習慣，而且不用在本機設定 IDE。"
+            },
+            {
+                "question": "時間和記憶體限制是多少？",
+                "answer": "每次運行預設有 10 秒的時間限制，可以在設定中調整或關閉。程式最多可使用 512 MB 記憶體（其中堆疊 8 MB），輸出上限為 32 MB。編譯本身超過 30 秒會逾時。"
+            },
+            {
+                "question": "可以在手機或平板上使用嗎？",
+                "answer": "可以。編輯器會自動適應各種螢幕尺寸，你可以在 iPhone、iPad、Android 手機、Chromebook，或任何有現代瀏覽器的裝置上撰寫和運行 C++。"
+            },
+            {
+                "question": "程式碼會自動儲存嗎？",
+                "answer": "會。你的程式碼、測資和設定會自動儲存在瀏覽器的本機儲存空間，下次回來時都還在。不過這些資料只存在這台裝置的這個瀏覽器上，重要的程式碼請另外備份。"
+            },
+            {
+                "question": "可以把程式碼分享給別人嗎？",
+                "answer": "可以。點選「分享」就會產生一個連結，內容包含你的程式碼、測資、輸入和輸出。任何人打開連結，看到的都會跟你看到的一模一樣，很適合用來求助或講解解法。"
+            },
+            {
+                "question": "如何用 C++ Here 線上執行 C++ 程式？",
+                "answer": "打開編輯器，撰寫或貼上程式碼，在測資中填入輸入，然後按 Ctrl + Enter（macOS 為 ⌘ + Enter）。程式碼會被編譯成 WebAssembly，幾秒內輸出就會顯示在測資旁邊。"
+            },
+            {
+                "question": "可以自動從 Codeforces 或 AtCoder 匯入測資嗎？",
+                "answer": "瀏覽器擴充功能即將推出，只要一鍵，就能從 Codeforces、AtCoder、CSES 等超過 100 個競賽程式平台匯入範例測資。"
+            },
+            {
+                "question": "為什麼 C++ Here 比其他線上 C++ 編譯器快？",
+                "answer": "大多數線上編譯器會在共用的伺服器上執行你的程式，你得排隊等待。C++ Here 只在伺服器上編譯，再於你自己的裝置上執行 WebAssembly 程式，所以執行速度不受伺服器負載影響。最近的編譯結果也會被快取，再次運行相同的程式碼時會跳過編譯。"
+            },
+            {
+                "question": "在 C++ Here 上執行程式安全嗎？",
+                "answer": "安全。編譯在隔離、一次性且無法連網的 Docker 容器中進行，之後程式在瀏覽器的 WebAssembly 沙盒中執行，無法存取你的檔案或系統。Cloudflare Turnstile 則負責阻擋機器人。"
+            },
+            {
+                "question": "如何格式化 C++ 程式碼？",
+                "answer": "按 Shift + Alt + F（macOS 為 Shift + Option + F）即可用 clang-format 格式化程式碼。你可以在設定中選擇 LLVM、Google、Chromium、Mozilla、WebKit、Microsoft 或 GNU 格式化風格，並調整 Tab 寬度。"
+            },
+            {
+                "question": "C++ Here 使用哪個編譯器？",
+                "answer": "C++ Here 使用 Emscripten 編譯你的程式碼。Emscripten 以 Clang 和 LLVM 為基礎，並使用 libc++ 標準函式庫，編譯結果是在瀏覽器中執行的 WebAssembly 程式。"
+            },
+            {
+                "question": "介面支援哪些語言？",
+                "answer": "C++ Here 目前支援英文和繁體中文，更多語言即將推出。任何人都可以到 Crowdin 協助翻譯。"
+            },
+            {
+                "question": "C++ Here 是什麼？",
+                "answer": "C++ Here 是一個免費、開源的線上 C++ 編譯器與編輯器，專為競賽程式設計打造。你可以在瀏覽器中撰寫 C++、編譯成 WebAssembly，並用自己的測資運行，同時內建錯誤高亮、程式碼格式化和自動補全。"
+            }
+        ]
     },
     "footer": {
         "mitLicensed": "MIT 授權",
