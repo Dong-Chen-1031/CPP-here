@@ -43,7 +43,14 @@ const ExtEventSchema = z.object({
     ),
 });
 
-type ExtProblem = z.infer<typeof ExtEventSchema>;
+type ExtEvent = z.infer<typeof ExtEventSchema>;
+
+/** A received problem, already turned into the test cases it adds. */
+interface ReceivedProblem {
+    name: string;
+    group?: string;
+    testCases: TestCase[];
+}
 
 /**
  * The extension sends a contest's problems one event at a time. If a send
@@ -53,7 +60,7 @@ type ExtProblem = z.infer<typeof ExtEventSchema>;
 const BATCH_FLUSH_DELAY_MS = 3000;
 
 interface PendingBatch {
-    problems: ExtProblem[];
+    problems: ReceivedProblem[];
     timer?: number;
 }
 
@@ -84,18 +91,9 @@ export function ExtensionReceiver() {
 
         // Imports every problem of a batch at once, so a contest asks to
         // overwrite or insert only once instead of once per problem.
-        const importProblems = (problems: ExtProblem[]) => {
-            const testCasesFromExtension: TestCase[] = problems.flatMap(
-                (problem) =>
-                    problem.tests.map((test, index) => ({
-                        id: crypto.randomUUID(),
-                        name: t("testCase.extension.caseName", {
-                            problemName: problem.name,
-                            index: index + 1,
-                        }),
-                        input: test.input,
-                        expectedOutput: test.output,
-                    })),
+        const importProblems = (problems: ReceivedProblem[]) => {
+            const testCasesFromExtension = problems.flatMap(
+                (problem) => problem.testCases,
             );
             const displayName =
                 problems.length === 1
@@ -172,14 +170,37 @@ export function ExtensionReceiver() {
                 );
                 return;
             }
+
+            console.log("Received ext event with payload:", parsed.data);
+
+            const { name, group, batch, tests } = parsed.data;
+            const problem: ReceivedProblem = {
+                name,
+                group,
+                testCases: tests.map((test, index) => ({
+                    id: crypto.randomUUID(),
+                    name: t("testCase.extension.caseName", {
+                        problemName: name,
+                        index: index + 1,
+                    }),
+                    input: test.input,
+                    expectedOutput: test.output,
+                })),
+            };
+
+            receiveProblem(problem, batch);
+
             // Tells the extension the payload was accepted: it dispatches a
-            // cancelable event and treats a canceled one as delivered.
+            // cancelable event and treats a canceled one as delivered. Called
+            // last, so a payload this handler failed on isn't reported as
+            // delivered.
             event.preventDefault();
+        };
 
-            const problem = parsed.data;
-            console.log("Received ext event with payload:", problem);
-
-            const { batch } = problem;
+        const receiveProblem = (
+            problem: ReceivedProblem,
+            batch: ExtEvent["batch"],
+        ) => {
             if (!batch || batch.size <= 1) {
                 importProblems([problem]);
                 return;

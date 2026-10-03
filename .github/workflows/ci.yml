@@ -125,6 +125,7 @@ jobs:
               working-directory: extensions
               run: bun run lint
 
+            # The Firefox build was already made (and linted) by the Lint step
             - name: Build
               working-directory: extensions
-              run: bun run build
+              run: bun run build:chrome

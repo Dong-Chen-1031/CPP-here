@@ -114,6 +114,14 @@ function onContextMenu(info: Menus.OnClickData, tab: Tabs.Tab): void {
 const TAB_LOAD_TIMEOUT_MS = 30_000;
 const LISTENER_READY_TIMEOUT_MS = 30_000;
 
+/**
+ * Whether a tab has finished loading a real page. A new tab can first report 'complete' for its initial about:blank
+ * (Firefox does), so the URL is checked too; it is only visible because the extension has access to the target URL.
+ */
+function isTabLoaded(tab: Tabs.Tab): boolean {
+  return tab.status === 'complete' && tab.url !== undefined && tab.url !== 'about:blank';
+}
+
 function waitForTabLoad(tabId: number): Promise<void> {
   return new Promise((resolve, reject) => {
     const cleanup = (): void => {
@@ -122,8 +130,8 @@ function waitForTabLoad(tabId: number): Promise<void> {
       browser.tabs.onRemoved.removeListener(onRemoved);
     };
 
-    const onUpdated = (updatedTabId: number, changeInfo: Tabs.OnUpdatedChangeInfoType): void => {
-      if (updatedTabId === tabId && changeInfo.status === 'complete') {
+    const onUpdated = (updatedTabId: number, _changeInfo: Tabs.OnUpdatedChangeInfoType, tab: Tabs.Tab): void => {
+      if (updatedTabId === tabId && isTabLoaded(tab)) {
         cleanup();
         resolve();
       }
@@ -147,7 +155,7 @@ function waitForTabLoad(tabId: number): Promise<void> {
 
     browser.tabs.get(tabId).then(
       tab => {
-        if (tab.status === 'complete') {
+        if (isTabLoaded(tab)) {
           cleanup();
           resolve();
         }
@@ -177,21 +185,28 @@ async function dispatchExtEvent(tabId: number, payload: unknown): Promise<void> 
       };
 
       return new Promise(resolve => {
-        if ((window as any).eventListenerLoaded) {
-          resolve(dispatch());
-          return;
-        }
-
         const startTime = Date.now();
-        const checkInterval = setInterval(() => {
+
+        // Returns whether polling is done
+        const check = (): boolean => {
           if ((window as any).eventListenerLoaded) {
-            clearInterval(checkInterval);
             resolve(dispatch());
-          } else if (Date.now() - startTime > timeoutMs) {
-            clearInterval(checkInterval);
-            resolve('timeout');
+            return true;
           }
-        }, 50);
+          if (Date.now() - startTime > timeoutMs) {
+            resolve('timeout');
+            return true;
+          }
+          return false;
+        };
+
+        if (!check()) {
+          const checkInterval = setInterval(() => {
+            if (check()) {
+              clearInterval(checkInterval);
+            }
+          }, 50);
+        }
       });
     },
   });
@@ -256,6 +271,11 @@ async function sendTask(tabId: number, messageId: string, data: string): Promise
     const { pattern: targetUrl, entry: targetEntry } = getTargetUrl(targetUrlSetting);
     const eventPayload = parsedData.eventPayload ?? parsedData;
 
+    // Without access, open editor tabs can't be found by URL or scripted, and their load can't be detected
+    if (!(await browser.permissions.contains({ origins: [targetUrl] }))) {
+      throw new Error(`C++ Here doesn't have access to ${targetUrl}. Click the button again and allow access.`);
+    }
+
     let targetTabId: number;
 
     const tabs = await browser.tabs.query({ url: targetUrl });
@@ -271,9 +291,10 @@ async function sendTask(tabId: number, messageId: string, data: string): Promise
     } else {
       const newTab = await browser.tabs.create({ url: targetEntry, active: true });
       targetTabId = newTab.id!;
-
-      await waitForTabLoad(targetTabId);
     }
+
+    // An open tab may still be loading too, or reloading because activating it restored it from being discarded
+    await waitForTabLoad(targetTabId);
 
     await dispatchExtEvent(targetTabId, eventPayload);
 

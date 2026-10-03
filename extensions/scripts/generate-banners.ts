@@ -108,9 +108,18 @@ for (const [name, width, height] of requiredBanners) {
   await page.goto(`file://${banner.svgPath}`, { waitUntil: 'networkidle0' });
   await page.setViewport({ width, height });
 
+  // document.fonts.check() would also pass if the stylesheet never loaded, since it returns true when no font face
+  // in the document matches, so look for a JetBrains Mono face that actually loaded
   const fontLoaded = await page.evaluate(async () => {
     await document.fonts.ready;
-    return document.fonts.check("700 16px 'JetBrains Mono'");
+
+    let loaded = false;
+    document.fonts.forEach(fontFace => {
+      if (fontFace.family.replace(/["']/g, '') === 'JetBrains Mono' && fontFace.status === 'loaded') {
+        loaded = true;
+      }
+    });
+    return loaded;
   });
   if (!fontLoaded) {
     throw new Error('JetBrains Mono failed to load from Google Fonts');
