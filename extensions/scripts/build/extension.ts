@@ -102,6 +102,9 @@ await Promise.all(
           manifest.browser_specific_settings = {
             gecko: {
               id: 'cpp-here@doong.me',
+              // scripting.executeScript() runs in the page's MAIN world since Firefox 128,
+              // and data_collection_permissions is supported since Firefox 140
+              strict_min_version: '140.0',
               data_collection_permissions: {
                 required: ['websiteContent'],
               },
