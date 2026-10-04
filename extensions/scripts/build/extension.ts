@@ -109,6 +109,10 @@ await Promise.all(
                 required: ['websiteContent'],
               },
             },
+            // Firefox for Android supports data_collection_permissions since 142
+            gecko_android: {
+              strict_min_version: '142.0',
+            },
           };
         }
 

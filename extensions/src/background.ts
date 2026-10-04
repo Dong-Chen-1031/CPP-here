@@ -285,7 +285,8 @@ async function sendTask(tabId: number, messageId: string, data: string): Promise
 
       await browser.tabs.update(targetTabId, { active: true });
 
-      if (tabs[0].windowId) {
+      // Firefox for Android has no windows API
+      if (tabs[0].windowId && browser.windows) {
         await browser.windows.update(tabs[0].windowId, { focused: true });
       }
     } else {
@@ -350,6 +351,10 @@ async function handleMessage(message: Message | any, sender: Runtime.MessageSend
 }
 
 browser.action.onClicked.addListener(onAction);
-browser.contextMenus.onClicked.addListener(onContextMenu);
 browser.runtime.onMessage.addListener(handleMessage);
-browser.runtime.onInstalled.addListener(createContextMenu);
+
+// Firefox for Android has no context menus, so pages are always parsed with the parser that matches their URL there
+if (browser.contextMenus) {
+  browser.contextMenus.onClicked.addListener(onContextMenu);
+  browser.runtime.onInstalled.addListener(createContextMenu);
+}
