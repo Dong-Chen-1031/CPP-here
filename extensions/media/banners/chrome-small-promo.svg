@@ -10,22 +10,12 @@
   </style>
   <rect width="100%" height="100%" fill="var(--background-color)" />
   
-<svg viewBox="0 0 500 340" x="65.58823529411765" y="35" width="308.8235294117647" height="210">
-  <svg viewBox="0 0 24 24" x="150" y="0" width="200" height="200">
-  <rect width="24" height="24" rx="5.5" fill="#ffffff" />
-  <g
-    transform="translate(12 12) scale(0.8) translate(-12 -12)"
-    fill="none"
-    stroke="#0a0a0a"
-    stroke-width="2.75"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  >
-    <path d="m16 18 6-6-6-6" />
-    <path d="m8 6-6 6 6 6" />
-  </g>
+<svg viewBox="0 0 500 300" x="45" y="35" width="350" height="210">
+  <svg viewBox="0 0 895.16 533.12" x="130" y="0.03299968720675395" width="240" height="142.9340006255865">
+  <path d="M176.05,266.56l172.53-172.53c4.69-4.69,4.69-12.28,0-16.97L275.04,3.51c-4.69-4.69-12.28-4.69-16.97,0L3.51,258.07c-4.69,4.69-4.69,12.28,0,16.97l254.56,254.56c4.69,4.69,12.28,4.69,16.97,0l73.54-73.54c4.69-4.69,4.69-12.28,0-16.97l-172.53-172.53Z" fill="#ffffff" />
+  <path d="M891.64,258.07l-73.54-73.54c-4.69-4.69-12.28-4.69-16.97,0l-70.71,70.71-90.51-90.51,70.71-70.71c4.69-4.69,4.69-12.28,0-16.97L637.08,3.51c-4.69-4.69-12.28-4.69-16.97,0l-254.56,254.56c-4.69,4.69-4.69,12.28,0,16.97l73.54,73.54c4.69,4.69,12.28,4.69,16.97,0l93.34-93.34,90.51,90.51-93.34,93.34c-4.69,4.69-4.69,12.28,0,16.97l73.54,73.54c4.69,4.69,12.28,4.69,16.97,0l101.82-101.82,73.54-73.54,79.2-79.2c4.69-4.69,4.69-12.28,0-16.97Z" fill="#ffffff" />
 </svg>
-  <text x="50%" y="290" dominant-baseline="central" text-anchor="middle" fill="var(--text-color)" font-family="'JetBrains Mono', monospace" font-weight="700" style="font-variant-ligatures: none; font-feature-settings: 'calt' 0, 'liga' 0" font-size="90px">C++ Here</text>
+  <text x="50%" y="250" dominant-baseline="central" text-anchor="middle" fill="var(--text-color)" font-family="'JetBrains Mono', monospace" font-weight="700" style="font-variant-ligatures: none; font-feature-settings: 'calt' 0, 'liga' 0" font-size="90px">C++ Here</text>
 </svg>
   
 </svg>

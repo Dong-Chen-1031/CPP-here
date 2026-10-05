@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as puppeteer from 'puppeteer';
-import { iconSvg } from './icon';
+import { foregroundColor, glyphSvg } from './icon';
 import { projectRoot } from './utils';
 
 interface BaseImage {
@@ -21,24 +21,24 @@ const textAttributes = `fill="var(--text-color)" font-family="'JetBrains Mono', 
 
 const horizontalBaseImage: BaseImage = {
   svg: (baseX, baseY, newWidth, newHeight) => `
-<svg viewBox="0 0 780 200" x="${baseX}" y="${baseY}" width="${newWidth}" height="${newHeight}">
-  ${iconSvg(0, 0, 200, true)}
-  <text x="250" y="50%" dominant-baseline="central" ${textAttributes} font-size="110px">C++ Here</text>
+<svg viewBox="0 0 800 200" x="${baseX}" y="${baseY}" width="${newWidth}" height="${newHeight}">
+  ${glyphSvg(0, 0, 220, 200, foregroundColor)}
+  <text x="272" y="50%" dominant-baseline="central" ${textAttributes} font-size="110px">C++ Here</text>
 </svg>
   `,
-  width: 780,
+  width: 800,
   height: 200,
 };
 
 const verticalBaseImage: BaseImage = {
   svg: (baseX, baseY, newWidth, newHeight) => `
-<svg viewBox="0 0 500 340" x="${baseX}" y="${baseY}" width="${newWidth}" height="${newHeight}">
-  ${iconSvg(150, 0, 200, true)}
-  <text x="50%" y="290" dominant-baseline="central" text-anchor="middle" ${textAttributes} font-size="90px">C++ Here</text>
+<svg viewBox="0 0 500 300" x="${baseX}" y="${baseY}" width="${newWidth}" height="${newHeight}">
+  ${glyphSvg(130, 0, 240, 143, foregroundColor)}
+  <text x="50%" y="250" dominant-baseline="central" text-anchor="middle" ${textAttributes} font-size="90px">C++ Here</text>
 </svg>
   `,
   width: 500,
-  height: 340,
+  height: 300,
 };
 
 async function generateBanner(name: string, width: number, height: number): Promise<BannerImage> {
