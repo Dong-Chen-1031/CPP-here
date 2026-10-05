@@ -1,5 +1,5 @@
 ---
-import { CodeIcon } from "@lucide/astro";
+import Logo from "@/components/Logo.astro";
 import HeaderActions, { HeaderActionsMobile } from "@/components/HeaderActions";
 import { GithubLink } from "./header/githubLink";
 ---
@@ -19,7 +19,7 @@ import { GithubLink } from "./header/githubLink";
         }
     </script>
     <a href="/" class="flex items-center">
-        <CodeIcon class="w-5 h-5 mr-2 md:w-6 md:h-6 shrink-0" />
+        <Logo class="h-3 mr-2 md:h-3.5 shrink-0" />
         <h1 class="text-[min(1.25rem,3.5vw)] pr-2 font-bold shrink-0">
             C++ Here
         </h1>
