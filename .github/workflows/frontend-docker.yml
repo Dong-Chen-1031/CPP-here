@@ -7,11 +7,17 @@ on:
         paths:
             - "frontend/**"
             - "docker/**"
+            - "package.json"
+            - "bun.lock"
+            - "builder/docker/inner/bits/**"
             - ".github/workflows/frontend-docker.yml"
     pull_request:
         paths:
             - "frontend/**"
             - "docker/**"
+            - "package.json"
+            - "bun.lock"
+            - "builder/docker/inner/bits/**"
             - ".github/workflows/frontend-docker.yml"
     workflow_dispatch:
 
@@ -53,6 +59,20 @@ jobs:
               uses: docker/metadata-action@v5
               with:
                   images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+            - name: Build image for testing
+              uses: docker/build-push-action@v6
+              with:
+                  context: .
+                  file: ./docker/frontend/Dockerfile
+                  platforms: ${{ matrix.platform }}
+                  load: true
+                  tags: cpp-here-frontend:test
+                  cache-from: type=gha,scope=${{ matrix.platform }}
+                  cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
+
+            - name: Smoke test
+              run: frontend/test/docker-smoke.sh cpp-here-frontend:test
 
             - name: Build and push image by digest
               id: build

@@ -51,6 +51,11 @@ its inputs are unchanged. It takes about 3 minutes.
 `--if-enabled`, which only prepares the toolchain when `PUBLIC_LOCAL_COMPILER`
 is `true` (environment or `frontend/.env`).
 
+The Docker image (`docker/frontend/Dockerfile`) generates the toolchain in its
+own build stage, so `PUBLIC_LOCAL_COMPILER=true` in compose finds it up to date
+at container start. Run the script with Node, not Bun: Bun's `node:wasi`
+ignores the `stdout` fd and the PCH smoke test fails.
+
 ## Trust
 
 Pinned to `21.1.4-3`: the last release with npm provenance, built by
