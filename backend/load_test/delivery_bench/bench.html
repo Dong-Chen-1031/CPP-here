@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WASM Delivery Bench</title>
+<style>
+  :root { --bg: #fff; --fg: #1a1a1a; --muted: #666; --line: #ddd; --accent: #2563eb; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #121212; --fg: #e8e8e8; --muted: #999; --line: #333; --accent: #60a5fa; }
+  }
+  body { background: var(--bg); color: var(--fg); font: 14px/1.5 system-ui, sans-serif; margin: 0 auto; max-width: 1100px; padding: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p.muted, .muted { color: var(--muted); }
+  fieldset { border: 1px solid var(--line); border-radius: 8px; margin: 12px 0; padding: 8px 12px; }
+  label { margin-right: 14px; white-space: nowrap; }
+  button { background: var(--accent); border: 0; border-radius: 6px; color: #fff; font-size: 15px; padding: 8px 18px; }
+  button:disabled { opacity: .5; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; font-variant-numeric: tabular-nums; margin: 12px 0; width: 100%; }
+  th, td { border-bottom: 1px solid var(--line); padding: 4px 8px; text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child, th:nth-child(2), td:nth-child(2), th:nth-child(3), td:nth-child(3) { text-align: left; }
+  td.best { color: var(--accent); font-weight: 600; }
+  #log { color: var(--muted); font-family: ui-monospace, monospace; font-size: 12px; max-height: 160px; overflow: auto; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>WASM Delivery Bench</h1>
+<p class="muted">比較 /api/build 回傳格式：A = JS 與 WASM 都給網址；B = JS 程式碼 + WASM 網址（現行）；C = JS 程式碼 + base64 WASM。
+  <code>stream</code> = <code>WebAssembly.compileStreaming</code>，<code>buffer</code> = 下載完再 <code>WebAssembly.compile</code>。
+  時間皆為中位數（毫秒），從送出請求開始算。</p>
+
+<fieldset>
+  <legend>設定</legend>
+  <div id="sampleBoxes"></div>
+  <div id="fileBoxes"></div>
+  <div>
+    <label>每種組合次數 <input id="iters" type="number" value="10" min="1" max="100" style="width:4em"></label>
+    <label>標籤 <input id="label" placeholder="例如：家裡 Wi-Fi / 手機 4G" style="width:14em"></label>
+  </div>
+</fieldset>
+<button id="start">開始測試</button>
+<span id="status" class="muted"></span>
+
+<div class="scroll"><table id="summary"></table></div>
+<div class="scroll"><table id="conn"></table></div>
+<div id="log"></div>
+
+<script>
+"use strict";
+const API = location.origin;
+const MODES = {
+  "A-stream": { variant: "a", compile: "stream" },
+  "A-buffer": { variant: "a", compile: "buffer" },
+  "B-stream": { variant: "b", compile: "stream" },
+  "B-buffer": { variant: "b", compile: "buffer" },
+  "C-atob":   { variant: "c", compile: "atob" },
+  "C-native": { variant: "c", compile: "native" },
+};
+if (typeof Uint8Array.fromBase64 !== "function") delete MODES["C-native"];
+
+const INPUTS = {
+  printf: "1 2\n",
+  iostream: "1 2\n",
+  stdcxx: "5\n5 3 1 4 2\n",
+  heavy: "hello world hello C++ Here\n",
+};
+
+let INFO = null;
+try { performance.setResourceTimingBufferSize(100000); } catch {}
+
+const now = () => performance.now();
+const log = (s) => { const el = document.getElementById("log"); el.textContent += s + "\n"; el.scrollTop = 1e9; };
+
+function decodeBase64(b64, how) {
+  if (how === "native") return Uint8Array.fromBase64(b64);
+  const s = atob(b64);
+  const out = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
+  return out;
+}
+
+async function loadWasm(url, how, r) {
+  const t = now();
+  const res = await fetch(url);
+  if (how === "stream") return WebAssembly.compileStreaming(res);
+  const buf = await res.arrayBuffer();
+  const t1 = now();
+  r.wasm_download_ms = t1 - t;
+  const mod = await WebAssembly.compile(buf);
+  r.compile_ms = now() - t1;
+  return mod;
+}
+
+// Mirrors CodeWorker + runCode in frontend/src/service/run.ts
+function runWorker(jsCode, module, input, t0, r) {
+  return new Promise((resolve, reject) => {
+    const blobUrl = URL.createObjectURL(new Blob([jsCode], { type: "application/javascript" }));
+    const worker = new Worker(blobUrl);
+    URL.revokeObjectURL(blobUrl);
+    const taskId = crypto.randomUUID();
+    let stdout = "";
+    const timer = setTimeout(() => { worker.terminate(); reject(new Error("worker timeout")); }, 15000);
+    worker.onmessage = (e) => {
+      const { type, content } = e.data;
+      if (type === "stdout") stdout += content;
+      else if (type === "status" && content === "Running") r.running_ms = now() - t0;
+      else if (type === "status" && content === "exit") {
+        clearTimeout(timer); worker.terminate(); r.stdout = stdout.slice(0, 200); resolve();
+      } else if (type === "error" || type === "limit") {
+        clearTimeout(timer); worker.terminate(); reject(new Error(`${type}: ${content}`));
+      }
+    };
+    worker.onerror = (e) => { clearTimeout(timer); worker.terminate(); reject(new Error(e.message)); };
+    worker.postMessage({ taskId, inputData: input, module_: module });
+  });
+}
+
+function timingOf(url) {
+  const entries = performance.getEntriesByName(url);
+  const e = entries[entries.length - 1];
+  if (!e) return null;
+  return {
+    dns: e.domainLookupEnd - e.domainLookupStart,
+    connect: e.connectEnd - e.connectStart,
+    tls: e.secureConnectionStart > 0 ? e.connectEnd - e.secureConnectionStart : 0,
+    queue: (e.connectStart || e.fetchStart) - e.startTime,
+    ttfb: e.responseStart - e.requestStart,
+    download: e.responseEnd - e.responseStart,
+    total: e.duration,
+    transfer: e.transferSize,
+    encoded: e.encodedBodySize,
+    decoded: e.decodedBodySize,
+    proto: e.nextHopProtocol,
+  };
+}
+
+// One build round trip + load + run. Exposed for run_playwright.mjs.
+async function runOne({ sample, mode, files = "same", nonce }) {
+  const m = MODES[mode];
+  nonce = nonce ?? crypto.randomUUID();
+  const r = { sample, mode, files, nonce, variant: m.variant, compile: m.compile };
+  const buildUrl = `${API}/bench/build?n=${encodeURIComponent(nonce)}-${mode}`;
+  const t0 = now();
+  const res = await fetch(buildUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sample, variant: m.variant, files, nonce }),
+  });
+  const data = await res.json();
+  r.json_ms = now() - t0;
+  r.edge = data.edge?.colo;
+
+  let jsCode, module;
+  if (m.variant === "c") {
+    const td = now();
+    const bytes = decodeBase64(data.wasm_b64, m.compile);
+    const tc = now();
+    r.decode_ms = tc - td;
+    module = await WebAssembly.compile(bytes);
+    r.compile_ms = now() - tc;
+    jsCode = data.js_code;
+  } else {
+    const jsP = m.variant === "a"
+      ? fetch(data.js_url).then((x) => x.text())
+      : Promise.resolve(data.js_code);
+    [module, jsCode] = await Promise.all([loadWasm(data.wasm_url, m.compile, r), jsP]);
+  }
+  r.ready_ms = now() - t0;
+  await runWorker(jsCode, module, INPUTS[sample] ?? "", t0, r);
+  r.exit_ms = now() - t0;
+
+  r.t_build = timingOf(buildUrl);
+  if (data.wasm_url) r.t_wasm = timingOf(data.wasm_url);
+  if (data.js_url) r.t_js = timingOf(data.js_url);
+  return r;
+}
+
+async function info() {
+  if (!INFO) INFO = await (await fetch(`${API}/bench/samples`)).json();
+  return INFO;
+}
+
+// Opens (and times) the connection to a host; the first call per host in a
+// fresh browser profile shows what a cold connection costs.
+async function ping(base) {
+  const url = `${base}/bench/ping?r=${Math.random()}`;
+  const t = now();
+  const data = await (await fetch(url)).json();
+  return { base, ms: now() - t, colo: data.colo, ...timingOf(url) };
+}
+
+function env() {
+  const c = navigator.connection || {};
+  return {
+    ua: navigator.userAgent,
+    cores: navigator.hardwareConcurrency,
+    effectiveType: c.effectiveType, downlink: c.downlink, rtt: c.rtt,
+    nativeBase64: typeof Uint8Array.fromBase64 === "function",
+  };
+}
+
+async function postResults(payload) {
+  await fetch(`${API}/bench/results`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+window.bench = { runOne, info, ping, env, postResults, MODES };
+
+// ---------- interactive UI ----------
+
+const q = (arr, p) => {
+  if (!arr.length) return NaN;
+  const s = [...arr].sort((a, b) => a - b);
+  const i = (s.length - 1) * p, lo = Math.floor(i), hi = Math.ceil(i);
+  return s[lo] + (s[hi] - s[lo]) * (i - lo);
+};
+const fmt = (x) => (Number.isFinite(x) ? x.toFixed(1) : "–");
+
+function summarize(results) {
+  const groups = new Map();
+  for (const r of results) {
+    const k = `${r.sample}|${r.files}|${r.mode}`;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(r);
+  }
+  const rows = [];
+  for (const [k, rs] of groups) {
+    const [sample, files, mode] = k.split("|");
+    const col = (f) => rs.map(f).filter(Number.isFinite);
+    rows.push({
+      sample, files, mode, n: rs.length,
+      json: q(col((r) => r.json_ms), 0.5),
+      ready: q(col((r) => r.ready_ms), 0.5),
+      ready25: q(col((r) => r.ready_ms), 0.25),
+      ready75: q(col((r) => r.ready_ms), 0.75),
+      exit: q(col((r) => r.exit_ms), 0.5),
+      bytes: q(col((r) => (r.t_build?.transfer || 0) + (r.t_wasm?.transfer || 0) + (r.t_js?.transfer || 0)), 0.5),
+    });
+  }
+  return rows;
+}
+
+function render(results, conns) {
+  const rows = summarize(results);
+  const best = new Map();
+  for (const r of rows) {
+    const k = r.sample;
+    if (!best.has(k) || r.ready < best.get(k)) best.set(k, r.ready);
+  }
+  document.getElementById("summary").innerHTML =
+    "<tr><th>樣本</th><th>WASM host</th><th>模式</th><th>n</th><th>JSON 回來</th><th>可執行 (p50)</th><th>p25–p75</th><th>程式結束</th><th>傳輸 bytes</th></tr>" +
+    rows.map((r) => `<tr><td>${r.sample}</td><td>${r.files}</td><td>${r.mode}</td><td>${r.n}</td><td>${fmt(r.json)}</td>` +
+      `<td class="${r.ready === best.get(r.sample) ? "best" : ""}">${fmt(r.ready)}</td><td>${fmt(r.ready25)}–${fmt(r.ready75)}</td>` +
+      `<td>${fmt(r.exit)}</td><td>${r.bytes ? Math.round(r.bytes).toLocaleString() : "–"}</td></tr>`).join("");
+  document.getElementById("conn").innerHTML =
+    "<tr><th>連線</th><th>host</th><th>edge</th><th>總時間</th><th>DNS</th><th>TCP+TLS</th><th>TLS</th><th>TTFB</th><th>協定</th></tr>" +
+    conns.map((c) => `<tr><td>${c.when}</td><td>${new URL(c.base).host}</td><td>${c.colo ?? "–"}</td><td>${fmt(c.ms)}</td>` +
+      `<td>${fmt(c.dns)}</td><td>${fmt(c.connect)}</td><td>${fmt(c.tls)}</td><td>${fmt(c.ttfb)}</td><td>${c.proto ?? "–"}</td></tr>`).join("");
+}
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+async function setup() {
+  const data = await info();
+  document.getElementById("sampleBoxes").innerHTML = "樣本：" + data.samples.map((s) =>
+    `<label><input type="checkbox" name="sample" value="${s.name}" checked> ${s.name} <span class="muted">(${(s.wasm_bytes / 1024).toFixed(0)} KB wasm)</span></label>`).join("");
+  document.getElementById("fileBoxes").innerHTML = "WASM 放在：" +
+    `<label><input type="checkbox" name="files" value="same" checked> 同一個 host（${location.host}）</label>` +
+    (data.alt_base ? `<label><input type="checkbox" name="files" value="alt" checked> 另一個 host（${new URL(data.alt_base).host}）</label>` :
+      `<span class="muted">（伺服器沒有設定 ALT_BASE，無法測另一個 host）</span>`);
+}
+
+document.getElementById("start").onclick = async () => {
+  const btn = document.getElementById("start");
+  btn.disabled = true;
+  const status = document.getElementById("status");
+  const samples = [...document.querySelectorAll("input[name=sample]:checked")].map((x) => x.value);
+  const filesList = [...document.querySelectorAll("input[name=files]:checked")].map((x) => x.value);
+  const iters = Number(document.getElementById("iters").value) || 10;
+  const label = document.getElementById("label").value || "browser";
+  const data = await info();
+
+  const conns = [];
+  // The page host is already warm (this page came from it); the alt host is
+  // cold on its first request unless this browser talked to it recently.
+  if (data.alt_base && filesList.includes("alt")) conns.push({ when: "alt 第一次", ...(await ping(data.alt_base)) });
+  conns.push({ when: "page host（已連線）", ...(await ping(API)) });
+  if (data.alt_base && filesList.includes("alt")) conns.push({ when: "alt（已連線）", ...(await ping(data.alt_base)) });
+
+  const combos = [];
+  for (const sample of samples)
+    for (const files of filesList)
+      for (const mode of Object.keys(MODES))
+        if (!(files === "alt" && mode.startsWith("C"))) combos.push({ sample, files, mode });
+
+  // One untimed pass so JIT/worker warm-up doesn't land on whichever combo runs first
+  for (const c of combos) { try { await runOne(c); } catch {} }
+
+  const results = [];
+  const total = combos.length * iters;
+  for (let i = 0; i < iters; i++) {
+    for (const c of shuffle([...combos])) {
+      status.textContent = `${results.length + 1} / ${total}`;
+      try {
+        const r = await runOne(c);
+        r.iter = i;
+        results.push(r);
+      } catch (e) {
+        log(`${c.sample} ${c.mode} ${c.files}: ${e}`);
+      }
+    }
+    render(results, conns);
+  }
+  status.textContent = "上傳結果…";
+  try {
+    await postResults({ label, source: "browser-ui", env: env(), conns, results });
+    status.textContent = `完成，已上傳 ${results.length} 筆結果`;
+  } catch (e) {
+    status.textContent = `完成，但上傳失敗：${e}`;
+  }
+  btn.disabled = false;
+};
+
+if (!new URLSearchParams(location.search).has("headless")) setup().catch((e) => log(String(e)));
+</script>
+</body>
+</html>
