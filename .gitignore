@@ -228,3 +228,7 @@ __marimo__/
 .agents
 .claude
 skills-lock.json
+
+# Generated local compiler assets (run frontend's toolchain script).
+frontend/public/toolchain/
+frontend/test/browser/results/

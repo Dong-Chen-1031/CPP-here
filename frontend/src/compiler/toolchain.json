@@ -1,0 +1,29 @@
+{
+    "version": "yowasp-clang-21.1.4-3-cpp-here-v1",
+    "yowasp": "21.1.4-3",
+    "standards": ["c++98", "c++11", "c++14", "c++17", "c++20", "c++23"],
+    "compileFlags": [
+        "-O2",
+        "-fno-exceptions",
+        "-ftemplate-depth=50",
+        "-fconstexpr-depth=50",
+        "-fmacro-backtrace-limit=10",
+        "-fsanitize=integer-divide-by-zero",
+        "-fsanitize-trap=integer-divide-by-zero"
+    ],
+    "linkFlags": [
+        "-Wl,-z,stack-size=8388608",
+        "-Wl,--stack-first",
+        "-Wl,--max-memory=536870912",
+        "-Wl,--wrap=malloc",
+        "-Wl,--wrap=calloc",
+        "-Wl,--wrap=realloc"
+    ],
+    "assets": [
+        "llvm.core.wasm",
+        "llvm.core2.wasm",
+        "llvm.core3.wasm",
+        "llvm.core4.wasm",
+        "llvm-resources.tar"
+    ]
+}
