@@ -121,6 +121,7 @@ The version shown in the stores comes from `version` in [`package.json`](./packa
 | Hydro                      | ✔              | ✔              |
 | ICPC Live Archive          | ✔              |                |
 | InfoArena                  | ✔              |                |
+| ISCOJ                      | ✔              | ✔              |
 | ITCoder HUTECH             | ✔              |                |
 | Jutge                      | ✔              |                |
 | Kattis                     | ✔              | ✔              |
@@ -145,6 +146,7 @@ The version shown in the stores comes from `version` in [`package.json`](./packa
 | Newton School              | ✔              |                |
 | NOJ                        | ✔              | ✔              |
 | NowCoder                   | ✔              |                |
+| NTUCPC OJ                  | ✔              | ✔              |
 | NYTD Online Judge          | ✔              | ✔              |
 | oiClass                    | ✔              | ✔              |
 | Olinfo                     | ✔              |                |
@@ -170,6 +172,7 @@ The version shown in the stores comes from `version` in [`package.json`](./packa
 | StarryCoding               | ✔              |                |
 | TheJobOverflow             | ✔              |                |
 | Timus Online Judge         | ✔              | ✔              |
+| TIOJ                       | ✔              | ✔              |
 | TLX                        | ✔              | ✔              |
 | Toph                       | ✔              |                |
 | uDebug                     | ✔              |                |
@@ -186,6 +189,7 @@ The version shown in the stores comes from `version` in [`package.json`](./packa
 | X-Camp                     | ✔              |                |
 | yukicoder                  | ✔              | ✔              |
 | Yun Dou Xue Yuan           | ✔              | ✔              |
+| ZeroJudge                  | ✔              | ✔              |
 | ZOJ                        | ✔              |                |
 | ZUFEOJ                     | ✔              | ✔              |
 

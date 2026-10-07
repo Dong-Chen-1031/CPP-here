@@ -1,0 +1,39 @@
+{
+  "url": "https://zerojudge.tw/ShowProblem?problemid=a001",
+  "parser": "ZeroJudgeProblemParser",
+  "result": {
+    "name": "a001. 哈囉",
+    "group": "ZeroJudge",
+    "url": "https://zerojudge.tw/ShowProblem?problemid=a001",
+    "interactive": false,
+    "memoryLimit": 512,
+    "timeLimit": 1000,
+    "tests": [
+      {
+        "input": "world\n",
+        "output": "hello, world\n"
+      },
+      {
+        "input": "C++\n",
+        "output": "hello, C++\n"
+      },
+      {
+        "input": "Taiwan\n",
+        "output": "hello, Taiwan\n"
+      }
+    ],
+    "testType": "single",
+    "input": {
+      "type": "stdin"
+    },
+    "output": {
+      "type": "stdout"
+    },
+    "languages": {
+      "java": {
+        "mainClass": "Main",
+        "taskClass": "A001"
+      }
+    }
+  }
+}
