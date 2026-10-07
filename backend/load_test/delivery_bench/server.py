@@ -119,8 +119,8 @@ async def build(request: Request):
     name = body["sample"]
     variant = body["variant"]
     nonce = str(body.get("nonce", "0"))
-    files_base = ALT_BASE if body.get("files") == "alt" and ALT_BASE else public_base(
-        request
+    files_base = (
+        ALT_BASE if body.get("files") == "alt" and ALT_BASE else public_base(request)
     )
     d = sample_dir(name)
     prefix = f"{files_base}/bench/files/{name}/{nonce}"

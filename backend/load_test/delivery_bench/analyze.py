@@ -37,7 +37,9 @@ def main():
         if labels and rec.get("label") not in labels:
             continue
         rs = rec.get("results", [])
-        print(f"\n### {rec.get('label')} ({rec.get('source')}, edge {rec.get('colo')}, n={len(rs)})")
+        print(
+            f"\n### {rec.get('label')} ({rec.get('source')}, edge {rec.get('colo')}, n={len(rs)})"
+        )
         print(rec.get("env", {}).get("ua"))
         for c in rec.get("conns", []):
             print(
@@ -47,7 +49,13 @@ def main():
             )
         groups = defaultdict(list)
         for r in rs:
-            key = (r.get("profile", "-"), r.get("phase", "warm"), r["sample"], r["files"], r["mode"])
+            key = (
+                r.get("profile", "-"),
+                r.get("phase", "warm"),
+                r["sample"],
+                r["files"],
+                r["mode"],
+            )
             groups[key].append(r)
         print(
             f"  {'profile':7} {'phase':5} {'sample':9} {'files':11} {'mode':9} {'n':>3} | "
@@ -58,11 +66,12 @@ def main():
             g = groups[key]
             ready = [r["ready_ms"] for r in g]
             nbytes = [
-                sum((get(r, k, "transfer") or 0) for k in ("t_build", "t_wasm", "t_js")) for r in g
+                sum((get(r, k, "transfer") or 0) for k in ("t_build", "t_wasm", "t_js"))
+                for r in g
             ]
             print(
                 f"  {key[0]:7} {key[1]:5} {key[2]:9} {key[3]:11} {key[4]:9} {len(g):3} | "
-                f"{med(ready):6.0f} {q(ready, .25):6.0f} {q(ready, .75):6.0f} | "
+                f"{med(ready):6.0f} {q(ready, 0.25):6.0f} {q(ready, 0.75):6.0f} | "
                 f"{med([r['json_ms'] for r in g]):6.0f} {med([get(r, 't_build', 'ttfb') for r in g]):6.0f} "
                 f"{med([get(r, 't_wasm', 'ttfb') for r in g]):6.0f} {med([get(r, 't_js', 'ttfb') for r in g]):6.0f} "
                 f"{med([get(r, 't_wasm', 'connect') for r in g]):6.0f} | {statistics.median(nbytes):7.0f}"
