@@ -1,0 +1,102 @@
+name: Browser Compiler Regression
+
+# Runs builder/test/regression's cases through the in-browser compiler, the
+# same cases builder-docker.yml runs through the server's. Auto mode switches
+# between the two without telling the user, so they must agree.
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - "frontend/src/compiler/**"
+            - "frontend/src/service/browserBuild.ts"
+            - "frontend/src/service/buildCache.ts"
+            - "frontend/src/config/runLimits.ts"
+            - "frontend/scripts/**"
+            - "frontend/test/browser/**"
+            - "builder/docker/inner/bits/**"
+            - "builder/docker/cpp-here-build"
+            - "builder/test/regression/**"
+            - "package.json"
+            - "bun.lock"
+            - ".github/workflows/browser-compiler.yml"
+    pull_request:
+        paths:
+            - "frontend/src/compiler/**"
+            - "frontend/src/service/browserBuild.ts"
+            - "frontend/src/service/buildCache.ts"
+            - "frontend/src/config/runLimits.ts"
+            - "frontend/scripts/**"
+            - "frontend/test/browser/**"
+            - "builder/docker/inner/bits/**"
+            - "builder/docker/cpp-here-build"
+            - "builder/test/regression/**"
+            - "package.json"
+            - "bun.lock"
+            - ".github/workflows/browser-compiler.yml"
+    workflow_dispatch:
+
+jobs:
+    regression:
+        name: In-browser compiler regression
+        runs-on: ubuntu-latest
+        timeout-minutes: 45
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Set up Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: latest
+
+            # The scripts need real Node: Bun's node:wasi ignores the stdout fd,
+            # so prepare-toolchain's PCH smoke test would fail.
+            - name: Set up Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+
+            - name: Install dependencies
+              run: bun install --frozen-lockfile
+
+            - name: Toolchain id
+              id: toolchain
+              working-directory: frontend
+              run: |
+                  id=$(node --input-type=module -e '
+                      const { readToolchainInputs } = await import("./scripts/toolchain-id.mjs");
+                      console.log((await readToolchainInputs()).id);')
+                  echo "id=$id" >> "$GITHUB_OUTPUT"
+
+            # The id hashes every input of the toolchain, so a hit is up to date
+            # and prepare-toolchain skips its ~3 minutes.
+            - name: Cache toolchain
+              uses: actions/cache@v4
+              with:
+                  path: frontend/public/toolchain
+                  key: browser-toolchain-${{ steps.toolchain.outputs.id }}
+
+            - name: Prepare toolchain
+              working-directory: frontend
+              run: node scripts/prepare-toolchain.mjs
+
+            - name: Install Chromium
+              working-directory: frontend
+              run: bunx playwright install --with-deps chromium
+
+            - name: PCH rule matches the builder
+              working-directory: frontend
+              run: node test/browser/pch-rule.mjs
+
+            - name: Regression cases
+              working-directory: frontend
+              run: node test/browser/run.mjs
+
+            - name: Upload results
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: browser-regression-results
+                  path: frontend/test/browser/results
+                  if-no-files-found: ignore

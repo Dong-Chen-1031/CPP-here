@@ -145,6 +145,10 @@ npx astro sync && npx wrangler types && npx tsc --noEmit
 Set `CHROME_PATH` to use an installed Chrome. `CASE`, `AFTER` and `MAX_MS`
 filter the regression run.
 
+CI (`.github/workflows/browser-compiler.yml`) runs `pch-rule.mjs` and the
+regression cases when the compiler, its toolchain inputs or the cases change,
+with `public/toolchain/` cached by toolchain id.
+
 Verified in headless Chromium:
 
 - 73/73 regression case/standard combinations, including `cpp23_features`
