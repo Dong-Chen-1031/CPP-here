@@ -247,15 +247,47 @@ function ButtonFieldTemplate({ field }: { field: ButtonField }) {
 }
 
 export function SettingFieldTemplate({ field }: { field: SettingsField }) {
-    return (
+    const { t } = useTranslation("editor");
+    // Hover cards ignore touch, so a tap expands the detail under the field
+    // instead. The card also opens on focus, which a tap gives the button.
+    const [cardOpen, setCardOpen] = useState(false);
+    const [detailExpanded, setDetailExpanded] = useState(false);
+    const pointerType = useRef("");
+    const touch = () =>
+        pointerType.current === "touch" || pointerType.current === "pen";
+    const row = (
         <Field orientation="horizontal" className="items-center!">
             <FieldContent>
                 <div className="flex items-center space-x-1">
                     <FieldLabel>{field.label}</FieldLabel>
                     {field.hoverDetail && (
-                        <HoverCard openDelay={10} closeDelay={100}>
-                            <HoverCardTrigger>
-                                <CircleQuestionMarkIcon className="inline ml-1 size-4" />
+                        <HoverCard
+                            openDelay={10}
+                            closeDelay={100}
+                            open={cardOpen}
+                            onOpenChange={(open) =>
+                                setCardOpen(open && !touch())
+                            }
+                        >
+                            <HoverCardTrigger asChild>
+                                <button
+                                    type="button"
+                                    aria-label={t("settings.moreInfo")}
+                                    aria-expanded={detailExpanded}
+                                    className="ml-1 inline-flex rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    onPointerEnter={(e) =>
+                                        (pointerType.current = e.pointerType)
+                                    }
+                                    onPointerDown={(e) =>
+                                        (pointerType.current = e.pointerType)
+                                    }
+                                    onClick={() => {
+                                        if (touch())
+                                            setDetailExpanded((p) => !p);
+                                    }}
+                                >
+                                    <CircleQuestionMarkIcon className="size-4" />
+                                </button>
                             </HoverCardTrigger>
                             <HoverCardContent className="text-xs">
                                 {field.hoverDetail}
@@ -277,6 +309,15 @@ export function SettingFieldTemplate({ field }: { field: SettingsField }) {
                 <NumberFieldTemplate field={field} />
             ) : null}
         </Field>
+    );
+    if (!field.hoverDetail || !detailExpanded) return row;
+    return (
+        <div className="flex flex-col gap-2">
+            {row}
+            <div className="rounded-md bg-muted/50 p-2.5 text-xs">
+                {field.hoverDetail}
+            </div>
+        </div>
     );
 }
 

@@ -71,7 +71,6 @@ export function effectiveCompilerMode(getter: Getter = get): CompilerMode {
 
 interface NavigatorHints {
     deviceMemory?: number;
-    userAgentData?: { mobile?: boolean };
     connection?: {
         saveData?: boolean;
         type?: string;
@@ -80,24 +79,9 @@ interface NavigatorHints {
     };
 }
 
-/**
- * Phones take ten seconds or more per compile even after the download, so
- * auto mode never compiles on them.
- */
-function isPhone() {
-    if (typeof navigator === "undefined") return false;
-    const { userAgentData } = navigator as Navigator & NavigatorHints;
-    return (
-        userAgentData?.mobile ??
-        /iPhone|iPod|Android.+Mobile|Mobile.+Firefox|Windows Phone/i.test(
-            navigator.userAgent,
-        )
-    );
-}
-
 /** Clang in WebAssembly needs a few cores and some memory to be usable. */
 function deviceCanCompile() {
-    if (typeof navigator === "undefined" || isPhone()) return false;
+    if (typeof navigator === "undefined") return false;
     const { deviceMemory } = navigator as Navigator & NavigatorHints;
     return (
         (navigator.hardwareConcurrency ?? 0) >= 4 &&
@@ -124,7 +108,7 @@ function canDownloadInBackground() {
 function chooseTarget(getter: Getter): BuildTarget {
     const mode = effectiveCompilerMode(getter);
     if (mode !== "auto") return mode;
-    if (getter(serverUnavailableStore) && !isPhone()) return "browser";
+    if (getter(serverUnavailableStore)) return "browser";
     return getter(browserCompilerProgressStore) === DOWNLOADED &&
         deviceCanCompile()
         ? "browser"
@@ -358,11 +342,7 @@ export async function build(
                 if (chosen === "server")
                     store.set(serverUnavailableStore, true);
                 const other = chosen === "server" ? "browser" : "server";
-                if (
-                    other === "browser"
-                        ? !isPhone()
-                        : !store.get(serverUnavailableStore)
-                ) {
+                if (other === "browser" || !store.get(serverUnavailableStore)) {
                     const failed = chosen;
                     chosen = other;
                     const fallback = await buildWith(
@@ -451,22 +431,6 @@ export function suggestOtherCompiler(
         store.set(compilerModeStore, mode);
         retry();
     };
-    // On phones Auto never compiles in the browser, so it cannot help when the
-    // server is down: offer the in-browser compiler as a deliberate choice.
-    if (isPhone() && result.target === "server") {
-        store.set(alertDialogStore, {
-            title: t("editor:compiler.serverUnavailableTitle"),
-            description: t("editor:compiler.serverUnavailablePhoneDescription"),
-            actions: [
-                {
-                    text: t("editor:compiler.use.browser"),
-                    onClick: use("browser"),
-                    autoFocus: true,
-                },
-            ],
-        });
-        return;
-    }
     // Auto mode has already tried both.
     if (effectiveCompilerMode() === "auto") return;
     const other: BuildTarget =

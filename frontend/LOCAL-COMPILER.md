@@ -17,11 +17,10 @@ downloaded in the background 10 seconds after the editor loads and after each
 server build. A failed verification or server build marks the server
 unavailable for the session, so Auto then builds in the browser.
 
-On phones (`navigator.userAgentData.mobile`, or the user agent where that is
-missing) Auto never compiles in the browser, not even when the server is
-unavailable: a compile takes ten seconds or more there. It then offers the
-In browser mode instead. An in-browser compile slower than 7 seconds suggests
-the server, once per session.
+An in-browser compile slower than 7 seconds suggests the server, once per
+session. Measured on an iPhone in production: 4 to 6 seconds for the first
+compile after a page load (the toolchain is loaded into the worker), about 2
+seconds after that, for `#include <iostream>` without a PCH.
 
 "Stop building" (the run button while building, or the button in the output
 panel) ends the build: a running compile terminates the compile worker, so the

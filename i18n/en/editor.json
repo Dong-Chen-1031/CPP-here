@@ -162,10 +162,11 @@
             "server": "Server"
         },
         "compilerModeDesc": {
-            "auto": "Recommended. Uses the in-browser compiler once it is downloaded and this device is fast enough, and the server otherwise. Phones always use the server.",
-            "browser": "Always compiles on this device. The first use downloads about 26 MB. Not recommended on phones, where each compile can take over ten seconds.",
+            "auto": "Recommended. Uses the in-browser compiler once it is downloaded and this device is fast enough, and the server otherwise.",
+            "browser": "Always compiles on this device. The first use downloads about 26 MB.",
             "server": "Always compiles on our servers."
-        }
+        },
+        "moreInfo": "More info"
     },
     "resize": {
         "loadingEditor": "Loading Editor",
@@ -246,7 +247,6 @@
         "backgroundDownloadFailedTitle": "In-browser compiler not downloaded",
         "backgroundDownloadFailedDescription": "The background download failed. Your code keeps compiling on the server.",
         "serverUnreachable": "The server could not be reached.",
-        "serverUnavailablePhoneDescription": "The server could not build your code. You can compile in your browser instead, but it is slow on phones, often over ten seconds per compile, so Auto mode does not do it on its own.",
         "slowTitle": "Compiling is slow on this device",
         "slowDescription": "Compiling in your browser took over 7 seconds. The server is usually much faster."
     }
