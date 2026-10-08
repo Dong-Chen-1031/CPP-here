@@ -3,6 +3,7 @@ import { chromium } from "playwright";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { toolchainId } from "../../scripts/toolchain-id.mjs";
 const frontend = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
     "../..",
@@ -15,6 +16,7 @@ const server = await createServer({
     configFile: false,
     root: frontend,
     publicDir: path.join(frontend, "public"),
+    plugins: [toolchainId()],
     server: { host: "127.0.0.1", port: 5178 },
 });
 await server.listen();

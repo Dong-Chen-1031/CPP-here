@@ -1,6 +1,6 @@
 import { atom, getDefaultStore } from "jotai";
 import i18next from "i18next";
-import { LOCAL_WORKER_MARKER, TOOLCHAIN_VERSION } from "../compiler/config";
+import { LOCAL_WORKER_MARKER, TOOLCHAIN_ID } from "../compiler/config";
 import {
     TOOLCHAIN_FILES,
     deleteOldToolchains,
@@ -8,6 +8,7 @@ import {
     openToolchainCache,
 } from "../compiler/toolchainCache";
 import type { BuildResult } from "./build";
+import { createBuildCache } from "./buildCache";
 
 export const NOT_DOWNLOADED = -1;
 export const DOWNLOADED = 101;
@@ -26,7 +27,7 @@ let download: Promise<boolean> | undefined;
 let nextJobId = 0;
 // Ends the compile running in the worker, if any.
 let stopJob: (() => void) | undefined;
-const cache = new Map<string, BuildResult>();
+const cache = createBuildCache();
 
 const failed = (text: string, unavailable = true): BuildResult => ({
     ok: false,
@@ -46,7 +47,7 @@ function capture(event: string, properties: Record<string, unknown>) {
 
 function toolchainBase() {
     return new URL(
-        import.meta.env.BASE_URL + "toolchain/" + TOOLCHAIN_VERSION + "/",
+        import.meta.env.BASE_URL + "toolchain/" + TOOLCHAIN_ID + "/",
         location.origin,
     ).href;
 }
@@ -197,10 +198,7 @@ async function compile(source: string, std: string): Promise<BuildResult> {
     if (!(await isBrowserCompilerDownloaded()))
         if (!(await downloadBrowserCompiler()))
             return failed(i18next.t("editor:compiler.downloadFailed"));
-    // No crypto.subtle or crypto.randomUUID here: insecure origins (the
-    // dev server opened by LAN IP) lack both.
-    const key = JSON.stringify([std, source]);
-    const hit = cache.get(key);
+    const hit = cache.get(source, std);
     if (hit) {
         capture("browser_compiler_build", {
             success: true,
@@ -234,10 +232,7 @@ async function compile(source: string, std: string): Promise<BuildResult> {
             ? result.errors.join("\n").slice(0, 300)
             : undefined,
     });
-    if (result.ok) {
-        cache.set(key, result);
-        if (cache.size > 8) cache.delete(cache.keys().next().value!);
-    }
+    cache.set(source, std, result);
     return { ...result, durationMs };
 }
 

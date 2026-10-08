@@ -13,8 +13,6 @@ image=${1:?usage: $0 <image>}
 timeout=${TIMEOUT:-600}
 port=${PORT:-14321}
 name=cpp-here-frontend-smoke
-root=$(cd "$(dirname "$0")/../.." && pwd)
-version=$(jq -r .version "$root/frontend/src/compiler/toolchain.json")
 base=http://127.0.0.1:$port
 
 # Matching on captured output, not a pipe: with pipefail, `grep -q` exiting early
@@ -45,21 +43,23 @@ echo "Serving after ${SECONDS}s"
 
 # The image ships the toolchain prebuilt; regenerating it here means the
 # Dockerfile's toolchain stage and the copied sources disagree.
-grep -q "Toolchain up to date" <<<"$(logs)" ||
-    fail "toolchain was not prebuilt in the image"
+# The directory is named by the toolchain id (frontend/scripts/toolchain-id.mjs),
+# a hash of its inputs, so read it from that line rather than recomputing it.
+id=$(sed -n 's|.*Toolchain up to date: .*/toolchain/||p' <<<"$(logs)" | tail -1)
+[ -n "$id" ] || fail "toolchain was not prebuilt in the image"
 
 for path in / /editor/; do
     page=$(curl -fsSL "$base$path") || fail "$path not served"
     grep -qi "</html>" <<<"$page" || fail "$path did not return a full HTML page"
 done
 
-manifest=$(curl -fsS "$base/toolchain/$version/manifest.json") || fail "toolchain manifest not served"
-jq -e --arg v "$version" '.version == $v' <<<"$manifest" >/dev/null ||
-    fail "toolchain manifest is for another version"
+manifest=$(curl -fsS "$base/toolchain/$id/manifest.json") || fail "toolchain manifest not served"
+jq -e --arg v "$id" '.version == $v' <<<"$manifest" >/dev/null ||
+    fail "toolchain manifest is for another toolchain"
 
 # The worker decompresses .gz.bin itself; a Content-Encoding header would make
 # the browser decompress first and the worker fail (see frontend/LOCAL-COMPILER.md).
-headers=$(curl -fsSI "$base/toolchain/$version/llvm.core.wasm.gz.bin") ||
+headers=$(curl -fsSI "$base/toolchain/$id/llvm.core.wasm.gz.bin") ||
     fail "toolchain wasm not served"
 ! grep -qi '^content-encoding' <<<"$headers" || fail "toolchain wasm served with Content-Encoding"
 

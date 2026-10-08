@@ -3,7 +3,7 @@ import {
     LINK_FLAGS,
     STANDARDS,
     TOOLCHAIN_ASSETS,
-    TOOLCHAIN_VERSION,
+    TOOLCHAIN_ID,
 } from "./config";
 import { startsWithStdcxx } from "./pchRule";
 import { fetchToolchainFile } from "./toolchainCache";
@@ -80,9 +80,9 @@ async function load(base: string): Promise<Toolchain> {
         ),
         read(base + "memory-helpers.o").then((r) => r.arrayBuffer()),
     ]);
-    if (manifest.version !== TOOLCHAIN_VERSION)
+    if (manifest.version !== TOOLCHAIN_ID)
         throw new Error(
-            `Toolchain ${manifest.version} does not match ${TOOLCHAIN_VERSION}`,
+            `Toolchain ${manifest.version} does not match ${TOOLCHAIN_ID}`,
         );
     return {
         yowasp,

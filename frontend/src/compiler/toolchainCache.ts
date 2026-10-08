@@ -1,11 +1,11 @@
-import { TOOLCHAIN_ASSETS, TOOLCHAIN_VERSION } from "./config";
+import { TOOLCHAIN_ASSETS, TOOLCHAIN_ID } from "./config";
 
 // The toolchain is kept in Cache Storage so it survives reloads and whether it
 // is downloaded can be checked without the network. Both the page and the
 // compile worker use it. Insecure origins have no Cache Storage: files then
 // come from the network (and the HTTP cache) every time.
 const CACHE_PREFIX = "cpp-here-toolchain:";
-const CACHE_NAME = CACHE_PREFIX + TOOLCHAIN_VERSION;
+const CACHE_NAME = CACHE_PREFIX + TOOLCHAIN_ID;
 
 /** Every file a build needs, except the per-standard PCHs (fetched on use). */
 export const TOOLCHAIN_FILES = [

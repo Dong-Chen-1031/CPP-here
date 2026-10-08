@@ -64,7 +64,7 @@ user's code). Stopping a build sends `code_build_cancelled`.
 - **Compiler**: [`@yowasp/clang`](https://www.npmjs.com/package/@yowasp/clang)
   `21.1.4-3` (LLVM/Clang/LLD 21.1.4 built for WASI, target `wasm32-wasip1`).
 - `src/compiler/toolchainCache.ts` keeps the toolchain files in Cache Storage
-  (`cpp-here-toolchain:<version>`, older versions deleted on download), so it
+  (`cpp-here-toolchain:<id>`, other ids deleted on download), so it
   survives reloads and "downloaded" can be checked offline. Insecure origins
   have no Cache Storage and fetch from the network every time. PCHs are cached
   there on first use.
@@ -76,6 +76,12 @@ user's code). Stopping a build sends `code_build_cancelled`.
   sockets.
 - `src/compiler/toolchain.json` holds the toolchain version and the compile and
   link flags, shared by the worker and `scripts/prepare-toolchain.mjs`.
+- `scripts/toolchain-id.mjs` derives the toolchain id: the version plus a hash
+  of every input of the toolchain (`toolchain.json`, `bits/stdc++.h`,
+  `memory-helpers.cpp`, the scripts). It names the URL and the Cache Storage
+  entry, so changing any input makes browsers download the new toolchain
+  instead of reusing cached files of the old one; the version needs no bump.
+  Its Vite plugin defines `__TOOLCHAIN_ID__` for the app and the tests.
 
 Flags match the backend where it matters: `-O2`, template/constexpr depth 50,
 8 MB stack (`-z stack-size`, `--stack-first`), 512 MiB memory
@@ -86,7 +92,7 @@ exceptions, `setjmp`/`longjmp` or signals (WASI preview 1).
 ## Generated assets
 
 `npm run toolchain` (in `frontend`) writes
-`public/toolchain/<version>/`, ignored by Git:
+`public/toolchain/<id>/`, ignored by Git:
 
 | File                                                                                                                 | Size                                          |
 | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
@@ -104,7 +110,8 @@ instead of downloading again.
 
 The script checks the installed `@yowasp/clang` version, builds a PCH per
 standard and compiles and runs a smoke test with each, and skips the work when
-its inputs are unchanged. It takes about 3 minutes.
+its inputs are unchanged. It deletes toolchains of other ids under
+`public/toolchain/`. It takes about 3 minutes.
 
 `build`, `build:static`, `deploy` and `deploy:preview` run it with
 `--if-enabled`, which only prepares the toolchain when `PUBLIC_LOCAL_COMPILER`

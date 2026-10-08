@@ -2,6 +2,7 @@ import { createServer } from "vite";
 import { chromium } from "playwright";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { toolchainId } from "../../scripts/toolchain-id.mjs";
 const root = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
     "../..",
@@ -15,6 +16,7 @@ const server = await createServer({
     root,
     resolve: { alias: { "@": path.join(root, "src") } },
     plugins: [
+        toolchainId(),
         {
             name: "test-env",
             resolveId(id) {

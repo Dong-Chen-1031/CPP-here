@@ -3,6 +3,7 @@ import { defineConfig, envField, fontProviders } from "astro/config";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
+import { toolchainId } from "./scripts/toolchain-id.mjs";
 import cloudflare from "@astrojs/cloudflare";
 import { strictPrerender } from "./strict-prerender.mjs";
 import { DEV_JWT_SECRET } from "./env.defaults.mjs";
@@ -38,7 +39,7 @@ export default defineConfig({
         // }),
     ],
     vite: {
-        plugins: [tailwindcss()],
+        plugins: [tailwindcss(), toolchainId()],
         worker: { format: "es" },
         optimizeDeps: {
             include: ["react-dom/client"],

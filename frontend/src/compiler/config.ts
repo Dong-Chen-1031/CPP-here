@@ -2,7 +2,10 @@
 // the version, flags or header requires regenerating the static toolchain.
 import toolchain from "./toolchain.json";
 
-export const TOOLCHAIN_VERSION = toolchain.version;
+// Defined by the toolchainId Vite plugin (scripts/toolchain-id.mjs): the
+// version plus a hash of everything the toolchain is generated from.
+declare const __TOOLCHAIN_ID__: string;
+export const TOOLCHAIN_ID = __TOOLCHAIN_ID__;
 export const STANDARDS = toolchain.standards;
 export const COMPILE_FLAGS = toolchain.compileFlags;
 export const LINK_FLAGS = toolchain.linkFlags;

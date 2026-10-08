@@ -1,5 +1,5 @@
 // Generates the static assets of the in-browser compiler (see LOCAL-COMPILER.md)
-// into public/toolchain/<version>/:
+// into public/toolchain/<id>/ (see toolchain-id.mjs):
 //   - YoWASP Clang's bundle.js, and its wasm modules and sysroot as .gz.bin
 //   - stdcxx.h (the project's bits/stdc++.h), memory-helpers.o, one PCH per -std
 //   - manifest.json, license notices
@@ -14,12 +14,12 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { WASI } from "node:wasi";
 import { fileURLToPath } from "node:url";
+import { readToolchainInputs } from "./toolchain-id.mjs";
 
 const frontend = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
     "..",
 );
-const root = path.resolve(frontend, "..");
 const argv = process.argv.slice(2);
 
 if (argv.includes("--if-enabled")) {
@@ -32,12 +32,7 @@ if (argv.includes("--if-enabled")) {
     }
 }
 
-const config = JSON.parse(
-    await fs.readFile(
-        path.join(frontend, "src/compiler/toolchain.json"),
-        "utf8",
-    ),
-);
+const { config, header, helperSource, id } = await readToolchainInputs();
 const gen = path.dirname(fileURLToPath(import.meta.resolve("@yowasp/clang")));
 const yowaspPackage = JSON.parse(
     await fs.readFile(path.join(gen, "../package.json"), "utf8"),
@@ -49,39 +44,27 @@ if (yowaspPackage.version !== config.yowasp)
         `@yowasp/clang ${yowaspPackage.version} installed, toolchain.json expects ${config.yowasp}`,
     );
 
-const out = path.join(frontend, "public/toolchain", config.version);
-const original = await fs.readFile(
-    path.join(root, "builder/docker/inner/bits/stdc++.h"),
-    "utf8",
-);
-// WASI has no setjmp/longjmp or signals.
-const header = original
-    .split("\n")
-    .filter((l) => !/^\s*#\s*include\s*<(csetjmp|csignal|cstdalign)>/.test(l))
-    .join("\n");
-const helperSource = await fs.readFile(
-    path.join(frontend, "src/compiler/memory-helpers.cpp"),
-    "utf8",
-);
+const toolchains = path.join(frontend, "public/toolchain");
+const out = path.join(toolchains, id);
+// Older toolchains would only add to the deployed assets.
+for (const name of await fs.readdir(toolchains).catch(() => []))
+    if (name !== id)
+        await fs.rm(path.join(toolchains, name), {
+            recursive: true,
+            force: true,
+        });
+// Not part of the id: a --no-pch build only lacks the PCHs, which the
+// manifest lists.
 const standards = argv.includes("--no-pch") ? [] : config.standards;
-const inputsHash = crypto
-    .createHash("sha256")
-    .update(
-        JSON.stringify({
-            config,
-            standards,
-            header,
-            helperSource,
-            script: await fs.readFile(fileURLToPath(import.meta.url), "utf8"),
-        }),
-    )
-    .digest("hex");
 
 const manifestPath = path.join(out, "manifest.json");
 if (!argv.includes("--force")) {
     try {
         const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8"));
-        if (manifest.inputsHash === inputsHash) {
+        if (
+            manifest.version === id &&
+            JSON.stringify(manifest.pch) === JSON.stringify(standards)
+        ) {
             console.log("Toolchain up to date:", out);
             process.exit(0);
         }
@@ -239,14 +222,13 @@ await fs.writeFile(
     manifestPath,
     JSON.stringify(
         {
-            version: config.version,
+            version: id,
             yowasp: config.yowasp,
             headerSha256: crypto
                 .createHash("sha256")
                 .update(header)
                 .digest("hex"),
             pch: standards,
-            inputsHash,
         },
         null,
         2,
