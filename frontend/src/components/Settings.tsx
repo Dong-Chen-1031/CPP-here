@@ -274,7 +274,7 @@ export function SettingFieldTemplate({ field }: { field: SettingsField }) {
                                     type="button"
                                     aria-label={t("settings.moreInfo")}
                                     aria-expanded={detailExpanded}
-                                    className="ml-1 inline-flex rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    className="relative ml-1 inline-flex rounded-full outline-none after:absolute after:-inset-3 focus-visible:ring-2 focus-visible:ring-ring"
                                     onPointerEnter={(e) =>
                                         (pointerType.current = e.pointerType)
                                     }
