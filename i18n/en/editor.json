@@ -108,7 +108,10 @@
         "downloadCode": "Download",
         "downloadCodeTip": "Download as .cpp",
         "uploadCode": "Upload",
-        "uploadCodeTip": "Upload a .cpp file"
+        "uploadCodeTip": "Upload a .cpp file",
+        "buildingInBrowser": "Building in browser",
+        "buildingOnServer": "Building on server",
+        "downloadingCompiler": "Downloading {{progress}}%"
     },
     "turnstile": {
         "verificationFailed": "Verification Failed",
@@ -139,7 +142,17 @@
         "codeFormatStyleDesc": "Select a code formatting style.",
         "cppVersion": "C++ Version",
         "timeLimit": "Time Limit (s)",
-        "timeLimitDesc": "Stop the program after this many seconds. Enter -1 for no limit."
+        "timeLimitDesc": "Stop the program after this many seconds. Enter -1 for no limit.",
+        "compiler": "Compiler",
+        "compilerDesc": "Auto uses the in-browser compiler once it is downloaded and this device is fast enough, and the server otherwise.",
+        "compilerNotDownloaded": "In-browser compiler: not downloaded (about 26 MB).",
+        "compilerDownloading": "In-browser compiler: downloading {{progress}}%.",
+        "compilerDownloaded": "In-browser compiler: downloaded.",
+        "compilerMode": {
+            "auto": "Auto",
+            "browser": "In browser",
+            "server": "Server"
+        }
     },
     "resize": {
         "loadingEditor": "Loading Editor",
@@ -191,6 +204,26 @@
         "memory": {
             "title": "Memory Limit Exceeded",
             "description": "The program used more than {{size}} MiB of memory and was stopped."
+        }
+    },
+    "compiler": {
+        "browserUnsupported": "This browser cannot run the in-browser compiler. Please update it to a recent version.",
+        "downloadFailed": "Could not download the in-browser compiler. Check your connection and try again.",
+        "timedOut": "In-browser compilation timed out after 180 seconds.",
+        "downloadingTitle": "Downloading the in-browser compiler",
+        "downloadingDescription": "The first download is about 26 MB. In Auto mode your code builds on the server meanwhile, and the compiler downloads in the background.",
+        "switchToAuto": "Switch to Auto",
+        "clangFailedTitle": "Built in the browser with Clang",
+        "clangFailedDescription": "The server compiles with GCC, which accepts some code Clang rejects. If this code should compile, try the server.",
+        "retryOnServer": "Try on server",
+        "browserUnavailableTitle": "In-browser compiler unavailable",
+        "browserUnavailableDescription": "The in-browser compiler could not be used. Build on the server instead, or let Auto mode pick a compiler that works.",
+        "serverUnavailableTitle": "Server compiler unavailable",
+        "serverUnavailableDescription": "The server could not build your code. Build in the browser instead, or let Auto mode pick a compiler that works.",
+        "use": {
+            "auto": "Use Auto",
+            "browser": "Use in-browser",
+            "server": "Use server"
         }
     }
 }

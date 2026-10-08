@@ -1,6 +1,6 @@
-import { compileLocal } from "../../src/compiler/client";
+import { browserBuild } from "../../src/service/browserBuild";
 const api = {
-    compileLocal,
+    compileLocal: browserBuild,
     run: (module: WebAssembly.Module, input: string, timeout = 10_000) =>
         new Promise((resolve) => {
             const worker = new Worker(

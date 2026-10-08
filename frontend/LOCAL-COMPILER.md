@@ -1,14 +1,46 @@
 # in-browser compiler
 
-Experimental, opt-in. With `PUBLIC_LOCAL_COMPILER=true` the editor compiles and
-runs code on the user's device and never calls `/api/build`; failures do not
-fall back to the backend. Disabled (the default) keeps the existing backend
-path unchanged. Sharing and other API features are unaffected.
+Experimental, opt-in. `PUBLIC_LOCAL_COMPILER=true` ships the toolchain and adds
+a Compiler setting with three modes; disabled (the default) keeps the backend
+as the only compiler and hides the setting. Sharing and other API features are
+unaffected.
+
+| Mode           | Builds with                                                                                                                                                                                                |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Auto (default) | The browser when its compiler is downloaded and the device has 4+ cores and 4+ GB (when reported), otherwise the server. If the chosen one cannot be used (network, outage, download), it tries the other. |
+| In browser     | Always the browser; the first build downloads the compiler with a progress bar and offers to switch to Auto.                                                                                               |
+| Server         | Always `/api/build`.                                                                                                                                                                                       |
+
+In Auto mode on a capable device with a fast, unmetered connection (Network
+Information API; without it, devices without a coarse pointer), the compiler is
+downloaded in the background 10 seconds after the editor loads and after each
+server build. A failed verification or server build marks the server
+unavailable for the session, so Auto then builds in the browser.
+
+After a failure the user is pointed at the other compiler: a dialog to switch
+modes when a forced compiler cannot be used, and a "Try on server" action when
+Clang in the browser rejects the code (GCC on the server may accept it).
+
+## Code layout
+
+- `src/service/build.ts`: picks the compiler from the setting and the device,
+  falls back, suggests switching. `buildNeedsVerificationStore` tells the UI
+  whether the next build needs a Turnstile token.
+- `src/service/browserBuild.ts`: `browserBuild`, `downloadBrowserCompiler`,
+  `isBrowserCompilerDownloaded` and `browserCompilerProgressStore` (`-1` not
+  downloaded, `0`–`100` downloading, `101` downloaded).
+- `src/service/serverBuild.ts`: `/api/build`.
+- `src/service/run.ts`: runs the built program.
 
 ## How it works
 
 - **Compiler**: [`@yowasp/clang`](https://www.npmjs.com/package/@yowasp/clang)
   `21.1.4-3` (LLVM/Clang/LLD 21.1.4 built for WASI, target `wasm32-wasip1`).
+- `src/compiler/toolchainCache.ts` keeps the toolchain files in Cache Storage
+  (`cpp-here-toolchain:<version>`, older versions deleted on download), so it
+  survives reloads and "downloaded" can be checked offline. Insecure origins
+  have no Cache Storage and fetch from the network every time. PCHs are cached
+  there on first use.
 - `src/compiler/compile.worker.ts` loads the toolchain once per worker, then
   runs `clang++` for each build. Every clang/wasm-ld run gets a fresh wasm
   instance; only the downloaded and compiled modules are kept.
@@ -93,7 +125,9 @@ Not yet measured on phones, Safari or Firefox.
 
 - First use downloads about 26 MB, plus the PCH; the in-memory build cache
   (eight entries) does not survive a reload.
-- Compiler timeout is 180 seconds including the first download, and compiling
-  cannot be cancelled from the UI.
+- `bundle.js` is imported by URL, so it comes from the HTTP cache, not Cache
+  Storage.
+- Compiler timeout is 180 seconds after the download, and compiling cannot be
+  cancelled from the UI.
 - Browsers without `DecompressionStream` (Safari before 16.4) get an error
   asking them to update.

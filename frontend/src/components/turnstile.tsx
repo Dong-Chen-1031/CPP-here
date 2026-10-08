@@ -3,7 +3,11 @@ import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useAtom } from "jotai";
-import { turnstileRefStore, verifyJwtStore } from "@/store/atom";
+import {
+    serverUnavailableStore,
+    turnstileRefStore,
+    verifyJwtStore,
+} from "@/store/atom";
 import {
     PUBLIC_TURNSTILE_SITE_KEY,
     PUBLIC_BYPASS_CAPTCHA,
@@ -32,6 +36,7 @@ function TurnstileChallenge() {
     const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [, setJwt] = useAtom(verifyJwtStore);
     const [, setTurnstileRefGlobal] = useAtom(turnstileRefStore);
+    const [, setServerUnavailable] = useAtom(serverUnavailableStore);
     const { t } = useTranslation(["editor"]);
     useEffect(() => {
         setTurnstileRefGlobal(turnstileRef);
@@ -70,6 +75,7 @@ function TurnstileChallenge() {
                     }
 
                     setJwt(newJwt);
+                    setServerUnavailable(false);
 
                     const resetDelay =
                         typeof expires_in === "number" &&
@@ -94,6 +100,8 @@ function TurnstileChallenge() {
                     }, resetDelay);
                 } catch (err) {
                     console.error("Verification error:", err);
+                    // The backend is unreachable: auto mode compiles in the browser
+                    setServerUnavailable(true);
                     addAlert({
                         title: t("turnstile.verificationFailed"),
                         description: t("turnstile.verificationFailedDesc"),

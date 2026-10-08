@@ -17,6 +17,15 @@ export const timeLimitStore = atomWithStorage<number>(
     { getOnInit: true },
 );
 
+export type CompilerMode = "auto" | "browser" | "server";
+/** Which compiler builds the code; see service/build.ts. */
+export const compilerModeStore = atomWithStorage<CompilerMode>(
+    "compilerMode",
+    "auto",
+    undefined,
+    { getOnInit: true },
+);
+
 export const defCodeStore = atomWithStorage<string>(
     "defCode",
     `#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello C++ Here";\n    return 0;\n}`,
@@ -28,9 +37,11 @@ export function useResetSettingsAtoms() {
     const resetCodeFormatStyle = useResetAtom(codeFormatStyle);
     const resetEditorTabSize = useResetAtom(editorTabSizeStore);
     const resetTimeLimit = useResetAtom(timeLimitStore);
+    const resetCompilerMode = useResetAtom(compilerModeStore);
 
     return () => {
         resetTimeLimit();
+        resetCompilerMode();
         resetEditorTabSize();
         resetEditorFontSize();
         resetDefCode();

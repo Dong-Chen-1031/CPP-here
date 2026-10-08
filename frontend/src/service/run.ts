@@ -1,3 +1,7 @@
+import { LOCAL_WORKER_MARKER } from "../compiler/config";
+// `?worker&url` makes Vite bundle the worker; a bare new URL("….ts") inside
+// super() is not recognized as one and would ship the TypeScript source.
+import runtimeWorkerUrl from "../compiler/runtime.worker.ts?worker&url";
 import {
     codeStore,
     codeWorkersStore,
@@ -22,31 +26,12 @@ import {
 } from "@/config/runLimits";
 import { timeLimitStore } from "@/store/configStore";
 import i18next from "i18next";
-import { apiAxios, callAPI, isAuthError } from "@/lib/axiosInstance";
+import { apiAxios } from "@/lib/axiosInstance";
 import { addAlert } from "@/lib/alert";
 import { getDefaultStore } from "jotai";
-import type { buildAPI } from "@/pages/api/build";
+import { build, suggestOtherCompiler, type BuildTarget } from "./build";
 
 const defaultStore = getDefaultStore();
-
-async function buildCode(code: string, cppVersion: string) {
-    try {
-        return await callAPI<buildAPI>("/api/build", { code, cppVersion });
-    } catch (error) {
-        console.error("Error during build request:", error);
-        return {
-            ok: false,
-            js_code: "",
-            wasm_url: "",
-            errors: [
-                isAuthError(error)
-                    ? i18next.t("editor:run.verificationFailed")
-                    : String(error),
-            ],
-            success: false,
-        };
-    }
-}
 
 async function text2BlobUrl(
     code: string,
@@ -100,7 +85,10 @@ export class CodeWorker extends (typeof Worker !== "undefined"
         const blobUrl = URL.createObjectURL(
             new Blob([js_code], { type: "application/javascript" }),
         );
-        super(blobUrl);
+        super(
+            js_code === LOCAL_WORKER_MARKER ? runtimeWorkerUrl : blobUrl,
+            js_code === LOCAL_WORKER_MARKER ? { type: "module" } : undefined,
+        );
         try {
             defaultStore.set(codeWorkersStore, (prev) => [...prev, this]);
             this.running = true;
@@ -201,7 +189,8 @@ export async function runCode(
         worker.onerror = (event) => {
             if (!worker.running || draining) return;
             worker.terminate();
-            onError && onError(event.message);
+            // A worker that fails to load has no message.
+            onError && onError(event.message || "Failed to start the program.");
             onExit && onExit();
         };
         worker.onmessage = (event) => {
@@ -214,7 +203,11 @@ export async function runCode(
             switch (type) {
                 case "stdout":
                 case "stderr":
-                    receivedBytes += content.length;
+                    receivedBytes +=
+                        event.data.byteLength ??
+                        (js_code === LOCAL_WORKER_MARKER
+                            ? new TextEncoder().encode(content).length
+                            : content.length);
                     if (receivedBytes > OUTPUT_LIMIT_BYTES) {
                         // While draining the TLE is reported anyway
                         if (!draining) stopForLimit("output");
@@ -352,7 +345,8 @@ function showLimit(
 export async function handleRun({
     code,
     input,
-}: { code?: string; input?: string } = {}) {
+    target,
+}: { code?: string; input?: string; target?: BuildTarget } = {}) {
     code = code ?? store.get(codeStore);
     input = input ?? store.get(inputStore);
     const cppVersion = store.get(cppVersionStore);
@@ -364,12 +358,13 @@ export async function handleRun({
     await clearOutputBuffer();
     window.innerWidth < 768 && store.set(panelDrawerStore, "output");
 
-    const response = await buildCode(code, cppVersion);
+    const response = await build(code, cppVersion, target);
 
     if (!response.ok || !response?.js_code) {
         window.posthog?.capture("code_build_failed", {
             cpp_version: cppVersion,
             mode: "single",
+            compiler: response.target,
         });
         showError(
             i18next.t("editor:run.buildFailedOutput") +
@@ -382,11 +377,15 @@ export async function handleRun({
             },
         );
         store.set(runStatusStore, "idle");
+        suggestOtherCompiler(response, (target) =>
+            handleRun({ code, input, target }),
+        );
         return;
     }
 
     window.posthog?.capture("code_run", {
         cpp_version: cppVersion,
+        compiler: response.target,
     });
 
     const addSingleOutput = (type: "stdout" | "stderr", content: string) => {
@@ -398,6 +397,7 @@ export async function handleRun({
 
     runCode(response.js_code, input, {
         wasmUrl: response.wasm_url,
+        wasmModule: response.wasmModule,
         onStdout: (output) => addSingleOutput("stdout", output),
         onStderr: (output) => addSingleOutput("stderr", output),
         onError(error) {
@@ -448,7 +448,7 @@ function upsertCase(prev: OutputCase[], item: OutputCase): OutputCase[] {
     return [...prev.slice(0, pos), item, ...prev.slice(pos)];
 }
 
-export async function handleRunAll() {
+export async function handleRunAll({ target }: { target?: BuildTarget } = {}) {
     const testCases = store.get(testCasesStore);
     const code = store.get(codeStore);
     const cppVersion = store.get(cppVersionStore);
@@ -470,12 +470,17 @@ export async function handleRunAll() {
     await clearOutputBuffer();
     window.innerWidth < 768 && store.set(panelDrawerStore, "output");
 
-    const response = await buildCode(code, cppVersion);
-    if (!response.ok || !response.js_code || !response.wasm_url) {
+    const response = await build(code, cppVersion, target);
+    if (
+        !response.ok ||
+        !response.js_code ||
+        (!response.wasm_url && !response.wasmModule)
+    ) {
         window.posthog?.capture("code_build_failed", {
             cpp_version: cppVersion,
             mode: "all",
             test_case_count: testCases.length,
+            compiler: response.target,
         });
         showError(
             i18next.t("editor:run.buildFailedOutput") +
@@ -488,15 +493,18 @@ export async function handleRunAll() {
             },
         );
         store.set(runStatusStore, "idle");
+        suggestOtherCompiler(response, (target) => handleRunAll({ target }));
         return;
     }
 
     window.posthog?.capture("code_run_all", {
         cpp_version: cppVersion,
         test_case_count: testCases.length,
+        compiler: response.target,
     });
 
-    const wasmModule = await url2WasmModule(response.wasm_url);
+    const wasmModule =
+        response.wasmModule ?? (await url2WasmModule(response.wasm_url));
 
     // exitCount = 0;
 

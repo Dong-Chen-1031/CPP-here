@@ -39,6 +39,7 @@ export default defineConfig({
     ],
     vite: {
         plugins: [tailwindcss()],
+        worker: { format: "es" },
         optimizeDeps: {
             include: ["react-dom/client"],
             exclude: ["@wasm-fmt/clang-format"],
@@ -50,8 +51,6 @@ export default defineConfig({
     build: {
         inlineStylesheets: "auto",
     },
-    // No fallbacks on either family: the font-jetbrains / font-quattro
-    // utilities in global.css append the full stacks, CJK fonts included.
     fonts: [
         {
             provider: fontProviders.fontsource(),
@@ -96,6 +95,13 @@ export default defineConfig({
     ],
     env: {
         schema: {
+            // Also read outside the schema by scripts/prepare-toolchain.mjs
+            // --if-enabled, which only accepts the literal string "true".
+            PUBLIC_LOCAL_COMPILER: envField.boolean({
+                context: "client",
+                access: "public",
+                default: false,
+            }),
             PUBLIC_TURNSTILE_SITE_KEY: envField.string({
                 context: "client",
                 access: "public",

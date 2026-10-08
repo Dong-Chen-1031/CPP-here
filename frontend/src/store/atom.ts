@@ -25,6 +25,9 @@ export type Alert = {
     className?: string;
     id: string;
     icon?: React.ReactNode;
+    action?: { text: string; onClick: () => void };
+    /** Milliseconds before it hides itself, 5000 by default. */
+    duration?: number;
 };
 
 export const alertStore = atom<Alert[]>([]);
@@ -91,6 +94,8 @@ export const testCasesStore = atomWithStorage<TestCase[]>(
 export const codeWorkersStore = atom<CodeWorker[]>([]);
 
 export const verifyJwtStore = atom<string | null>(null);
+/** The backend failed for a reason other than the code; auto mode stops using it. */
+export const serverUnavailableStore = atom(false);
 export const alertDialogStore = atom<AlertDialogOptions | null>(null);
 export const panelDrawerStore = atom<PanelDrawerView | null>(null);
 export const testCaseEditStore = atom<EditDialogOptions | null>(null);

@@ -6,6 +6,7 @@ import {
     TOOLCHAIN_VERSION,
 } from "./config";
 import { startsWithStdcxx } from "./pchRule";
+import { fetchToolchainFile } from "./toolchainCache";
 
 const scope = globalThis as unknown as {
     onmessage: ((event: MessageEvent) => void) | null;
@@ -36,14 +37,7 @@ interface Toolchain {
 let toolchain: Promise<Toolchain> | undefined;
 const pchs = new Map<string, Promise<Uint8Array | null>>();
 
-async function read(url: string) {
-    const response = await fetch(url);
-    if (!response.ok)
-        throw new Error(
-            `Toolchain download failed (${response.status}): ${url}`,
-        );
-    return response;
-}
+const read = fetchToolchainFile;
 async function compressed(url: string) {
     const response = await read(url + ".gz.bin");
     return new Response(

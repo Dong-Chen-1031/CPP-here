@@ -14,7 +14,7 @@ import { ChevronDownIcon, SquareIcon, TestTubes } from "lucide-react";
 import { Play } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
-import { getDefaultStore, useAtom } from "jotai";
+import { getDefaultStore, useAtom, useAtomValue } from "jotai";
 import {
     codeWorkersStore,
     runModeStore,
@@ -23,6 +23,12 @@ import {
 } from "@/store/atom";
 
 import { handleRun, handleRunAll } from "@/service/run";
+import {
+    buildingWithStore,
+    prepareBuild,
+    useBuildNeedsVerification,
+} from "@/service/build";
+import { browserCompilerProgressStore } from "@/service/browserBuild";
 
 import Tip from "@/components/ui/tips";
 import { cn, commandKeyIcon } from "@/lib/utils";
@@ -47,11 +53,6 @@ const MotionButtonLabel = React.forwardRef(function MotionButtonLabel(
     const innerRef = React.useRef<HTMLDivElement>(null);
     React.useImperativeHandle(ref, () => innerRef.current as HTMLDivElement);
 
-    // Measure after commit, never during render: reading the DOM while
-    // rendering breaks under StrictMode / concurrent rendering, and a global
-    // getElementById would pick up the label that is currently animating out.
-    // Each label records its own width while mounted, so the next label to
-    // enter starts from the width of the one it replaced.
     React.useLayoutEffect(() => {
         const el = innerRef.current?.querySelector<HTMLElement>(
             "[data-run-btn-text]",
@@ -112,12 +113,19 @@ export function RunButton({
     const runBtnGroupRef = React.useRef<HTMLDivElement>(
         undefined,
     ) as React.RefObject<HTMLDivElement>;
-    const cantPress = !jwt || (runStatus !== "idle" && runStatus !== "running");
+    const needsVerification = useBuildNeedsVerification();
+    const buildingWith = useAtomValue(buildingWithStore);
+    const downloadProgress = useAtomValue(browserCompilerProgressStore);
+    const verifying = needsVerification && !jwt;
+    const downloading = runStatus === "building" && !!buildingWith?.downloading;
+    const cantPress =
+        verifying || (runStatus !== "idle" && runStatus !== "running");
     const { t } = useTranslation(["editor"]);
     const [hasLoaded, setHasLoaded] = React.useState(false);
 
     React.useEffect(() => {
         setHasLoaded(true);
+        prepareBuild();
     }, []);
     return (
         <ButtonGroup className={className} ref={runBtnGroupRef}>
@@ -143,7 +151,7 @@ export function RunButton({
                     variant={
                         runStatus === "running" ? "destructive" : "outline"
                     }
-                    className="overflow-hidden"
+                    className="relative overflow-hidden"
                     // style={{ maxWidth: `${buttonMaxWidth}rem` }}
                     disabled={cantPress}
                     onClick={(e) => {
@@ -164,8 +172,17 @@ export function RunButton({
                         onClick(e);
                     }}
                 >
+                    {downloading && (
+                        <div
+                            aria-hidden
+                            className="absolute inset-y-0 left-0 bg-primary/15 transition-[width] duration-300"
+                            style={{
+                                width: `${Math.max(0, downloadProgress)}%`,
+                            }}
+                        />
+                    )}
                     <AnimatePresence mode="popLayout" initial={hasLoaded}>
-                        {!jwt ? (
+                        {verifying ? (
                             <MotionButtonLabel
                                 key="verify"
                                 lastWidthRef={lastWidthRef}
@@ -176,14 +193,33 @@ export function RunButton({
                                     {t("headerActions.verifying")}
                                 </span>
                             </MotionButtonLabel>
+                        ) : downloading ? (
+                            <MotionButtonLabel
+                                key="downloading"
+                                lastWidthRef={lastWidthRef}
+                            >
+                                <Spinner className="size-3" />
+                                <span
+                                    className="text-xs tabular-nums"
+                                    data-run-btn-text
+                                >
+                                    {t("headerActions.downloadingCompiler", {
+                                        progress: Math.max(0, downloadProgress),
+                                    })}
+                                </span>
+                            </MotionButtonLabel>
                         ) : runStatus === "building" ? (
                             <MotionButtonLabel
-                                key="building"
+                                key={`building-${buildingWith?.target}`}
                                 lastWidthRef={lastWidthRef}
                             >
                                 <Spinner className="size-3" />
                                 <span className="text-xs" data-run-btn-text>
-                                    {t("headerActions.building")}
+                                    {buildingWith?.target === "browser"
+                                        ? t("headerActions.buildingInBrowser")
+                                        : buildingWith?.target === "server"
+                                          ? t("headerActions.buildingOnServer")
+                                          : t("headerActions.building")}
                                 </span>
                             </MotionButtonLabel>
                         ) : runStatus === "running" ? (

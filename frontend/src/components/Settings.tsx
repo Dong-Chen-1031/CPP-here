@@ -8,15 +8,17 @@ import {
 } from "@/components/ui/dialog-fix";
 import { codeStore, settingsPanelStore } from "@/store/atom";
 import {
+    compilerModeStore,
     defCodeStore,
     editorFontSizeStore,
     editorTabSizeStore,
     timeLimitStore,
     useResetSettingsAtoms,
+    type CompilerMode,
 } from "@/store/configStore";
 import { Input } from "@/components/ui/input";
 import { MAX_TIMEOUT_S, NO_TIME_LIMIT } from "@/config/runLimits";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import {
     Field,
     FieldContent,
@@ -55,6 +57,15 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { CppVersionSelect } from "@/components/header/cppVersionSelect";
+import { browserCompilerAvailable } from "@/service/build";
+import {
+    DOWNLOADED,
+    NOT_DOWNLOADED,
+    browserCompilerProgressStore,
+    downloadBrowserCompiler,
+} from "@/service/browserBuild";
+
+const COMPILER_MODES: CompilerMode[] = ["auto", "browser", "server"];
 
 interface SettingsProps {
     allLangs: Record<string, string>;
@@ -255,6 +266,8 @@ export function Settings({ allLangs }: SettingsProps) {
     const [code, setCode] = useAtom(codeStore);
     const [tabSize, setTabSize] = useAtom(editorTabSizeStore);
     const [timeLimit, setTimeLimit] = useAtom(timeLimitStore);
+    const [compilerMode, setCompilerMode] = useAtom(compilerModeStore);
+    const downloadProgress = useAtomValue(browserCompilerProgressStore);
     const resetSettingsAtoms = useResetSettingsAtoms();
     const [resetTimes, setResetTimes] = useState(0);
     const [setCodeTimes, setSetCodeTimes] = useState(0);
@@ -297,6 +310,61 @@ export function Settings({ allLangs }: SettingsProps) {
             label: t("settings.cppVersion"),
             render: () => <CppVersionSelect size={"default"} />,
         },
+        ...(browserCompilerAvailable()
+            ? [
+                  {
+                      type: "Custom" as const,
+                      label: t("settings.compiler"),
+                      description:
+                          t("settings.compilerDesc") +
+                          " " +
+                          (downloadProgress === DOWNLOADED
+                              ? t("settings.compilerDownloaded")
+                              : downloadProgress === NOT_DOWNLOADED
+                                ? t("settings.compilerNotDownloaded")
+                                : t("settings.compilerDownloading", {
+                                      progress: downloadProgress,
+                                  })),
+                      render: () => (
+                          <Select
+                              value={compilerMode}
+                              onValueChange={(value) => {
+                                  const mode = value as CompilerMode;
+                                  setCompilerMode(mode);
+                                  window.posthog?.capture(
+                                      "settings_compiler_changed",
+                                      { compiler: mode },
+                                  );
+                                  // Chosen explicitly: no reason to wait for a run
+                                  if (
+                                      mode === "browser" &&
+                                      downloadProgress === NOT_DOWNLOADED
+                                  )
+                                      void downloadBrowserCompiler();
+                              }}
+                          >
+                              <SelectTrigger className="w-full max-w-30">
+                                  <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  <SelectGroup>
+                                      <SelectLabel>
+                                          {t("settings.compiler")}
+                                      </SelectLabel>
+                                      {COMPILER_MODES.map((mode) => (
+                                          <SelectItem key={mode} value={mode}>
+                                              {t(
+                                                  `settings.compilerMode.${mode}`,
+                                              )}
+                                          </SelectItem>
+                                      ))}
+                                  </SelectGroup>
+                              </SelectContent>
+                          </Select>
+                      ),
+                  },
+              ]
+            : []),
         {
             type: "Custom",
             label: t("settings.language"),

@@ -47,6 +47,7 @@ try {
     console.log(result, "backend build requests", requests);
     if (
         result.single !== "42\n" ||
+        result.auto !== "10\n" ||
         result.a !== "4\n" ||
         result.b !== "6\n" ||
         result.all.some((x) => x.status !== "ac") ||

@@ -1,4 +1,10 @@
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+    Alert,
+    AlertAction,
+    AlertDescription,
+    AlertTitle,
+} from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { cn, useIsMobile } from "@/lib/utils";
 import { alertDialogStore, alertStore } from "@/store/atom";
 import { useAtom } from "jotai";
@@ -24,10 +30,10 @@ export function Alerts() {
     // early return would make the hook order conditional.
     useEffect(() => {
         if (alerts.length === 0) return;
-        const uuid = alerts[alerts.length - 1].id;
+        const { id: uuid, duration = 5000 } = alerts[alerts.length - 1];
         const timer = setTimeout(() => {
             setAlerts((prev) => prev.filter((a) => a.id !== uuid));
-        }, 5000);
+        }, duration);
         return () => clearTimeout(timer);
     }, [alerts]);
 
@@ -59,6 +65,8 @@ export function Alerts() {
                             variant={item.variant || "default"}
                             className={cn(
                                 "md:max-w-md max-w-[96vw] border-border",
+                                // The action sits under the text, not beside it
+                                "has-data-[slot=alert-action]:pr-2.5",
                                 item.className,
                             )}
                             onClick={() =>
@@ -74,6 +82,25 @@ export function Alerts() {
                             <AlertDescription className="text-[0.8rem] wrap-normal">
                                 {item.description}
                             </AlertDescription>
+                            {item.action && (
+                                <AlertAction className="static col-start-2 mt-1.5 justify-self-start">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            item.action!.onClick();
+                                            setAlerts((p) =>
+                                                p.filter(
+                                                    (a) => a.id !== item.id,
+                                                ),
+                                            );
+                                        }}
+                                    >
+                                        {item.action.text}
+                                    </Button>
+                                </AlertAction>
+                            )}
                         </Alert>
                     </motion.div>
                 ))}
