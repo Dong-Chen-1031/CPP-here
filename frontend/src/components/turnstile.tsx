@@ -75,7 +75,6 @@ function TurnstileChallenge() {
                     }
 
                     setJwt(newJwt);
-                    setServerUnavailable(false);
 
                     const resetDelay =
                         typeof expires_in === "number" &&

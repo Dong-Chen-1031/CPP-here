@@ -41,7 +41,14 @@
         "copyThisCaseTip": "Copy output of this test case",
         "clearTip": "Clear output",
         "noOutput": "No output yet.",
-        "truncated": "Output is too long to show in full. Use copy to get the full output."
+        "truncated": "Output is too long to show in full. Use copy to get the full output.",
+        "compiler": {
+            "browser": "Compiling in your browser",
+            "server": "Compiling on the server",
+            "downloading": "Downloading the in-browser compiler: {{progress}}%",
+            "fallbackToBrowser": "The server could not be used, so your browser compiles the code instead.",
+            "fallbackToServer": "The in-browser compiler could not be used, so the server compiles the code instead."
+        }
     },
     "testCase": {
         "label": "Test Case",
@@ -111,7 +118,8 @@
         "uploadCodeTip": "Upload a .cpp file",
         "buildingInBrowser": "Building in browser",
         "buildingOnServer": "Building on server",
-        "downloadingCompiler": "Downloading {{progress}}%"
+        "downloadingCompiler": "Downloading {{progress}}%",
+        "stopBuilding": "Stop building"
     },
     "turnstile": {
         "verificationFailed": "Verification Failed",
@@ -144,7 +152,7 @@
         "timeLimit": "Time Limit (s)",
         "timeLimitDesc": "Stop the program after this many seconds. Enter -1 for no limit.",
         "compiler": "Compiler",
-        "compilerDesc": "Auto uses the in-browser compiler once it is downloaded and this device is fast enough, and the server otherwise.",
+        "compilerDesc": "Where your code is compiled.",
         "compilerNotDownloaded": "In-browser compiler: not downloaded (about 26 MB).",
         "compilerDownloading": "In-browser compiler: downloading {{progress}}%.",
         "compilerDownloaded": "In-browser compiler: downloaded.",
@@ -152,6 +160,11 @@
             "auto": "Auto",
             "browser": "In browser",
             "server": "Server"
+        },
+        "compilerModeDesc": {
+            "auto": "Recommended. Uses the in-browser compiler once it is downloaded and this device is fast enough, and the server otherwise. Phones always use the server.",
+            "browser": "Always compiles on this device. The first use downloads about 26 MB. Not recommended on phones, where each compile can take over ten seconds.",
+            "server": "Always compiles on our servers."
         }
     },
     "resize": {
@@ -171,7 +184,10 @@
         "noTestCasesTitle": "No Test Cases",
         "noTestCasesDescription": "There are no test cases to run. Please add some test cases first.",
         "verificationFailed": "Verification failed. Please try again.",
-        "workersUnsupported": "Web Workers are not supported in this environment."
+        "workersUnsupported": "Web Workers are not supported in this environment.",
+        "unexpectedErrorTitle": "Something Went Wrong",
+        "unexpectedErrorDescription": "The run stopped because of an unexpected error. Please check output for details.",
+        "unknownBuildError": "The compiler did not report a reason."
     },
     "auth": {
         "unauthorizedTitle": "Unauthorized",
@@ -213,8 +229,8 @@
         "downloadingTitle": "Downloading the in-browser compiler",
         "downloadingDescription": "The first download is about 26 MB. In Auto mode your code builds on the server meanwhile, and the compiler downloads in the background.",
         "switchToAuto": "Switch to Auto",
-        "clangFailedTitle": "Built in the browser with Clang",
-        "clangFailedDescription": "The server compiles with GCC, which accepts some code Clang rejects. If this code should compile, try the server.",
+        "clangFailedTitle": "Compiled in your browser",
+        "clangFailedDescription": "The in-browser compiler does not support C++ exceptions (try, catch, throw), which the server compiles. If this code should compile, try the server.",
         "retryOnServer": "Try on server",
         "browserUnavailableTitle": "In-browser compiler unavailable",
         "browserUnavailableDescription": "The in-browser compiler could not be used. Build on the server instead, or let Auto mode pick a compiler that works.",
@@ -224,6 +240,14 @@
             "auto": "Use Auto",
             "browser": "Use in-browser",
             "server": "Use server"
-        }
+        },
+        "beta": "Beta",
+        "downloadFailedTitle": "Could not download the in-browser compiler",
+        "backgroundDownloadFailedTitle": "In-browser compiler not downloaded",
+        "backgroundDownloadFailedDescription": "The background download failed. Your code keeps compiling on the server.",
+        "serverUnreachable": "The server could not be reached.",
+        "serverUnavailablePhoneDescription": "The server could not build your code. You can compile in your browser instead, but it is slow on phones, often over ten seconds per compile, so Auto mode does not do it on its own.",
+        "slowTitle": "Compiling is slow on this device",
+        "slowDescription": "Compiling in your browser took over 7 seconds. The server is usually much faster."
     }
 }

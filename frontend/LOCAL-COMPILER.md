@@ -17,9 +17,37 @@ downloaded in the background 10 seconds after the editor loads and after each
 server build. A failed verification or server build marks the server
 unavailable for the session, so Auto then builds in the browser.
 
+On phones (`navigator.userAgentData.mobile`, or the user agent where that is
+missing) Auto never compiles in the browser, not even when the server is
+unavailable: a compile takes ten seconds or more there. It then offers the
+In browser mode instead. An in-browser compile slower than 7 seconds suggests
+the server, once per session.
+
+"Stop building" (the run button while building, or the button in the output
+panel) ends the build: a running compile terminates the compile worker, so the
+next one loads the toolchain again from Cache Storage; a server request is
+left to finish and its answer ignored; a download keeps going for later use.
+
+The output panel names the compiler under "Building" in every mode, with the
+download progress and a note when Auto fell back to the other one.
+
 After a failure the user is pointed at the other compiler: a dialog to switch
 modes when a forced compiler cannot be used, and a "Try on server" action when
-Clang in the browser rejects the code (GCC on the server may accept it).
+the in-browser compiler rejects the code (the server is also Clang, through
+Emscripten, but compiles code that uses C++ exceptions).
+
+Nothing fails silently: `build()` and `browserBuild()` turn any thrown error
+into a failed result, `handleRun` and `handleRunAll` report anything else that
+throws, and failed downloads (background or started from Settings) show an
+alert.
+
+PostHog events: `browser_compiler_download` (`success`, `trigger`: build,
+background or settings, `duration_ms`, `bytes`, `files`, `error`) and
+`browser_compiler_build` (`success`, `cpp_version`, `cached`, `cold`: the
+first compile in a worker, which loads the toolchain, `used_pch`,
+`duration_ms` without the download, `failure`: compile_error, unavailable,
+cancelled or exception, `error` except for compile errors, which quote the
+user's code). Stopping a build sends `code_build_cancelled`.
 
 ## Code layout
 

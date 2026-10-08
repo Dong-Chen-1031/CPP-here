@@ -23,6 +23,9 @@ const store = getDefaultStore();
 let worker: Worker | undefined;
 let queue = Promise.resolve();
 let download: Promise<boolean> | undefined;
+let nextJobId = 0;
+// Ends the compile running in the worker, if any.
+let stopJob: (() => void) | undefined;
 const cache = new Map<string, BuildResult>();
 
 const failed = (text: string, unavailable = true): BuildResult => ({
@@ -32,6 +35,14 @@ const failed = (text: string, unavailable = true): BuildResult => ({
     errors: [text],
     unavailable,
 });
+
+/** What started a download, reported to PostHog. */
+export type DownloadTrigger = "build" | "background" | "settings";
+
+function capture(event: string, properties: Record<string, unknown>) {
+    if (typeof window !== "undefined")
+        window.posthog?.capture(event, properties);
+}
 
 function toolchainBase() {
     return new URL(
@@ -52,7 +63,7 @@ export async function isBrowserCompilerDownloaded(): Promise<boolean> {
     const progress = store.get(browserCompilerProgressStore);
     if (progress === DOWNLOADED) return true;
     if (progress !== NOT_DOWNLOADED) return false;
-    const cached = await isToolchainCached(toolchainBase());
+    const cached = await isToolchainCached(toolchainBase()).catch(() => false);
     // A download may have started in the meantime.
     if (cached && store.get(browserCompilerProgressStore) === NOT_DOWNLOADED)
         store.set(browserCompilerProgressStore, DOWNLOADED);
@@ -60,9 +71,14 @@ export async function isBrowserCompilerDownloaded(): Promise<boolean> {
 }
 
 /** Downloads the toolchain into Cache Storage. Resolves to false on failure. */
-export function downloadBrowserCompiler(): Promise<boolean> {
+export function downloadBrowserCompiler(
+    trigger: DownloadTrigger = "build",
+): Promise<boolean> {
     download ??= (async () => {
         store.set(browserCompilerProgressStore, 0);
+        const started = performance.now();
+        let bytes = 0;
+        let fileCount = 0;
         try {
             const base = toolchainBase();
             const cache = await openToolchainCache();
@@ -81,6 +97,7 @@ export function downloadBrowserCompiler(): Promise<boolean> {
                 }),
             );
             const files = pending.filter((file) => file !== null);
+            fileCount = files.length;
             // Without every size, count finished files instead of bytes.
             const bySize = files.every((file) => file.size > 0);
             const total = bySize
@@ -100,6 +117,7 @@ export function downloadBrowserCompiler(): Promise<boolean> {
                         const { done: end, value } = await reader.read();
                         if (end) break;
                         chunks.push(value);
+                        bytes += value.byteLength;
                         if (bySize) {
                             done += value.byteLength;
                             report();
@@ -122,10 +140,25 @@ export function downloadBrowserCompiler(): Promise<boolean> {
                 }),
             );
             store.set(browserCompilerProgressStore, DOWNLOADED);
+            capture("browser_compiler_download", {
+                success: true,
+                trigger,
+                duration_ms: Math.round(performance.now() - started),
+                bytes,
+                files: fileCount,
+            });
             return true;
         } catch (error) {
             console.error("In-browser compiler download failed:", error);
             store.set(browserCompilerProgressStore, NOT_DOWNLOADED);
+            capture("browser_compiler_download", {
+                success: false,
+                trigger,
+                duration_ms: Math.round(performance.now() - started),
+                bytes,
+                files: fileCount,
+                error: String(error).slice(0, 300),
+            });
             return false;
         } finally {
             download = undefined;
@@ -143,75 +176,129 @@ export function browserBuild(
         return Promise.resolve(
             failed(i18next.t("editor:compiler.browserUnsupported")),
         );
-    const job = queue.then(async () => {
-        if (!(await isBrowserCompilerDownloaded()))
-            if (!(await downloadBrowserCompiler()))
-                return failed(i18next.t("editor:compiler.downloadFailed"));
-        const digest = await crypto.subtle.digest(
-            "SHA-256",
-            new TextEncoder().encode(
-                JSON.stringify([TOOLCHAIN_VERSION, std, source]),
-            ),
-        );
-        const key = Array.from(new Uint8Array(digest), (b) =>
-            b.toString(16).padStart(2, "0"),
-        ).join("");
-        if (cache.has(key)) return cache.get(key)!;
-        // The worker keeps the loaded and compiled toolchain between jobs;
-        // every clang/wasm-ld run gets a fresh instance, so no heap carries over.
-        worker ??= new Worker(
-            new URL("../compiler/compile.worker.ts", import.meta.url),
-            { type: "module" },
-        );
-        const current = worker;
-        const id = crypto.randomUUID();
-        const result = await new Promise<BuildResult>((resolve) => {
-            const finish = (result: BuildResult) => {
-                clearTimeout(timer);
-                current.removeEventListener("message", message);
-                current.removeEventListener("error", error);
-                resolve(result);
-            };
-            const discard = () => {
-                current.terminate();
-                if (worker === current) worker = undefined;
-            };
-            const message = ({ data }: MessageEvent) => {
-                if (data.id !== id) return;
-                // reset: the toolchain failed to load, not the code to compile
-                if (data.reset) discard();
-                finish({
-                    ok: data.ok,
-                    errors: data.errors,
-                    unavailable: !!data.reset,
-                    usedPch: data.usedPch,
-                    wasmModule: data.module,
-                    js_code: data.ok ? LOCAL_WORKER_MARKER : "",
-                    wasm_url: "",
-                });
-            };
-            const error = (event: ErrorEvent) => {
-                discard();
-                finish(failed(event.message || "Local compiler worker failed"));
-            };
-            // A dead compiler must not strand the UI.
-            const timer = setTimeout(() => {
-                discard();
-                finish(failed(i18next.t("editor:compiler.timedOut")));
-            }, 180_000);
-            current.addEventListener("message", message);
-            current.addEventListener("error", error);
-            current.postMessage({ id, source, std, base: toolchainBase() });
-        });
-        if (result.ok) {
-            cache.set(key, result);
-            if (cache.size > 8) cache.delete(cache.keys().next().value!);
-        }
-        return result;
-    });
-    queue = job.then(
-        () => {},
-        () => {},
+    // Never rejects: a thrown error would leave the UI building forever.
+    const job = queue.then(() =>
+        compile(source, std).catch((error) => {
+            console.error("In-browser build failed:", error);
+            capture("browser_compiler_build", {
+                success: false,
+                cpp_version: std,
+                failure: "exception",
+                error: String(error).slice(0, 300),
+            });
+            return failed(String(error));
+        }),
     );
+    queue = job.then(() => {});
     return job;
+}
+
+async function compile(source: string, std: string): Promise<BuildResult> {
+    if (!(await isBrowserCompilerDownloaded()))
+        if (!(await downloadBrowserCompiler()))
+            return failed(i18next.t("editor:compiler.downloadFailed"));
+    // No crypto.subtle or crypto.randomUUID here: insecure origins (the
+    // dev server opened by LAN IP) lack both.
+    const key = JSON.stringify([std, source]);
+    const hit = cache.get(key);
+    if (hit) {
+        capture("browser_compiler_build", {
+            success: true,
+            cpp_version: std,
+            cached: true,
+            duration_ms: 0,
+        });
+        return { ...hit, durationMs: 0 };
+    }
+    // The first job in a worker also loads the toolchain into it.
+    const cold = !worker;
+    const started = performance.now();
+    const result = await compileInWorker(source, std);
+    const durationMs = Math.round(performance.now() - started);
+    // Compile errors stay out: they quote the user's code.
+    capture("browser_compiler_build", {
+        success: result.ok,
+        cpp_version: std,
+        cached: false,
+        cold,
+        used_pch: !!result.usedPch,
+        duration_ms: durationMs,
+        failure: result.ok
+            ? undefined
+            : result.cancelled
+              ? "cancelled"
+              : result.unavailable
+                ? "unavailable"
+                : "compile_error",
+        error: result.unavailable
+            ? result.errors.join("\n").slice(0, 300)
+            : undefined,
+    });
+    if (result.ok) {
+        cache.set(key, result);
+        if (cache.size > 8) cache.delete(cache.keys().next().value!);
+    }
+    return { ...result, durationMs };
+}
+
+function compileInWorker(source: string, std: string): Promise<BuildResult> {
+    // The worker keeps the loaded and compiled toolchain between jobs;
+    // every clang/wasm-ld run gets a fresh instance, so no heap carries over.
+    worker ??= new Worker(
+        new URL("../compiler/compile.worker.ts", import.meta.url),
+        { type: "module" },
+    );
+    const current = worker;
+    const id = nextJobId++;
+    return new Promise<BuildResult>((resolve) => {
+        const finish = (result: BuildResult) => {
+            if (stopJob === stop) stopJob = undefined;
+            clearTimeout(timer);
+            current.removeEventListener("message", message);
+            current.removeEventListener("error", error);
+            resolve(result);
+        };
+        const discard = () => {
+            current.terminate();
+            if (worker === current) worker = undefined;
+        };
+        const message = ({ data }: MessageEvent) => {
+            if (data.id !== id) return;
+            // reset: the toolchain failed to load, not the code to compile
+            if (data.reset) discard();
+            finish({
+                ok: data.ok,
+                errors: data.errors,
+                unavailable: !!data.reset,
+                usedPch: data.usedPch,
+                wasmModule: data.module,
+                js_code: data.ok ? LOCAL_WORKER_MARKER : "",
+                wasm_url: "",
+            });
+        };
+        const error = (event: ErrorEvent) => {
+            discard();
+            finish(failed(event.message || "Local compiler worker failed"));
+        };
+        // A dead compiler must not strand the UI.
+        const timer = setTimeout(() => {
+            discard();
+            finish(failed(i18next.t("editor:compiler.timedOut")));
+        }, 180_000);
+        current.addEventListener("message", message);
+        current.addEventListener("error", error);
+        // The worker cannot be interrupted mid-compile, only discarded; the
+        // next compile loads the toolchain again (from Cache Storage).
+        const stop = () => {
+            discard();
+            finish({ ...failed("", false), errors: [], cancelled: true });
+        };
+        stopJob = stop;
+        current.postMessage({ id, source, std, base: toolchainBase() });
+    });
+}
+
+/** Stops the compile in progress; its build resolves as cancelled. */
+export function cancelBrowserBuild() {
+    stopJob?.();
 }

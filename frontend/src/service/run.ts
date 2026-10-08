@@ -29,7 +29,13 @@ import i18next from "i18next";
 import { apiAxios } from "@/lib/axiosInstance";
 import { addAlert } from "@/lib/alert";
 import { getDefaultStore } from "jotai";
-import { build, suggestOtherCompiler, type BuildTarget } from "./build";
+import { randomId } from "@/lib/utils";
+import {
+    build,
+    cancelBuild,
+    suggestOtherCompiler,
+    type BuildTarget,
+} from "./build";
 
 const defaultStore = getDefaultStore();
 
@@ -152,7 +158,7 @@ export async function runCode(
             wasmModule = await WebAssembly.compileStreaming(wasmResponse);
         }
         const worker = new CodeWorker({ js_code });
-        const taskId = crypto.randomUUID();
+        const taskId = randomId();
         let receivedBytes = 0;
         // Set between a TLE and reporting it, see stopForLimit
         let draining = false;
@@ -342,23 +348,82 @@ function showLimit(
     });
 }
 
-export async function handleRun({
-    code,
-    input,
-    target,
-}: { code?: string; input?: string; target?: BuildTarget } = {}) {
+type RunSingleOptions = { code?: string; input?: string; target?: BuildTarget };
+
+/** Builds and runs the code with the current input. Never fails silently. */
+export async function handleRun(options: RunSingleOptions = {}) {
+    try {
+        await runSingle(options);
+    } catch (error) {
+        reportUnexpected(error);
+    }
+}
+
+/** Builds once and runs every test case. Never fails silently. */
+export async function handleRunAll(options: { target?: BuildTarget } = {}) {
+    try {
+        await runAll(options);
+    } catch (error) {
+        reportUnexpected(error);
+    }
+}
+
+function reportUnexpected(error: unknown) {
+    console.error("Run failed unexpectedly:", error);
+    defaultStore.get(codeWorkersStore).forEach((worker) => worker.terminate());
+    store.set(runStatusStore, "idle");
+    showError(String(error), {
+        title: i18next.t("editor:run.unexpectedErrorTitle"),
+        description: i18next.t("editor:run.unexpectedErrorDescription"),
+    });
+}
+
+// Bumped by every run and by stopBuild: a run whose build finishes after
+// that must not go on to execute.
+let runGeneration = 0;
+
+/** Stops the build in progress. Running programs stop with their workers. */
+export function stopBuild() {
+    if (store.get(runStatusStore) !== "building") return;
+    runGeneration++;
+    cancelBuild();
+    store.set(runStatusStore, "idle");
+    window.posthog?.capture("code_build_cancelled", {
+        cpp_version: store.get(cppVersionStore),
+    });
+}
+
+/** Whether the build was stopped; the run then ends quietly. */
+function buildStopped(generation: number, cancelled?: boolean) {
+    if (generation === runGeneration && !cancelled) return false;
+    if (generation === runGeneration) store.set(runStatusStore, "idle");
+    return true;
+}
+
+function buildErrorText(errors: string[]) {
+    return (
+        errors.filter(Boolean).join("\n") ||
+        i18next.t("editor:run.unknownBuildError")
+    );
+}
+
+async function runSingle({ code, input, target }: RunSingleOptions) {
     code = code ?? store.get(codeStore);
     input = input ?? store.get(inputStore);
     const cppVersion = store.get(cppVersionStore);
     console.log(`Running code with C++ version: ${cppVersion}`);
 
+    const generation = ++runGeneration;
     store.set(runStatusStore, "building");
     store.set(editorErrorStore, []);
     store.set(outputStore, []);
     await clearOutputBuffer();
     window.innerWidth < 768 && store.set(panelDrawerStore, "output");
 
+    // Stopped before the build began
+    if (generation !== runGeneration) return;
     const response = await build(code, cppVersion, target);
+    if (buildStopped(generation, response.cancelled)) return;
 
     if (!response.ok || !response?.js_code) {
         window.posthog?.capture("code_build_failed", {
@@ -369,7 +434,7 @@ export async function handleRun({
         showError(
             i18next.t("editor:run.buildFailedOutput") +
                 "\n" +
-                response.errors[0],
+                buildErrorText(response.errors),
             {
                 title: i18next.t("editor:run.buildFailedTitle"),
                 description: i18next.t("editor:run.buildFailedDescription"),
@@ -448,7 +513,7 @@ function upsertCase(prev: OutputCase[], item: OutputCase): OutputCase[] {
     return [...prev.slice(0, pos), item, ...prev.slice(pos)];
 }
 
-export async function handleRunAll({ target }: { target?: BuildTarget } = {}) {
+async function runAll({ target }: { target?: BuildTarget }) {
     const testCases = store.get(testCasesStore);
     const code = store.get(codeStore);
     const cppVersion = store.get(cppVersionStore);
@@ -464,13 +529,17 @@ export async function handleRunAll({ target }: { target?: BuildTarget } = {}) {
         });
         return;
     }
+    const generation = ++runGeneration;
     store.set(runStatusStore, "building");
     store.set(editorErrorStore, []);
     store.set(outputStore, []);
     await clearOutputBuffer();
     window.innerWidth < 768 && store.set(panelDrawerStore, "output");
 
+    // Stopped before the build began
+    if (generation !== runGeneration) return;
     const response = await build(code, cppVersion, target);
+    if (buildStopped(generation, response.cancelled)) return;
     if (
         !response.ok ||
         !response.js_code ||
@@ -485,7 +554,7 @@ export async function handleRunAll({ target }: { target?: BuildTarget } = {}) {
         showError(
             i18next.t("editor:run.buildFailedOutput") +
                 "\n" +
-                response.errors[0],
+                buildErrorText(response.errors),
             {
                 title: i18next.t("editor:run.buildFailedTitle"),
                 description: i18next.t("editor:run.buildFailedDescription"),

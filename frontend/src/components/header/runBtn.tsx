@@ -22,7 +22,7 @@ import {
     verifyJwtStore,
 } from "@/store/atom";
 
-import { handleRun, handleRunAll } from "@/service/run";
+import { handleRun, handleRunAll, stopBuild } from "@/service/run";
 import {
     buildingWithStore,
     prepareBuild,
@@ -35,6 +35,7 @@ import { cn, commandKeyIcon } from "@/lib/utils";
 
 import { AnimatePresence, motion } from "motion/react";
 import { Kbd } from "@/components/ui/kbd";
+import { BetaBadge } from "@/components/BetaBadge";
 
 const MotionButtonLabel = React.forwardRef(function MotionButtonLabel(
     {
@@ -118,8 +119,8 @@ export function RunButton({
     const downloadProgress = useAtomValue(browserCompilerProgressStore);
     const verifying = needsVerification && !jwt;
     const downloading = runStatus === "building" && !!buildingWith?.downloading;
-    const cantPress =
-        verifying || (runStatus !== "idle" && runStatus !== "running");
+    // While building, pressing stops the build
+    const cantPress = verifying;
     const { t } = useTranslation(["editor"]);
     const [hasLoaded, setHasLoaded] = React.useState(false);
 
@@ -132,7 +133,9 @@ export function RunButton({
             <Tip
                 show={!cantPress}
                 content={
-                    runMode === "single" ? (
+                    runStatus === "building" ? (
+                        t("headerActions.stopBuilding")
+                    ) : runMode === "single" ? (
                         <>
                             {t("headerActions.runCode")}{" "}
                             <Kbd>{commandKeyIcon}</Kbd>
@@ -156,6 +159,10 @@ export function RunButton({
                     disabled={cantPress}
                     onClick={(e) => {
                         if (cantPress) return;
+                        if (runStatus === "building") {
+                            stopBuild();
+                            return;
+                        }
                         if (runStatus === "running") {
                             defaultStore
                                 .get(codeWorkersStore)
@@ -210,16 +217,15 @@ export function RunButton({
                             </MotionButtonLabel>
                         ) : runStatus === "building" ? (
                             <MotionButtonLabel
-                                key={`building-${buildingWith?.target}`}
+                                key={`building`}
                                 lastWidthRef={lastWidthRef}
                             >
                                 <Spinner className="size-3" />
-                                <span className="text-xs" data-run-btn-text>
-                                    {buildingWith?.target === "browser"
-                                        ? t("headerActions.buildingInBrowser")
-                                        : buildingWith?.target === "server"
-                                          ? t("headerActions.buildingOnServer")
-                                          : t("headerActions.building")}
+                                <span
+                                    className="text-xs inline-flex items-center gap-1"
+                                    data-run-btn-text
+                                >
+                                    {t("headerActions.building")}
                                 </span>
                             </MotionButtonLabel>
                         ) : runStatus === "running" ? (
@@ -268,7 +274,7 @@ export function RunButton({
                                     : "outline"
                             }
                             className="p-1"
-                            disabled={cantPress || runStatus === "running"}
+                            disabled={cantPress || runStatus !== "idle"}
                             aria-label={t("headerActions.runOptions")}
                             // asChild
                         >

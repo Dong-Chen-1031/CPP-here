@@ -6,6 +6,11 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog-fix";
+import {
+    HoverCard,
+    HoverCardContent,
+    HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { codeStore, settingsPanelStore } from "@/store/atom";
 import {
     compilerModeStore,
@@ -39,6 +44,7 @@ import { useTranslation } from "react-i18next";
 import React, { useEffect, useRef, useState } from "react";
 import { ButtonGroup } from "./ui/button-group";
 import {
+    CircleQuestionMarkIcon,
     FileCodeIcon,
     ListRestart,
     ListRestartIcon,
@@ -57,13 +63,17 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { CppVersionSelect } from "@/components/header/cppVersionSelect";
-import { browserCompilerAvailable } from "@/service/build";
+import { BetaBadge } from "@/components/BetaBadge";
+import {
+    browserCompilerAvailable,
+    startBrowserCompilerDownload,
+} from "@/service/build";
 import {
     DOWNLOADED,
     NOT_DOWNLOADED,
     browserCompilerProgressStore,
-    downloadBrowserCompiler,
 } from "@/service/browserBuild";
+import type { hover } from "motion/react";
 
 const COMPILER_MODES: CompilerMode[] = ["auto", "browser", "server"];
 
@@ -82,6 +92,7 @@ interface ValueFieldProps<V> {
 interface BaseSettingsField<T extends SettingType> {
     type: T;
     label: string;
+    hoverDetail?: React.ReactNode;
     description?: string;
 }
 
@@ -239,7 +250,19 @@ export function SettingFieldTemplate({ field }: { field: SettingsField }) {
     return (
         <Field orientation="horizontal" className="items-center!">
             <FieldContent>
-                <FieldLabel>{field.label}</FieldLabel>
+                <div className="flex items-center space-x-1">
+                    <FieldLabel>{field.label}</FieldLabel>
+                    {field.hoverDetail && (
+                        <HoverCard openDelay={10} closeDelay={100}>
+                            <HoverCardTrigger>
+                                <CircleQuestionMarkIcon className="inline ml-1 size-4" />
+                            </HoverCardTrigger>
+                            <HoverCardContent className="text-xs">
+                                {field.hoverDetail}
+                            </HoverCardContent>
+                        </HoverCard>
+                    )}
+                </div>
                 <FieldDescription className="text-xs">
                     {field.description}
                 </FieldDescription>
@@ -315,16 +338,39 @@ export function Settings({ allLangs }: SettingsProps) {
                   {
                       type: "Custom" as const,
                       label: t("settings.compiler"),
-                      description:
-                          t("settings.compilerDesc") +
-                          " " +
-                          (downloadProgress === DOWNLOADED
-                              ? t("settings.compilerDownloaded")
-                              : downloadProgress === NOT_DOWNLOADED
-                                ? t("settings.compilerNotDownloaded")
-                                : t("settings.compilerDownloading", {
-                                      progress: downloadProgress,
-                                  })),
+                      hoverDetail: (
+                          <div className="flex flex-col gap-2">
+                              <p>{t("settings.compilerDesc")}</p>
+                              <ul className="flex flex-col gap-1.5">
+                                  {COMPILER_MODES.map((mode) => (
+                                      <li key={mode}>
+                                          <p className="flex items-center gap-1 font-medium">
+                                              {t(
+                                                  `settings.compilerMode.${mode}`,
+                                              )}
+                                              {mode !== "server" && (
+                                                  <BetaBadge />
+                                              )}
+                                          </p>
+                                          <p className="text-muted-foreground">
+                                              {t(
+                                                  `settings.compilerModeDesc.${mode}`,
+                                              )}
+                                          </p>
+                                      </li>
+                                  ))}
+                              </ul>
+                          </div>
+                      ),
+                      // description:
+                      //     downloadProgress === DOWNLOADED
+                      //         ? t("settings.compilerDownloaded")
+                      //         : downloadProgress === NOT_DOWNLOADED
+                      //           ? t("settings.compilerNotDownloaded")
+                      //           : t("settings.compilerDownloading", {
+                      //                 progress: downloadProgress,
+                      //             }),
+
                       render: () => (
                           <Select
                               value={compilerMode}
@@ -335,15 +381,14 @@ export function Settings({ allLangs }: SettingsProps) {
                                       "settings_compiler_changed",
                                       { compiler: mode },
                                   );
-                                  // Chosen explicitly: no reason to wait for a run
                                   if (
                                       mode === "browser" &&
                                       downloadProgress === NOT_DOWNLOADED
                                   )
-                                      void downloadBrowserCompiler();
+                                      void startBrowserCompilerDownload();
                               }}
                           >
-                              <SelectTrigger className="w-full max-w-30">
+                              <SelectTrigger className="w-full max-w-48">
                                   <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -355,6 +400,9 @@ export function Settings({ allLangs }: SettingsProps) {
                                           <SelectItem key={mode} value={mode}>
                                               {t(
                                                   `settings.compilerMode.${mode}`,
+                                              )}
+                                              {mode !== "server" && (
+                                                  <BetaBadge className="ml-1" />
                                               )}
                                           </SelectItem>
                                       ))}

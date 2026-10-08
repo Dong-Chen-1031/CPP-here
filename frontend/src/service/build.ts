@@ -3,7 +3,11 @@ import { atom, getDefaultStore, useAtomValue, type Getter } from "jotai";
 import { useEffect, useState } from "react";
 import i18next from "i18next";
 import { compilerModeStore, type CompilerMode } from "@/store/configStore";
-import { alertDialogStore, serverUnavailableStore } from "@/store/atom";
+import {
+    alertDialogStore,
+    serverUnavailableStore,
+    verifyJwtStore,
+} from "@/store/atom";
 import { addAlert } from "@/lib/alert";
 import { serverBuild } from "./serverBuild";
 import {
@@ -12,6 +16,7 @@ import {
     browserBuild,
     browserCompilerProgressStore,
     browserCompilerSupported,
+    cancelBrowserBuild,
     downloadBrowserCompiler,
     isBrowserCompilerDownloaded,
 } from "./browserBuild";
@@ -29,8 +34,12 @@ export interface BuildResult {
      * opposed to rejecting the code, so the other one may still work.
      */
     unavailable?: boolean;
+    /** In-browser builds: compile time without the download. */
+    durationMs?: number;
     /** In-browser builds: whether a precompiled bits/stdc++.h was used. */
     usedPch?: boolean;
+    /** The user stopped the build. */
+    cancelled?: boolean;
     /** The compiler that produced this result. */
     target?: BuildTarget;
 }
@@ -39,6 +48,8 @@ export interface BuildResult {
 export const buildingWithStore = atom<{
     target: BuildTarget;
     downloading: boolean;
+    /** Set when `target` stands in for this compiler, which could not be used. */
+    fallbackFrom?: BuildTarget;
 } | null>(null);
 
 const store = getDefaultStore();
@@ -46,6 +57,8 @@ const get: Getter = (anAtom) => store.get(anAtom);
 
 // Let the page finish loading before a background download competes with it.
 const BACKGROUND_DOWNLOAD_DELAY_MS = 10_000;
+// An in-browser compile slower than this suggests the server instead.
+const SLOW_BUILD_MS = 7_000;
 
 export function browserCompilerAvailable() {
     return PUBLIC_LOCAL_COMPILER && browserCompilerSupported();
@@ -58,6 +71,7 @@ export function effectiveCompilerMode(getter: Getter = get): CompilerMode {
 
 interface NavigatorHints {
     deviceMemory?: number;
+    userAgentData?: { mobile?: boolean };
     connection?: {
         saveData?: boolean;
         type?: string;
@@ -66,9 +80,24 @@ interface NavigatorHints {
     };
 }
 
+/**
+ * Phones take ten seconds or more per compile even after the download, so
+ * auto mode never compiles on them.
+ */
+function isPhone() {
+    if (typeof navigator === "undefined") return false;
+    const { userAgentData } = navigator as Navigator & NavigatorHints;
+    return (
+        userAgentData?.mobile ??
+        /iPhone|iPod|Android.+Mobile|Mobile.+Firefox|Windows Phone/i.test(
+            navigator.userAgent,
+        )
+    );
+}
+
 /** Clang in WebAssembly needs a few cores and some memory to be usable. */
 function deviceCanCompile() {
-    if (typeof navigator === "undefined") return false;
+    if (typeof navigator === "undefined" || isPhone()) return false;
     const { deviceMemory } = navigator as Navigator & NavigatorHints;
     return (
         (navigator.hardwareConcurrency ?? 0) >= 4 &&
@@ -95,16 +124,21 @@ function canDownloadInBackground() {
 function chooseTarget(getter: Getter): BuildTarget {
     const mode = effectiveCompilerMode(getter);
     if (mode !== "auto") return mode;
-    if (getter(serverUnavailableStore)) return "browser";
+    if (getter(serverUnavailableStore) && !isPhone()) return "browser";
     return getter(browserCompilerProgressStore) === DOWNLOADED &&
         deviceCanCompile()
         ? "browser"
         : "server";
 }
 
-/** The next build goes to the server, which needs a verified token. */
+/**
+ * The next build goes to the server, which needs a verified token. Not once
+ * the server is known to be unavailable: the build then fails at once with a
+ * way out instead of the button waiting for a token that may never come.
+ */
 export const buildNeedsVerificationStore = atom(
-    (getter) => chooseTarget(getter) === "server",
+    (getter) =>
+        chooseTarget(getter) === "server" && !getter(serverUnavailableStore),
 );
 
 /**
@@ -119,13 +153,38 @@ export function useBuildNeedsVerification() {
     return !hydrated || needsVerification;
 }
 
+// One failed background download is reported; retrying after every build
+// would repeat the same message.
+let backgroundDownloadFailed = false;
+
 function downloadInBackground() {
     if (
-        effectiveCompilerMode() === "auto" &&
-        store.get(browserCompilerProgressStore) === NOT_DOWNLOADED &&
-        canDownloadInBackground()
+        backgroundDownloadFailed ||
+        effectiveCompilerMode() !== "auto" ||
+        store.get(browserCompilerProgressStore) !== NOT_DOWNLOADED ||
+        !canDownloadInBackground()
     )
-        void downloadBrowserCompiler();
+        return;
+    void downloadBrowserCompiler("background").then((downloaded) => {
+        if (downloaded) return;
+        backgroundDownloadFailed = true;
+        addAlert({
+            title: i18next.t("editor:compiler.backgroundDownloadFailedTitle"),
+            description: i18next.t(
+                "editor:compiler.backgroundDownloadFailedDescription",
+            ),
+        });
+    });
+}
+
+/** Downloads the in-browser compiler now, telling the user if that fails. */
+export async function startBrowserCompilerDownload() {
+    if (await downloadBrowserCompiler("settings")) return;
+    addAlert({
+        title: i18next.t("editor:compiler.downloadFailedTitle"),
+        description: i18next.t("editor:compiler.downloadFailed"),
+        variant: "destructive",
+    });
 }
 
 let prepared = false;
@@ -161,22 +220,33 @@ function suggestAutoWhileDownloading() {
     });
 }
 
-/** Resolves to null when the user left the download for auto mode. */
+/**
+ * Resolves to null when the user left the download for auto mode or stopped
+ * the build (`stop` resolves).
+ */
 async function buildInBrowser(
     code: string,
     cppVersion: string,
+    stop: Promise<null>,
     offerAuto: boolean,
+    fallbackFrom?: BuildTarget,
 ): Promise<BuildResult | null> {
     const downloading = !(await isBrowserCompilerDownloaded());
-    store.set(buildingWithStore, { target: "browser", downloading });
+    store.set(buildingWithStore, {
+        target: "browser",
+        downloading,
+        fallbackFrom,
+    });
     if (downloading) {
         if (offerAuto) suggestAutoWhileDownloading();
         const left = new Promise<null>((resolve) => {
             leaveDownload = () => resolve(null);
         });
+        // Stopping leaves the download running: the next build can use it.
         const downloaded = await Promise.race([
-            downloadBrowserCompiler(),
+            downloadBrowserCompiler("build"),
             left,
+            stop,
         ]);
         leaveDownload = undefined;
         if (downloaded === null) return null;
@@ -188,23 +258,49 @@ async function buildInBrowser(
                 errors: [i18next.t("editor:compiler.downloadFailed")],
                 unavailable: true,
             };
-        store.set(buildingWithStore, { target: "browser", downloading: false });
+        store.set(buildingWithStore, {
+            target: "browser",
+            downloading: false,
+            fallbackFrom,
+        });
     }
-    return browserBuild(code, cppVersion);
+    return Promise.race([browserBuild(code, cppVersion), stop]);
 }
 
 async function buildWith(
     target: BuildTarget,
     code: string,
     cppVersion: string,
+    stop: Promise<null>,
     offerAuto: boolean,
+    fallbackFrom?: BuildTarget,
 ): Promise<BuildResult | null> {
     let result: BuildResult | null;
     if (target === "server") {
-        store.set(buildingWithStore, { target, downloading: false });
-        result = await serverBuild(code, cppVersion);
+        store.set(buildingWithStore, {
+            target,
+            downloading: false,
+            fallbackFrom,
+        });
+        result =
+            !store.get(verifyJwtStore) && store.get(serverUnavailableStore)
+                ? {
+                      ok: false,
+                      js_code: "",
+                      wasm_url: "",
+                      errors: [i18next.t("editor:compiler.serverUnreachable")],
+                      unavailable: true,
+                  }
+                : // The request cannot be withdrawn; its answer is ignored.
+                  await Promise.race([serverBuild(code, cppVersion), stop]);
     } else {
-        result = await buildInBrowser(code, cppVersion, offerAuto);
+        result = await buildInBrowser(
+            code,
+            cppVersion,
+            stop,
+            offerAuto,
+            fallbackFrom,
+        );
     }
     return result && { ...result, target };
 }
@@ -220,12 +316,38 @@ export async function build(
     cppVersion: string,
     target?: BuildTarget,
 ): Promise<BuildResult> {
-    if (browserCompilerAvailable()) await isBrowserCompilerDownloaded();
+    let chosen = target;
+    let stopped = false;
+    let resolveStop!: (value: null) => void;
+    const stop = new Promise<null>((resolve) => (resolveStop = resolve));
+    const cancel = () => {
+        stopped = true;
+        cancelBrowserBuild();
+        resolveStop(null);
+    };
+    cancelCurrent = cancel;
+    const cancelled = (): BuildResult => ({
+        ok: false,
+        js_code: "",
+        wasm_url: "",
+        errors: [],
+        cancelled: true,
+        target: chosen,
+    });
     try {
+        if (browserCompilerAvailable()) await isBrowserCompilerDownloaded();
         for (;;) {
-            const chosen = target ?? chooseTarget(get);
+            if (stopped) return cancelled();
+            chosen = target ?? chooseTarget(get);
             const offerAuto = !target && effectiveCompilerMode() === "browser";
-            let result = await buildWith(chosen, code, cppVersion, offerAuto);
+            let result = await buildWith(
+                chosen,
+                code,
+                cppVersion,
+                stop,
+                offerAuto,
+            );
+            if (stopped || result?.cancelled) return cancelled();
             // Left the download: now in auto mode, choose again.
             if (!result) continue;
             if (
@@ -236,18 +358,69 @@ export async function build(
                 if (chosen === "server")
                     store.set(serverUnavailableStore, true);
                 const other = chosen === "server" ? "browser" : "server";
-                if (other === "browser" || !store.get(serverUnavailableStore))
-                    result =
-                        (await buildWith(other, code, cppVersion, false)) ??
-                        result;
+                if (
+                    other === "browser"
+                        ? !isPhone()
+                        : !store.get(serverUnavailableStore)
+                ) {
+                    const failed = chosen;
+                    chosen = other;
+                    const fallback = await buildWith(
+                        other,
+                        code,
+                        cppVersion,
+                        stop,
+                        false,
+                        failed,
+                    );
+                    if (stopped || fallback?.cancelled) return cancelled();
+                    result = fallback ?? result;
+                }
             }
             if (result.target === "server" && !result.unavailable)
                 downloadInBackground();
+            if ((result.durationMs ?? 0) > SLOW_BUILD_MS)
+                suggestServerForSpeed();
             return result;
         }
+    } catch (error) {
+        // Callers show a failed result; a rejection would go unnoticed.
+        console.error("Build failed unexpectedly:", error);
+        return {
+            ok: false,
+            js_code: "",
+            wasm_url: "",
+            errors: [String(error)],
+            unavailable: true,
+            target: chosen,
+        };
     } finally {
+        if (cancelCurrent === cancel) cancelCurrent = undefined;
         store.set(buildingWithStore, null);
     }
+}
+
+let cancelCurrent: (() => void) | undefined;
+
+/** Stops the build in progress; it resolves as cancelled. */
+export function cancelBuild() {
+    cancelCurrent?.();
+}
+
+let slowBuildReported = false;
+
+function suggestServerForSpeed() {
+    if (slowBuildReported) return;
+    slowBuildReported = true;
+    addAlert({
+        title: i18next.t("editor:compiler.slowTitle"),
+        description: i18next.t("editor:compiler.slowDescription"),
+        action: {
+            text: i18next.t("editor:compiler.use.server"),
+            onClick: () => store.set(compilerModeStore, "server"),
+        },
+        duration: 15_000,
+    });
 }
 
 /**
@@ -261,7 +434,7 @@ export function suggestOtherCompiler(
     if (!browserCompilerAvailable() || !result.target) return;
     const t = i18next.t;
     if (!result.unavailable) {
-        // Clang rejects some code GCC on the server accepts.
+        // The in-browser compiler lacks C++ exceptions, which the server has.
         if (result.target === "browser")
             addAlert({
                 title: t("editor:compiler.clangFailedTitle"),
@@ -274,14 +447,30 @@ export function suggestOtherCompiler(
             });
         return;
     }
-    // Auto mode has already tried both.
-    if (effectiveCompilerMode() === "auto") return;
-    const other: BuildTarget =
-        result.target === "browser" ? "server" : "browser";
     const use = (mode: CompilerMode) => () => {
         store.set(compilerModeStore, mode);
         retry();
     };
+    // On phones Auto never compiles in the browser, so it cannot help when the
+    // server is down: offer the in-browser compiler as a deliberate choice.
+    if (isPhone() && result.target === "server") {
+        store.set(alertDialogStore, {
+            title: t("editor:compiler.serverUnavailableTitle"),
+            description: t("editor:compiler.serverUnavailablePhoneDescription"),
+            actions: [
+                {
+                    text: t("editor:compiler.use.browser"),
+                    onClick: use("browser"),
+                    autoFocus: true,
+                },
+            ],
+        });
+        return;
+    }
+    // Auto mode has already tried both.
+    if (effectiveCompilerMode() === "auto") return;
+    const other: BuildTarget =
+        result.target === "browser" ? "server" : "browser";
     store.set(alertDialogStore, {
         title: t(`editor:compiler.${result.target}UnavailableTitle`),
         description: t(

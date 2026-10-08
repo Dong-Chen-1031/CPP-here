@@ -21,7 +21,7 @@ import {
     verifyJwtStore,
     type TestCase,
 } from "@/store/atom";
-import { cn, useIsMobile } from "@/lib/utils";
+import { cn, randomId, useIsMobile } from "@/lib/utils";
 import { handleRun } from "@/service/run";
 import { useBuildNeedsVerification } from "@/service/build";
 import { useTranslation } from "react-i18next";
@@ -136,7 +136,7 @@ export default function TestCasePanel({
             const testCaseData = parsed.data;
             const testCasesFromExtension: TestCase[] = testCaseData.tests.map(
                 (test, index) => ({
-                    id: crypto.randomUUID(),
+                    id: randomId(),
                     name: t("testCase.extension.caseName", {
                         problemName: testCaseData.name,
                         index: index + 1,
@@ -232,7 +232,7 @@ export default function TestCasePanel({
     }, []);
     function handleAddTestCase(name: string, input: string, expected: string) {
         const newTestCase: TestCase = {
-            id: crypto.randomUUID(),
+            id: randomId(),
             name,
             input,
             expectedOutput: expected,
