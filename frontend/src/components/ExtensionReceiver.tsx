@@ -85,6 +85,18 @@ export function ExtensionReceiver() {
     // a re-run doesn't drop problems that have already arrived.
     const pendingBatchesRef = useRef(new Map<string, PendingBatch>());
 
+    // ...but not the component: an unmounted receiver must not import a
+    // batch or open a dialog when its flush timer fires
+    useEffect(() => {
+        const pendingBatches = pendingBatchesRef.current;
+        return () => {
+            for (const pending of pendingBatches.values()) {
+                window.clearTimeout(pending.timer);
+            }
+            pendingBatches.clear();
+        };
+    }, []);
+
     useEffect(() => {
         const defaultStore = getDefaultStore();
         const pendingBatches = pendingBatchesRef.current;
