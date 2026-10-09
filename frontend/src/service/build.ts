@@ -2,7 +2,11 @@ import { PUBLIC_LOCAL_COMPILER } from "astro:env/client";
 import { atom, getDefaultStore, useAtomValue, type Getter } from "jotai";
 import { useEffect, useState } from "react";
 import i18next from "i18next";
-import { compilerModeStore, type CompilerMode } from "@/store/configStore";
+import {
+    compilerFlagStore,
+    compilerModeStore,
+    type CompilerMode,
+} from "@/store/configStore";
 import {
     alertDialogStore,
     serverUnavailableStore,
@@ -60,13 +64,27 @@ const BACKGROUND_DOWNLOAD_DELAY_MS = 10_000;
 // An in-browser compile slower than this suggests the server instead.
 const SLOW_BUILD_MS = 7_000;
 
-export function browserCompilerAvailable() {
-    return PUBLIC_LOCAL_COMPILER && browserCompilerSupported();
+/**
+ * Shipped (PUBLIC_LOCAL_COMPILER), not hidden by the compiler-menu flag, and
+ * supported by this browser.
+ */
+export function browserCompilerAvailable(getter: Getter = get) {
+    return (
+        PUBLIC_LOCAL_COMPILER &&
+        getter(compilerFlagStore) !== null &&
+        browserCompilerSupported()
+    );
 }
+
+export const browserCompilerAvailableStore = atom((getter) =>
+    browserCompilerAvailable(getter),
+);
 
 /** Without the in-browser compiler only the server is left. */
 export function effectiveCompilerMode(getter: Getter = get): CompilerMode {
-    return browserCompilerAvailable() ? getter(compilerModeStore) : "server";
+    return browserCompilerAvailable(getter)
+        ? getter(compilerModeStore)
+        : "server";
 }
 
 interface NavigatorHints {

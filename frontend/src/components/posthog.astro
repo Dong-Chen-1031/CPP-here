@@ -26,8 +26,15 @@
     } as PostHog;
 
     async function loadPostHog() {
-        const { default: posthog } =
-            await import("posthog-js/dist/module.full.no-external");
+        const [
+            { default: posthog },
+            { getDefaultStore },
+            { featureFlagsStore },
+        ] = await Promise.all([
+            import("posthog-js/dist/module.full.no-external"),
+            import("jotai"),
+            import("@/store/featureFlagStore"),
+        ]);
 
         // tracing_headers matches exact hostnames, not URLs. An empty
         // PUBLIC_API_URL means the API is same-origin, which resolves to this
@@ -46,6 +53,13 @@
         // structurally incompatible type declarations.
         window.posthog = posthog as unknown as PostHog;
         for (const args of queued.splice(0)) posthog.capture(...args);
+
+        // Called at once with the flags cached from the last visit, then
+        // again with fresh ones. A failed load keeps the stored values.
+        posthog.onFeatureFlags((_flags, variants, context) => {
+            if (!context?.errorsLoading)
+                getDefaultStore().set(featureFlagsStore, variants);
+        });
     }
 
     // A stale chunk after a deploy, a network error or a blocker can reject

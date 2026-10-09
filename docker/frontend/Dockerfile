@@ -1,8 +1,8 @@
 # Only PUBLIC_SKIP_API_FETCH is baked into the image (plus NODE_OPTIONS, which is
 # for the build tooling, not the app); every other variable the frontend reads is
 # set per deployment in docker/frontend/docker-compose.yml.
-# The in-browser compiler's toolchain is prebuilt into the image, so setting
-# PUBLIC_LOCAL_COMPILER=true in compose costs nothing extra at container start.
+# The in-browser compiler's toolchain is prebuilt into the image, so leaving
+# PUBLIC_LOCAL_COMPILER at its default (true) costs nothing extra at container start.
 # Last synced 2026-10-07 at commit ecbfd4f+dirty
 
 FROM node:24-slim AS node

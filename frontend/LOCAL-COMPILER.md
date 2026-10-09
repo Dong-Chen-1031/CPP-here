@@ -1,15 +1,23 @@
 # in-browser compiler
 
-Experimental, opt-in. `PUBLIC_LOCAL_COMPILER=true` ships the toolchain and adds
-a Compiler setting with three modes; disabled (the default) keeps the backend
-as the only compiler and hides the setting. Sharing and other API features are
+Experimental. `PUBLIC_LOCAL_COMPILER=true` (the default) ships the toolchain
+and adds a Compiler setting with three modes; `false` keeps the backend as the
+only compiler and hides the setting. Sharing and other API features are
 unaffected.
 
-| Mode           | Builds with                                                                                                                                                                                                |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Auto (default) | The browser when its compiler is downloaded and the device has 4+ cores and 4+ GB (when reported), otherwise the server. If the chosen one cannot be used (network, outage, download), it tries the other. |
-| In browser     | Always the browser; the first build downloads the compiler with a progress bar and offers to switch to Auto.                                                                                               |
-| Server         | Always `/api/build`.                                                                                                                                                                                       |
+The PostHog flag `compiler-menu` then picks per device: `auto`, `server` or
+`in-browser` show the setting with that mode as its default (a mode the user
+picked wins); `disable`, the flag off or an unknown variant hides it and builds
+on the server. The flags are kept in localStorage (`featureFlags`) so they apply
+before PostHog loads on the next visit. Until PostHog has ever reported flags
+(no `PUBLIC_POSTHOG_PROJECT_TOKEN`, blocked, or a first visit) the setting shows
+with Auto.
+
+| Mode       | Builds with                                                                                                                                                                                                |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Auto       | The browser when its compiler is downloaded and the device has 4+ cores and 4+ GB (when reported), otherwise the server. If the chosen one cannot be used (network, outage, download), it tries the other. |
+| In browser | Always the browser; the first build downloads the compiler with a progress bar and offers to switch to Auto.                                                                                               |
+| Server     | Always `/api/build`.                                                                                                                                                                                       |
 
 In Auto mode on a capable device with a fast, unmetered connection (Network
 Information API; without it, devices without a coarse pointer), the compiler is
@@ -114,13 +122,13 @@ its inputs are unchanged. It deletes toolchains of other ids under
 `public/toolchain/`. It takes about 3 minutes.
 
 `build`, `build:static`, `deploy` and `deploy:preview` run it with
-`--if-enabled`, which only prepares the toolchain when `PUBLIC_LOCAL_COMPILER`
-is `true` (environment or `frontend/.env`).
+`--if-enabled`, which skips the toolchain when `PUBLIC_LOCAL_COMPILER`
+(environment or `frontend/.env`) is set to anything but `true`.
 
 The Docker image (`docker/frontend/Dockerfile`) generates the toolchain in its
-own build stage, so `PUBLIC_LOCAL_COMPILER=true` in compose finds it up to date
-at container start. Run the script with Node, not Bun: Bun's `node:wasi`
-ignores the `stdout` fd and the PCH smoke test fails.
+own build stage, so with `PUBLIC_LOCAL_COMPILER` enabled the container finds
+it up to date at container start. Run the script with Node, not Bun: Bun's
+`node:wasi` ignores the `stdout` fd and the PCH smoke test fails.
 
 ## Trust
 

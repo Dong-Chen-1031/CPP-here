@@ -6,8 +6,8 @@
 //
 //   node scripts/prepare-toolchain.mjs [--if-enabled] [--no-pch] [--force]
 //
-// --if-enabled does nothing unless PUBLIC_LOCAL_COMPILER=true (environment or
-// .env), so the normal build stays fast while the feature is off.
+// --if-enabled does nothing when PUBLIC_LOCAL_COMPILER (environment or .env) is
+// set to anything but "true", so the build stays fast while the feature is off.
 import zlib from "node:zlib";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -26,7 +26,7 @@ if (argv.includes("--if-enabled")) {
     try {
         process.loadEnvFile(path.join(frontend, ".env"));
     } catch {}
-    if (process.env.PUBLIC_LOCAL_COMPILER !== "true") {
+    if ((process.env.PUBLIC_LOCAL_COMPILER ?? "true") !== "true") {
         console.log("Local compiler disabled; skipping toolchain preparation.");
         process.exit(0);
     }

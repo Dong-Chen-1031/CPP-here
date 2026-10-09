@@ -97,11 +97,12 @@ export default defineConfig({
     env: {
         schema: {
             // Also read outside the schema by scripts/prepare-toolchain.mjs
-            // --if-enabled, which only accepts the literal string "true".
+            // --if-enabled, which treats anything but unset or the literal
+            // string "true" as disabled.
             PUBLIC_LOCAL_COMPILER: envField.boolean({
                 context: "client",
                 access: "public",
-                default: false,
+                default: true,
             }),
             PUBLIC_TURNSTILE_SITE_KEY: envField.string({
                 context: "client",

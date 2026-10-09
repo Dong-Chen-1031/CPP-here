@@ -65,7 +65,7 @@ import {
 import { CppVersionSelect } from "@/components/header/cppVersionSelect";
 import { BetaBadge } from "@/components/BetaBadge";
 import {
-    browserCompilerAvailable,
+    browserCompilerAvailableStore,
     startBrowserCompilerDownload,
 } from "@/service/build";
 import {
@@ -332,6 +332,7 @@ export function Settings({ allLangs }: SettingsProps) {
     const [timeLimit, setTimeLimit] = useAtom(timeLimitStore);
     const [compilerMode, setCompilerMode] = useAtom(compilerModeStore);
     const downloadProgress = useAtomValue(browserCompilerProgressStore);
+    const compilerAvailable = useAtomValue(browserCompilerAvailableStore);
     const resetSettingsAtoms = useResetSettingsAtoms();
     const [resetTimes, setResetTimes] = useState(0);
     const [setCodeTimes, setSetCodeTimes] = useState(0);
@@ -374,7 +375,7 @@ export function Settings({ allLangs }: SettingsProps) {
             label: t("settings.cppVersion"),
             render: () => <CppVersionSelect size={"default"} />,
         },
-        ...(browserCompilerAvailable()
+        ...(compilerAvailable
             ? [
                   {
                       type: "Custom" as const,

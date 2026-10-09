@@ -38,13 +38,14 @@ services:
       # Default: true
       # - PUBLIC_SKIP_API_FETCH=true
 
-      # Ship the in-browser compiler and add a Compiler setting (Auto / In browser / Server, default
-      # Auto). Disabled, the backend is the only compiler; the other /api/* calls are unaffected.
+      # Ship the in-browser compiler and add a Compiler setting (Auto / In browser / Server). The
+      # PostHog flag compiler-menu picks its default or hides it. Disabled, the backend is the only
+      # compiler; the other /api/* calls are unaffected.
       # The image ships the toolchain prebuilt, so enabling it adds nothing to container start.
-      # Write "true" exactly. Details in frontend/LOCAL-COMPILER.md.
+      # Write "true" or "false" exactly. Details in frontend/LOCAL-COMPILER.md.
       # Scope: build-time (inlined into the client bundle)
-      # Default: false
-      # - PUBLIC_LOCAL_COMPILER=false
+      # Default: true
+      # - PUBLIC_LOCAL_COMPILER=true
 
       # Cloudflare Turnstile site key rendered in the browser widget. Must pair with the
       # backend's TURNSTILE_SECRET; replace both for production.
