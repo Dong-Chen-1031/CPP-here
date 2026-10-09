@@ -5,7 +5,7 @@ import { config } from './utils/config';
 import { sendToContent } from './utils/messaging';
 import { noop } from './utils/noop';
 import { request, requiredPermissions } from './utils/request';
-import { checkTargetUrl, DEFAULT_TARGET_URL } from './utils/target';
+import { checkTargetUrl, DEFAULT_TARGET_URL, TargetUrl } from './utils/target';
 
 declare global {
   const PARSER_NAMES: string[];
@@ -230,7 +230,7 @@ async function dispatchExtEvent(tabId: number, payload: unknown): Promise<void> 
   throw new Error('Could not send the problem data to the C++ Here editor tab.');
 }
 
-function getTargetUrl(targetUrl: string): { pattern: string; entry: string } {
+function getTargetUrl(targetUrl: string): TargetUrl {
   const target = checkTargetUrl(targetUrl);
 
   if ('error' in target) {
@@ -268,7 +268,7 @@ async function sendTask(tabId: number, messageId: string, data: string): Promise
   try {
     const parsedData = JSON.parse(data);
     targetUrlSetting = await config.get('targetUrl');
-    const { pattern: targetUrl, entry: targetEntry } = getTargetUrl(targetUrlSetting);
+    const { pattern: targetUrl, entry: targetEntry, origin: targetOrigin } = getTargetUrl(targetUrlSetting);
     const eventPayload = parsedData.eventPayload ?? parsedData;
 
     // Without access, open editor tabs can't be found by URL or scripted, and their load can't be detected
@@ -278,7 +278,10 @@ async function sendTask(tabId: number, messageId: string, data: string): Promise
 
     let targetTabId: number;
 
-    const tabs = await browser.tabs.query({ url: targetUrl });
+    // The pattern has no port, so it also matches editors served on other ports of the same host
+    const tabs = (await browser.tabs.query({ url: targetUrl })).filter(
+      tab => tab.url !== undefined && new URL(tab.url).origin === targetOrigin,
+    );
 
     if (tabs.length > 0) {
       targetTabId = tabs[0].id!;

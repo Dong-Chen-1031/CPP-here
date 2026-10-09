@@ -9,40 +9,48 @@ export const ALLOWED_TARGETS_DESCRIPTION =
   'https://cpp.doong.me, a local dev server on localhost or 127.0.0.1 (any port), or a preview deployment on *.cpp-insiders.doong.me';
 
 export interface TargetUrl {
-  /** Match pattern for the editor tabs, e.g. https://cpp.doong.me/editor/* */
+  /**
+   * Match pattern for the editor tabs, e.g. https://cpp.doong.me/editor/*. It has no port, since Firefox doesn't
+   * support ports in match patterns; a pattern without a port matches any port in both Chrome and Firefox.
+   */
   pattern: string;
-  /** URL to open when no editor tab exists, e.g. https://cpp.doong.me/editor/ */
+  /** URL to open when no editor tab exists, e.g. http://localhost:4321/editor/ */
   entry: string;
+  /** Origin of the editor, including its port, to pick the right tabs out of those the pattern matches */
+  origin: string;
 }
 
 export type TargetUrlCheck = TargetUrl | { error: string };
 
-export function normalizeTargetUrl(rawTargetUrl: string): TargetUrl {
-  const trimmed = rawTargetUrl.trim();
-  const candidate = trimmed.length > 0 ? trimmed : DEFAULT_TARGET_URL;
-
-  const entry = candidate.endsWith('/*') ? candidate.slice(0, -1) : candidate;
-  const pattern = entry.endsWith('/*') ? entry : `${entry.replace(/\/$/, '')}/*`;
-
-  return { pattern, entry: entry.replace(/\/$/, '') + '/' };
-}
-
 /**
- * Checks whether the extension can be granted access to a target URL. Browsers only let an extension request
- * hosts listed in its manifest, so anything else fails with a cryptic error when the toolbar button is clicked.
+ * Parses the target URL setting, and checks whether the extension can be granted access to it. Browsers only let an
+ * extension request hosts listed in its manifest, so anything else fails with a cryptic error when the toolbar button
+ * is clicked.
  */
 export function checkTargetUrl(rawTargetUrl: string): TargetUrlCheck {
-  const target = normalizeTargetUrl(rawTargetUrl);
+  const trimmed = rawTargetUrl.trim();
+  const candidate = trimmed.length > 0 ? trimmed : DEFAULT_TARGET_URL;
+  // A trailing * only marks every page under the editor's path, like in a match pattern
+  const withoutWildcard = candidate.endsWith('*') ? candidate.slice(0, -1) : candidate;
 
   let url: URL;
   try {
-    url = new URL(target.entry);
+    url = new URL(withoutWildcard);
   } catch {
-    return { error: `"${rawTargetUrl.trim()}" is not a valid URL.` };
+    return { error: `"${candidate}" is not a valid URL.` };
   }
 
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
     return { error: 'The target URL must start with http:// or https://.' };
+  }
+
+  // Match patterns compare the query string as part of the path and never match a URL with a fragment
+  if (withoutWildcard.includes('?') || withoutWildcard.includes('#')) {
+    return { error: 'The target URL cannot contain a query string (?) or a fragment (#).' };
+  }
+
+  if (withoutWildcard.includes('*')) {
+    return { error: 'The target URL can only contain * at the end.' };
   }
 
   if (!getManifestHostPatterns().some(pattern => matchesPattern(pattern, url))) {
@@ -51,7 +59,13 @@ export function checkTargetUrl(rawTargetUrl: string): TargetUrlCheck {
     };
   }
 
-  return target;
+  const path = url.pathname.endsWith('/') ? url.pathname : `${url.pathname}/`;
+
+  return {
+    pattern: `${url.protocol}//${url.hostname}${path}*`,
+    entry: `${url.origin}${path}`,
+    origin: url.origin,
+  };
 }
 
 function getManifestHostPatterns(): string[] {
