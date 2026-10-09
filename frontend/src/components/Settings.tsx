@@ -19,6 +19,7 @@ import {
     editorTabSizeStore,
     timeLimitStore,
     useResetSettingsAtoms,
+    COMPILER_MODES,
     type CompilerMode,
 } from "@/store/configStore";
 import { Input } from "@/components/ui/input";
@@ -69,11 +70,10 @@ import {
     startBrowserCompilerDownload,
 } from "@/service/build";
 import {
+    DOWNLOADED,
     NOT_DOWNLOADED,
     browserCompilerProgressStore,
 } from "@/service/browserBuild";
-
-const COMPILER_MODES: CompilerMode[] = ["auto", "browser", "server"];
 
 interface SettingsProps {
     allLangs: Record<string, string>;
@@ -395,6 +395,28 @@ export function Settings({ allLangs }: SettingsProps) {
                                           <p className="text-muted-foreground">
                                               {t(
                                                   `settings.compilerModeDesc.${mode}`,
+                                              )}
+                                              {mode === "browser" && (
+                                                  <span className="tabular-nums">
+                                                      {" "}
+                                                      {downloadProgress ===
+                                                      DOWNLOADED
+                                                          ? t(
+                                                                "settings.compilerDownload.downloaded",
+                                                            )
+                                                          : downloadProgress ===
+                                                              NOT_DOWNLOADED
+                                                            ? t(
+                                                                  "settings.compilerDownload.notDownloaded",
+                                                              )
+                                                            : t(
+                                                                  "settings.compilerDownload.downloading",
+                                                                  {
+                                                                      progress:
+                                                                          downloadProgress,
+                                                                  },
+                                                              )}
+                                                  </span>
                                               )}
                                           </p>
                                       </li>

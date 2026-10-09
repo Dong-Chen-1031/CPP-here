@@ -19,13 +19,11 @@ export const timeLimitStore = atomWithStorage<number>(
     { getOnInit: true },
 );
 
-export type CompilerMode = "auto" | "browser" | "server";
+export const COMPILER_MODES = ["auto", "browser", "server"] as const;
+export type CompilerMode = (typeof COMPILER_MODES)[number];
 
-const COMPILER_FLAG_MODES = new Map<unknown, CompilerMode>([
-    ["auto", "auto"],
-    ["server", "server"],
-    ["in-browser", "browser"],
-]);
+const isCompilerMode = (value: unknown): value is CompilerMode =>
+    COMPILER_MODES.includes(value as CompilerMode);
 
 /**
  * The compiler-menu flag: the default compiler mode, or null when it hides the
@@ -35,7 +33,9 @@ const COMPILER_FLAG_MODES = new Map<unknown, CompilerMode>([
 export const compilerFlagStore = atom<CompilerMode | null>((get) => {
     const flags = get(featureFlagsStore);
     if (!flags) return "auto";
-    return COMPILER_FLAG_MODES.get(flags["compiler-menu"]) ?? null;
+    // Its variants are named after the modes.
+    const variant = flags["compiler-menu"];
+    return isCompilerMode(variant) ? variant : null;
 });
 
 /** The mode the user picked; null leaves it to the compiler-menu flag. */

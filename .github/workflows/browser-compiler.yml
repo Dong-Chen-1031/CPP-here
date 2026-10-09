@@ -2,15 +2,17 @@ name: Browser Compiler Regression
 
 # Runs builder/test/regression's cases through the in-browser compiler, the
 # same cases builder-docker.yml runs through the server's. Auto mode switches
-# between the two without telling the user, so they must agree.
+# between the two without telling the user, so they must agree. Also runs the
+# build and run flow, and the production bundle, in a browser.
 on:
     push:
         branches:
             - main
         paths:
             - "frontend/src/compiler/**"
-            - "frontend/src/service/browserBuild.ts"
-            - "frontend/src/service/buildCache.ts"
+            # integration.mjs runs the whole build and run flow through these
+            - "frontend/src/service/**"
+            - "frontend/src/store/**"
             - "frontend/src/config/runLimits.ts"
             - "frontend/scripts/**"
             - "frontend/test/browser/**"
@@ -23,8 +25,9 @@ on:
     pull_request:
         paths:
             - "frontend/src/compiler/**"
-            - "frontend/src/service/browserBuild.ts"
-            - "frontend/src/service/buildCache.ts"
+            # integration.mjs runs the whole build and run flow through these
+            - "frontend/src/service/**"
+            - "frontend/src/store/**"
             - "frontend/src/config/runLimits.ts"
             - "frontend/scripts/**"
             - "frontend/test/browser/**"
@@ -92,6 +95,15 @@ jobs:
             - name: Regression cases
               working-directory: frontend
               run: node test/browser/run.mjs
+
+            - name: Run flow integration
+              working-directory: frontend
+              run: node test/browser/integration.mjs
+
+            # The compile worker loaded from a production bundle, with a PCH
+            - name: Bundled smoke
+              working-directory: frontend
+              run: node test/browser/build.mjs && node test/browser/bundled.mjs
 
             - name: Upload results
               if: always()

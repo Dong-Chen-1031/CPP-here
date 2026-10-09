@@ -46,6 +46,7 @@
             "browser": "Compiling in your browser",
             "server": "Compiling on the server",
             "downloading": "Downloading the in-browser compiler: {{progress}}%",
+            "verifying": "Verifying before compiling on the server",
             "fallbackToBrowser": "The server could not be used, so your browser compiles the code instead.",
             "fallbackToServer": "The in-browser compiler could not be used, so the server compiles the code instead."
         }
@@ -158,8 +159,13 @@
         },
         "compilerModeDesc": {
             "auto": "Recommended. Uses the in-browser compiler once it is downloaded and this device is fast enough, and the server otherwise.",
-            "browser": "Always compiles on this device. The first use downloads about 26 MB.",
+            "browser": "Always compiles on this device.",
             "server": "Always compiles on our servers."
+        },
+        "compilerDownload": {
+            "notDownloaded": "The first use downloads about 26 MB.",
+            "downloading": "Downloading: {{progress}}%.",
+            "downloaded": "Downloaded."
         },
         "moreInfo": "More info"
     },

@@ -235,13 +235,15 @@ function BuildingWith() {
     const progress = Math.max(0, useAtomValue(browserCompilerProgressStore));
     const { t } = useTranslation("editor");
     if (!buildingWith) return null;
-    const { target, downloading, fallbackFrom } = buildingWith;
+    const { target, downloading, verifying, fallbackFrom } = buildingWith;
     return (
         <>
             <p className="text-xs text-muted-foreground inline-flex items-center gap-1.5 tabular-nums">
                 {downloading
                     ? t("output.compiler.downloading", { progress })
-                    : t(`output.compiler.${target}`)}
+                    : verifying
+                      ? t("output.compiler.verifying")
+                      : t(`output.compiler.${target}`)}
                 {target === "browser" && <BetaBadge />}
             </p>
             {downloading && (

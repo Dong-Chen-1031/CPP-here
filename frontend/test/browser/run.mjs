@@ -159,6 +159,11 @@ try {
         return { ok: build.ok, ms: performance.now() - t };
     });
     console.log("Cache hit", cache);
+    // A real compile takes seconds; a hit is one message to the worker.
+    if (!cache.ok || cache.ms > 500) {
+        console.error("FAIL cache hit", cache);
+        fail++;
+    }
     await page.screenshot({
         path: path.join(resultsDir, "screenshot.png"),
         fullPage: true,

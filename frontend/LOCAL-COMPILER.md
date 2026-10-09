@@ -6,7 +6,7 @@ only compiler and hides the setting. Sharing and other API features are
 unaffected.
 
 The PostHog flag `compiler-menu` then picks per device: `auto`, `server` or
-`in-browser` show the setting with that mode as its default (a mode the user
+`browser` show the setting with that mode as its default (a mode the user
 picked wins); `disable`, the flag off or an unknown variant hides it and builds
 on the server. The flags are kept in localStorage (`featureFlags`) so they apply
 before PostHog loads on the next visit. Until PostHog has ever reported flags
