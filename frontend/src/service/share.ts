@@ -1,6 +1,11 @@
-import { codeStore, inputStore, testCasesStore } from "@/store/atom";
+import {
+    codeStore,
+    inputStore,
+    testCasesStore,
+    verifyJwtStore,
+} from "@/store/atom";
 import { PUBLIC_S3_BUCKET_NAME, PUBLIC_S3_BUCKET_URL } from "astro:env/client";
-import { axios, callAPI, isAuthError } from "@/lib/axiosInstance";
+import { axios, callAPI, isAuthError, waitForJwt } from "@/lib/axiosInstance";
 import { getDefaultStore } from "jotai";
 import { exportOutputCases, outputStore } from "@/store/outputStore";
 import { SHARE_OUTPUT_LIMIT_CHARS } from "@/config/runLimits";
@@ -16,8 +21,19 @@ const defaultStore = getDefaultStore();
 type ShareResult =
     { ok: true; shareId: string } | { ok: false; errors: string[] };
 
-export async function shareCode(): Promise<ShareResult> {
+/** `onVerifying` is called when the share first waits for Turnstile. */
+export async function shareCode({
+    onVerifying,
+}: { onVerifying?: () => void } = {}): Promise<ShareResult> {
     try {
+        if (!defaultStore.get(verifyJwtStore)) {
+            onVerifying?.();
+            if (!(await waitForJwt()))
+                return {
+                    ok: false,
+                    errors: ["Verification failed. Please try again."],
+                };
+        }
         const code = defaultStore.get(codeStore);
         const testCase = defaultStore.get(testCasesStore);
         const inputData = defaultStore.get(inputStore);

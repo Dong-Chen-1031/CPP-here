@@ -116,8 +116,6 @@
         "downloadCodeTip": "Download as .cpp",
         "uploadCode": "Upload",
         "uploadCodeTip": "Upload a .cpp file",
-        "buildingInBrowser": "Building in browser",
-        "buildingOnServer": "Building on server",
         "downloadingCompiler": "Downloading {{progress}}%",
         "stopBuilding": "Stop building"
     },
@@ -153,9 +151,6 @@
         "timeLimitDesc": "Stop the program after this many seconds. Enter -1 for no limit.",
         "compiler": "Compiler",
         "compilerDesc": "Where your code is compiled.",
-        "compilerNotDownloaded": "In-browser compiler: not downloaded (about 26 MB).",
-        "compilerDownloading": "In-browser compiler: downloading {{progress}}%.",
-        "compilerDownloaded": "In-browser compiler: downloaded.",
         "compilerMode": {
             "auto": "Auto",
             "browser": "In browser",
@@ -235,6 +230,10 @@
         "retryOnServer": "Try on server",
         "browserUnavailableTitle": "In-browser compiler unavailable",
         "browserUnavailableDescription": "The in-browser compiler could not be used. Build on the server instead, or let Auto mode pick a compiler that works.",
+        "serverSkippedDescription": "The server failed a moment ago, so Auto mode did not try it. It may work now.",
+        "serverInvalidResponse": "The server sent an unexpected response.",
+        "retryBusyTitle": "Already running",
+        "retryBusyDescription": "Stop the current run, then try again.",
         "serverUnavailableTitle": "Server compiler unavailable",
         "serverUnavailableDescription": "The server could not build your code. Build in the browser instead, or let Auto mode pick a compiler that works.",
         "use": {
@@ -246,7 +245,6 @@
         "downloadFailedTitle": "Could not download the in-browser compiler",
         "backgroundDownloadFailedTitle": "In-browser compiler not downloaded",
         "backgroundDownloadFailedDescription": "The background download failed. Your code keeps compiling on the server.",
-        "serverUnreachable": "The server could not be reached.",
         "slowTitle": "Compiling is slow on this device",
         "slowDescription": "Compiling in your browser took over 7 seconds. The server is usually much faster."
     }

@@ -400,6 +400,21 @@ function buildStopped(generation: number, cancelled?: boolean) {
     return true;
 }
 
+/**
+ * Retries a failed build from an alert, unless a run has started since: that
+ * one already builds the current code.
+ */
+function retryWhenIdle(run: () => Promise<void>) {
+    if (store.get(runStatusStore) === "idle") {
+        void run();
+        return;
+    }
+    addAlert({
+        title: i18next.t("editor:compiler.retryBusyTitle"),
+        description: i18next.t("editor:compiler.retryBusyDescription"),
+    });
+}
+
 function buildErrorText(errors: string[]) {
     return (
         errors.filter(Boolean).join("\n") ||
@@ -443,7 +458,7 @@ async function runSingle({ code, input, target }: RunSingleOptions) {
         );
         store.set(runStatusStore, "idle");
         suggestOtherCompiler(response, (target) =>
-            handleRun({ code, input, target }),
+            retryWhenIdle(() => handleRun({ input, target })),
         );
         return;
     }
@@ -562,7 +577,9 @@ async function runAll({ target }: { target?: BuildTarget }) {
             },
         );
         store.set(runStatusStore, "idle");
-        suggestOtherCompiler(response, (target) => handleRunAll({ target }));
+        suggestOtherCompiler(response, (target) =>
+            retryWhenIdle(() => handleRunAll({ target })),
+        );
         return;
     }
 
@@ -574,6 +591,8 @@ async function runAll({ target }: { target?: BuildTarget }) {
 
     const wasmModule =
         response.wasmModule ?? (await url2WasmModule(response.wasm_url));
+    // Stopped while the wasm was fetched
+    if (generation !== runGeneration) return;
 
     // exitCount = 0;
 

@@ -3,7 +3,7 @@
     "type": "module",
     "version": "0.0.1",
     "scripts": {
-        "dev": "wrangler types && astro dev --host",
+        "dev": "wrangler types && node scripts/prepare-toolchain.mjs --if-enabled && astro dev --host",
         "build": "wrangler types && node scripts/prepare-toolchain.mjs --if-enabled && astro build",
         "build:static": "wrangler types && node scripts/prepare-toolchain.mjs --if-enabled && astro build && shx rm -rf .dist-tmp && shx mv dist/client .dist-tmp && shx rm -rf dist && shx mv .dist-tmp dist",
         "preview": "astro preview",

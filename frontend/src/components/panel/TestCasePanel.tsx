@@ -18,12 +18,10 @@ import {
     runStatusStore,
     testCaseEditStore,
     testCasesStore,
-    verifyJwtStore,
     type TestCase,
 } from "@/store/atom";
 import { cn, randomId, useIsMobile } from "@/lib/utils";
 import { handleRun } from "@/service/run";
-import { useBuildNeedsVerification } from "@/service/build";
 import { useTranslation } from "react-i18next";
 import TestEditDialog from "./TestEditDialog";
 import { addAlert } from "@/lib/alert";
@@ -106,8 +104,6 @@ export default function TestCasePanel({
     const [, setPanel] = useAtom(panelDrawerStore);
     const [, setAlertDialog] = useAtom(alertDialogStore);
     const isMobile = useIsMobile();
-    const [jwt] = useAtom(verifyJwtStore);
-    const needsVerification = useBuildNeedsVerification();
     const { t } = useTranslation(["editor", "common"]);
     const defaultStore = getDefaultStore();
 
@@ -242,7 +238,7 @@ export default function TestCasePanel({
             has_expected_output: !!expected,
         });
     }
-    const cantRun = runStatus !== "idle" || (needsVerification && !jwt);
+    const cantRun = runStatus !== "idle";
 
     return (
         <>

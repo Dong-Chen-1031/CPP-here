@@ -94,6 +94,8 @@ export const testCasesStore = atomWithStorage<TestCase[]>(
 export const codeWorkersStore = atom<CodeWorker[]>([]);
 
 export const verifyJwtStore = atom<string | null>(null);
+/** Turnstile verification failed and will not retry on its own. */
+export const verifyFailedStore = atom(false);
 /** The backend failed for a reason other than the code; auto mode stops using it. */
 export const serverUnavailableStore = atom(false);
 export const alertDialogStore = atom<AlertDialogOptions | null>(null);

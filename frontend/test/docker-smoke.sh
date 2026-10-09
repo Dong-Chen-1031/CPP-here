@@ -59,7 +59,9 @@ jq -e --arg v "$id" '.version == $v' <<<"$manifest" >/dev/null ||
 
 # The worker decompresses .gz.bin itself; a Content-Encoding header would make
 # the browser decompress first and the worker fail (see frontend/LOCAL-COMPILER.md).
-headers=$(curl -fsSI "$base/toolchain/$id/llvm.core.wasm.gz.bin") ||
+# Ask the way browsers do: a server only compresses when the request allows it.
+headers=$(curl -fsSI -H 'Accept-Encoding: gzip, deflate, br, zstd' \
+    "$base/toolchain/$id/llvm.core.wasm.gz.bin") ||
     fail "toolchain wasm not served"
 ! grep -qi '^content-encoding' <<<"$headers" || fail "toolchain wasm served with Content-Encoding"
 

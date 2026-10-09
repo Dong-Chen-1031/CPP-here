@@ -6,6 +6,7 @@ import { useAtom } from "jotai";
 import {
     serverUnavailableStore,
     turnstileRefStore,
+    verifyFailedStore,
     verifyJwtStore,
 } from "@/store/atom";
 import {
@@ -37,6 +38,8 @@ function TurnstileChallenge() {
     const [, setJwt] = useAtom(verifyJwtStore);
     const [, setTurnstileRefGlobal] = useAtom(turnstileRefStore);
     const [, setServerUnavailable] = useAtom(serverUnavailableStore);
+    // Builds and shares waiting for a token give up at once
+    const [, setVerifyFailed] = useAtom(verifyFailedStore);
     const { t } = useTranslation(["editor"]);
     useEffect(() => {
         setTurnstileRefGlobal(turnstileRef);
@@ -66,6 +69,7 @@ function TurnstileChallenge() {
 
                     if (!success || !newJwt) {
                         console.error("Verification rejected:", error);
+                        setVerifyFailed(true);
                         addAlert({
                             title: t("turnstile.verificationFailed"),
                             description: t("turnstile.verificationFailedDesc"),
@@ -75,6 +79,9 @@ function TurnstileChallenge() {
                     }
 
                     setJwt(newJwt);
+                    setVerifyFailed(false);
+                    // A new token: auto mode may try the server again
+                    setServerUnavailable(false);
 
                     const resetDelay =
                         typeof expires_in === "number" &&
@@ -101,6 +108,7 @@ function TurnstileChallenge() {
                     console.error("Verification error:", err);
                     // The backend is unreachable: auto mode compiles in the browser
                     setServerUnavailable(true);
+                    setVerifyFailed(true);
                     addAlert({
                         title: t("turnstile.verificationFailed"),
                         description: t("turnstile.verificationFailedDesc"),
@@ -110,6 +118,7 @@ function TurnstileChallenge() {
                 }
             }}
             onUnsupported={() => {
+                setVerifyFailed(true);
                 addAlert({
                     title: t("turnstile.unsupported"),
                     description: t("turnstile.unsupportedDesc"),

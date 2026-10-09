@@ -69,11 +69,9 @@ import {
     startBrowserCompilerDownload,
 } from "@/service/build";
 import {
-    DOWNLOADED,
     NOT_DOWNLOADED,
     browserCompilerProgressStore,
 } from "@/service/browserBuild";
-import type { hover } from "motion/react";
 
 const COMPILER_MODES: CompilerMode[] = ["auto", "browser", "server"];
 
@@ -404,15 +402,6 @@ export function Settings({ allLangs }: SettingsProps) {
                               </ul>
                           </div>
                       ),
-                      // description:
-                      //     downloadProgress === DOWNLOADED
-                      //         ? t("settings.compilerDownloaded")
-                      //         : downloadProgress === NOT_DOWNLOADED
-                      //           ? t("settings.compilerNotDownloaded")
-                      //           : t("settings.compilerDownloading", {
-                      //                 progress: downloadProgress,
-                      //             }),
-
                       render: () => (
                           <Select
                               value={compilerMode}

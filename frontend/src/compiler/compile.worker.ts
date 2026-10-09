@@ -170,10 +170,16 @@ scope.onmessage = async ({ data }) => {
             ok: true,
             module,
             errors: [],
-            diagnostics: stderr,
             usedPch: !!pch,
         });
     } catch (error) {
-        scope.postMessage({ id, ok: false, errors: [String(error)] });
+        // Not the code's fault (out of memory, a broken toolchain): the page
+        // starts a new worker and may use the server instead.
+        scope.postMessage({
+            id,
+            ok: false,
+            errors: [String(error)],
+            reset: true,
+        });
     }
 };

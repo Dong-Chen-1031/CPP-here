@@ -15,19 +15,10 @@ import { Play } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
 import { getDefaultStore, useAtom, useAtomValue } from "jotai";
-import {
-    codeWorkersStore,
-    runModeStore,
-    runStatusStore,
-    verifyJwtStore,
-} from "@/store/atom";
+import { codeWorkersStore, runModeStore, runStatusStore } from "@/store/atom";
 
 import { handleRun, handleRunAll, stopBuild } from "@/service/run";
-import {
-    buildingWithStore,
-    prepareBuild,
-    useBuildNeedsVerification,
-} from "@/service/build";
+import { buildingWithStore, prepareBuild } from "@/service/build";
 import { browserCompilerProgressStore } from "@/service/browserBuild";
 
 import Tip from "@/components/ui/tips";
@@ -35,7 +26,6 @@ import { cn, commandKeyIcon } from "@/lib/utils";
 
 import { AnimatePresence, motion } from "motion/react";
 import { Kbd } from "@/components/ui/kbd";
-import { BetaBadge } from "@/components/BetaBadge";
 
 const MotionButtonLabel = React.forwardRef(function MotionButtonLabel(
     {
@@ -107,20 +97,17 @@ export function RunButton({
     onClick?: (e: React.MouseEvent) => void;
 }) {
     const [runMode, setRunMode] = useAtom(runModeStore);
-    const [jwt] = useAtom(verifyJwtStore);
     const defaultStore = getDefaultStore();
     const [runStatus] = useAtom(runStatusStore);
     const lastWidthRef = React.useRef([8.2]);
     const runBtnGroupRef = React.useRef<HTMLDivElement>(
         undefined,
     ) as React.RefObject<HTMLDivElement>;
-    const needsVerification = useBuildNeedsVerification();
     const buildingWith = useAtomValue(buildingWithStore);
     const downloadProgress = useAtomValue(browserCompilerProgressStore);
-    const verifying = needsVerification && !jwt;
+    // Only once a server build waits for Turnstile; pressing stops it.
+    const verifying = runStatus === "building" && !!buildingWith?.verifying;
     const downloading = runStatus === "building" && !!buildingWith?.downloading;
-    // While building, pressing stops the build
-    const cantPress = verifying;
     const { t } = useTranslation(["editor"]);
     const [hasLoaded, setHasLoaded] = React.useState(false);
 
@@ -131,7 +118,7 @@ export function RunButton({
     return (
         <ButtonGroup className={className} ref={runBtnGroupRef}>
             <Tip
-                show={!cantPress}
+                show
                 content={
                     runStatus === "building" ? (
                         t("headerActions.stopBuilding")
@@ -156,9 +143,8 @@ export function RunButton({
                     }
                     className="relative overflow-hidden"
                     // style={{ maxWidth: `${buttonMaxWidth}rem` }}
-                    disabled={cantPress}
                     onClick={(e) => {
-                        if (cantPress) return;
+                        // While building, pressing stops the build
                         if (runStatus === "building") {
                             stopBuild();
                             return;
@@ -274,7 +260,7 @@ export function RunButton({
                                     : "outline"
                             }
                             className="p-1"
-                            disabled={cantPress || runStatus !== "idle"}
+                            disabled={runStatus !== "idle"}
                             aria-label={t("headerActions.runOptions")}
                             // asChild
                         >

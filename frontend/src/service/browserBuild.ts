@@ -9,6 +9,7 @@ import {
 } from "../compiler/toolchainCache";
 import type { BuildResult } from "./build";
 import { createBuildCache } from "./buildCache";
+import { failedBuild as failed } from "./buildResult";
 
 export const NOT_DOWNLOADED = -1;
 export const DOWNLOADED = 101;
@@ -28,14 +29,6 @@ let nextJobId = 0;
 // Ends the compile running in the worker, if any.
 let stopJob: (() => void) | undefined;
 const cache = createBuildCache();
-
-const failed = (text: string, unavailable = true): BuildResult => ({
-    ok: false,
-    js_code: "",
-    wasm_url: "",
-    errors: [text],
-    unavailable,
-});
 
 /** What started a download, reported to PostHog. */
 export type DownloadTrigger = "build" | "background" | "settings";
@@ -80,6 +73,9 @@ export function downloadBrowserCompiler(
         const started = performance.now();
         let bytes = 0;
         let fileCount = 0;
+        // One failed file ends the others, which would otherwise keep
+        // reporting progress over the reset below.
+        const abort = new AbortController();
         try {
             const base = toolchainBase();
             const cache = await openToolchainCache();
@@ -88,7 +84,9 @@ export function downloadBrowserCompiler(
                 TOOLCHAIN_FILES.map(async (name) => {
                     const url = base + name;
                     if (await cache?.match(url)) return null;
-                    const response = await fetch(url);
+                    const response = await fetch(url, {
+                        signal: abort.signal,
+                    });
                     if (!response.ok || !response.body)
                         throw new Error(
                             `Toolchain download failed (${response.status}): ${url}`,
@@ -106,6 +104,7 @@ export function downloadBrowserCompiler(
                 : files.length;
             let done = 0;
             const report = () =>
+                !abort.signal.aborted &&
                 store.set(
                     browserCompilerProgressStore,
                     total ? Math.min(100, Math.floor((done * 100) / total)) : 0,
@@ -150,6 +149,7 @@ export function downloadBrowserCompiler(
             });
             return true;
         } catch (error) {
+            abort.abort();
             console.error("In-browser compiler download failed:", error);
             store.set(browserCompilerProgressStore, NOT_DOWNLOADED);
             capture("browser_compiler_download", {
@@ -259,7 +259,7 @@ function compileInWorker(source: string, std: string): Promise<BuildResult> {
         };
         const message = ({ data }: MessageEvent) => {
             if (data.id !== id) return;
-            // reset: the toolchain failed to load, not the code to compile
+            // reset: the compiler itself failed, not the code to compile
             if (data.reset) discard();
             finish({
                 ok: data.ok,

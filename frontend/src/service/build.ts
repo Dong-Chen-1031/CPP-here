@@ -1,6 +1,5 @@
 import { PUBLIC_LOCAL_COMPILER } from "astro:env/client";
-import { atom, getDefaultStore, useAtomValue, type Getter } from "jotai";
-import { useEffect, useState } from "react";
+import { atom, getDefaultStore, type Getter } from "jotai";
 import i18next from "i18next";
 import {
     compilerFlagStore,
@@ -13,7 +12,10 @@ import {
     verifyJwtStore,
 } from "@/store/atom";
 import { addAlert } from "@/lib/alert";
+import { waitForJwt } from "@/lib/axiosInstance";
+import { openToolchainCache } from "@/compiler/toolchainCache";
 import { serverBuild } from "./serverBuild";
+import { failedBuild } from "./buildResult";
 import {
     DOWNLOADED,
     NOT_DOWNLOADED,
@@ -46,12 +48,16 @@ export interface BuildResult {
     cancelled?: boolean;
     /** The compiler that produced this result. */
     target?: BuildTarget;
+    /** Auto mode tried the other compiler too. */
+    triedBoth?: boolean;
 }
 
 /** The compiler the current build uses; null while not building. */
 export const buildingWithStore = atom<{
     target: BuildTarget;
     downloading: boolean;
+    /** Waiting for Turnstile to verify before building on the server. */
+    verifying?: boolean;
     /** Set when `target` stands in for this compiler, which could not be used. */
     fallbackFrom?: BuildTarget;
 } | null>(null);
@@ -63,6 +69,32 @@ const get: Getter = (anAtom) => store.get(anAtom);
 const BACKGROUND_DOWNLOAD_DELAY_MS = 10_000;
 // An in-browser compile slower than this suggests the server instead.
 const SLOW_BUILD_MS = 7_000;
+// How long auto mode leaves a failed server alone before trying it again.
+const SERVER_RETRY_MS = 60_000;
+
+let serverRetryTimer: ReturnType<typeof setTimeout> | undefined;
+
+function setServerUnavailable(unavailable: boolean) {
+    clearTimeout(serverRetryTimer);
+    store.set(serverUnavailableStore, unavailable);
+    if (!unavailable) return;
+    serverRetryTimer = setTimeout(
+        () => store.set(serverUnavailableStore, false),
+        SERVER_RETRY_MS,
+    );
+}
+
+/** The in-browser compiler has no C++ exceptions; the server has them. */
+function needsExceptions(result: BuildResult) {
+    return (
+        result.target === "browser" &&
+        !result.ok &&
+        !result.unavailable &&
+        result.errors.some((error) =>
+            error.includes("with exceptions disabled"),
+        )
+    );
+}
 
 /**
  * Shipped (PUBLIC_LOCAL_COMPILER), not hidden by the compiler-menu flag, and
@@ -133,49 +165,32 @@ function chooseTarget(getter: Getter): BuildTarget {
         : "server";
 }
 
-/**
- * The next build goes to the server, which needs a verified token. Not once
- * the server is known to be unavailable: the build then fails at once with a
- * way out instead of the button waiting for a token that may never come.
- */
-export const buildNeedsVerificationStore = atom(
-    (getter) =>
-        chooseTarget(getter) === "server" && !getter(serverUnavailableStore),
-);
-
-/**
- * Whether the next build needs a verified token. True until hydrated: the
- * server cannot see the setting or the device, and React keeps a mismatched
- * attribute such as `disabled` from the server HTML.
- */
-export function useBuildNeedsVerification() {
-    const needsVerification = useAtomValue(buildNeedsVerificationStore);
-    const [hydrated, setHydrated] = useState(false);
-    useEffect(() => setHydrated(true), []);
-    return !hydrated || needsVerification;
-}
-
 // One failed background download is reported; retrying after every build
 // would repeat the same message.
 let backgroundDownloadFailed = false;
 
 function downloadInBackground() {
-    if (
-        backgroundDownloadFailed ||
-        effectiveCompilerMode() !== "auto" ||
-        store.get(browserCompilerProgressStore) !== NOT_DOWNLOADED ||
-        !canDownloadInBackground()
-    )
-        return;
-    void downloadBrowserCompiler("background").then((downloaded) => {
-        if (downloaded) return;
-        backgroundDownloadFailed = true;
-        addAlert({
-            title: i18next.t("editor:compiler.backgroundDownloadFailedTitle"),
-            description: i18next.t(
-                "editor:compiler.backgroundDownloadFailedDescription",
-            ),
-        });
+    tryDownloadInBackground().catch((error) =>
+        console.error("Background download failed:", error),
+    );
+}
+
+async function tryDownloadInBackground() {
+    const ready = () =>
+        !backgroundDownloadFailed &&
+        effectiveCompilerMode() === "auto" &&
+        store.get(browserCompilerProgressStore) === NOT_DOWNLOADED;
+    if (!ready() || !canDownloadInBackground()) return;
+    // Without Cache Storage (insecure origins, some private windows) nothing
+    // would be kept: every page load would download it again.
+    if (!(await openToolchainCache()) || !ready()) return;
+    if (await downloadBrowserCompiler("background")) return;
+    backgroundDownloadFailed = true;
+    addAlert({
+        title: i18next.t("editor:compiler.backgroundDownloadFailedTitle"),
+        description: i18next.t(
+            "editor:compiler.backgroundDownloadFailedDescription",
+        ),
     });
 }
 
@@ -253,13 +268,7 @@ async function buildInBrowser(
         leaveDownload = undefined;
         if (downloaded === null) return null;
         if (!downloaded)
-            return {
-                ok: false,
-                js_code: "",
-                wasm_url: "",
-                errors: [i18next.t("editor:compiler.downloadFailed")],
-                unavailable: true,
-            };
+            return failedBuild(i18next.t("editor:compiler.downloadFailed"));
         store.set(buildingWithStore, {
             target: "browser",
             downloading: false,
@@ -279,22 +288,27 @@ async function buildWith(
 ): Promise<BuildResult | null> {
     let result: BuildResult | null;
     if (target === "server") {
+        const verifying = !store.get(verifyJwtStore);
         store.set(buildingWithStore, {
             target,
             downloading: false,
+            verifying,
             fallbackFrom,
         });
-        result =
-            !store.get(verifyJwtStore) && store.get(serverUnavailableStore)
-                ? {
-                      ok: false,
-                      js_code: "",
-                      wasm_url: "",
-                      errors: [i18next.t("editor:compiler.serverUnreachable")],
-                      unavailable: true,
-                  }
-                : // The request cannot be withdrawn; its answer is ignored.
-                  await Promise.race([serverBuild(code, cppVersion), stop]);
+        // null: stopped while verifying
+        const jwt = verifying ? await Promise.race([waitForJwt(), stop]) : true;
+        if (jwt === null) return null;
+        if (verifying)
+            store.set(buildingWithStore, {
+                target,
+                downloading: false,
+                fallbackFrom,
+            });
+        result = !jwt
+            ? failedBuild(i18next.t("editor:run.verificationFailed"))
+            : // The request cannot be withdrawn; its answer is ignored.
+              await Promise.race([serverBuild(code, cppVersion), stop]);
+        if (result) setServerUnavailable(!!result.unavailable);
     } else {
         result = await buildInBrowser(
             code,
@@ -353,12 +367,10 @@ export async function build(
             // Left the download: now in auto mode, choose again.
             if (!result) continue;
             if (
-                result.unavailable &&
+                (result.unavailable || needsExceptions(result)) &&
                 !target &&
                 effectiveCompilerMode() === "auto"
             ) {
-                if (chosen === "server")
-                    store.set(serverUnavailableStore, true);
                 const other = chosen === "server" ? "browser" : "server";
                 if (other === "browser" || !store.get(serverUnavailableStore)) {
                     const failed = chosen;
@@ -372,7 +384,20 @@ export async function build(
                         failed,
                     );
                     if (stopped || fallback?.cancelled) return cancelled();
-                    result = fallback ?? result;
+                    if (fallback?.unavailable && result.unavailable)
+                        // Neither works: show why for both.
+                        result = {
+                            ...fallback,
+                            errors: [
+                                ...labelErrors(result),
+                                ...labelErrors(fallback),
+                            ],
+                            triedBoth: true,
+                        };
+                    // Otherwise keep a compile error over an unusable
+                    // fallback; suggestOtherCompiler then still offers it.
+                    else if (fallback && !fallback.unavailable)
+                        result = { ...fallback, triedBoth: true };
                 }
             }
             if (result.target === "server" && !result.unavailable)
@@ -384,18 +409,17 @@ export async function build(
     } catch (error) {
         // Callers show a failed result; a rejection would go unnoticed.
         console.error("Build failed unexpectedly:", error);
-        return {
-            ok: false,
-            js_code: "",
-            wasm_url: "",
-            errors: [String(error)],
-            unavailable: true,
-            target: chosen,
-        };
+        return { ...failedBuild(String(error)), target: chosen };
     } finally {
         if (cancelCurrent === cancel) cancelCurrent = undefined;
         store.set(buildingWithStore, null);
     }
+}
+
+/** Prefixes each error with the compiler that reported it. */
+function labelErrors(result: BuildResult) {
+    const name = i18next.t(`editor:settings.compilerMode.${result.target}`);
+    return result.errors.filter(Boolean).map((error) => `${name}: ${error}`);
 }
 
 let cancelCurrent: (() => void) | undefined;
@@ -429,11 +453,11 @@ export function suggestOtherCompiler(
     result: BuildResult,
     retry: (target?: BuildTarget) => void,
 ) {
-    if (!browserCompilerAvailable() || !result.target) return;
+    if (!browserCompilerAvailable() || !result.target || result.triedBoth)
+        return;
     const t = i18next.t;
     if (!result.unavailable) {
-        // The in-browser compiler lacks C++ exceptions, which the server has.
-        if (result.target === "browser")
+        if (needsExceptions(result))
             addAlert({
                 title: t("editor:compiler.clangFailedTitle"),
                 description: t("editor:compiler.clangFailedDescription"),
@@ -449,8 +473,20 @@ export function suggestOtherCompiler(
         store.set(compilerModeStore, mode);
         retry();
     };
-    // Auto mode has already tried both.
-    if (effectiveCompilerMode() === "auto") return;
+    if (effectiveCompilerMode() === "auto") {
+        // Auto mode skipped a server that failed a moment ago; it may be back.
+        if (result.target === "browser")
+            addAlert({
+                title: t("editor:compiler.browserUnavailableTitle"),
+                description: t("editor:compiler.serverSkippedDescription"),
+                action: {
+                    text: t("editor:compiler.retryOnServer"),
+                    onClick: () => retry("server"),
+                },
+                duration: 10_000,
+            });
+        return;
+    }
     const other: BuildTarget =
         result.target === "browser" ? "server" : "browser";
     store.set(alertDialogStore, {

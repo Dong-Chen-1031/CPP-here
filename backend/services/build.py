@@ -32,9 +32,12 @@ tracer = trace.get_tracer(__name__)
 
 
 class BuildError(Exception):
-    def __init__(self, msg: str, build_logs: str = ""):
+    def __init__(self, msg: str, build_logs: str = "", server_fault: bool = False):
         super().__init__(msg)
         self.build_logs = build_logs
+        # The server could not build, whatever the code: the frontend may then
+        # try another compiler instead of showing a compile error.
+        self.server_fault = server_fault
 
 
 class ContainerPool:
@@ -414,4 +417,6 @@ async def build(
 
     except DockerError as e:
         logger.error(f"Docker error during build (status {e.status}): {e}")
-        raise BuildError("Build failed due to Docker error.", build_logs=output) from e
+        raise BuildError(
+            "Build failed due to Docker error.", build_logs=output, server_fault=True
+        ) from e

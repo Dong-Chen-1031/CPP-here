@@ -13,6 +13,8 @@ const ResponseSchema = z.object({
     wasm_url: z.string(),
     errors: z.array(z.string()),
     ok: z.boolean(),
+    // The builder node failed for a reason other than the code
+    unavailable: z.boolean().optional(),
 });
 
 const FORWARD_HEADERS = [
@@ -92,12 +94,15 @@ export const buildAPI = makeAPI({
         }
         const data = parsed.data;
 
-        return reply({
-            js_code: data.js_code,
-            wasm_url: data.wasm_url,
-            errors: data.errors || [],
-            ok: data.ok,
-        });
+        return reply(
+            {
+                js_code: data.js_code,
+                wasm_url: data.wasm_url,
+                errors: data.errors || [],
+                ok: data.ok,
+            },
+            { success: !data.unavailable },
+        );
     },
 });
 

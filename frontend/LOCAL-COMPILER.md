@@ -100,7 +100,8 @@ exceptions, `setjmp`/`longjmp` or signals (WASI preview 1).
 ## Generated assets
 
 `npm run toolchain` (in `frontend`) writes
-`public/toolchain/<id>/`, ignored by Git:
+`public/toolchain/<id>/`, ignored by Git. `dev`, `build` and `deploy` run it
+first while PUBLIC_LOCAL_COMPILER is on (the first time takes a few minutes):
 
 | File                                                                                                                 | Size                                          |
 | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
@@ -173,7 +174,6 @@ Not yet measured on phones, Safari or Firefox.
   (eight entries) does not survive a reload.
 - `bundle.js` is imported by URL, so it comes from the HTTP cache, not Cache
   Storage.
-- Compiler timeout is 180 seconds after the download, and compiling cannot be
-  cancelled from the UI.
+- Compiler timeout is 180 seconds after the download.
 - Browsers without `DecompressionStream` (Safari before 16.4) get an error
   asking them to update.

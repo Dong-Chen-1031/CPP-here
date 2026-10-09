@@ -3,6 +3,7 @@ import { callAPI, isAuthError } from "@/lib/axiosInstance";
 import type { buildAPI } from "@/pages/api/build";
 import type { BuildResult } from "./build";
 import { createBuildCache } from "./buildCache";
+import { failedBuild } from "./buildResult";
 
 // Its wasm_url stays valid: the builder node keeps a build for days after
 // its last use.
@@ -19,22 +20,33 @@ export async function serverBuild(
             code,
             cppVersion,
         });
-        // success is false when the builder node failed, not the code
-        const result = { ...response, unavailable: !response.success };
-        if (response.success) cache.set(code, cppVersion, result);
+        // Anything but a build result (a misconfigured PUBLIC_API_URL serving
+        // HTML, a proxy page) means the server cannot be used.
+        if (typeof response?.ok !== "boolean")
+            return failedBuild(
+                i18next.t("editor:compiler.serverInvalidResponse"),
+            );
+        // The builder failed, not the code: success is false from the
+        // Cloudflare API, unavailable is set by the Python backend (Docker,
+        // static builds), which leaves success out.
+        const unavailable =
+            response.success === false ||
+            (response as { unavailable?: unknown }).unavailable === true;
+        const result: BuildResult = {
+            ok: response.ok,
+            js_code: response.js_code ?? "",
+            wasm_url: response.wasm_url ?? "",
+            errors: response.errors ?? [],
+            unavailable,
+        };
+        if (!unavailable) cache.set(code, cppVersion, result);
         return result;
     } catch (error) {
         console.error("Error during build request:", error);
-        return {
-            ok: false,
-            js_code: "",
-            wasm_url: "",
-            errors: [
-                isAuthError(error)
-                    ? i18next.t("editor:run.verificationFailed")
-                    : String(error),
-            ],
-            unavailable: true,
-        };
+        return failedBuild(
+            isAuthError(error)
+                ? i18next.t("editor:run.verificationFailed")
+                : String(error),
+        );
     }
 }
