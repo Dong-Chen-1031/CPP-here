@@ -1,0 +1,39 @@
+{
+  "url": "https://oj.ntucpc.org/problems/2",
+  "parser": "TIOJProblemParser",
+  "result": {
+    "name": "2. 苦無出鹿",
+    "group": "NTUCPC OJ",
+    "url": "https://oj.ntucpc.org/problems/2",
+    "interactive": false,
+    "memoryLimit": 512,
+    "timeLimit": 6000,
+    "tests": [
+      {
+        "input": "2\n????\n",
+        "output": "12\n"
+      },
+      {
+        "input": "3\n??YP?G\n",
+        "output": "4\n"
+      },
+      {
+        "input": "5\nYGYPRGYPYG\n",
+        "output": "0\n"
+      }
+    ],
+    "testType": "single",
+    "input": {
+      "type": "stdin"
+    },
+    "output": {
+      "type": "stdout"
+    },
+    "languages": {
+      "java": {
+        "mainClass": "Main",
+        "taskClass": "Task"
+      }
+    }
+  }
+}

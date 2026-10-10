@@ -1,18 +1,9 @@
 import { Button } from "@/components/ui/button";
-import {
-    CirclePlus,
-    TestTubes,
-    Trash,
-    Pencil,
-    Play,
-    CircleCheckBig,
-} from "lucide-react";
-import { useEffect } from "react";
+import { CirclePlus, TestTubes, Trash, Pencil, Play } from "lucide-react";
 
 import Tip from "../ui/tips";
-import { getDefaultStore, useAtom } from "jotai";
+import { useAtom } from "jotai";
 import {
-    alertDialogStore,
     inputStore,
     panelDrawerStore,
     runStatusStore,
@@ -24,75 +15,6 @@ import { cn, randomId, useIsMobile } from "@/lib/utils";
 import { handleRun } from "@/service/run";
 import { useTranslation } from "react-i18next";
 import TestEditDialog from "./TestEditDialog";
-import { addAlert } from "@/lib/alert";
-import { z } from "zod";
-
-interface Test {
-    input: string;
-    output: string;
-}
-enum TestType {
-    Single = "single",
-    MultiNumber = "multiNumber",
-}
-
-interface OutputConfiguration {
-    type: "stdout" | "file";
-    fileName?: string;
-}
-
-interface LanguageConfiguration {
-    java: JavaConfiguration;
-}
-
-interface JavaConfiguration {
-    mainClass: string;
-    taskClass: string;
-}
-
-interface InputConfiguration {
-    type: "stdin" | "file" | "regex";
-    fileName?: string;
-    pattern?: string;
-}
-
-interface OutputConfiguration {
-    type: "stdout" | "file";
-    fileName?: string;
-}
-interface Batch {
-    id: string;
-    size: number;
-}
-
-interface extTestCase {
-    name: string;
-    group: string;
-    url: string;
-    interactive: boolean;
-    memoryLimit: number;
-    timeLimit: number;
-    tests: Test[];
-    testType: TestType;
-    input: InputConfiguration;
-    output: OutputConfiguration;
-    languages: LanguageConfiguration;
-    batch: Batch;
-}
-
-/**
- * The "ext" event can be dispatched by anything running on the page, so only
- * the fields we actually consume are trusted — and only after validation.
- */
-const ExtEventSchema = z.object({
-    name: z.string(),
-    tests: z.array(
-        z.object({
-            input: z.string(),
-            output: z.string(),
-        }),
-    ),
-});
 
 export default function TestCasePanel({
     drawer = false,
@@ -102,130 +24,12 @@ export default function TestCasePanel({
     const [, setInput] = useAtom(inputStore);
     const [testCases, setTestCases] = useAtom(testCasesStore);
     const [, setPanel] = useAtom(panelDrawerStore);
-    const [, setAlertDialog] = useAtom(alertDialogStore);
     const isMobile = useIsMobile();
     const { t } = useTranslation(["editor", "common"]);
-    const defaultStore = getDefaultStore();
 
     const [runStatus] = useAtom(runStatusStore);
     const [, setTestCaseEditArgs] = useAtom(testCaseEditStore);
 
-    useEffect(() => {
-        const handleExtEvent = (event: Event) => {
-            const testCases = defaultStore.get(testCasesStore);
-            const alertDialogDescription = t(
-                "testCase.extension.alertDialog.description",
-                {
-                    problemName: "||||",
-                },
-            ).split("||||");
-            const parsed = ExtEventSchema.safeParse(
-                (event as CustomEvent<extTestCase>).detail,
-            );
-            if (!parsed.success) {
-                console.warn(
-                    "Ignoring malformed ext event",
-                    parsed.error.issues,
-                );
-                return;
-            }
-            const testCaseData = parsed.data;
-            const testCasesFromExtension: TestCase[] = testCaseData.tests.map(
-                (test, index) => ({
-                    id: randomId(),
-                    name: t("testCase.extension.caseName", {
-                        problemName: testCaseData.name,
-                        index: index + 1,
-                    }),
-                    input: test.input,
-                    expectedOutput: test.output,
-                }),
-            );
-            console.log("Received ext event with payload:", testCaseData);
-            // console.log(testCases);
-            if (testCases.length === 0) {
-                setTestCases(testCasesFromExtension);
-                window.posthog?.capture("extension_test_cases_imported", {
-                    test_case_count: testCasesFromExtension.length,
-                    problem_name: testCaseData.name,
-                    mode: "overwrite",
-                });
-                addAlert({
-                    title: t("testCase.extension.alert.title"),
-                    description: t("testCase.extension.alert.description", {
-                        problemName: testCaseData.name,
-                    }),
-                    icon: <CircleCheckBig className="w-4 h-4" />,
-                });
-                if (isMobile) {
-                    setPanel("testCases");
-                }
-                return;
-            }
-            setAlertDialog({
-                title: t("testCase.extension.alertDialog.title"),
-                descriptionNode: (
-                    <>
-                        {alertDialogDescription[0]}
-                        <code>{testCaseData.name}</code>
-                        {alertDialogDescription[1]}
-                    </>
-                ),
-                actions: [
-                    {
-                        text: t("testCase.extension.alertDialog.overwrite"),
-                        onClick: () => {
-                            setTestCases(testCasesFromExtension);
-                            window.posthog?.capture(
-                                "extension_test_cases_imported",
-                                {
-                                    test_case_count:
-                                        testCasesFromExtension.length,
-                                    problem_name: testCaseData.name,
-                                    mode: "overwrite",
-                                },
-                            );
-                            if (isMobile) {
-                                setPanel("testCases");
-                            }
-                        },
-                    },
-                    {
-                        text: t("testCase.extension.alertDialog.insert"),
-                        autoFocus: true,
-                        onClick: () => {
-                            setTestCases((prev) => [
-                                ...testCasesFromExtension,
-                                ...prev,
-                            ]);
-                            window.posthog?.capture(
-                                "extension_test_cases_imported",
-                                {
-                                    test_case_count:
-                                        testCasesFromExtension.length,
-                                    problem_name: testCaseData.name,
-                                    mode: "insert",
-                                },
-                            );
-                            if (isMobile) {
-                                setPanel("testCases");
-                            }
-                        },
-                    },
-                ],
-                cancelText: t("testCase.extension.alertDialog.cancel"),
-            });
-        };
-        window.addEventListener("ext", handleExtEvent);
-
-        // this is used by the extension to check if the event listener is loaded
-        // don't remove this or the extension won't work
-        // @ts-ignore
-        window.eventListenerLoaded = true;
-        return () => {
-            window.removeEventListener("ext", handleExtEvent);
-        };
-    }, []);
     function handleAddTestCase(name: string, input: string, expected: string) {
         const newTestCase: TestCase = {
             id: randomId(),

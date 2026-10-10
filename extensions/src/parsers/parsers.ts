@@ -43,12 +43,14 @@ import { QDUOJContestParser } from './contest/QDUOJContestParser';
 import { RoboContestContestParser } from './contest/RoboContestContestParser';
 import { SeriousOJContestParser } from './contest/SeriousOJContestParser';
 import { TimusOnlineJudgeContestParser } from './contest/TimusOnlineJudgeContestParser';
+import { TIOJContestParser } from './contest/TIOJContestParser';
 import { TLXContestParser } from './contest/TLXContestParser';
 import { UniversalCupContestParser } from './contest/UniversalCupContestParser';
 import { UOJContestParser } from './contest/UOJContestParser';
 import { VirtualJudgeContestParser } from './contest/VirtualJudgeContestParser';
 import { YandexContestParser } from './contest/YandexContestParser';
 import { YukicoderContestParser } from './contest/YukicoderContestParser';
+import { ZeroJudgeContestParser } from './contest/ZeroJudgeContestParser';
 import { ZUFEOJContestParser } from './contest/ZUFEOJContestParser';
 import { Parser } from './Parser';
 import { A2OnlineJudgeProblemParser } from './problem/A2OnlineJudgeProblemParser';
@@ -144,6 +146,7 @@ import { SSOIERProblemParser } from './problem/SSOIERProblemParser';
 import { StarryCodingProblemParser } from './problem/StarryCodingProblemParser';
 import { TheJobOverflowProblemParser } from './problem/TheJobOverflowProblemParser';
 import { TimusOnlineJudgeProblemParser } from './problem/TimusOnlineJudgeProblemParser';
+import { TIOJProblemParser } from './problem/TIOJProblemParser';
 import { TLXProblemParser } from './problem/TLXProblemParser';
 import { TophProblemParser } from './problem/TophProblemParser';
 import { UDebugProblemParser } from './problem/UDebugProblemParser';
@@ -158,6 +161,7 @@ import { XXMProblemParser } from './problem/XXMProblemParser';
 import { YACSProblemParser } from './problem/YACSProblemParser';
 import { YandexProblemParser } from './problem/YandexProblemParser';
 import { YukicoderProblemParser } from './problem/YukicoderProblemParser';
+import { ZeroJudgeProblemParser } from './problem/ZeroJudgeProblemParser';
 import { ZOJProblemParser } from './problem/ZOJProblemParser';
 import { ZUFEOJProblemParser } from './problem/ZUFEOJProblemParser';
 
@@ -388,6 +392,9 @@ export const parsers: Parser[] = [
   new TimusOnlineJudgeProblemParser(),
   new TimusOnlineJudgeContestParser(),
 
+  new TIOJProblemParser(),
+  new TIOJContestParser(),
+
   new TLXProblemParser(),
   new TLXContestParser(),
 
@@ -420,6 +427,9 @@ export const parsers: Parser[] = [
 
   new YukicoderProblemParser(),
   new YukicoderContestParser(),
+
+  new ZeroJudgeProblemParser(),
+  new ZeroJudgeContestParser(),
 
   new ZOJProblemParser(),
 

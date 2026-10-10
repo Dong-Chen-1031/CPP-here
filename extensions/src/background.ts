@@ -1,18 +1,19 @@
 import type { Menus, Runtime, Tabs } from 'webextension-polyfill';
-import { getHosts } from './hosts/hosts';
 import { Message, MessageAction } from './models/messaging';
 import { browser } from './utils/browser';
-import { noop } from './utils/noop';
-import { sendToContent } from './utils/messaging';
-import { request, requiredPermissions } from './utils/request';
 import { config } from './utils/config';
+import { sendToContent } from './utils/messaging';
+import { noop } from './utils/noop';
+import { request, requiredPermissions } from './utils/request';
+import { checkTargetUrl, DEFAULT_TARGET_URL, TargetUrl } from './utils/target';
 
 declare global {
   const PARSER_NAMES: string[];
 }
 
-const DEFAULT_TARGET_URL = 'https://cpp.doong.me/editor/*';
-let targetPermissionPattern = DEFAULT_TARGET_URL;
+// permissions.request() only works synchronously within the click's user gesture, so the configured target URL is
+// kept in memory instead of being read from storage when the toolbar button is clicked
+let targetUrlSetting = DEFAULT_TARGET_URL;
 
 function createContextMenu(): void {
   browser.contextMenus.create({
@@ -72,118 +73,232 @@ async function loadContentScript(tab: Tabs.Tab, parserName: string): Promise<voi
   sendToContent(tab.id, MessageAction.Parse, { parserName });
 }
 
+/**
+ * Shows an error on the problem page. Errors thrown before the content script is loaded would otherwise only appear
+ * in the background console, so clicking the toolbar button would seem to do nothing.
+ */
+async function showErrorOnTab(tabId: number, message: string): Promise<void> {
+  console.error(message);
+
+  try {
+    await browser.scripting.executeScript({
+      target: { tabId },
+      args: [message],
+      func: (errorMessage: string): void => {
+        alert(errorMessage);
+      },
+    });
+  } catch {
+    // Pages the extension can't script, like the browser's own pages; the console error above is all we can do
+  }
+}
+
+function parseTab(tab: Tabs.Tab, parserName: string): void {
+  loadContentScript(tab, parserName).catch(err => {
+    const message = err instanceof Error ? err.message : `${err}`;
+    void showErrorOnTab(tab.id, `C++ Here could not parse this page. ${message}`);
+  });
+}
+
 function onAction(tab: Tabs.Tab): void {
-  void loadContentScript(tab, null);
+  parseTab(tab, null);
 }
 
 function onContextMenu(info: Menus.OnClickData, tab: Tabs.Tab): void {
   if (info.menuItemId.toString().startsWith('parse-with-')) {
     const parserName = info.menuItemId.toString().split('parse-with-').pop();
-    void loadContentScript(tab, parserName);
+    parseTab(tab, parserName);
   }
+}
+
+const TAB_LOAD_TIMEOUT_MS = 30_000;
+const LISTENER_READY_TIMEOUT_MS = 30_000;
+
+/**
+ * Whether a tab has finished loading a real page. A new tab can first report 'complete' for its initial about:blank
+ * (Firefox does), so the URL is checked too; it is only visible because the extension has access to the target URL.
+ */
+function isTabLoaded(tab: Tabs.Tab): boolean {
+  return tab.status === 'complete' && tab.url !== undefined && tab.url !== 'about:blank';
 }
 
 function waitForTabLoad(tabId: number): Promise<void> {
-  return new Promise(resolve => {
-    browser.tabs.get(tabId).then(tab => {
-      if (tab.status === 'complete') {
+  return new Promise((resolve, reject) => {
+    const cleanup = (): void => {
+      clearTimeout(timeout);
+      browser.tabs.onUpdated.removeListener(onUpdated);
+      browser.tabs.onRemoved.removeListener(onRemoved);
+    };
+
+    const onUpdated = (updatedTabId: number, _changeInfo: Tabs.OnUpdatedChangeInfoType, tab: Tabs.Tab): void => {
+      if (updatedTabId === tabId && isTabLoaded(tab)) {
+        cleanup();
         resolve();
-      } else {
-        const listener = (updatedTabId: number, changeInfo: any) => {
-          if (updatedTabId === tabId && changeInfo.status === 'complete') {
-            browser.tabs.onUpdated.removeListener(listener);
-            resolve();
-          }
-        };
-        browser.tabs.onUpdated.addListener(listener);
       }
-    });
+    };
+
+    const onRemoved = (removedTabId: number): void => {
+      if (removedTabId === tabId) {
+        cleanup();
+        reject(new Error('The C++ Here tab was closed before it finished loading.'));
+      }
+    };
+
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error(`The C++ Here tab did not finish loading within ${TAB_LOAD_TIMEOUT_MS / 1000} seconds.`));
+    }, TAB_LOAD_TIMEOUT_MS);
+
+    // Listen before checking the current status so a load that completes in between is not missed
+    browser.tabs.onUpdated.addListener(onUpdated);
+    browser.tabs.onRemoved.addListener(onRemoved);
+
+    browser.tabs.get(tabId).then(
+      tab => {
+        if (isTabLoaded(tab)) {
+          cleanup();
+          resolve();
+        }
+      },
+      err => {
+        cleanup();
+        reject(err);
+      },
+    );
   });
 }
 
-async function dispatchExtEvent(tabId: number, payload: unknown): Promise<void> {
-  await browser.scripting.executeScript({
-    target: { tabId },
-    args: [payload],
-    world: 'MAIN',
-    func: injectedPayload => {
-      function waitForEventListener(): Promise<void> {
-        return new Promise(resolve => {
-          if ((window as any).eventListenerLoaded) {
-            resolve();
-          } else {
-            const checkInterval = setInterval(() => {
-              // console.log(window.eventListenerLoaded);
-              if ((window as any).eventListenerLoaded) {
-                clearInterval(checkInterval);
-                resolve();
-              }
-            }, 50);
-          }
-        });
-      }
+type DispatchResult = 'delivered' | 'rejected' | 'timeout';
 
-      waitForEventListener().then(() => {
-        console.log('Dispatching ext event with payload:', injectedPayload);
-        window.dispatchEvent(new CustomEvent('ext', { detail: injectedPayload }));
+async function dispatchExtEvent(tabId: number, payload: unknown): Promise<void> {
+  // The injected function returns a promise, which executeScript waits for before resolving
+  const [injection] = await browser.scripting.executeScript({
+    target: { tabId },
+    args: [payload, LISTENER_READY_TIMEOUT_MS],
+    world: 'MAIN',
+    func: (injectedPayload: unknown, timeoutMs: number): Promise<DispatchResult> => {
+      const dispatch = (): DispatchResult => {
+        const event = new CustomEvent('ext', { detail: injectedPayload, cancelable: true });
+        // The editor calls preventDefault() once it has accepted the payload,
+        // which makes dispatchEvent() return false
+        return window.dispatchEvent(event) ? 'rejected' : 'delivered';
+      };
+
+      return new Promise(resolve => {
+        const startTime = Date.now();
+
+        // Returns whether polling is done
+        const check = (): boolean => {
+          if ((window as any).eventListenerLoaded) {
+            resolve(dispatch());
+            return true;
+          }
+          if (Date.now() - startTime > timeoutMs) {
+            resolve('timeout');
+            return true;
+          }
+          return false;
+        };
+
+        if (!check()) {
+          const checkInterval = setInterval(() => {
+            if (check()) {
+              clearInterval(checkInterval);
+            }
+          }, 50);
+        }
       });
     },
   });
+
+  const result = injection?.result as DispatchResult | undefined;
+
+  if (result === 'delivered') {
+    return;
+  }
+
+  if (result === 'rejected') {
+    throw new Error('The C++ Here editor did not accept the problem data. Try reloading the editor tab.');
+  }
+
+  if (result === 'timeout') {
+    throw new Error(
+      `The C++ Here editor was not ready within ${LISTENER_READY_TIMEOUT_MS / 1000} seconds. Make sure the editor tab has finished loading and try again.`,
+    );
+  }
+
+  throw new Error('Could not send the problem data to the C++ Here editor tab.');
 }
 
-function normalizeTargetUrl(rawTargetUrl: string): { pattern: string; entry: string } {
-  const trimmed = rawTargetUrl.trim();
-  const fallback = DEFAULT_TARGET_URL;
-  const candidate = trimmed.length > 0 ? trimmed : fallback;
+function getTargetUrl(targetUrl: string): TargetUrl {
+  const target = checkTargetUrl(targetUrl);
 
-  const entry = candidate.endsWith('/*') ? candidate.slice(0, -1) : candidate;
-  const pattern = entry.endsWith('/*') ? entry : `${entry.replace(/\/$/, '')}/*`;
+  if ('error' in target) {
+    throw new Error(`${target.error} Change the target URL in the C++ Here extension options.`);
+  }
 
-  return { pattern, entry: entry.replace(/\/$/, '') + '/' };
+  return target;
 }
 
 async function ensurePermissionsOnGesture(origins: string[]): Promise<void> {
-  const combinedOrigins = [...new Set([...origins, targetPermissionPattern])];
+  // Must not await anything before permissions.request(), or the user gesture is lost
+  const combinedOrigins = [...new Set([...origins, getTargetUrl(targetUrlSetting).pattern])];
   const granted = await browser.permissions.request({ origins: combinedOrigins });
 
   if (!granted) {
-    throw new Error(`User denied host permissions for ${combinedOrigins.join(', ')}`);
+    throw new Error(
+      `C++ Here needs access to ${combinedOrigins.join(', ')} to send problems to the editor. Click the button again and allow access.`,
+    );
   }
 }
 
-async function refreshTargetPermissionPattern(): Promise<void> {
-  const configuredTargetUrl = await config.get('targetUrl');
-  targetPermissionPattern = normalizeTargetUrl(configuredTargetUrl).pattern;
+async function refreshTargetUrlSetting(): Promise<void> {
+  targetUrlSetting = await config.get('targetUrl');
 }
 
-void refreshTargetPermissionPattern().catch(noop);
+void refreshTargetUrlSetting().catch(noop);
+
+browser.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'local' && 'targetUrl' in changes) {
+    void refreshTargetUrlSetting().catch(noop);
+  }
+});
 
 async function sendTask(tabId: number, messageId: string, data: string): Promise<void> {
   try {
     const parsedData = JSON.parse(data);
-    const configuredTargetUrl = await config.get('targetUrl');
-    const { pattern: targetUrl, entry: targetEntry } = normalizeTargetUrl(configuredTargetUrl);
-    targetPermissionPattern = targetUrl;
+    targetUrlSetting = await config.get('targetUrl');
+    const { pattern: targetUrl, entry: targetEntry, origin: targetOrigin } = getTargetUrl(targetUrlSetting);
     const eventPayload = parsedData.eventPayload ?? parsedData;
+
+    // Without access, open editor tabs can't be found by URL or scripted, and their load can't be detected
+    if (!(await browser.permissions.contains({ origins: [targetUrl] }))) {
+      throw new Error(`C++ Here doesn't have access to ${targetUrl}. Click the button again and allow access.`);
+    }
 
     let targetTabId: number;
 
-    const tabs = await browser.tabs.query({ url: targetUrl });
+    // The pattern has no port, so it also matches editors served on other ports of the same host
+    const tabs = (await browser.tabs.query({ url: targetUrl })).filter(
+      tab => tab.url !== undefined && new URL(tab.url).origin === targetOrigin,
+    );
 
     if (tabs.length > 0) {
       targetTabId = tabs[0].id!;
 
       await browser.tabs.update(targetTabId, { active: true });
 
-      if (tabs[0].windowId) {
+      // Firefox for Android has no windows API
+      if (tabs[0].windowId && browser.windows) {
         await browser.windows.update(tabs[0].windowId, { focused: true });
       }
     } else {
       const newTab = await browser.tabs.create({ url: targetEntry, active: true });
       targetTabId = newTab.id!;
-
-      await waitForTabLoad(targetTabId);
     }
+
+    // An open tab may still be loading too, or reloading because activating it restored it from being discarded
+    await waitForTabLoad(targetTabId);
 
     await dispatchExtEvent(targetTabId, eventPayload);
 
@@ -239,6 +354,10 @@ async function handleMessage(message: Message | any, sender: Runtime.MessageSend
 }
 
 browser.action.onClicked.addListener(onAction);
-browser.contextMenus.onClicked.addListener(onContextMenu);
 browser.runtime.onMessage.addListener(handleMessage);
-browser.runtime.onInstalled.addListener(createContextMenu);
+
+// Firefox for Android has no context menus, so pages are always parsed with the parser that matches their URL there
+if (browser.contextMenus) {
+  browser.contextMenus.onClicked.addListener(onContextMenu);
+  browser.runtime.onInstalled.addListener(createContextMenu);
+}

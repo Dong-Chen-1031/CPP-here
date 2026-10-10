@@ -1,0 +1,153 @@
+{
+  "url": "https://iscoj.ckefgisc.org/contests/10",
+  "parser": "TIOJContestParser",
+  "result": [
+    {
+      "name": "4623. 水餃.pdf",
+      "group": "ISCOJ",
+      "url": "https://iscoj.ckefgisc.org/contests/10/problems/4623",
+      "interactive": false,
+      "memoryLimit": 64,
+      "timeLimit": 1000,
+      "tests": [
+        {
+          "input": "",
+          "output": "Hello, 2025 CKEFGISC summer camp!\n"
+        }
+      ],
+      "testType": "single",
+      "input": {
+        "type": "stdin"
+      },
+      "output": {
+        "type": "stdout"
+      },
+      "languages": {
+        "java": {
+          "mainClass": "Main",
+          "taskClass": "Pdf"
+        }
+      }
+    },
+    {
+      "name": "4624. 水餃睡覺",
+      "group": "ISCOJ",
+      "url": "https://iscoj.ckefgisc.org/contests/10/problems/4624",
+      "interactive": false,
+      "memoryLimit": 64,
+      "timeLimit": 1000,
+      "tests": [
+        {
+          "input": "-13 + 27\n",
+          "output": "14\n"
+        }
+      ],
+      "testType": "single",
+      "input": {
+        "type": "stdin"
+      },
+      "output": {
+        "type": "stdout"
+      },
+      "languages": {
+        "java": {
+          "mainClass": "Main",
+          "taskClass": "Task"
+        }
+      }
+    },
+    {
+      "name": "4625. 關於禮物",
+      "group": "ISCOJ",
+      "url": "https://iscoj.ckefgisc.org/contests/10/problems/4625",
+      "interactive": false,
+      "memoryLimit": 64,
+      "timeLimit": 1000,
+      "tests": [
+        {
+          "input": "13\n",
+          "output": "1101\n"
+        },
+        {
+          "input": "384149081\n",
+          "output": "10110111001011010011001011001\n"
+        }
+      ],
+      "testType": "single",
+      "input": {
+        "type": "stdin"
+      },
+      "output": {
+        "type": "stdout"
+      },
+      "languages": {
+        "java": {
+          "mainClass": "Main",
+          "taskClass": "Task"
+        }
+      }
+    },
+    {
+      "name": "4626. 圓周運動需要什麼力",
+      "group": "ISCOJ",
+      "url": "https://iscoj.ckefgisc.org/contests/10/problems/4626",
+      "interactive": false,
+      "memoryLimit": 64,
+      "timeLimit": 1000,
+      "tests": [
+        {
+          "input": "1 2 1\n",
+          "output": "-1 -1\n"
+        },
+        {
+          "input": "1 1 1\n",
+          "output": "Not for junior high school\n"
+        }
+      ],
+      "testType": "single",
+      "input": {
+        "type": "stdin"
+      },
+      "output": {
+        "type": "stdout"
+      },
+      "languages": {
+        "java": {
+          "mainClass": "Main",
+          "taskClass": "Task"
+        }
+      }
+    },
+    {
+      "name": "4627. 你有貓餅",
+      "group": "ISCOJ",
+      "url": "https://iscoj.ckefgisc.org/contests/10/problems/4627",
+      "interactive": false,
+      "memoryLimit": 64,
+      "timeLimit": 1000,
+      "tests": [
+        {
+          "input": "6\n",
+          "output": "even\n"
+        },
+        {
+          "input": "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111117\n",
+          "output": "odd\n"
+        }
+      ],
+      "testType": "single",
+      "input": {
+        "type": "stdin"
+      },
+      "output": {
+        "type": "stdout"
+      },
+      "languages": {
+        "java": {
+          "mainClass": "Main",
+          "taskClass": "Task"
+        }
+      }
+    }
+  ]
+}

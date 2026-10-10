@@ -1,0 +1,47 @@
+{
+  "url": "https://iscoj.ckefgisc.org/contests/11/problems/4630",
+  "parser": "TIOJProblemParser",
+  "result": {
+    "name": "4630. α：洗衣烘衣",
+    "group": "ISCOJ",
+    "url": "https://iscoj.ckefgisc.org/contests/11/problems/4630",
+    "interactive": false,
+    "memoryLimit": 64,
+    "timeLimit": 1000,
+    "tests": [
+      {
+        "input": "1\n",
+        "output": "0 winutes\nDirty\n"
+      },
+      {
+        "input": "2\n",
+        "output": "47 winutes\n100% wet\n"
+      },
+      {
+        "input": "3\n",
+        "output": "72 winutes\n60% wet\n"
+      },
+      {
+        "input": "4\n",
+        "output": "97 winutes\n20% wet\n"
+      },
+      {
+        "input": "200\n",
+        "output": "122 winutes\nClean\n"
+      }
+    ],
+    "testType": "single",
+    "input": {
+      "type": "stdin"
+    },
+    "output": {
+      "type": "stdout"
+    },
+    "languages": {
+      "java": {
+        "mainClass": "Main",
+        "taskClass": "Task"
+      }
+    }
+  }
+}

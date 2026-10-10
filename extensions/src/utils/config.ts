@@ -1,20 +1,17 @@
 import { browser } from './browser';
+import { DEFAULT_TARGET_URL } from './target';
 
 interface ConfigItems {
-  customPorts: number[];
   customRules: [string, string][];
-  requestTimeout: number;
   debugMode: boolean;
   targetUrl: string;
 }
 
 class Config {
   private readonly defaults: Partial<ConfigItems> = {
-    customPorts: [],
     customRules: [],
-    requestTimeout: 500,
     debugMode: false,
-    targetUrl: 'https://cpp.doong.me/editor/*',
+    targetUrl: DEFAULT_TARGET_URL,
   };
 
   public async get<T extends keyof ConfigItems>(key: T): Promise<ConfigItems[T]> {

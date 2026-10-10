@@ -20,7 +20,13 @@ await Promise.all(
         const packageJson = JSON.parse(packageJsonContent);
 
         const optionalHostPermissions = [
-          ...new Set([...Object.values(requiredPermissions), 'http://127.0.0.1:4321/*']),
+          // Custom target URLs: a local C++ Here dev server (any port), or a cpp-insiders preview deployment
+          ...new Set([
+            ...Object.values(requiredPermissions),
+            'http://localhost/*',
+            'http://127.0.0.1/*',
+            'https://*.cpp-insiders.doong.me/*',
+          ]),
         ];
 
         const manifest: Record<string, any> = {
@@ -31,9 +37,10 @@ await Promise.all(
           version: packageJson.version,
 
           author: packageJson.author,
-          homepage_url: packageJson.repository,
+          homepage_url: packageJson.homepage,
 
-          permissions: ['activeTab', 'contextMenus', 'storage', 'scripting', 'tabs', 'windows'],
+          // Tabs are found by URL through host permissions, so the broader 'tabs' permission isn't needed
+          permissions: ['activeTab', 'contextMenus', 'storage', 'scripting'],
           host_permissions: ['https://cpp.doong.me/*'],
 
           icons: {
@@ -94,10 +101,17 @@ await Promise.all(
 
           manifest.browser_specific_settings = {
             gecko: {
-              id: '{74e326aa-c645-4495-9287-b6febc5565a7}',
+              id: 'cpp-here@doong.me',
+              // scripting.executeScript() runs in the page's MAIN world since Firefox 128,
+              // and data_collection_permissions is supported since Firefox 140
+              strict_min_version: '140.0',
               data_collection_permissions: {
                 required: ['websiteContent'],
               },
+            },
+            // Firefox for Android supports data_collection_permissions since 142
+            gecko_android: {
+              strict_min_version: '142.0',
             },
           };
         }
@@ -109,6 +123,10 @@ await Promise.all(
     {
       from: path.resolve(projectRoot, 'media/icons'),
       to: path.resolve(buildDirectory, 'icons'),
+    },
+    {
+      from: path.resolve(projectRoot, 'media/fonts'),
+      to: path.resolve(buildDirectory, 'fonts'),
     },
     {
       from: path.resolve(projectRoot, 'src/options.html'),
