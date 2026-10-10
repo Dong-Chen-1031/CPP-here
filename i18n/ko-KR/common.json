@@ -6,6 +6,6 @@
   "cancel": "Cancel",
   "runStatus": {
     "running": "Running",
-    "building": "Building"
+    "building": "Compiling"
   }
 }
