@@ -231,7 +231,7 @@
         "downloadingTitle": "Downloading the in-browser compiler",
         "downloadingDescription": "The first download is about 26 MB. In Auto mode your code compiles on the server meanwhile, and the compiler downloads in the background.",
         "switchToAuto": "Switch to Auto",
-        "clangFailedTitle": "Compiled in your browser",
+        "clangFailedTitle": "Could not compile in your browser",
         "clangFailedDescription": "The in-browser compiler does not support C++ exceptions (try, catch, throw), which the server compiles. If this code should compile, try the server.",
         "retryOnServer": "Try on server",
         "browserUnavailableTitle": "In-browser compiler unavailable",

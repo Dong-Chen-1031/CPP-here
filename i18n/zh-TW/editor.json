@@ -231,7 +231,7 @@
         "downloadingTitle": "正在下載瀏覽器內編譯",
         "downloadingDescription": "首次下載約 26 MB。在自動模式下，下載期間會先在伺服器上編譯，瀏覽器內編譯則在背景下載。",
         "switchToAuto": "切換為自動",
-        "clangFailedTitle": "已在瀏覽器中編譯",
+        "clangFailedTitle": "瀏覽器內編譯失敗",
         "clangFailedDescription": "瀏覽器內編譯不支援 C++ 例外處理（try、catch、throw），伺服器則支援。如果這段程式碼應該能編譯，請改用伺服器試試。",
         "retryOnServer": "改用伺服器",
         "browserUnavailableTitle": "瀏覽器內編譯無法使用",
