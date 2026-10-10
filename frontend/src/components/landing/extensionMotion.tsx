@@ -217,8 +217,9 @@ export function RotatingCircleMobile({
 
 export interface ExtensionDemoText {
     title: string;
-    descriptionBefore: string;
-    descriptionAfter: string;
+    // Contains {{problem}} where the problem name goes, so each language can
+    // place it where its word order needs it.
+    description: string;
     cancel: string;
     overwrite: string;
     insert: string;
@@ -231,6 +232,8 @@ export function ExtensionAlert({
     now: number;
     t?: ExtensionDemoText;
 }) {
+    const [descriptionBefore, descriptionAfter] =
+        t?.description.split("{{problem}}") ?? [];
     return (
         <div
             role="alertdialog"
@@ -260,7 +263,7 @@ export function ExtensionAlert({
                     data-slot="alert-dialog-description"
                     className="text-sm text-balance text-muted-foreground md:text-pretty *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground"
                 >
-                    {t?.descriptionBefore}{" "}
+                    {descriptionBefore}
                     <code>
                         <AnimatePresence mode="popLayout">
                             <motion.span
@@ -291,8 +294,8 @@ export function ExtensionAlert({
                                 }
                             </motion.span>
                         </AnimatePresence>
-                    </code>{" "}
-                    {t?.descriptionAfter}
+                    </code>
+                    {descriptionAfter}
                 </p>
             </div>
             <div

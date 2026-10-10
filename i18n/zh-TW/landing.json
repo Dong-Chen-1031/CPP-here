@@ -72,8 +72,7 @@
         "sourceCode": "原始碼",
         "demoDialog": {
             "title": "已收到來自擴充功能的測資",
-            "descriptionBefore": "",
-            "descriptionAfter": "的測資已收到。你想要覆寫現有測資，還是插入新的測資？",
+            "description": "{{problem}} 的測資已收到。你想要覆寫現有測資，還是插入新的測資？",
             "cancel": "取消",
             "overwrite": "覆寫",
             "insert": "插入"
