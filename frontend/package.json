@@ -3,20 +3,23 @@
     "type": "module",
     "version": "0.0.1",
     "scripts": {
-        "dev": "wrangler types && astro dev --host",
-        "build": "wrangler types && astro build",
-        "build:static": "wrangler types && astro build && shx rm -rf .dist-tmp && shx mv dist/client .dist-tmp && shx rm -rf dist && shx mv .dist-tmp dist",
+        "dev": "wrangler types && node scripts/prepare-toolchain.mjs --if-enabled && astro dev --host",
+        "build": "wrangler types && node scripts/prepare-toolchain.mjs --if-enabled && astro build",
+        "build:static": "wrangler types && node scripts/prepare-toolchain.mjs --if-enabled && astro build && shx rm -rf .dist-tmp && shx mv dist/client .dist-tmp && shx rm -rf dist && shx mv .dist-tmp dist",
         "preview": "astro preview",
         "astro": "astro",
         "cf-typegen": "wrangler types",
-        "deploy": "astro build && wrangler deploy",
-        "deploy:preview": "astro build && wrangler preview"
+        "deploy": "node scripts/prepare-toolchain.mjs --if-enabled && astro build && wrangler deploy",
+        "deploy:preview": "node scripts/prepare-toolchain.mjs --if-enabled && astro build && wrangler preview",
+        "toolchain": "node scripts/prepare-toolchain.mjs",
+        "test:browser": "node test/browser/run.mjs"
     },
     "dependencies": {
         "@astrojs/cloudflare": "^13.7.0",
         "@astrojs/react": "^4.4.2",
         "@astrojs/sitemap": "^3.7.3",
         "@base-ui/react": "^1.5.0",
+        "@bjorn3/browser_wasi_shim": "0.4.2",
         "@codemirror/autocomplete": "^6.20.3",
         "@codemirror/commands": "^6.10.4",
         "@codemirror/lang-cpp": "^6.0.3",
@@ -69,6 +72,9 @@
         "@astrojs/check": "^0.9.10",
         "@types/node": "^25.9.2",
         "@types/react": "^19.2.17",
-        "typescript": "^6.0.3"
+        "@yowasp/clang": "21.1.4-3",
+        "playwright": "^1.58.2",
+        "typescript": "^6.0.3",
+        "vite": "^7.3.1"
     }
 }

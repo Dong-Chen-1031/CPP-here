@@ -6,17 +6,25 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog-fix";
+import {
+    HoverCard,
+    HoverCardContent,
+    HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { codeStore, settingsPanelStore } from "@/store/atom";
 import {
+    compilerModeStore,
     defCodeStore,
     editorFontSizeStore,
     editorTabSizeStore,
     timeLimitStore,
     useResetSettingsAtoms,
+    COMPILER_MODES,
+    type CompilerMode,
 } from "@/store/configStore";
 import { Input } from "@/components/ui/input";
 import { MAX_TIMEOUT_S, NO_TIME_LIMIT } from "@/config/runLimits";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import {
     Field,
     FieldContent,
@@ -37,6 +45,7 @@ import { useTranslation } from "react-i18next";
 import React, { useEffect, useRef, useState } from "react";
 import { ButtonGroup } from "./ui/button-group";
 import {
+    CircleQuestionMarkIcon,
     FileCodeIcon,
     ListRestart,
     ListRestartIcon,
@@ -55,6 +64,16 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { CppVersionSelect } from "@/components/header/cppVersionSelect";
+import { BetaBadge } from "@/components/BetaBadge";
+import {
+    browserCompilerAvailableStore,
+    startBrowserCompilerDownload,
+} from "@/service/build";
+import {
+    DOWNLOADED,
+    NOT_DOWNLOADED,
+    browserCompilerProgressStore,
+} from "@/service/browserBuild";
 
 interface SettingsProps {
     allLangs: Record<string, string>;
@@ -71,6 +90,7 @@ interface ValueFieldProps<V> {
 interface BaseSettingsField<T extends SettingType> {
     type: T;
     label: string;
+    hoverDetail?: React.ReactNode;
     description?: string;
 }
 
@@ -225,10 +245,54 @@ function ButtonFieldTemplate({ field }: { field: ButtonField }) {
 }
 
 export function SettingFieldTemplate({ field }: { field: SettingsField }) {
-    return (
+    const { t } = useTranslation("editor");
+    // Hover cards ignore touch, so a tap expands the detail under the field
+    // instead. The card also opens on focus, which a tap gives the button.
+    const [cardOpen, setCardOpen] = useState(false);
+    const [detailExpanded, setDetailExpanded] = useState(false);
+    const pointerType = useRef("");
+    const touch = () =>
+        pointerType.current === "touch" || pointerType.current === "pen";
+    const row = (
         <Field orientation="horizontal" className="items-center!">
             <FieldContent>
-                <FieldLabel>{field.label}</FieldLabel>
+                <div className="flex items-center space-x-1">
+                    <FieldLabel>{field.label}</FieldLabel>
+                    {field.hoverDetail && (
+                        <HoverCard
+                            openDelay={10}
+                            closeDelay={100}
+                            open={cardOpen}
+                            onOpenChange={(open) =>
+                                setCardOpen(open && !touch())
+                            }
+                        >
+                            <HoverCardTrigger asChild>
+                                <button
+                                    type="button"
+                                    aria-label={t("settings.moreInfo")}
+                                    aria-expanded={detailExpanded}
+                                    className="relative ml-1 inline-flex rounded-full outline-none after:absolute after:-inset-3 focus-visible:ring-2 focus-visible:ring-ring"
+                                    onPointerEnter={(e) =>
+                                        (pointerType.current = e.pointerType)
+                                    }
+                                    onPointerDown={(e) =>
+                                        (pointerType.current = e.pointerType)
+                                    }
+                                    onClick={() => {
+                                        if (touch())
+                                            setDetailExpanded((p) => !p);
+                                    }}
+                                >
+                                    <CircleQuestionMarkIcon className="size-4" />
+                                </button>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="text-xs">
+                                {field.hoverDetail}
+                            </HoverCardContent>
+                        </HoverCard>
+                    )}
+                </div>
                 <FieldDescription className="text-xs">
                     {field.description}
                 </FieldDescription>
@@ -244,6 +308,15 @@ export function SettingFieldTemplate({ field }: { field: SettingsField }) {
             ) : null}
         </Field>
     );
+    if (!field.hoverDetail || !detailExpanded) return row;
+    return (
+        <div className="flex flex-col gap-2">
+            {row}
+            <div className="rounded-md bg-muted/50 p-2.5 text-xs">
+                {field.hoverDetail}
+            </div>
+        </div>
+    );
 }
 
 export function Settings({ allLangs }: SettingsProps) {
@@ -255,6 +328,9 @@ export function Settings({ allLangs }: SettingsProps) {
     const [code, setCode] = useAtom(codeStore);
     const [tabSize, setTabSize] = useAtom(editorTabSizeStore);
     const [timeLimit, setTimeLimit] = useAtom(timeLimitStore);
+    const [compilerMode, setCompilerMode] = useAtom(compilerModeStore);
+    const downloadProgress = useAtomValue(browserCompilerProgressStore);
+    const compilerAvailable = useAtomValue(browserCompilerAvailableStore);
     const resetSettingsAtoms = useResetSettingsAtoms();
     const [resetTimes, setResetTimes] = useState(0);
     const [setCodeTimes, setSetCodeTimes] = useState(0);
@@ -297,6 +373,100 @@ export function Settings({ allLangs }: SettingsProps) {
             label: t("settings.cppVersion"),
             render: () => <CppVersionSelect size={"default"} />,
         },
+        ...(compilerAvailable
+            ? [
+                  {
+                      type: "Custom" as const,
+                      label: t("settings.compiler"),
+                      hoverDetail: (
+                          <div className="flex flex-col gap-2">
+                              <p>{t("settings.compilerDesc")}</p>
+                              <ul className="flex flex-col gap-1.5">
+                                  {COMPILER_MODES.map((mode) => (
+                                      <li key={mode}>
+                                          <p className="flex items-center gap-1 font-medium">
+                                              {t(
+                                                  `settings.compilerMode.${mode}`,
+                                              )}
+                                              {mode !== "server" && (
+                                                  <BetaBadge />
+                                              )}
+                                          </p>
+                                          <p className="text-muted-foreground">
+                                              {t(
+                                                  `settings.compilerModeDesc.${mode}`,
+                                              )}
+                                              {mode === "browser" && (
+                                                  // Its own line: languages differ in
+                                                  // how sentences are joined.
+                                                  <span className="block tabular-nums">
+                                                      {downloadProgress ===
+                                                      DOWNLOADED
+                                                          ? t(
+                                                                "settings.compilerDownload.downloaded",
+                                                            )
+                                                          : downloadProgress ===
+                                                              NOT_DOWNLOADED
+                                                            ? t(
+                                                                  "settings.compilerDownload.notDownloaded",
+                                                              )
+                                                            : t(
+                                                                  "settings.compilerDownload.downloading",
+                                                                  {
+                                                                      progress:
+                                                                          downloadProgress,
+                                                                  },
+                                                              )}
+                                                  </span>
+                                              )}
+                                          </p>
+                                      </li>
+                                  ))}
+                              </ul>
+                          </div>
+                      ),
+                      render: () => (
+                          <Select
+                              value={compilerMode}
+                              onValueChange={(value) => {
+                                  const mode = value as CompilerMode;
+                                  setCompilerMode(mode);
+                                  window.posthog?.capture(
+                                      "settings_compiler_changed",
+                                      { compiler: mode },
+                                  );
+                                  if (
+                                      mode === "browser" &&
+                                      downloadProgress === NOT_DOWNLOADED
+                                  )
+                                      void startBrowserCompilerDownload();
+                              }}
+                          >
+                              <SelectTrigger className="w-full max-w-48">
+                                  <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  <SelectGroup>
+                                      <SelectLabel>
+                                          {t("settings.compiler")}
+                                      </SelectLabel>
+                                      {COMPILER_MODES.map((mode) => (
+                                          <SelectItem key={mode} value={mode}>
+                                              {t(
+                                                  `settings.compilerMode.${mode}`,
+                                              )}
+                                              {mode !== "server" && (
+                                                  <BetaBadge className="ml-1" />
+                                              )}
+                                          </SelectItem>
+                                      ))}
+                                  </SelectGroup>
+                              </SelectContent>
+                          </Select>
+                      ),
+                  },
+              ]
+            : []),
         {
             type: "Custom",
             label: t("settings.language"),

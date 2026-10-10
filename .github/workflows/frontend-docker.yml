@@ -10,6 +10,7 @@ on:
             # Dependencies are baked into the image too
             - "package.json"
             - "bun.lock"
+            - "builder/docker/inner/bits/**"
             - ".github/workflows/frontend-docker.yml"
     pull_request:
         paths:
@@ -18,6 +19,7 @@ on:
             # Dependencies are baked into the image too
             - "package.json"
             - "bun.lock"
+            - "builder/docker/inner/bits/**"
             - ".github/workflows/frontend-docker.yml"
     workflow_dispatch:
 

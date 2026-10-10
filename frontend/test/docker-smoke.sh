@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Starts the frontend image the way docker/frontend/docker-compose.yml does and
-# checks that the site builds on container start and is served. The build only
-# runs at container start, so a broken image still builds and pushes fine; this
-# is what catches it.
+# Starts the frontend image the way docker/frontend/docker-compose.yml does, with
+# the in-browser compiler enabled, and checks that the site builds on container
+# start and is served. The build only runs at container start, so a broken image
+# still builds and pushes fine; this is what catches it.
 #
 #   frontend/test/docker-smoke.sh <image>
 #
@@ -28,7 +28,7 @@ fail() {
 }
 
 cleanup
-docker run -d --name "$name" -e CI=true \
+docker run -d --name "$name" -e CI=true -e PUBLIC_LOCAL_COMPILER=true \
     -p "127.0.0.1:$port:4321" "$image" >/dev/null
 
 # The CMD chains the build and Caddy with &&, so a failed build stops the container.
@@ -41,9 +41,28 @@ until grep -q "serving initial configuration" <<<"$(logs)"; do
 done
 echo "Serving after ${SECONDS}s"
 
+# The image ships the toolchain prebuilt; regenerating it here means the
+# Dockerfile's toolchain stage and the copied sources disagree.
+# The directory is named by the toolchain id (frontend/scripts/toolchain-id.mjs),
+# a hash of its inputs, so read it from that line rather than recomputing it.
+id=$(sed -n 's|.*Toolchain up to date: .*/toolchain/||p' <<<"$(logs)" | tail -1)
+[ -n "$id" ] || fail "toolchain was not prebuilt in the image"
+
 for path in / /editor/; do
     page=$(curl -fsSL "$base$path") || fail "$path not served"
     grep -qi "</html>" <<<"$page" || fail "$path did not return a full HTML page"
 done
+
+manifest=$(curl -fsS "$base/toolchain/$id/manifest.json") || fail "toolchain manifest not served"
+jq -e --arg v "$id" '.version == $v' <<<"$manifest" >/dev/null ||
+    fail "toolchain manifest is for another toolchain"
+
+# The worker decompresses .gz.bin itself; a Content-Encoding header would make
+# the browser decompress first and the worker fail (see frontend/LOCAL-COMPILER.md).
+# Ask the way browsers do: a server only compresses when the request allows it.
+headers=$(curl -fsSI -H 'Accept-Encoding: gzip, deflate, br, zstd' \
+    "$base/toolchain/$id/llvm.core.wasm.gz.bin") ||
+    fail "toolchain wasm not served"
+! grep -qi '^content-encoding' <<<"$headers" || fail "toolchain wasm served with Content-Encoding"
 
 echo "OK: $image"

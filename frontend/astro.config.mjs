@@ -3,6 +3,7 @@ import { defineConfig, envField, fontProviders } from "astro/config";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
+import { toolchainId } from "./scripts/toolchain-id.mjs";
 import cloudflare from "@astrojs/cloudflare";
 import { strictPrerender } from "./strict-prerender.mjs";
 import { DEV_JWT_SECRET } from "./env.defaults.mjs";
@@ -38,7 +39,8 @@ export default defineConfig({
         // }),
     ],
     vite: {
-        plugins: [tailwindcss()],
+        plugins: [tailwindcss(), toolchainId()],
+        worker: { format: "es" },
         optimizeDeps: {
             include: ["react-dom/client"],
             exclude: ["@wasm-fmt/clang-format"],
@@ -50,8 +52,6 @@ export default defineConfig({
     build: {
         inlineStylesheets: "auto",
     },
-    // No fallbacks on either family: the font-jetbrains / font-quattro
-    // utilities in global.css append the full stacks, CJK fonts included.
     fonts: [
         {
             provider: fontProviders.fontsource(),
@@ -96,6 +96,14 @@ export default defineConfig({
     ],
     env: {
         schema: {
+            // Also read outside the schema by scripts/prepare-toolchain.mjs
+            // --if-enabled, which treats anything but unset or the literal
+            // string "true" as disabled.
+            PUBLIC_LOCAL_COMPILER: envField.boolean({
+                context: "client",
+                access: "public",
+                default: true,
+            }),
             PUBLIC_TURNSTILE_SITE_KEY: envField.string({
                 context: "client",
                 access: "public",

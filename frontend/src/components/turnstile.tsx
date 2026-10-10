@@ -3,7 +3,12 @@ import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useAtom } from "jotai";
-import { turnstileRefStore, verifyJwtStore } from "@/store/atom";
+import {
+    serverUnavailableStore,
+    turnstileRefStore,
+    verifyFailedStore,
+    verifyJwtStore,
+} from "@/store/atom";
 import {
     PUBLIC_TURNSTILE_SITE_KEY,
     PUBLIC_BYPASS_CAPTCHA,
@@ -32,6 +37,9 @@ function TurnstileChallenge() {
     const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [, setJwt] = useAtom(verifyJwtStore);
     const [, setTurnstileRefGlobal] = useAtom(turnstileRefStore);
+    const [, setServerUnavailable] = useAtom(serverUnavailableStore);
+    // Builds and shares waiting for a token give up at once
+    const [, setVerifyFailed] = useAtom(verifyFailedStore);
     const { t } = useTranslation(["editor"]);
     useEffect(() => {
         setTurnstileRefGlobal(turnstileRef);
@@ -61,6 +69,7 @@ function TurnstileChallenge() {
 
                     if (!success || !newJwt) {
                         console.error("Verification rejected:", error);
+                        setVerifyFailed(true);
                         addAlert({
                             title: t("turnstile.verificationFailed"),
                             description: t("turnstile.verificationFailedDesc"),
@@ -70,6 +79,9 @@ function TurnstileChallenge() {
                     }
 
                     setJwt(newJwt);
+                    setVerifyFailed(false);
+                    // A new token: auto mode may try the server again
+                    setServerUnavailable(false);
 
                     const resetDelay =
                         typeof expires_in === "number" &&
@@ -94,6 +106,9 @@ function TurnstileChallenge() {
                     }, resetDelay);
                 } catch (err) {
                     console.error("Verification error:", err);
+                    // The backend is unreachable: auto mode compiles in the browser
+                    setServerUnavailable(true);
+                    setVerifyFailed(true);
                     addAlert({
                         title: t("turnstile.verificationFailed"),
                         description: t("turnstile.verificationFailedDesc"),
@@ -103,6 +118,7 @@ function TurnstileChallenge() {
                 }
             }}
             onUnsupported={() => {
+                setVerifyFailed(true);
                 addAlert({
                     title: t("turnstile.unsupported"),
                     description: t("turnstile.unsupportedDesc"),

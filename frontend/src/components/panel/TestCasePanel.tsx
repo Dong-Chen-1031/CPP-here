@@ -18,10 +18,9 @@ import {
     runStatusStore,
     testCaseEditStore,
     testCasesStore,
-    verifyJwtStore,
     type TestCase,
 } from "@/store/atom";
-import { cn, useIsMobile } from "@/lib/utils";
+import { cn, randomId, useIsMobile } from "@/lib/utils";
 import { handleRun } from "@/service/run";
 import { useTranslation } from "react-i18next";
 import TestEditDialog from "./TestEditDialog";
@@ -105,7 +104,6 @@ export default function TestCasePanel({
     const [, setPanel] = useAtom(panelDrawerStore);
     const [, setAlertDialog] = useAtom(alertDialogStore);
     const isMobile = useIsMobile();
-    const [jwt] = useAtom(verifyJwtStore);
     const { t } = useTranslation(["editor", "common"]);
     const defaultStore = getDefaultStore();
 
@@ -134,7 +132,7 @@ export default function TestCasePanel({
             const testCaseData = parsed.data;
             const testCasesFromExtension: TestCase[] = testCaseData.tests.map(
                 (test, index) => ({
-                    id: crypto.randomUUID(),
+                    id: randomId(),
                     name: t("testCase.extension.caseName", {
                         problemName: testCaseData.name,
                         index: index + 1,
@@ -230,7 +228,7 @@ export default function TestCasePanel({
     }, []);
     function handleAddTestCase(name: string, input: string, expected: string) {
         const newTestCase: TestCase = {
-            id: crypto.randomUUID(),
+            id: randomId(),
             name,
             input,
             expectedOutput: expected,
@@ -240,7 +238,7 @@ export default function TestCasePanel({
             has_expected_output: !!expected,
         });
     }
-    const cantRun = runStatus !== "idle" || !jwt;
+    const cantRun = runStatus !== "idle";
 
     return (
         <>
