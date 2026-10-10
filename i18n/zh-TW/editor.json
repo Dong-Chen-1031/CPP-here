@@ -41,7 +41,15 @@
         "copyThisCaseTip": "複製此測資的輸出",
         "clearTip": "清除輸出",
         "noOutput": "尚無輸出結果",
-        "truncated": "輸出過長，未完整顯示。完整內容請使用複製。"
+        "truncated": "輸出過長，未完整顯示。完整內容請使用複製。",
+        "compiler": {
+            "browser": "正在瀏覽器中編譯",
+            "server": "正在伺服器上編譯",
+            "downloading": "正在下載瀏覽器內編譯：{{progress}}%",
+            "verifying": "正在驗證，完成後會在伺服器上編譯",
+            "fallbackToBrowser": "伺服器目前無法使用，改由瀏覽器編譯程式碼。",
+            "fallbackToServer": "瀏覽器內編譯目前無法使用，改由伺服器編譯程式碼。"
+        }
     },
     "testCase": {
         "label": "測資",
@@ -108,7 +116,9 @@
         "downloadCode": "下載",
         "downloadCodeTip": "下載為 .cpp",
         "uploadCode": "上傳",
-        "uploadCodeTip": "上傳 .cpp 檔案"
+        "uploadCodeTip": "上傳 .cpp 檔案",
+        "downloadingCompiler": "下載中 {{progress}}%",
+        "stopBuilding": "停止編譯"
     },
     "turnstile": {
         "verificationFailed": "驗證失敗",
@@ -139,7 +149,25 @@
         "codeFormatStyleDesc": "選擇一個程式碼格式化風格。",
         "cppVersion": "C++ 版本",
         "timeLimit": "時間限制（秒）",
-        "timeLimitDesc": "程式執行超過此秒數會被強制停止。輸入 -1 表示不限制。"
+        "timeLimitDesc": "程式執行超過此秒數會被強制停止。輸入 -1 表示不限制。",
+        "compiler": "編譯器",
+        "compilerDesc": "程式碼要在哪裡編譯。",
+        "compilerMode": {
+            "auto": "自動",
+            "browser": "瀏覽器",
+            "server": "伺服器"
+        },
+        "compilerModeDesc": {
+            "auto": "建議選項。瀏覽器內編譯下載完成且此裝置效能足夠時在瀏覽器中編譯，否則使用伺服器。",
+            "browser": "一律在此裝置上編譯。",
+            "server": "一律在我們的伺服器上編譯。"
+        },
+        "compilerDownload": {
+            "notDownloaded": "首次使用需下載約 26 MB。",
+            "downloading": "下載中：{{progress}}%。",
+            "downloaded": "已下載。"
+        },
+        "moreInfo": "更多資訊"
     },
     "resize": {
         "loadingEditor": "正在載入編輯器",
@@ -158,7 +186,10 @@
         "noTestCasesTitle": "沒有測資",
         "noTestCasesDescription": "目前沒有可執行的測資，請先新增測資。",
         "verificationFailed": "驗證失敗，請再試一次。",
-        "workersUnsupported": "此環境不支援 Web Workers。"
+        "workersUnsupported": "此環境不支援 Web Workers。",
+        "unexpectedErrorTitle": "發生問題",
+        "unexpectedErrorDescription": "運行因非預期的錯誤而中止，詳細資訊請查看輸出。",
+        "unknownBuildError": "編譯器沒有提供失敗原因。"
     },
     "auth": {
         "unauthorizedTitle": "未授權",
@@ -192,5 +223,35 @@
             "title": "記憶體超過上限（MLE）",
             "description": "程式使用超過 {{size}} MiB 記憶體，已強制停止。"
         }
+    },
+    "compiler": {
+        "browserUnsupported": "此瀏覽器無法執行瀏覽器內編譯，請更新至最新版本。",
+        "downloadFailed": "無法下載瀏覽器內編譯，請檢查網路連線後再試一次。",
+        "timedOut": "瀏覽器編譯超過 180 秒，已逾時。",
+        "downloadingTitle": "正在下載瀏覽器內編譯",
+        "downloadingDescription": "首次下載約 26 MB。在自動模式下，下載期間會先在伺服器上編譯，瀏覽器內編譯則在背景下載。",
+        "switchToAuto": "切換為自動",
+        "clangFailedTitle": "已在瀏覽器中編譯",
+        "clangFailedDescription": "瀏覽器內編譯不支援 C++ 例外處理（try、catch、throw），伺服器則支援。如果這段程式碼應該能編譯，請改用伺服器試試。",
+        "retryOnServer": "改用伺服器",
+        "browserUnavailableTitle": "瀏覽器內編譯無法使用",
+        "browserUnavailableDescription": "無法使用瀏覽器內編譯。請改用伺服器編譯，或讓自動模式選擇可用的編譯器。",
+        "serverSkippedDescription": "伺服器剛才發生錯誤，所以自動模式沒有使用它。現在可能已經恢復。",
+        "serverInvalidResponse": "伺服器回傳了非預期的回應。",
+        "retryBusyTitle": "正在運行中",
+        "retryBusyDescription": "請先停止目前的運行，再試一次。",
+        "serverUnavailableTitle": "伺服器編譯器無法使用",
+        "serverUnavailableDescription": "伺服器無法編譯你的程式碼。請改用瀏覽器編譯，或讓自動模式選擇可用的編譯器。",
+        "use": {
+            "auto": "使用自動",
+            "browser": "使用瀏覽器",
+            "server": "使用伺服器"
+        },
+        "beta": "Beta",
+        "downloadFailedTitle": "無法下載瀏覽器內編譯",
+        "backgroundDownloadFailedTitle": "瀏覽器內編譯尚未下載",
+        "backgroundDownloadFailedDescription": "背景下載失敗，你的程式碼會繼續在伺服器上編譯。",
+        "slowTitle": "此裝置編譯速度較慢",
+        "slowDescription": "在瀏覽器中編譯花了超過 7 秒，伺服器通常快得多。"
     }
 }

@@ -397,8 +397,9 @@ export function Settings({ allLangs }: SettingsProps) {
                                                   `settings.compilerModeDesc.${mode}`,
                                               )}
                                               {mode === "browser" && (
-                                                  <span className="tabular-nums">
-                                                      {" "}
+                                                  // Its own line: languages differ in
+                                                  // how sentences are joined.
+                                                  <span className="block tabular-nums">
                                                       {downloadProgress ===
                                                       DOWNLOADED
                                                           ? t(

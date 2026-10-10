@@ -30,12 +30,12 @@ session. Measured on an iPhone in production: 4 to 6 seconds for the first
 compile after a page load (the toolchain is loaded into the worker), about 2
 seconds after that, for `#include <iostream>` without a PCH.
 
-"Stop building" (the run button while building, or the button in the output
+"Stop compiling" (the run button while compiling, or the button in the output
 panel) ends the build: a running compile terminates the compile worker, so the
 next one loads the toolchain again from Cache Storage; a server request is
 left to finish and its answer ignored; a download keeps going for later use.
 
-The output panel names the compiler under "Building" in every mode, with the
+The output panel names the compiler under "Compiling" in every mode, with the
 download progress and a note when Auto fell back to the other one.
 
 After a failure the user is pointed at the other compiler: a dialog to switch
