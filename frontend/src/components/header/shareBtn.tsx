@@ -23,6 +23,8 @@ export function ShareButton({
 }) {
     const { t } = useTranslation(["editor"]);
     const [sharing, setSharing] = React.useState(false);
+    // Waiting for Turnstile before the share can be sent
+    const [verifying, setVerifying] = React.useState(false);
     const [sharedTimes, setSharedTimes] = React.useState(0);
 
     return (
@@ -34,6 +36,8 @@ export function ShareButton({
                     className={className}
                     aria-label={t("headerActions.shareCodeTip")}
                     onClick={async (e) => {
+                        // Still verifying or sending the last one
+                        if (sharing) return;
                         setSharing(true);
                         onClick(e);
 
@@ -65,7 +69,10 @@ export function ShareButton({
                             : Promise.resolve(false);
 
                         try {
-                            const result = await shareCode();
+                            const result = await shareCode({
+                                onVerifying: () => setVerifying(true),
+                            });
+                            setVerifying(false);
 
                             if (result.ok) {
                                 const shareUrl = `${window.location.origin}/share/${result.shareId as string}`;
@@ -123,6 +130,7 @@ export function ShareButton({
                             });
                         } finally {
                             setSharing(false);
+                            setVerifying(false);
                         }
                     }}
                 >
@@ -133,7 +141,9 @@ export function ShareButton({
                         className="size-3"
                     />
                     <span className="inline md:hidden lg:inline">
-                        {t("headerActions.shareCode")}
+                        {verifying
+                            ? t("headerActions.verifying")
+                            : t("headerActions.shareCode")}
                     </span>
                 </Button>
             </Tip>

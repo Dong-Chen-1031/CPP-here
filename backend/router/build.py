@@ -90,8 +90,10 @@ class BuildResponse(BaseModel):
     js_code: str
     wasm_url: str
     errors: list[str] = []
+    # The build failed for a reason other than the code (see BuildError)
+    unavailable: bool = False
 
-    metric_status: Literal["success", "failure", "cache"] = Field("success")
+    metric_status: Literal["success", "failure", "cache", "error"] = Field("success")
     wasm_size_bytes: int | None = Field(default=0)
 
 
@@ -228,18 +230,19 @@ async def build_cpp(
             )
             logger.info("Build succeeded")
         except BuildError as e:
+            logs = re.sub(
+                r"emcc: error:[\s\S]*?failed \(returned 1\)\n?",
+                "",
+                str(e.build_logs),
+            ).strip()
             return BuildResponse(
                 ok=False,
                 wasm_url="",
                 js_code="",
-                errors=[
-                    re.sub(
-                        r"emcc: error:[\s\S]*?failed \(returned 1\)\n?",
-                        "",
-                        str(e.build_logs),
-                    ).strip()
-                ],
-                metric_status="failure",
+                # A server fault's logs are partial; a timeout has none
+                errors=[logs if logs and not e.server_fault else str(e)],
+                unavailable=e.server_fault,
+                metric_status="error" if e.server_fault else "failure",
             )
 
         with tracer.start_as_current_span("build.finalize"):

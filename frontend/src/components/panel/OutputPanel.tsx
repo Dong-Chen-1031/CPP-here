@@ -1,11 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { Trash, SquareTerminal, ClipboardCopy } from "lucide-react";
+import { Trash, SquareTerminal, ClipboardCopy, SquareIcon } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
 import Tip from "../ui/tips";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { runStatusStore } from "@/store/atom";
-import { cn } from "@/lib/utils";
+import { buildingWithStore } from "@/service/build";
+import { stopBuild } from "@/service/run";
+import { browserCompilerProgressStore } from "@/service/browserBuild";
+import { BetaBadge } from "@/components/BetaBadge";
+import { cn, randomId } from "@/lib/utils";
 import { EzIconMotion } from "../IconMotion";
 import { Spinner } from "../ui/spinner";
 import { useTranslation } from "react-i18next";
@@ -202,7 +206,7 @@ function OutputCaseJSX({
                                 );
                                 setCopiedCases({
                                     ...copiedCases,
-                                    [line.testCaseId]: crypto.randomUUID(),
+                                    [line.testCaseId]: randomId(),
                                 });
                             }}
                         >
@@ -222,6 +226,44 @@ function OutputCaseJSX({
                 </p>
             )}
         </div>
+    );
+}
+
+/** Which compiler the running build uses, whatever the setting. */
+function BuildingWith() {
+    const buildingWith = useAtomValue(buildingWithStore);
+    const progress = Math.max(0, useAtomValue(browserCompilerProgressStore));
+    const { t } = useTranslation("editor");
+    if (!buildingWith) return null;
+    const { target, downloading, verifying, fallbackFrom } = buildingWith;
+    return (
+        <>
+            <p className="text-xs text-muted-foreground inline-flex items-center gap-1.5 tabular-nums">
+                {downloading
+                    ? t("output.compiler.downloading", { progress })
+                    : verifying
+                      ? t("output.compiler.verifying")
+                      : t(`output.compiler.${target}`)}
+                {target === "browser" && <BetaBadge />}
+            </p>
+            {downloading && (
+                <div className="h-1 w-40 overflow-hidden rounded-full bg-muted">
+                    <div
+                        className="h-full bg-primary transition-[width] duration-300"
+                        style={{ width: `${progress}%` }}
+                    />
+                </div>
+            )}
+            {fallbackFrom && (
+                <p className="max-w-72 text-center text-xs text-muted-foreground">
+                    {t(
+                        target === "browser"
+                            ? "output.compiler.fallbackToBrowser"
+                            : "output.compiler.fallbackToServer",
+                    )}
+                </p>
+            )}
+        </>
     );
 }
 
@@ -255,7 +297,7 @@ export default function OutputPanel({ drawer = false }: { drawer?: boolean }) {
                                 ),
                             );
                             navigator.clipboard.writeText(texts.join("\n"));
-                            setCopied(crypto.randomUUID());
+                            setCopied(randomId());
                         }}
                         className="px-2"
                         disabled={output.length === 0}
@@ -272,7 +314,7 @@ export default function OutputPanel({ drawer = false }: { drawer?: boolean }) {
                         onClick={() => {
                             setOutput([]);
                             clearOutputBuffer();
-                            setCleared(crypto.randomUUID());
+                            setCleared(randomId());
                         }}
                         className="px-2"
                         disabled={output.length === 0}
@@ -290,6 +332,16 @@ export default function OutputPanel({ drawer = false }: { drawer?: boolean }) {
                     <p className="text-sm text-muted-foreground">
                         {t("common:runStatus.building")}
                     </p>
+                    <BuildingWith />
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-1"
+                        onClick={stopBuild}
+                    >
+                        <SquareIcon />
+                        {t("headerActions.stopBuilding")}
+                    </Button>
                 </div>
             ) : output.length === 0 && runStatus === "running" ? (
                 <div className="mt-4 flex-col flex justify-center w-full h-[90%] items-center gap-2">

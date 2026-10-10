@@ -7,11 +7,19 @@ on:
         paths:
             - "frontend/**"
             - "docker/**"
+            # Dependencies are baked into the image too
+            - "package.json"
+            - "bun.lock"
+            - "builder/docker/inner/bits/**"
             - ".github/workflows/frontend-docker.yml"
     pull_request:
         paths:
             - "frontend/**"
             - "docker/**"
+            # Dependencies are baked into the image too
+            - "package.json"
+            - "bun.lock"
+            - "builder/docker/inner/bits/**"
             - ".github/workflows/frontend-docker.yml"
     workflow_dispatch:
 
@@ -54,6 +62,25 @@ jobs:
               with:
                   images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
+            # The site is built when the container starts, not in the Dockerfile,
+            # so an image that cannot build itself still builds and pushes fine.
+            # Load it into the local daemon and start it before anything is pushed;
+            # a failure here also keeps the merge job from moving latest.
+            - name: Build image for testing
+              uses: docker/build-push-action@v6
+              with:
+                  context: .
+                  file: ./docker/frontend/Dockerfile
+                  platforms: ${{ matrix.platform }}
+                  load: true
+                  tags: cpp-here-frontend:test
+                  cache-from: type=gha,scope=${{ matrix.platform }}
+                  cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
+
+            - name: Smoke test
+              run: frontend/test/docker-smoke.sh cpp-here-frontend:test
+
+            # Same inputs as the test build, so every layer comes from the cache
             - name: Build and push image by digest
               id: build
               uses: docker/build-push-action@v6

@@ -1,4 +1,8 @@
-import { turnstileRefStore, verifyJwtStore } from "@/store/atom";
+import {
+    turnstileRefStore,
+    verifyFailedStore,
+    verifyJwtStore,
+} from "@/store/atom";
 import axios from "axios";
 import i18next from "i18next";
 import { getDefaultStore } from "jotai";
@@ -10,6 +14,8 @@ import type z from "zod";
 const defaultStore = getDefaultStore();
 
 const JWT_RENEW_TIMEOUT_MS = 60_000;
+// Turnstile usually verifies in a few seconds after the page loads.
+const JWT_WAIT_TIMEOUT_MS = 30_000;
 
 const apiAxios = axios.create({
     baseURL: PUBLIC_API_URL,
@@ -23,6 +29,32 @@ apiAxios.interceptors.request.use((config) => {
     }
     return config;
 });
+
+/**
+ * The verified token, waiting for Turnstile if it is still verifying.
+ * Resolves to false when verification takes too long or has failed.
+ */
+export function waitForJwt(): Promise<string | false> {
+    const jwt = defaultStore.get(verifyJwtStore);
+    if (jwt) return Promise.resolve(jwt);
+    if (defaultStore.get(verifyFailedStore)) return Promise.resolve(false);
+    return new Promise((resolve) => {
+        const finish = (result: string | false) => {
+            clearTimeout(timer);
+            unsubJwt();
+            unsubFailed();
+            resolve(result);
+        };
+        const timer = setTimeout(() => finish(false), JWT_WAIT_TIMEOUT_MS);
+        const unsubJwt = defaultStore.sub(verifyJwtStore, () => {
+            const jwt = defaultStore.get(verifyJwtStore);
+            if (jwt) finish(jwt);
+        });
+        const unsubFailed = defaultStore.sub(verifyFailedStore, () => {
+            if (defaultStore.get(verifyFailedStore)) finish(false);
+        });
+    });
+}
 
 let jwtRenewPromise: Promise<string | null> | null = null;
 

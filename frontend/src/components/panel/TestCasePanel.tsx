@@ -9,10 +9,9 @@ import {
     runStatusStore,
     testCaseEditStore,
     testCasesStore,
-    verifyJwtStore,
     type TestCase,
 } from "@/store/atom";
-import { cn, useIsMobile } from "@/lib/utils";
+import { cn, randomId, useIsMobile } from "@/lib/utils";
 import { handleRun } from "@/service/run";
 import { useTranslation } from "react-i18next";
 import TestEditDialog from "./TestEditDialog";
@@ -26,7 +25,6 @@ export default function TestCasePanel({
     const [testCases, setTestCases] = useAtom(testCasesStore);
     const [, setPanel] = useAtom(panelDrawerStore);
     const isMobile = useIsMobile();
-    const [jwt] = useAtom(verifyJwtStore);
     const { t } = useTranslation(["editor", "common"]);
 
     const [runStatus] = useAtom(runStatusStore);
@@ -34,7 +32,7 @@ export default function TestCasePanel({
 
     function handleAddTestCase(name: string, input: string, expected: string) {
         const newTestCase: TestCase = {
-            id: crypto.randomUUID(),
+            id: randomId(),
             name,
             input,
             expectedOutput: expected,
@@ -44,7 +42,7 @@ export default function TestCasePanel({
             has_expected_output: !!expected,
         });
     }
-    const cantRun = runStatus !== "idle" || !jwt;
+    const cantRun = runStatus !== "idle";
 
     return (
         <>

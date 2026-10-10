@@ -10,7 +10,7 @@ import {
     testCasesStore,
     type TestCase,
 } from "@/store/atom";
-import { useIsMobile } from "@/lib/utils";
+import { randomId, useIsMobile } from "@/lib/utils";
 import { addAlert } from "@/lib/alert";
 
 declare global {
@@ -190,7 +190,7 @@ export function ExtensionReceiver() {
                 name,
                 group,
                 testCases: tests.map((test, index) => ({
-                    id: crypto.randomUUID(),
+                    id: randomId(),
                     name: t("testCase.extension.caseName", {
                         problemName: name,
                         index: index + 1,

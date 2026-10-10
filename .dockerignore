@@ -235,3 +235,6 @@ frontend/.astro
 frontend/.wrangler
 frontend/public/i18n
 frontend/public/script
+frontend/test/browser/results
+# Built inside the image by docker/frontend/Dockerfile instead.
+frontend/public/toolchain
