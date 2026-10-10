@@ -72,8 +72,7 @@
         "sourceCode": "Source Code",
         "demoDialog": {
             "title": "Received Test Case from Extension",
-            "descriptionBefore": "Test case of",
-            "descriptionAfter": "has been received. Would you like to overwrite or insert the new test cases?",
+            "description": "Test case of {{problem}} has been received. Would you like to overwrite or insert the new test cases?",
             "cancel": "Cancel",
             "overwrite": "Overwrite",
             "insert": "Insert"
