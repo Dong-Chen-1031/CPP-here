@@ -42,6 +42,9 @@
         "clearTip": "清除輸出",
         "noOutput": "尚無輸出結果",
         "truncated": "Output is too long to show in full. Use copy to get the full output.",
+        "queued": "Waiting to run…",
+        "notRun": "Not run.",
+        "stopped": "Stopped.",
         "compiler": {
             "browser": "正在瀏覽器中編譯",
             "server": "正在伺服器上編譯",
