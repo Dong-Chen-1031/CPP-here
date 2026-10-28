@@ -14,6 +14,12 @@ const resultsDir = path.join(frontend, "test/browser/results");
 await fs.mkdir(resultsDir, { recursive: true });
 const server = await createServer({
     configFile: false,
+    // Pre-bundle the run worker's dependency too, or Vite finds it at the
+    // first run and reloads the page mid-test.
+    optimizeDeps: {
+        entries: ["test/browser/index.html"],
+        include: ["@bjorn3/browser_wasi_shim"],
+    },
     root: frontend,
     publicDir: path.join(frontend, "public"),
     plugins: [toolchainId()],
