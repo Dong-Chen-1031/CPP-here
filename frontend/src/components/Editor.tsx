@@ -1,17 +1,19 @@
-import { useState, useCallback, useRef, useEffect } from "react";
-import CodeMirror, { type ReactCodeMirrorProps } from "@uiw/react-codemirror";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import CodeMirror, {
+    type ReactCodeMirrorProps,
+    type ReactCodeMirrorRef,
+} from "@uiw/react-codemirror";
 import { cpp } from "@codemirror/lang-cpp";
 // import { oneDark } from "@codemirror/theme-one-dark";
 import { vscodeDarkInit } from "@uiw/codemirror-theme-vscode";
 import { EditorView } from "@codemirror/view";
-import { indentUnit } from "@codemirror/language";
 import {
     acceptCompletion,
     autocompletion,
     type CompletionContext,
     type CompletionResult,
 } from "@codemirror/autocomplete";
-import { Prec } from "@codemirror/state";
+import { Prec, StateEffect, type Extension } from "@codemirror/state";
 import { keymap } from "@codemirror/view";
 import { cppKeywords } from "../config/cppKeywords";
 import {
@@ -42,22 +44,52 @@ function cppCompletions(context: CompletionContext): CompletionResult | null {
     };
 }
 
+const baseExtensions: Extension[] = [
+    cpp(),
+    autocompletion({ override: [cppCompletions] }),
+    EditorView.lineWrapping,
+    errorField,
+    Prec.highest(
+        keymap.of([
+            {
+                key: "Tab",
+                run: acceptCompletion,
+            },
+        ]),
+    ),
+];
+const noExtensions: Extension[] = [];
+
+const themes = new Map<number, Extension>();
+function getTheme(fontSize: number) {
+    let theme = themes.get(fontSize);
+    if (!theme) {
+        theme = vscodeDarkInit({
+            settings: {
+                fontSize: `${fontSize}px`,
+                background: "#1F1F1F",
+                gutterBackground: "#1F1F1F",
+            },
+        });
+        themes.set(fontSize, theme);
+    }
+    return theme;
+}
+
 function CppEditor({
     onChange,
-    extensions = [],
+    extensions = noExtensions,
     basicSetup,
     className,
     style,
     ...rest
 }: CppEditorProps) {
-    const [EditorGlobal, setEditorGlobal] = useAtom(editorRefStore);
+    const [, setEditorGlobal] = useAtom(editorRefStore);
     const [code, setCode] = useAtom(codeStore);
     const [fontSize] = useAtom(editorFontSizeStore);
     const [tabSize] = useAtom(editorTabSizeStore);
     const editorError = useAtomValue(editorErrorStore);
-    const editorRef = useRef<
-        import("@uiw/react-codemirror").ReactCodeMirrorRef | null
-    >(null);
+    const editorRef = useRef<ReactCodeMirrorRef | null>(null);
 
     const [isEditorReady, setIsEditorReady] = useState(false);
 
@@ -71,9 +103,7 @@ function CppEditor({
 
         try {
             const doc = view.state.doc;
-            const effects: import("@codemirror/state").StateEffect<any>[] = [
-                clearErrorsEffect.of(),
-            ];
+            const effects: StateEffect<any>[] = [clearErrorsEffect.of()];
 
             for (const err of editorError) {
                 // Safely access line to avoid out-of-bounds error
@@ -147,6 +177,21 @@ function CppEditor({
         };
     }, []);
 
+    const allExtensions = useMemo(
+        () => [...baseExtensions, ...extensions],
+        [extensions],
+    );
+    const setup = useMemo(
+        () => ({
+            lineNumbers: true,
+            foldGutter: true,
+            highlightActiveLine: true,
+            tabSize: tabSize,
+            ...(typeof basicSetup === "object" ? basicSetup : {}),
+        }),
+        [tabSize, basicSetup],
+    );
+
     const handleChange = useCallback(
         (value: string) => {
             setCode(value);
@@ -167,42 +212,15 @@ function CppEditor({
                     style={style}
                     value={code}
                     height="100%"
-                    theme={vscodeDarkInit({
-                        settings: {
-                            fontSize: `${fontSize}px`,
-                            background: "#1F1F1F",
-                            gutterBackground: "#1F1F1F",
-                        },
-                    })}
+                    theme={getTheme(fontSize)}
                     ref={editorRef}
                     onCreateEditor={() => {
                         setEditorGlobal(editorRef);
                         setIsEditorReady(true);
                     }}
-                    extensions={[
-                        cpp(),
-                        autocompletion({ override: [cppCompletions] }),
-                        EditorView.lineWrapping,
-                        errorField,
-                        indentUnit.of("    "),
-                        Prec.highest(
-                            keymap.of([
-                                {
-                                    key: "Tab",
-                                    run: acceptCompletion, // 如果選單開啟，按下 Tab 就選取補全
-                                },
-                            ]),
-                        ),
-                        ...extensions,
-                    ]}
+                    extensions={allExtensions}
                     onChange={handleChange}
-                    basicSetup={{
-                        lineNumbers: true,
-                        foldGutter: true,
-                        highlightActiveLine: true,
-                        tabSize: tabSize,
-                        ...(typeof basicSetup === "object" ? basicSetup : {}),
-                    }}
+                    basicSetup={setup}
                     {...rest}
                 />
             </div>
