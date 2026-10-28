@@ -95,7 +95,15 @@ Flags match the backend where it matters: `-O2`, template/constexpr depth 50,
 8 MB stack (`-z stack-size`, `--stack-first`), 512 MiB memory
 (`--max-memory`, with `malloc`/`calloc`/`realloc` wrapped to report the limit),
 32 MiB output, the UI's time limit. Integer division by zero traps. No C++
-exceptions, `setjmp`/`longjmp` or signals (WASI preview 1).
+exceptions, `setjmp`/`longjmp` or signals (WASI preview 1). Linked with
+`-lc-printscan-long-double` (wasi-libc otherwise traps on long double I/O) and
+WASI's process clock emulation, so `clock()` works; it measures wall time and
+`CLOCKS_PER_SEC` is 10⁹, not Linux's 10⁶.
+
+`prepare-toolchain.mjs` patches YoWASP's `bundle.js`: its in-memory filesystem
+copied a file on every write, quadratic in the file's size, so an object file
+with a large zero-initialized array (`int a[8000000];`, 32 MB) took 30 to 70
+seconds to write. The script fails if a new release changes that code.
 
 ## Generated assets
 

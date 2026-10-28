@@ -9,7 +9,8 @@
         "-fconstexpr-depth=50",
         "-fmacro-backtrace-limit=10",
         "-fsanitize=integer-divide-by-zero",
-        "-fsanitize-trap=integer-divide-by-zero"
+        "-fsanitize-trap=integer-divide-by-zero",
+        "-D_WASI_EMULATED_PROCESS_CLOCKS"
     ],
     "linkFlags": [
         "-Wl,-z,stack-size=8388608",
@@ -17,7 +18,9 @@
         "-Wl,--max-memory=536870912",
         "-Wl,--wrap=malloc",
         "-Wl,--wrap=calloc",
-        "-Wl,--wrap=realloc"
+        "-Wl,--wrap=realloc",
+        "-lc-printscan-long-double",
+        "-lwasi-emulated-process-clocks"
     ],
     "assets": [
         "llvm.core.wasm",

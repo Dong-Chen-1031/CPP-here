@@ -75,7 +75,9 @@ await fs.mkdir(out, { recursive: true });
 
 // The worker serves these URLs from .gz.bin files (see compile.worker.ts), so
 // fail here rather than in the browser if the bundle loads anything else.
-const bundle = await fs.readFile(path.join(gen, "bundle.js"), "utf8");
+const bundle = patchWriteStream(
+    await fs.readFile(path.join(gen, "bundle.js"), "utf8"),
+);
 const referenced = [
     ...bundle.matchAll(/new URL\("\.\/([^"]+)", import\.meta\.url\)/g),
 ].map((m) => m[1]);
@@ -235,6 +237,50 @@ await fs.writeFile(
     ),
 );
 console.log("Prepared:", out);
+
+// YoWASP's virtual filesystem copies the whole file on every write, so writing
+// an n-byte file costs O(n²): an object file with `int a[8000000];` (32 MB of
+// zeros) took 30 to 70 seconds to write. Grow a backing buffer by doubling
+// instead. `data` stays the file's exact contents (a view of the buffer), so
+// the rest of the bundle is unaffected; a buffer replaced elsewhere (open with
+// truncate, setSize growing it, an input file) is never written into. The
+// output is the same: the same main.wasm bytes for the same source.
+function patchWriteStream(bundle) {
+    const original = `  write(contents) {
+    const offset = Number(this.offset);
+    const newData = new Uint8Array(Math.max(this.file.data.length, offset + contents.length));
+    newData.set(this.file.data);
+    newData.subarray(offset).set(contents);
+    this.file.data = newData;
+    this.offset += BigInt(contents.length);
+  }`;
+    const patched = `  write(contents) {
+    const offset = Number(this.offset);
+    const file = this.file;
+    const length = file.data.length;
+    const end = Math.max(length, offset + contents.length);
+    let buffer = file.cppHereBuffer;
+    if (buffer && (file.data.buffer !== buffer.buffer || file.data.byteOffset !== 0))
+      buffer = undefined;
+    if (!buffer || buffer.length < end) {
+      const grown = new Uint8Array(Math.max(end, 2 * (buffer ? buffer.length : length), 4096));
+      grown.set(file.data);
+      buffer = grown;
+    } else if (offset > length) {
+      buffer.fill(0, length, offset);
+    }
+    buffer.set(contents, offset);
+    file.cppHereBuffer = buffer;
+    file.data = buffer.subarray(0, end);
+    this.offset += BigInt(contents.length);
+  }`;
+    // Fail rather than ship the slow writer when an update changes the code.
+    if (bundle.split(original).length !== 2)
+        throw Error(
+            "@yowasp/clang bundle.js: WriteStream.write is not the expected code; update patchWriteStream in prepare-toolchain.mjs",
+        );
+    return bundle.replace(original, patched);
+}
 
 async function runWasi(bytes) {
     const file = path.join(out, ".smoke-stdout");
