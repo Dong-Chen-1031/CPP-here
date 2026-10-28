@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import CodeMirror, { type ReactCodeMirrorProps } from "@uiw/react-codemirror";
 import { cpp } from "@codemirror/lang-cpp";
 // import { oneDark } from "@codemirror/theme-one-dark";
@@ -11,7 +11,7 @@ import {
     type CompletionContext,
     type CompletionResult,
 } from "@codemirror/autocomplete";
-import { Prec } from "@codemirror/state";
+import { Prec, type Extension } from "@codemirror/state";
 import { keymap } from "@codemirror/view";
 import { cppKeywords } from "../config/cppKeywords";
 import {
@@ -42,9 +42,45 @@ function cppCompletions(context: CompletionContext): CompletionResult | null {
     };
 }
 
+// CodeMirror reconfigures the whole editor whenever `theme` or `extensions`
+// change identity, and every new theme mounts CSS rules that are never
+// removed, so these must stay stable across renders.
+const baseExtensions: Extension[] = [
+    cpp(),
+    autocompletion({ override: [cppCompletions] }),
+    EditorView.lineWrapping,
+    errorField,
+    indentUnit.of("    "),
+    Prec.highest(
+        keymap.of([
+            {
+                key: "Tab",
+                run: acceptCompletion, // 如果選單開啟，按下 Tab 就選取補全
+            },
+        ]),
+    ),
+];
+const noExtensions: Extension[] = [];
+
+const themes = new Map<number, Extension>();
+function getTheme(fontSize: number) {
+    let theme = themes.get(fontSize);
+    if (!theme) {
+        theme = vscodeDarkInit({
+            settings: {
+                fontSize: `${fontSize}px`,
+                background: "#1F1F1F",
+                gutterBackground: "#1F1F1F",
+            },
+        });
+        themes.set(fontSize, theme);
+    }
+    return theme;
+}
+
 function CppEditor({
     onChange,
-    extensions = [],
+    extensions = noExtensions,
     basicSetup,
     className,
     style,
@@ -147,6 +183,21 @@ function CppEditor({
         };
     }, []);
 
+    const allExtensions = useMemo(
+        () => [...baseExtensions, ...extensions],
+        [extensions],
+    );
+    const setup = useMemo(
+        () => ({
+            lineNumbers: true,
+            foldGutter: true,
+            highlightActiveLine: true,
+            tabSize: tabSize,
+            ...(typeof basicSetup === "object" ? basicSetup : {}),
+        }),
+        [tabSize, basicSetup],
+    );
+
     const handleChange = useCallback(
         (value: string) => {
             setCode(value);
@@ -167,42 +218,15 @@ function CppEditor({
                     style={style}
                     value={code}
                     height="100%"
-                    theme={vscodeDarkInit({
-                        settings: {
-                            fontSize: `${fontSize}px`,
-                            background: "#1F1F1F",
-                            gutterBackground: "#1F1F1F",
-                        },
-                    })}
+                    theme={getTheme(fontSize)}
                     ref={editorRef}
                     onCreateEditor={() => {
                         setEditorGlobal(editorRef);
                         setIsEditorReady(true);
                     }}
-                    extensions={[
-                        cpp(),
-                        autocompletion({ override: [cppCompletions] }),
-                        EditorView.lineWrapping,
-                        errorField,
-                        indentUnit.of("    "),
-                        Prec.highest(
-                            keymap.of([
-                                {
-                                    key: "Tab",
-                                    run: acceptCompletion, // 如果選單開啟，按下 Tab 就選取補全
-                                },
-                            ]),
-                        ),
-                        ...extensions,
-                    ]}
+                    extensions={allExtensions}
                     onChange={handleChange}
-                    basicSetup={{
-                        lineNumbers: true,
-                        foldGutter: true,
-                        highlightActiveLine: true,
-                        tabSize: tabSize,
-                        ...(typeof basicSetup === "object" ? basicSetup : {}),
-                    }}
+                    basicSetup={setup}
                     {...rest}
                 />
             </div>
