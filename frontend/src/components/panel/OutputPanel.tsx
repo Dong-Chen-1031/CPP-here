@@ -88,6 +88,17 @@ function OutputCaseJSX({
     setCopiedCases,
 }: OutputCaseJSXProps) {
     const { t } = useTranslation(["editor", "common"]);
+    // A case left "running" or "queued" after the run ended (stopped, or the
+    // page was reloaded mid-run) is shown as stopped or not run.
+    const active = useAtomValue(runStatusStore) === "running";
+    const note =
+        line.status === "queued"
+            ? active
+                ? "output.queued"
+                : "output.notRun"
+            : line.status === "running" && !active
+              ? "output.stopped"
+              : null;
     const outputPlace = useRef<HTMLDivElement>(null);
     const [truncated, setTruncated] = useState(false);
     useEffect(() => {
@@ -185,7 +196,7 @@ function OutputCaseJSX({
             className={cn(
                 "text-xs rounded-md whitespace-pre-wrap break-all my-2 output-card",
                 line.type === "err" ? " text-destructive" : "",
-                line.status == "running"
+                line.status == "running" && active
                     ? "loading"
                     : line.status === "ac"
                       ? "success"
@@ -220,6 +231,7 @@ function OutputCaseJSX({
                 </div>
             )}
             <div ref={outputPlace}></div>
+            {note && <p className="text-muted-foreground italic">{t(note)}</p>}
             {truncated && (
                 <p className="mt-2 text-muted-foreground italic">
                     {t("output.truncated")}

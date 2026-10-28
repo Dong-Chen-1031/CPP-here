@@ -25,7 +25,8 @@ export interface OutputCase {
     testCaseId: string;
     testCaseName?: string;
     expectedOutput?: string;
-    status?: "running" | "ac" | "error" | "wa" | "finished";
+    // queued: "Run all" has not started the case yet
+    status?: "queued" | "running" | "ac" | "error" | "wa" | "finished";
 }
 
 export type OutputChunk = {
@@ -79,8 +80,9 @@ export async function getOutputString(caseId: string) {
     return (await getOutputChunks(caseId)).map((c) => c.content).join("");
 }
 
-export type SharedOutputCase = Omit<OutputCase, "testCaseId"> & {
+export type SharedOutputCase = Omit<OutputCase, "testCaseId" | "status"> & {
     testCaseId?: string;
+    status?: Exclude<OutputCase["status"], "queued">;
     content: string;
 };
 
@@ -88,11 +90,20 @@ export async function exportOutputCases(
     cases: OutputCase[],
     maxChars: number,
 ): Promise<SharedOutputCase[]> {
+    // A case that has not run has no output, and shares have no such status.
     return Promise.all(
-        cases.map(async (c) => ({
-            ...c,
-            content: (await getOutputString(c.testCaseId)).slice(0, maxChars),
-        })),
+        cases
+            .filter(
+                (c): c is OutputCase & Pick<SharedOutputCase, "status"> =>
+                    c.status !== "queued",
+            )
+            .map(async (c) => ({
+                ...c,
+                content: (await getOutputString(c.testCaseId)).slice(
+                    0,
+                    maxChars,
+                ),
+            })),
     );
 }
 

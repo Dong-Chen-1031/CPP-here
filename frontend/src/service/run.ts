@@ -20,6 +20,7 @@ import {
 } from "@/store/outputStore";
 import {
     DEFAULT_TIME_LIMIT_S,
+    MAX_PARALLEL_RUNS,
     MEMORY_LIMIT_MIB,
     NO_TIME_LIMIT,
     OUTPUT_LIMIT_BYTES,
@@ -596,13 +597,32 @@ async function runAll({ target }: { target?: BuildTarget }) {
 
     // exitCount = 0;
 
-    for (const testCase of testCases) {
+    // A case's time limit starts with its worker, so waiting here does not
+    // count towards it.
+    const queue = [...testCases];
+    store.set(outputStore, (prev) =>
+        queue.reduce(
+            (cases, testCase) =>
+                upsertCase(cases, {
+                    testCaseId: testCase.id,
+                    testCaseName: testCase.name,
+                    status: "queued",
+                }),
+            prev,
+        ),
+    );
+    const startNext = () => {
+        const testCase = queue.shift();
+        if (!testCase) return;
         let collected = "";
         let failed = false;
         const caseInfo = {
             testCaseId: testCase.id,
             testCaseName: testCase.name,
         };
+        store.set(outputStore, (prev) =>
+            upsertCase(prev, { ...caseInfo, status: "running" }),
+        );
         const addCaseOutput = (type: "stdout" | "stderr", content: string) => {
             addOutputChunk(testCase.id, { type, content });
             if (
@@ -636,20 +656,47 @@ async function runAll({ target }: { target?: BuildTarget }) {
                 if (!failed) {
                     let status: "finished" | "ac" | "wa" = "finished";
                     if (testCase.expectedOutput) {
-                        status =
-                            collected.trim() === testCase.expectedOutput.trim()
-                                ? "ac"
-                                : "wa";
+                        status = outputMatches(
+                            collected,
+                            testCase.expectedOutput,
+                        )
+                            ? "ac"
+                            : "wa";
                     }
                     store.set(outputStore, (prev) =>
                         upsertCase(prev, { ...caseInfo, status }),
                     );
                 }
+                // Not after the user stopped the run or started another one
+                if (
+                    generation === runGeneration &&
+                    store.get(runStatusStore) !== "idle"
+                )
+                    startNext();
                 if (defaultStore.get(codeWorkersStore).length === 0) {
                     store.set(runStatusStore, "idle");
                 }
             },
         });
-    }
+    };
+    const cores = navigator.hardwareConcurrency || 2;
+    const parallel = Math.max(1, Math.min(MAX_PARALLEL_RUNS, cores - 1));
+    for (let i = 0; i < parallel; i++) startNext();
     store.set(runStatusStore, "running");
+}
+
+/**
+ * Whether a program's output is the expected one, ignoring whitespace at the
+ * end of each line and around the whole output (blank lines, CRLF), as most
+ * judges do: `cout << x << " "` leaves a space before every newline.
+ */
+export function outputMatches(output: string, expected: string) {
+    const lines = (text: string) =>
+        text
+            .trim()
+            .split("\n")
+            .map((line) => line.trimEnd());
+    const a = lines(output);
+    const b = lines(expected);
+    return a.length === b.length && a.every((line, i) => line === b[i]);
 }

@@ -27,6 +27,13 @@ export const OUTPUT_LIMIT_BYTES = 32 * 1024 * 1024;
  */
 export const MEMORY_LIMIT_MIB = 512;
 
+/**
+ * Most test cases "Run all" runs at once; fewer on devices with fewer than 5
+ * cores, as one is left for the page. Each case is a worker with up to 512 MiB,
+ * and the time limit is wall-clock: cases competing for cores could exceed it.
+ */
+export const MAX_PARALLEL_RUNS = 4;
+
 /** Beyond this, a case's output is kept in IndexedDB but not rendered. */
 export const DISPLAY_LIMIT_CHARS = 2 * 1024 * 1024;
 export const DISPLAY_LIMIT_LINES = 5000;

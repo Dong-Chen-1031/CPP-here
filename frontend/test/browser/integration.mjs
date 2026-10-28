@@ -53,6 +53,17 @@ try {
         result.a !== "4\n" ||
         result.b !== "6\n" ||
         result.all.some((x) => x.status !== "ac") ||
+        result.queued.peak > result.queued.parallel ||
+        result.queued.started !== 8 ||
+        result.queued.statuses.join() !== "ac,ac,ac,ac,ac,ac,ac,wa" ||
+        result.stopped.started !== result.queued.parallel ||
+        result.stopped.during.running !== result.queued.parallel ||
+        result.stopped.during.queued !== 8 - result.queued.parallel ||
+        result.stopped.queued !== 8 - result.queued.parallel ||
+        result.stopped.shared !== result.queued.parallel ||
+        result.stopped.running !== 0 ||
+        result.stopped.status !== "idle" ||
+        result.matches.some((ok) => !ok) ||
         requests
     )
         throw Error("Integration failed");
