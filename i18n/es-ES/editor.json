@@ -42,6 +42,9 @@
         "clearTip": "Clear output",
         "noOutput": "No output yet.",
         "truncated": "Output is too long to show in full. Use copy to get the full output.",
+        "queued": "Waiting to run…",
+        "notRun": "Not run.",
+        "stopped": "Stopped.",
         "compiler": {
             "browser": "Compiling in your browser",
             "server": "Compiling on the server",
