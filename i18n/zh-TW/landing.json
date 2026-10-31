@@ -5,7 +5,8 @@
     },
     "header": {
         "openEditor": "立即開啟",
-        "github": "GitHub"
+        "github": "GitHub",
+        "language": "語言"
     },
     "hero": {
         "title": "新世代的",
@@ -184,11 +185,27 @@
         "editor": "編輯器",
         "github": "GitHub",
         "status": "服務狀態",
-        "author": "Dong-Chen-1031"
+        "author": "Dong-Chen-1031",
+        "blog": "Blog"
     },
     "editorPage": {
         "title": "編輯器 - C++ Here",
         "description": "線上 C++ 編輯器 —— 直接在瀏覽器中編譯、執行並測試 C++ 程式碼。"
+    },
+    "blog": {
+        "title": "Blog | C++ Here",
+        "description": "C++ Here 的更新、教學，以及競賽程式設計的筆記。",
+        "heading": "Blog",
+        "subheading": "更新、教學，以及競賽程式設計的筆記。",
+        "empty": "還沒有文章。",
+        "back": "所有文章",
+        "updated": "更新於",
+        "postTitleSuffix": " | C++ Here Blog",
+        "codeBlock": {
+            "copy": "複製到剪貼簿",
+            "copied": "已複製！",
+            "terminal": "終端機視窗"
+        }
     },
     "notFound": {
         "title": "404 - 找不到頁面 | C++ Here",
