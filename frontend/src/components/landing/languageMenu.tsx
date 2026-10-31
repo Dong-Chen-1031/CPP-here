@@ -22,10 +22,10 @@ export function LanguageMenu({
             <DropdownMenuTrigger asChild>
                 <Button
                     variant="outline"
-                    size="sm"
+                    size="icon-sm"
                     aria-label={label}
                     title={label}
-                    className="mr-3 hover:bg-primary/80 size-7"
+                    className="mr-3 hover:bg-primary/80"
                 >
                     <LanguagesIcon />
                 </Button>
