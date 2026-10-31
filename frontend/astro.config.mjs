@@ -23,6 +23,22 @@ export default defineConfig({
     ),
     site: "https://cpp.doong.me",
     integrations: [
+        // `astro build`, `check` and `sync` optimize dependencies too (the
+        // Cloudflare plugin starts its runner), and in the shared
+        // node_modules/.vite they replace the files a running dev server
+        // imports, which then fails with "The file does not exist ... in the
+        // optimize deps directory". Give every command but dev its own cache.
+        {
+            name: "separate-vite-cache",
+            hooks: {
+                "astro:config:setup": ({ command, updateConfig }) => {
+                    if (command !== "dev")
+                        updateConfig({
+                            vite: { cacheDir: `node_modules/.vite-${command}` },
+                        });
+                },
+            },
+        },
         react(),
         sitemap({
             filter: (page) =>
