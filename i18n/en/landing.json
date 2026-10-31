@@ -5,7 +5,8 @@
     },
     "header": {
         "openEditor": "Open Editor",
-        "github": "GitHub"
+        "github": "GitHub",
+        "language": "Language"
     },
     "hero": {
         "title": "Next-generation",
@@ -199,7 +200,6 @@
         "empty": "No posts yet.",
         "back": "All posts",
         "updated": "Updated",
-        "languages": "Languages",
         "postTitleSuffix": " | C++ Here Blog"
     },
     "notFound": {

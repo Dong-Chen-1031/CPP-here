@@ -1,6 +1,6 @@
 ---
 import { render } from "astro:content";
-import { ArrowLeftIcon, LanguagesIcon } from "@lucide/astro";
+import { ArrowLeftIcon } from "@lucide/astro";
 import Layout from "@/layouts/Layout.astro";
 import "@/styles/blog.css";
 import Header from "@/components/landing/header.astro";
@@ -44,10 +44,11 @@ const { title, description, pubDate, updatedDate, author, photo } = post.data;
 const t = getTranslation(lang);
 const { Content } = await render(post);
 
-// Each version; the switcher names each in its own language (Locale.name).
-const versions = translations
-    .map((p) => ({ locale: splitId(p).locale, href: postPath(p) }))
-    .sort((a, b) => a.locale.code.localeCompare(b.locale.code));
+// Each language this post is written in: for hreflang and the header's menu.
+const versions = translations.map((p) => ({
+    locale: splitId(p).locale,
+    href: postPath(p),
+}));
 const alternates = [
     ...versions.map((v) => ({ hreflang: v.locale.code, path: v.href })),
     // "/blog/<slug>/" redirects to the visitor's preferred language.
@@ -123,46 +124,22 @@ const structuredData = jsonLd({
         set:html={structuredData}
     ></script>
     <div class="font-jetbrains tabular-nums min-h-dvh flex flex-col">
-        <Header lang={lang} t={t.header} />
+        <Header
+            lang={lang}
+            t={t.header}
+            localeHref={(code) =>
+                versions.find((v) => v.locale.code === code)?.href ??
+                blogPath(code)
+            }
+        />
         <article class="flex-1 mx-auto w-full max-w-[42em] px-5 pt-28 pb-20">
-            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                <a
-                    href={blogPath(lang)}
-                    class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground link-fade"
-                >
-                    <ArrowLeftIcon class="size-4" />
-                    {t.blog.back}
-                </a>
-                {versions.length > 1 && (
-                    <nav
-                        aria-label={t.blog.languages}
-                        class="flex items-center gap-1 text-sm"
-                    >
-                        <LanguagesIcon class="size-4 mr-1 text-muted-foreground" />
-                        {versions.map(({ locale: l, href }) =>
-                            l === locale ? (
-                                <span
-                                    aria-current="page"
-                                    lang={l.code}
-                                    class="rounded-md bg-muted px-2 py-0.5 text-foreground"
-                                >
-                                    {l.name}
-                                </span>
-                            ) : (
-                                <a
-                                    {href}
-                                    hreflang={l.code}
-                                    lang={l.code}
-                                    data-remember-lang={l.code}
-                                    class="rounded-md px-2 py-0.5 text-muted-foreground hover:text-foreground link-fade"
-                                >
-                                    {l.name}
-                                </a>
-                            ),
-                        )}
-                    </nav>
-                )}
-            </div>
+            <a
+                href={blogPath(lang)}
+                class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground link-fade"
+            >
+                <ArrowLeftIcon class="size-4" />
+                {t.blog.back}
+            </a>
             <header class="mt-8">
                 <p class="text-sm text-muted-foreground">
                     <time datetime={pubDate.toISOString()}>
@@ -190,15 +167,3 @@ const structuredData = jsonLd({
         <Footer lang={lang} t={t.footer} />
     </div>
 </Layout>
-
-<script>
-    import { rememberLang } from "@/lib/langCookie";
-
-    // Switching a post's language is a choice worth keeping for "/" too.
-    for (const link of document.querySelectorAll<HTMLAnchorElement>(
-        "a[data-remember-lang]",
-    ))
-        link.addEventListener("click", () =>
-            rememberLang(link.dataset.rememberLang!),
-        );
-</script>

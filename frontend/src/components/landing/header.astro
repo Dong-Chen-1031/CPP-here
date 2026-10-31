@@ -3,14 +3,24 @@ import { Button } from "@/components/ui/button";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import { CodeIcon } from "@lucide/astro";
 import { PUBLIC_GITHUB_LINK } from "astro:env/client";
-import { localePath } from "@/lib/locales";
+import { findLocale, LOCALES, localePath } from "@/lib/locales";
+import { LanguageMenu } from "@/components/landing/languageMenu";
 
 interface Props {
     lang?: string;
     t?: Record<string, string>;
+    /** This page in another language; by default the same path under its prefix. */
+    localeHref?: (code: string) => string;
 }
 
 const { lang, t } = Astro.props as Props;
+const rest = Astro.url.pathname.replace(/^\/[^/]+/, "") || "/";
+const { localeHref = (code: string) => localePath(code, rest) } = Astro.props;
+const languages = LOCALES.map((l) => ({
+    code: l.code,
+    name: l.name,
+    href: localeHref(l.code),
+}));
 ---
 
 <header class="w-full fixed top-0 h-16 py-4 px-5 border-b-2 border-border flex items-center bg-background/50 backdrop-blur-md z-100">
@@ -28,6 +38,12 @@ const { lang, t } = Astro.props as Props;
             > */}
     <!-- <div class="flex-1"></div> -->
 
+    <LanguageMenu
+        client:load
+        label={t?.language ?? ""}
+        current={findLocale(lang).code}
+        links={languages}
+    />
     <a href={PUBLIC_GITHUB_LINK} target="_blank" rel="noopener noreferrer">
         <Button className="hover:bg-primary/80 flex-1" variant={"outline"}>
             <SiGithub />
