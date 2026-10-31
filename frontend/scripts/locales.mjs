@@ -63,7 +63,7 @@ export function locales() {
     };
 }
 
-function readLocales() {
+export function readLocales() {
     const read = (code, ns) => {
         const file = path.join(i18n, code, `${ns}.json`);
         if (!fs.existsSync(file)) return {};

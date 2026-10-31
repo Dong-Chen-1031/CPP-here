@@ -11,6 +11,7 @@ import mdx from "@astrojs/mdx";
 import { blogLastmod } from "./scripts/blog-lastmod.mjs";
 import { rehypeNewTabLinks } from "./scripts/rehype-new-tab-links.mjs";
 import { locales } from "./scripts/locales.mjs";
+import { codeBlocks } from "./scripts/code-blocks.mjs";
 
 const isProd = process.env.NODE_ENV === "production";
 const lastmod = blogLastmod();
@@ -48,6 +49,8 @@ export default defineConfig({
                 },
             },
         },
+        // Before mdx(), so it renders the code blocks in .mdx posts too.
+        codeBlocks(),
         mdx(),
         react(),
         sitemap({

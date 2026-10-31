@@ -200,7 +200,12 @@
         "empty": "No posts yet.",
         "back": "All posts",
         "updated": "Updated",
-        "postTitleSuffix": " | C++ Here Blog"
+        "postTitleSuffix": " | C++ Here Blog",
+        "codeBlock": {
+            "copy": "Copy to clipboard",
+            "copied": "Copied!",
+            "terminal": "Terminal window"
+        }
     },
     "notFound": {
         "title": "404 - Page not found | C++ Here",

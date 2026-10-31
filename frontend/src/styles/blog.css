@@ -23,3 +23,9 @@
         @apply link-fade;
     }
 }
+
+/* Code blocks opt out of typeset (scripts/code-blocks.mjs), and with it out of
+   its spacing; space them like its own blocks. */
+.typeset .expressive-code {
+    margin-block-start: var(--typeset-flow);
+}
