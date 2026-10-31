@@ -16,9 +16,10 @@ html {
     @apply transition-colors duration-300 hover:duration-150;
 }
 
-/* A base style, so component styles (typeset's on blog posts) win over it. */
+/* A base style, so component styles (typeset's on blog posts) win over it.
+   Inline code only: in a block the inline border would wrap every line. */
 @layer base {
-    code {
+    :not(pre) > code {
         border: 1px solid var(--border);
         border-radius: 4px;
         font-size: 0.855em;
