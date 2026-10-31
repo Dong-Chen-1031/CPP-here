@@ -3,6 +3,7 @@ import { chromium } from "playwright";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { toolchainId } from "../../scripts/toolchain-id.mjs";
+import { locales } from "../../scripts/locales.mjs";
 const root = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
     "../..",
@@ -17,6 +18,8 @@ const server = await createServer({
     resolve: { alias: { "@": path.join(root, "src") } },
     plugins: [
         toolchainId(),
+        // src/lib/i18n.ts imports the locale list and messages from it.
+        locales(),
         {
             name: "test-env",
             resolveId(id) {
