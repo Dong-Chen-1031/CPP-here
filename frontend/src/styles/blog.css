@@ -1,0 +1,31 @@
+/* Rendered markdown, on blog posts only. Families come from the Astro Fonts
+   API. */
+/* Same layer order as global.css, in case this sheet comes first. */
+@layer theme, base, components, utilities;
+@import "./typeset.css";
+@reference "./global.css";
+
+.typeset-docs {
+    --typeset-font-body:
+        var(--font-inter), "PingFang TC", "Microsoft JhengHei", "Noto Sans TC",
+        sans-serif;
+    --typeset-font-heading: var(--font-jetbrains);
+    --typeset-font-mono: var(--font-jetbrains);
+    --typeset-size: 15px;
+    --typeset-leading: 1.75;
+    --typeset-flow: 1.25em;
+}
+
+/* typeset darkens link underlines on hover; fade it like the site's other
+   links. */
+@media (prefers-reduced-motion: no-preference) {
+    .typeset-docs a {
+        @apply link-fade;
+    }
+}
+
+/* Code blocks opt out of typeset (scripts/code-blocks.mjs), and with it out of
+   its spacing; space them like its own blocks. */
+.typeset .expressive-code {
+    margin-block-start: var(--typeset-flow);
+}

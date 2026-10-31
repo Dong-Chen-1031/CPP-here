@@ -6,6 +6,14 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+/** Body of a `<script type="application/ld+json">`, safe to inline. */
+export function jsonLd(data: Record<string, unknown>): string {
+    return JSON.stringify({
+        "@context": "https://schema.org",
+        ...data,
+    }).replace(/</g, "\\u003c");
+}
+
 /** crypto.randomUUID, which insecure origins (the dev server by LAN IP) lack. */
 export function randomId(): string {
     if (typeof crypto.randomUUID === "function") return crypto.randomUUID();

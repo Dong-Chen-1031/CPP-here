@@ -1,33 +1,16 @@
 import enLanding from "../../../i18n/en/landing.json";
-import twLanding from "../../../i18n/zh-TW/landing.json";
+import { landing } from "virtual:locales";
+import { findLocale, LOCALES } from "@/lib/locales";
 
-export function getLanguageCodes(): readonly string[] {
-    const files = import.meta.glob("/public/i18n/*/common.json");
-    const codes = Object.keys(files).map((file) => file.split("/")[3]);
-    if (codes.length === 0) {
-        throw new Error("No language codes found");
-    }
-    return codes;
-}
-
+/** The editor's language setting: each language's own name → its code. */
 export function getLanguages(): Record<string, string> {
-    return Object.fromEntries(
-        getLanguageCodes().map((code) => [
-            new Intl.DisplayNames([code], { type: "language" }).of(code),
-            code,
-        ]),
-    );
+    return Object.fromEntries(LOCALES.map((l) => [l.name, l.code]));
 }
 
 export function getStaticLangPaths() {
-    // return getLanguageCodes()
-    //     .map((lang) => ({ params: { lang: lang.toLowerCase() } }))
-    //     .concat([{ params: { lang: undefined as any } }]);
-    return [
-        { params: { lang: undefined } },
-        { params: { lang: "en" } },
-        { params: { lang: "zh-tw" } },
-    ];
+    // No unprefixed copy: "/" and other paths without a language redirect to
+    // the visitor's preferred one (see lib/preferredLang.ts).
+    return LOCALES.map((l) => ({ params: { lang: l.path } }));
 }
 
 // Fill keys missing from a locale (new strings not yet translated on Crowdin)
@@ -53,5 +36,6 @@ function withFallback<T>(base: T, override: unknown): T {
 }
 
 export function getTranslation(lang?: string) {
-    return lang === "zh-tw" ? withFallback(enLanding, twLanding) : enLanding;
+    const { code } = findLocale(lang);
+    return withFallback(enLanding, landing[code]);
 }

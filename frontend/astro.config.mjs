@@ -7,8 +7,14 @@ import { toolchainId } from "./scripts/toolchain-id.mjs";
 import cloudflare from "@astrojs/cloudflare";
 import { strictPrerender } from "./strict-prerender.mjs";
 import { DEV_JWT_SECRET } from "./env.defaults.mjs";
+import mdx from "@astrojs/mdx";
+import { blogLastmod } from "./scripts/blog-lastmod.mjs";
+import { rehypeNewTabLinks } from "./scripts/rehype-new-tab-links.mjs";
+import { locales } from "./scripts/locales.mjs";
+import { codeBlocks } from "./scripts/code-blocks.mjs";
 
 const isProd = process.env.NODE_ENV === "production";
+const lastmod = blogLastmod();
 
 // import starlight from "@astrojs/starlight";
 
@@ -22,15 +28,44 @@ export default defineConfig({
         }),
     ),
     site: "https://cpp.doong.me",
+    // MDX extends this, so it covers both .md and .mdx posts.
+    markdown: {
+        rehypePlugins: [rehypeNewTabLinks],
+    },
     integrations: [
+        // `astro build`, `check` and `sync` optimize dependencies too (the
+        // Cloudflare plugin starts its runner), and in the shared
+        // node_modules/.vite they replace the files a running dev server
+        // imports, which then fails with "The file does not exist ... in the
+        // optimize deps directory". Give every command but dev its own cache.
+        {
+            name: "separate-vite-cache",
+            hooks: {
+                "astro:config:setup": ({ command, updateConfig }) => {
+                    if (command !== "dev")
+                        updateConfig({
+                            vite: { cacheDir: `node_modules/.vite-${command}` },
+                        });
+                },
+            },
+        },
+        // Before mdx(), so it renders the code blocks in .mdx posts too.
+        codeBlocks(),
+        mdx(),
         react(),
         sitemap({
+            // Whole path segments, so a post like /en/blog/test-cases/ stays.
             filter: (page) =>
-                // Same page as "/", which is the canonical one
-                new URL(page).pathname !== "/en/" &&
-                !page.includes("/editor") &&
-                !page.includes("/test") &&
-                !page.includes("/reset"),
+                !new URL(page).pathname
+                    .split("/")
+                    .some((segment) =>
+                        ["editor", "test", "reset"].includes(segment),
+                    ),
+            serialize(item) {
+                const date = lastmod.get(new URL(item.url).pathname);
+                if (date) item.lastmod = date;
+                return item;
+            },
         }),
         // starlight({
         //     title: "C++ Here Docs",
@@ -39,7 +74,7 @@ export default defineConfig({
         // }),
     ],
     vite: {
-        plugins: [tailwindcss(), toolchainId()],
+        plugins: [tailwindcss(), toolchainId(), locales()],
         worker: { format: "es" },
         optimizeDeps: {
             include: ["react-dom/client"],
@@ -68,6 +103,22 @@ export default defineConfig({
                 "vietnamese",
             ],
             fallbacks: [],
+        },
+        {
+            provider: fontProviders.fontsource(),
+            name: "Inter",
+            cssVariable: "--font-inter",
+            weights: ["100 900"],
+            styles: ["normal", "italic"],
+            subsets: [
+                "latin",
+                "latin-ext",
+                "cyrillic",
+                "cyrillic-ext",
+                "greek",
+                "vietnamese",
+            ],
+            fallbacks: ["sans-serif"],
         },
         {
             provider: fontProviders.local(),

@@ -5,7 +5,8 @@
     },
     "header": {
         "openEditor": "Open Editor",
-        "github": "GitHub"
+        "github": "GitHub",
+        "language": "Language"
     },
     "hero": {
         "title": "Next-generation",
@@ -184,11 +185,27 @@
         "editor": "Editor",
         "github": "GitHub",
         "status": "Status",
-        "author": "Dong-Chen-1031"
+        "author": "Dong-Chen-1031",
+        "blog": "Blog"
     },
     "editorPage": {
         "title": "Editor - C++ Here",
         "description": "Online C++ editor — compile, run, and test C++ code directly in your browser."
+    },
+    "blog": {
+        "title": "Blog | C++ Here",
+        "description": "Updates, guides, and notes on competitive programming from the C++ Here team.",
+        "heading": "Blog",
+        "subheading": "Updates, guides, and notes on competitive programming.",
+        "empty": "No posts yet.",
+        "back": "All posts",
+        "updated": "Updated",
+        "postTitleSuffix": " | C++ Here Blog",
+        "codeBlock": {
+            "copy": "Copy to clipboard",
+            "copied": "Copied!",
+            "terminal": "Terminal window"
+        }
     },
     "notFound": {
         "title": "404 - Page not found | C++ Here",
