@@ -11,12 +11,20 @@ html {
     font-style: normal;
 }
 
-code {
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    font-size: 0.855em;
-    padding: 2px;
-    background: oklch(from var(--background) calc(l + 0.1) c h);
+/* Links fade their color quickly in and slower out. */
+@utility link-fade {
+    @apply transition-colors duration-300 hover:duration-150;
+}
+
+/* A base style, so component styles (typeset's on blog posts) win over it. */
+@layer base {
+    code {
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        font-size: 0.855em;
+        padding: 2px;
+        background: oklch(from var(--background) calc(l + 0.1) c h);
+    }
 }
 * {
     scrollbar-width: thin;

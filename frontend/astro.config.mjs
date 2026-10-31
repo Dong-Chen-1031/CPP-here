@@ -7,9 +7,13 @@ import { toolchainId } from "./scripts/toolchain-id.mjs";
 import cloudflare from "@astrojs/cloudflare";
 import { strictPrerender } from "./strict-prerender.mjs";
 import { DEV_JWT_SECRET } from "./env.defaults.mjs";
+import mdx from "@astrojs/mdx";
+import { blogLastmod } from "./scripts/blog-lastmod.mjs";
+import { rehypeNewTabLinks } from "./scripts/rehype-new-tab-links.mjs";
 import { locales } from "./scripts/locales.mjs";
 
 const isProd = process.env.NODE_ENV === "production";
+const lastmod = blogLastmod();
 
 // import starlight from "@astrojs/starlight";
 
@@ -23,6 +27,10 @@ export default defineConfig({
         }),
     ),
     site: "https://cpp.doong.me",
+    // MDX extends this, so it covers both .md and .mdx posts.
+    markdown: {
+        rehypePlugins: [rehypeNewTabLinks],
+    },
     integrations: [
         // `astro build`, `check` and `sync` optimize dependencies too (the
         // Cloudflare plugin starts its runner), and in the shared
@@ -40,12 +48,18 @@ export default defineConfig({
                 },
             },
         },
+        mdx(),
         react(),
         sitemap({
             filter: (page) =>
                 !page.includes("/editor") &&
                 !page.includes("/test") &&
                 !page.includes("/reset"),
+            serialize(item) {
+                const date = lastmod.get(new URL(item.url).pathname);
+                if (date) item.lastmod = date;
+                return item;
+            },
         }),
         // starlight({
         //     title: "C++ Here Docs",
@@ -83,6 +97,22 @@ export default defineConfig({
                 "vietnamese",
             ],
             fallbacks: [],
+        },
+        {
+            provider: fontProviders.fontsource(),
+            name: "Inter",
+            cssVariable: "--font-inter",
+            weights: ["100 900"],
+            styles: ["normal", "italic"],
+            subsets: [
+                "latin",
+                "latin-ext",
+                "cyrillic",
+                "cyrillic-ext",
+                "greek",
+                "vietnamese",
+            ],
+            fallbacks: ["sans-serif"],
         },
         {
             provider: fontProviders.local(),

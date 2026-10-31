@@ -1,0 +1,204 @@
+---
+import { render } from "astro:content";
+import { ArrowLeftIcon, LanguagesIcon } from "@lucide/astro";
+import Layout from "@/layouts/Layout.astro";
+import "@/styles/blog.css";
+import Header from "@/components/landing/header.astro";
+import Footer from "@/components/landing/footer.astro";
+import { getTranslation } from "@/lib/langList";
+import { jsonLd } from "@/lib/utils";
+import {
+    blogPath,
+    formatDate,
+    getAllPosts,
+    postPath,
+    rssPath,
+    splitId,
+    type Post,
+} from "@/lib/blog";
+
+export async function getStaticPaths() {
+    const posts = await getAllPosts();
+    return posts.map((post) => {
+        const { locale, slug } = splitId(post);
+        return {
+            params: { lang: locale.path, slug },
+            props: {
+                post,
+                translations: posts.filter((p) => splitId(p).slug === slug),
+            },
+        };
+    });
+}
+
+interface Props {
+    post: Post;
+    translations: Post[];
+}
+
+const { lang } = Astro.params;
+const { post, translations } = Astro.props;
+const { locale, slug } = splitId(post);
+const { title, description, pubDate, updatedDate, author, photo } = post.data;
+
+const t = getTranslation(lang);
+const { Content } = await render(post);
+
+// Each version; the switcher names each in its own language (Locale.name).
+const versions = translations
+    .map((p) => ({ locale: splitId(p).locale, href: postPath(p) }))
+    .sort((a, b) => a.locale.code.localeCompare(b.locale.code));
+const alternates = [
+    ...versions.map((v) => ({ hreflang: v.locale.code, path: v.href })),
+    // "/blog/<slug>/" redirects to the visitor's preferred language.
+    { hreflang: "x-default", path: `/blog/${slug}/` },
+];
+
+const canonical = postPath(post);
+const url = new URL(canonical, Astro.site).href;
+const ogImage = photo ?? "/og-image.png";
+const structuredData = jsonLd({
+    "@type": "BlogPosting",
+    headline: title,
+    description,
+    inLanguage: locale.code,
+    url,
+    mainEntityOfPage: url,
+    datePublished: pubDate.toISOString(),
+    dateModified: (updatedDate ?? pubDate).toISOString(),
+    image: new URL(ogImage, Astro.site).href,
+    author: { "@type": "Person", name: author },
+    publisher: {
+        "@type": "Organization",
+        name: "C++ Here",
+        url: Astro.site?.href,
+        logo: {
+            "@type": "ImageObject",
+            url: new URL("/favicon-96x96.png", Astro.site).href,
+        },
+    },
+});
+---
+
+<Layout
+    title={title + t.blog.postTitleSuffix}
+    {description}
+    lang={locale.code}
+    font="inter"
+    ogType="article"
+    {ogImage}
+    ogImageAlt={photo ? title : undefined}
+    {canonical}
+    alternates={translations.length > 1 ? alternates : []}
+>
+    <meta
+        slot="head"
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
+    <meta
+        slot="head"
+        property="article:published_time"
+        content={pubDate.toISOString()}
+    />
+    {updatedDate && (
+        <meta
+            slot="head"
+            property="article:modified_time"
+            content={updatedDate.toISOString()}
+        />
+    )}
+    <meta slot="head" property="article:author" content={author} />
+    <link
+        slot="head"
+        rel="alternate"
+        type="application/rss+xml"
+        title={t.blog.title}
+        href={rssPath(lang)}
+    />
+    <script
+        slot="head"
+        type="application/ld+json"
+        is:inline
+        set:html={structuredData}
+    ></script>
+    <div class="font-jetbrains tabular-nums min-h-dvh flex flex-col">
+        <Header lang={lang} t={t.header} />
+        <article class="flex-1 mx-auto w-full max-w-[42em] px-5 pt-28 pb-20">
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <a
+                    href={blogPath(lang)}
+                    class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground link-fade"
+                >
+                    <ArrowLeftIcon class="size-4" />
+                    {t.blog.back}
+                </a>
+                {versions.length > 1 && (
+                    <nav
+                        aria-label={t.blog.languages}
+                        class="flex items-center gap-1 text-sm"
+                    >
+                        <LanguagesIcon class="size-4 mr-1 text-muted-foreground" />
+                        {versions.map(({ locale: l, href }) =>
+                            l === locale ? (
+                                <span
+                                    aria-current="page"
+                                    lang={l.code}
+                                    class="rounded-md bg-muted px-2 py-0.5 text-foreground"
+                                >
+                                    {l.name}
+                                </span>
+                            ) : (
+                                <a
+                                    {href}
+                                    hreflang={l.code}
+                                    lang={l.code}
+                                    data-remember-lang={l.code}
+                                    class="rounded-md px-2 py-0.5 text-muted-foreground hover:text-foreground link-fade"
+                                >
+                                    {l.name}
+                                </a>
+                            ),
+                        )}
+                    </nav>
+                )}
+            </div>
+            <header class="mt-8">
+                <p class="text-sm text-muted-foreground">
+                    <time datetime={pubDate.toISOString()}>
+                        {formatDate(pubDate, lang)}
+                    </time>
+                    {updatedDate && (
+                        <>
+                            {" · "}
+                            {t.blog.updated}{" "}
+                            <time datetime={updatedDate.toISOString()}>
+                                {formatDate(updatedDate, lang)}
+                            </time>
+                        </>
+                    )}
+                </p>
+                <h1 class="mt-2 text-3xl sm:text-4xl font-bold tracking-tight">
+                    {title}
+                </h1>
+                <p class="mt-3 text-muted-foreground">{description}</p>
+            </header>
+            <div class="typeset typeset-docs max-w-[42em] mt-10">
+                <Content />
+            </div>
+        </article>
+        <Footer lang={lang} t={t.footer} />
+    </div>
+</Layout>
+
+<script>
+    import { rememberLang } from "@/lib/langCookie";
+
+    // Switching a post's language is a choice worth keeping for "/" too.
+    for (const link of document.querySelectorAll<HTMLAnchorElement>(
+        "a[data-remember-lang]",
+    ))
+        link.addEventListener("click", () =>
+            rememberLang(link.dataset.rememberLang!),
+        );
+</script>

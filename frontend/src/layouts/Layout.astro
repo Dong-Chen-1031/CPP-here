@@ -2,6 +2,7 @@
 import { Font } from "astro:assets";
 import "@/styles/global.css";
 import PostHog from "@/components/posthog.astro";
+import { cn } from "@/lib/utils";
 import { findLocale } from "@/lib/locales";
 
 interface Props {
@@ -9,14 +10,16 @@ interface Props {
     description?: string;
     ogImage?: string;
     ogImageAlt?: string;
+    ogType?: "website" | "article";
     noindex?: boolean;
     lang?: string;
     /** The family the page is mostly set in, preloaded so its text renders sooner. */
-    font?: "jetbrains" | "quattro";
+    font?: "jetbrains" | "quattro" | "inter";
     /** Path of the URL search engines should index, when it isn't this one. */
     canonical?: string;
     /** Every language version of this page (itself included), as hreflang links. */
     alternates?: { hreflang: string; path: string }[];
+    className?: string;
 }
 
 const {
@@ -24,10 +27,12 @@ const {
     description = "Free, open-source online C++ compiler built for competitive programming. Compile C++ to WebAssembly and run test cases in your browser. No install, no login.",
     ogImage = "/og-image.png",
     ogImageAlt = "C++ Here — next-generation online C++ editor for competitive programming",
+    ogType = "website",
     noindex = false,
     lang,
     font = "jetbrains",
     canonical,
+    className = "",
     alternates = [],
 } = Astro.props;
 
@@ -47,7 +52,10 @@ const ogLocale = htmlLang === "en" ? "en_US" : htmlLang.replace("-", "_");
 ---
 
 <!doctype html>
-<html class="neutral dark bg-background text-foreground" lang={htmlLang}>
+<html
+    class={cn("neutral dark bg-background text-foreground", className)}
+    lang={htmlLang}
+>
     <head>
         <meta charset="UTF-8" />
         <Font
@@ -60,6 +68,13 @@ const ogLocale = htmlLang === "en" ? "en_US" : htmlLang.replace("-", "_");
             cssVariable="--font-ia-writer-quattro"
             preload={font === "quattro" && [{ style: "normal" }]}
         />
+        {/* Only blog posts are set in Inter. */}
+        {font === "inter" && (
+            <Font
+                cssVariable="--font-inter"
+                preload={[{ style: "normal", subset: "latin" }]}
+            />
+        )}
 
         <slot name="head" />
 
@@ -97,7 +112,7 @@ const ogLocale = htmlLang === "en" ? "en_US" : htmlLang.replace("-", "_");
         <meta name="theme-color" content="#0A0A0A" />
 
         {/* Open Graph */}
-        <meta property="og:type" content="website" />
+        <meta property="og:type" content={ogType} />
         <meta property="og:url" content={canonicalURL} />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />

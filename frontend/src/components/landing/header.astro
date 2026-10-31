@@ -13,7 +13,7 @@ interface Props {
 const { lang, t } = Astro.props as Props;
 ---
 
-<header class="w-full absolute h-16 py-4 px-5 border-b-2 border-border flex items-center bg-background/50 backdrop-blur-md z-100">
+<header class="w-full fixed top-0 h-16 py-4 px-5 border-b-2 border-border flex items-center bg-background/50 backdrop-blur-md z-100">
     <a href={localePath(lang, "/")} class="flex items-center">
         <CodeIcon class="size-5 shrink-0" />
         <p class="ml-2 font-bold text-md tracking-normal hidden min-[25rem]:block">
@@ -23,7 +23,7 @@ const { lang, t } = Astro.props as Props;
 
     <div class="flex-1"></div>
     {/* <a
-            class="text-sm text-muted-foreground hover:text-primary/80 transition"
+            class="text-sm text-muted-foreground hover:text-primary/80 transition duration-300 hover:duration-150"
             href="#features">Features</a
             > */}
     <!-- <div class="flex-1"></div> -->
