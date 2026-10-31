@@ -24,3 +24,10 @@ html {
         visibility: visible;
     }
 }
+
+/* The headings' tight tracking and leading suit Latin display type. CJK glyphs
+   fill the whole em box, so they would touch and the lines nearly collide. */
+:is(:lang(zh), :lang(ja), :lang(ko)) :is(h1, h2, h3) {
+    letter-spacing: normal;
+    line-height: 1.25;
+}
