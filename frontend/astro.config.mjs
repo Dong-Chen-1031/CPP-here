@@ -54,10 +54,13 @@ export default defineConfig({
         mdx(),
         react(),
         sitemap({
+            // Whole path segments, so a post like /en/blog/test-cases/ stays.
             filter: (page) =>
-                !page.includes("/editor") &&
-                !page.includes("/test") &&
-                !page.includes("/reset"),
+                !new URL(page).pathname
+                    .split("/")
+                    .some((segment) =>
+                        ["editor", "test", "reset"].includes(segment),
+                    ),
             serialize(item) {
                 const date = lastmod.get(new URL(item.url).pathname);
                 if (date) item.lastmod = date;

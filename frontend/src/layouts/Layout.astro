@@ -38,9 +38,7 @@ const {
 
 const siteUrl = "https://cpp.doong.me";
 const canonicalURL = new URL(canonical ?? Astro.url.pathname, siteUrl).href;
-const ogImageURL = ogImage.startsWith("http")
-    ? ogImage
-    : `${siteUrl}${ogImage}`;
+const ogImageURL = new URL(ogImage, siteUrl).href;
 
 // The locale lives in the route (`/zh-tw/...`), not in an Astro i18n config, so
 // derive it from the path instead of hardcoding "en" on every page. Pages whose

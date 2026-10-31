@@ -19,13 +19,21 @@ export function localePath(lang: string | undefined, path: string): string {
     return `/${findLocale(lang).path}${path}`;
 }
 
-/** The locale an Accept-Language / navigator.languages tag means, if any. */
+/**
+ * The locale an Accept-Language / navigator.languages tag means, if any. The
+ * most specific name wins: "en-GB" means en-GB over en, were both there.
+ */
 export function matchLocale(tag: string): Locale | undefined {
     const t = tag.trim().toLowerCase();
-    return LOCALES.find((l) =>
-        [l.code, ...l.aliases].some((name) => {
+    let best: { locale: Locale; length: number } | undefined;
+    for (const locale of LOCALES)
+        for (const name of [locale.code, ...locale.aliases]) {
             const n = name.toLowerCase();
-            return t === n || t.startsWith(n + "-");
-        }),
-    );
+            if (
+                (t === n || t.startsWith(n + "-")) &&
+                n.length > (best?.length ?? 0)
+            )
+                best = { locale, length: n.length };
+        }
+    return best?.locale;
 }

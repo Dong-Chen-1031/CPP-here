@@ -1,22 +1,25 @@
 import type { APIContext } from "astro";
 import {
     DEFAULT_LOCALE,
-    findLocale,
+    LOCALES,
     localePath,
     matchLocale,
+    type Locale,
 } from "@/lib/locales";
 import { LANG_COOKIE } from "@/lib/langCookie";
 
 /**
- * The site language (route segment) a request prefers: the one the visitor
- * picked by hand (the `lang` cookie), else the highest-weighted tag in its
- * Accept-Language header that the site has a locale for (matchLocale), else
- * English.
+ * The site language (route segment) a request prefers, out of `available`:
+ * the one the visitor picked by hand (the `lang` cookie), else the
+ * highest-weighted tag in its Accept-Language header that the site has a
+ * locale for (matchLocale), else English, else the first available.
  */
-export function preferredLang({ cookies, request }: APIContext): string {
-    const picked = cookies.get(LANG_COOKIE)?.value;
-    if (picked) return findLocale(picked).path;
-
+export function preferredLang(
+    { cookies, request }: APIContext,
+    available: readonly Locale[] = LOCALES,
+): string {
+    // A picked language the site has since dropped counts as no pick.
+    const picked = cookies.get(LANG_COOKIE)?.value.toLowerCase();
     const ranked = (request.headers.get("Accept-Language") ?? "")
         .split(",")
         .map((part) => {
@@ -28,20 +31,26 @@ export function preferredLang({ cookies, request }: APIContext): string {
         })
         .filter(({ tag, weight }) => tag && weight > 0)
         .sort((a, b) => b.weight - a.weight);
-    for (const { tag } of ranked) {
-        const locale = matchLocale(tag);
-        if (locale) return locale.path;
-    }
-    return DEFAULT_LOCALE.path;
+    const wanted = [
+        LOCALES.find((l) => l.path === picked),
+        ...ranked.map(({ tag }) => matchLocale(tag)),
+        DEFAULT_LOCALE,
+    ];
+    return (wanted.find((l) => l && available.includes(l)) ?? available[0])
+        .path;
 }
 
 /**
  * Sends a path without a language ("/", "/blog/<slug>") to its version in the
- * preferred language. Pages end in a slash, as built; files ("rss.xml") stay
- * as they are. Temporary and varied on what decides it, so neither browsers
- * nor caches pin one visitor's choice on everyone.
+ * preferred language, out of those it exists in (`available`). Pages end in a
+ * slash, as built; files ("rss.xml") stay as they are. Temporary and varied on
+ * what decides it, so neither browsers nor caches pin one visitor's choice on
+ * everyone.
  */
-export function redirectToPreferred(context: APIContext): Response {
+export function redirectToPreferred(
+    context: APIContext,
+    available?: readonly Locale[],
+): Response {
     const { pathname, search } = context.url;
     const path =
         pathname.endsWith("/") || /\.[a-z]+$/.test(pathname)
@@ -50,7 +59,8 @@ export function redirectToPreferred(context: APIContext): Response {
     return new Response(null, {
         status: 302,
         headers: {
-            Location: localePath(preferredLang(context), path) + search,
+            Location:
+                localePath(preferredLang(context, available), path) + search,
             Vary: "Cookie, Accept-Language",
             "Cache-Control": "private, no-cache",
         },
