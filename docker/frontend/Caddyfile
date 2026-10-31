@@ -4,5 +4,23 @@
 	# Static builds have no server routes, so mirror src/pages/share/[shareId].ts here.
 	redir /share/* /editor?shareId={http.request.uri.path.1}
 
+	# And src/pages/index.ts and src/pages/blog/[...path].ts (lib/preferredLang.ts),
+	# minus Accept-Language: a path without a language goes to the one picked by
+	# hand (the `lang` cookie) when the site has it, else to English. file_server
+	# then adds the trailing slash to page paths.
+	@noLang path / /blog /blog/*
+	handle @noLang {
+		header Cache-Control "private, no-cache"
+		header Vary Cookie
+		route {
+			@picked header_regexp lang Cookie (?:^|;\s*)lang=([a-z]+(?:-[a-z]+)?)
+			handle @picked {
+				@built file /{http.regexp.lang.1}/index.html
+				redir @built /{http.regexp.lang.1}{uri}
+			}
+			redir * /en{uri}
+		}
+	}
+
 	file_server
 }
