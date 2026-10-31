@@ -10,17 +10,17 @@
     },
     "hero": {
         "title": "新世代的",
-        "title2": "線上 C++ 編譯器。",
+        "title2": "線上 C++ 編譯器",
         "description": "一個開源、輕量但強大的線上 C++ 編譯器，專為競賽程式設計而生",
-        "startCoding": "開始寫程式",
+        "startCoding": "立即開啟",
         "starOnGithub": "在 GitHub 上 Star",
         "imageAlt": "C++ Here 線上編譯器以三筆測資執行 Hello World 程式"
     },
     "features": {
         "label": "功能",
-        "heading": "功能齊全。",
-        "subheading": "卻不臃腫。",
-        "description": "瀏覽器，就是你的開發環境。",
+        "heading": "功能齊全",
+        "subheading": "卻不臃腫",
+        "description": "瀏覽器，就是你的開發環境",
         "list": [
             {
                 "title": "WebAssembly 技術",
@@ -65,8 +65,8 @@
     },
     "extension": {
         "label": "瀏覽器擴充",
-        "heading1": "一鍵匯入。",
-        "heading2": "所有測資。",
+        "heading1": "一鍵匯入",
+        "heading2": "所有測資",
         "title": "不再複製貼上",
         "description": "透過我們的擴充功能，直接從瀏覽器匯入測資。支援超過 100 個競賽程式平台。",
         "comingSoon": "即將推出",
@@ -81,8 +81,8 @@
     },
     "stats": {
         "label": "數據",
-        "heading": "真實數據。",
-        "subheading": "真實使用。",
+        "heading": "真實數據",
+        "subheading": "真實使用",
         "compilations": "總編譯次數",
         "compilationsDescription": "直接在瀏覽器中編譯並執行的 C++ 程式數量。",
         "linesCompiled": "編譯總行數",
@@ -94,17 +94,17 @@
     },
     "cta": {
         "label": "讓我們開始吧",
-        "heading": "不再切換工具。",
-        "subheading": "你需要的，都在這裡。",
-        "description1": "無需安裝、無需登入。",
-        "description2": "打開分頁，直接拿 AC。",
-        "startCoding": "開始寫程式",
+        "heading": "不再切換工具",
+        "subheading": "你需要的，都在這裡",
+        "description1": "無需安裝、無需登入",
+        "description2": "打開分頁，立即使用",
+        "startCoding": "立即開啟",
         "starOnGithub": "在 GitHub 上 Star"
     },
     "faq": {
         "label": "常見問題",
         "heading": "有疑問嗎？",
-        "subheading": "這裡有解答。",
+        "subheading": "這裡有解答",
         "list": [
             {
                 "question": "C++ Here 是免費的嗎？",
@@ -186,7 +186,7 @@
         "github": "GitHub",
         "status": "服務狀態",
         "author": "Dong-Chen-1031",
-        "blog": "Blog"
+        "blog": "部落格"
     },
     "editorPage": {
         "title": "編輯器 - C++ Here",
