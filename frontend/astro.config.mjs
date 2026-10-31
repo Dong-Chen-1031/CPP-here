@@ -7,6 +7,7 @@ import { toolchainId } from "./scripts/toolchain-id.mjs";
 import cloudflare from "@astrojs/cloudflare";
 import { strictPrerender } from "./strict-prerender.mjs";
 import { DEV_JWT_SECRET } from "./env.defaults.mjs";
+import { locales } from "./scripts/locales.mjs";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -42,8 +43,6 @@ export default defineConfig({
         react(),
         sitemap({
             filter: (page) =>
-                // Same page as "/", which is the canonical one
-                new URL(page).pathname !== "/en/" &&
                 !page.includes("/editor") &&
                 !page.includes("/test") &&
                 !page.includes("/reset"),
@@ -55,7 +54,7 @@ export default defineConfig({
         // }),
     ],
     vite: {
-        plugins: [tailwindcss(), toolchainId()],
+        plugins: [tailwindcss(), toolchainId(), locales()],
         worker: { format: "es" },
         optimizeDeps: {
             include: ["react-dom/client"],

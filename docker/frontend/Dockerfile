@@ -54,4 +54,4 @@ ENTRYPOINT []
 # Built at startup so the build-time environment variables from docker compose are inlined.
 # The root scripts call `npm run`, which this image does not have, so run their steps directly.
 # build:static drops the Cloudflare Worker: /api/* is served by the Python backend (PUBLIC_API_URL).
-CMD ["/bin/sh", "-c", "bun run copy-i18n && bun run copy-docker && bun run logo && cd frontend && bun run build:static && caddy run --config /app/docker/frontend/Caddyfile --adapter caddyfile"]
+CMD ["/bin/sh", "-c", "bun run copy-docker && bun run logo && cd frontend && bun run build:static && caddy run --config /app/docker/frontend/Caddyfile --adapter caddyfile"]

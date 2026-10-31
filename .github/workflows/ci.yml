@@ -94,9 +94,6 @@ jobs:
             - name: Format check
               run: bun run format:check
 
-            - name: Copy i18n resources
-              run: bun run copy-i18n
-
             - name: Type check
               working-directory: frontend
               # `wrangler types` first, same as the build script: it generates

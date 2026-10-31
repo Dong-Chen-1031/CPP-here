@@ -3,18 +3,24 @@ import { Button } from "@/components/ui/button";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import { CodeIcon } from "@lucide/astro";
 import { PUBLIC_GITHUB_LINK } from "astro:env/client";
+import { localePath } from "@/lib/locales";
 
 interface Props {
     lang?: string;
     t?: Record<string, string>;
 }
 
-const { t } = Astro.props as Props;
+const { lang, t } = Astro.props as Props;
 ---
 
 <header class="w-full absolute h-16 py-4 px-5 border-b-2 border-border flex items-center bg-background/50 backdrop-blur-md z-100">
-    <CodeIcon class="size-5 shrink-0" />
-    <p class="ml-2 font-bold text-md tracking-normal">C++ Here</p>
+    <a href={localePath(lang, "/")} class="flex items-center">
+        <CodeIcon class="size-5 shrink-0" />
+        <p class="ml-2 font-bold text-md tracking-normal hidden min-[25rem]:block">
+            C++ Here
+        </p>
+    </a>
+
     <div class="flex-1"></div>
     {/* <a
             class="text-sm text-muted-foreground hover:text-primary/80 transition"

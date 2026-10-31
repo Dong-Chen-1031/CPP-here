@@ -2,6 +2,7 @@
 import { Font } from "astro:assets";
 import "@/styles/global.css";
 import PostHog from "@/components/posthog.astro";
+import { findLocale } from "@/lib/locales";
 
 interface Props {
     title?: string;
@@ -39,11 +40,10 @@ const ogImageURL = ogImage.startsWith("http")
 // The locale lives in the route (`/zh-tw/...`), not in an Astro i18n config, so
 // derive it from the path instead of hardcoding "en" on every page. Pages whose
 // language is chosen client-side (the editor) get corrected by lib/i18n.ts.
-const LOCALES: Record<string, string> = { en: "en", "zh-tw": "zh-TW" };
 const localeSegment =
     Astro.url.pathname.split("/").filter(Boolean)[0]?.toLowerCase() ?? "";
-const htmlLang = lang ?? LOCALES[localeSegment] ?? Astro.currentLocale ?? "en";
-const ogLocale = htmlLang === "zh-TW" ? "zh_TW" : "en_US";
+const htmlLang = lang ?? findLocale(localeSegment).code;
+const ogLocale = htmlLang === "en" ? "en_US" : htmlLang.replace("-", "_");
 ---
 
 <!doctype html>

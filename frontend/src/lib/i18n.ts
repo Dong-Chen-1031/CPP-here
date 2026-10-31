@@ -1,44 +1,47 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import Backend from "i18next-http-backend";
 import LanguageDetector from "i18next-browser-languagedetector";
-import enCommon from "../../../i18n/en/common.json";
-import enEditor from "../../../i18n/en/editor.json";
-import twCommon from "../../../i18n/zh-TW/common.json";
-import twEditor from "../../../i18n/zh-TW/editor.json";
+import { common, editor } from "virtual:locales";
+import { LOCALES, matchLocale } from "@/lib/locales";
+import { LANG_COOKIE } from "@/lib/langCookie";
 
-i18n.use(Backend)
-    .use(LanguageDetector)
+// Picks the language the same way the redirect from "/" does
+// (lib/preferredLang.ts): the one picked by hand, then the browser's.
+const detector = new LanguageDetector();
+detector.addDetector({
+    name: "siteNavigator",
+    lookup: () =>
+        typeof navigator === "undefined"
+            ? undefined
+            : navigator.languages.map(matchLocale).find(Boolean)?.code,
+});
+
+i18n.use(detector)
     .use(initReactI18next)
     .init({
         fallbackLng: "en",
-        supportedLngs: ["en", "zh-TW"],
+        supportedLngs: LOCALES.map((l) => l.code),
 
         ns: ["common", "editor"],
         defaultNS: "common",
 
         detection: {
-            order: ["localStorage", "navigator"],
-            caches: ["localStorage"],
+            // localStorage only for settings saved before the cookie existed.
+            order: ["cookie", "localStorage", "siteNavigator"],
+            lookupCookie: LANG_COOKIE,
+            // The cookie is written only when the language is picked by hand
+            // (lib/langCookie.ts), so a detected one never overrides
+            // Accept-Language on the server.
+            caches: [],
         },
 
-        resources: {
-            en: {
-                common: enCommon,
-                editor: enEditor,
-            },
-            "zh-TW": {
-                common: twCommon,
-                editor: twEditor,
-            },
-        },
-
-        partialBundledLanguages: true,
-
-        backend: {
-            loadPath: "../i18n/{{lng}}/{{ns}}.json",
-            reloadInterval: false,
-        },
+        // Every listed locale is bundled: none of them is fetched later.
+        resources: Object.fromEntries(
+            LOCALES.map((l) => [
+                l.code,
+                { common: common[l.code], editor: editor[l.code] },
+            ]),
+        ),
 
         interpolation: {
             escapeValue: false,
