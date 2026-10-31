@@ -70,6 +70,21 @@ if (!argv.includes("--force")) {
         }
     } catch {}
 }
+
+// Building the PCHs takes minutes with no output of clang's own, so say what's
+// happening rather than look stuck.
+const started = performance.now();
+const log = (...message) =>
+    console.log(
+        `[toolchain ${((performance.now() - started) / 1000).toFixed(1)}s]`,
+        ...message,
+    );
+console.log(
+    `Preparing the in-browser compiler toolchain (${id}); this takes a few minutes and runs again only when the toolchain changes.`,
+);
+console.log(
+    "To skip it, set PUBLIC_LOCAL_COMPILER=false in frontend/.env (the in-browser compiler is then disabled).",
+);
 await fs.rm(out, { recursive: true, force: true });
 await fs.mkdir(out, { recursive: true });
 
@@ -89,6 +104,7 @@ await fs.writeFile(path.join(out, "bundle.js"), bundle);
 // Cloudflare static assets have a 25 MiB per-file cap. Publish gzip bytes as
 // .gz.bin and decompress explicitly, independent of HTTP encodings.
 for (const name of config.assets) {
+    log("Compressing", name);
     const compressed = zlib.gzipSync(await fs.readFile(path.join(gen, name)), {
         level: 9,
     });
@@ -98,6 +114,7 @@ for (const name of config.assets) {
 }
 
 await fs.writeFile(path.join(out, "stdcxx.h"), header);
+log("Loading clang");
 const { runClang } = await import(path.join(gen, "bundle.js"));
 let stderr = "";
 const decoder = new TextDecoder();
@@ -116,6 +133,7 @@ async function clang(args, files) {
     }
 }
 
+log("Compiling memory-helpers.o");
 const helper = await clang(
     [
         "-c",
@@ -142,8 +160,10 @@ const tree = (extra) => ({
 });
 const smokeSource =
     '#include <bits/stdc++.h>\nint main(){std::vector<int> v{3,1,2};std::sort(v.begin(),v.end());std::cout<<v[0]<<v[2]<<"\\n";}';
-for (const std of standards) {
+for (const [i, std] of standards.entries()) {
+    const step = `[${i + 1}/${standards.length}] ${std}:`;
     const flags = [`-std=${std}`, "-isystem", "inc", ...config.compileFlags];
+    log(step, "building PCH");
     const pch = (
         await clang(
             [
@@ -164,6 +184,7 @@ for (const std of standards) {
         std === "c++98"
             ? smokeSource.replace("v{3,1,2}", "v(3,3)")
             : smokeSource;
+    log(step, "smoke-testing PCH");
     const smoke = await clang(
         [
             "main.cpp",
@@ -187,7 +208,7 @@ for (const std of standards) {
         path.join(out, std + ".pch.gz.bin"),
         zlib.gzipSync(pch, { level: 9 }),
     );
-    console.log(std, "PCH", pch.length, "bytes");
+    log(step, "PCH", pch.length, "bytes");
 }
 
 const wasiShim = path.dirname(
@@ -236,7 +257,7 @@ await fs.writeFile(
         2,
     ),
 );
-console.log("Prepared:", out);
+log("Prepared:", out);
 
 // YoWASP's virtual filesystem copies the whole file on every write, so writing
 // an n-byte file costs O(n²): an object file with `int a[8000000];` (32 MB of
