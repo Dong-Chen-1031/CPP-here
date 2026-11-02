@@ -12,7 +12,9 @@ import zlib from "node:zlib";
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
-import { WASI } from "node:wasi";
+import os from "node:os";
+import { promisify } from "node:util";
+import { Worker } from "node:worker_threads";
 import { fileURLToPath } from "node:url";
 import { readToolchainInputs } from "./toolchain-id.mjs";
 
@@ -21,6 +23,7 @@ const frontend = path.resolve(
     "..",
 );
 const argv = process.argv.slice(2);
+const gzip = promisify(zlib.gzip);
 
 if (argv.includes("--if-enabled")) {
     try {
@@ -101,115 +104,81 @@ for (const name of new Set([...referenced, ...config.assets]))
         throw Error(`bundle.js and toolchain.json disagree about ${name}`);
 await fs.writeFile(path.join(out, "bundle.js"), bundle);
 
-// Cloudflare static assets have a 25 MiB per-file cap. Publish gzip bytes as
-// .gz.bin and decompress explicitly, independent of HTTP encodings.
-for (const name of config.assets) {
-    log("Compressing", name);
-    const compressed = zlib.gzipSync(await fs.readFile(path.join(gen, name)), {
-        level: 9,
-    });
-    if (compressed.length > 25 * 1024 * 1024)
-        throw Error(name + " exceeds the static asset cap after gzip");
-    await fs.writeFile(path.join(out, name + ".gz.bin"), compressed);
-}
-
-await fs.writeFile(path.join(out, "stdcxx.h"), header);
-log("Loading clang");
-const { runClang } = await import(path.join(gen, "bundle.js"));
-let stderr = "";
-const decoder = new TextDecoder();
-const options = {
-    stdout: (b) => b && (stderr += decoder.decode(b, { stream: true })),
-    stderr: (b) => b && (stderr += decoder.decode(b, { stream: true })),
-    decodeASCII: false,
-    fetchProgress: () => {},
+// Each Clang job runs in a worker thread (toolchain-worker.mjs) with its own
+// Clang, so the PCHs build in parallel. One after another they took about 6
+// minutes on Cloudflare's builders (c++20 and c++23 1.5 minutes each); on 4
+// cores they now take as long as c++23 alone, plus some. TOOLCHAIN_JOBS caps
+// the number of threads, and so does memory: all four together peaked at
+// 1.8 GB.
+const jobs = Math.max(
+    1,
+    Math.min(
+        Number(process.env.TOOLCHAIN_JOBS) || os.availableParallelism(),
+        Math.floor(os.totalmem() / 2 ** 30),
+    ),
+);
+const shared = {
+    bundle: path.join(gen, "bundle.js"),
+    config,
+    header,
 };
-async function clang(args, files) {
-    stderr = "";
-    try {
-        return await runClang(["clang++", ...args], files, options);
-    } catch (error) {
-        throw Error(`clang++ ${args.join(" ")}\n${stderr}`, { cause: error });
-    }
+function runWorker(data) {
+    return new Promise((resolve, reject) => {
+        const worker = new Worker(
+            new URL("./toolchain-worker.mjs", import.meta.url),
+            { workerData: { ...shared, ...data } },
+        );
+        let result;
+        worker.on("message", (message) => {
+            if (message.log) log(...message.log);
+            else result = message.result;
+        });
+        worker.on("error", reject);
+        worker.on("exit", (code) =>
+            code === 0
+                ? resolve(result)
+                : reject(Error(`toolchain worker exited with ${code}`)),
+        );
+    });
 }
 
 log("Compiling memory-helpers.o");
-const helper = await clang(
-    [
-        "-c",
-        "memory-helpers.cpp",
-        "-std=c++17",
-        "-O2",
-        "-fno-exceptions",
-        "-o",
-        "memory-helpers.o",
-    ],
-    { "memory-helpers.cpp": helperSource },
-);
-await fs.writeFile(
-    path.join(out, "memory-helpers.o"),
-    helper["memory-helpers.o"],
-);
+const helperJob = runWorker({ job: "helper", helperSource });
 
-// Same tree and flags as compile.worker.ts: clang rejects a PCH built from a
-// different header path or with different language options.
-const tree = (extra) => ({
-    inc: { bits: { "stdc++.h": header } },
-    "memory-helpers.o": helper["memory-helpers.o"],
-    ...extra,
-});
-const smokeSource =
-    '#include <bits/stdc++.h>\nint main(){std::vector<int> v{3,1,2};std::sort(v.begin(),v.end());std::cout<<v[0]<<v[2]<<"\\n";}';
-for (const [i, std] of standards.entries()) {
-    const step = `[${i + 1}/${standards.length}] ${std}:`;
-    const flags = [`-std=${std}`, "-isystem", "inc", ...config.compileFlags];
-    log(step, "building PCH");
-    const pch = (
-        await clang(
-            [
-                "-x",
-                "c++-header",
-                "inc/bits/stdc++.h",
-                ...flags,
-                "-Xclang",
-                "-fno-pch-timestamp",
-                "-o",
-                "stdcxx.pch",
-            ],
-            tree({}),
-        )
-    )["stdcxx.pch"];
-    // A PCH that clang refuses would silently cost every build its speed-up.
-    const source =
-        std === "c++98"
-            ? smokeSource.replace("v{3,1,2}", "v(3,3)")
-            : smokeSource;
-    log(step, "smoke-testing PCH");
-    const smoke = await clang(
-        [
-            "main.cpp",
-            ...flags,
-            "-include-pch",
-            "stdcxx.pch",
-            "memory-helpers.o",
-            ...config.linkFlags,
-            "-o",
-            "main.wasm",
-        ],
-        tree({ "main.cpp": source, "stdcxx.pch": pch }),
-    );
-    const output = await runWasi(smoke["main.wasm"]);
-    const expected = std === "c++98" ? "33\n" : "13\n";
-    if (output !== expected)
-        throw Error(
-            `PCH smoke test for ${std} printed ${JSON.stringify(output)}`,
-        );
-    await fs.writeFile(
-        path.join(out, std + ".pch.gz.bin"),
-        zlib.gzipSync(pch, { level: 9 }),
-    );
-    log(step, "PCH", pch.length, "bytes");
-}
+// Cloudflare static assets have a 25 MiB per-file cap. Publish gzip bytes as
+// .gz.bin and decompress explicitly, independent of HTTP encodings. zlib's
+// async API compresses on libuv's thread pool, alongside the Clang thread.
+await Promise.all(
+    config.assets.map(async (name) => {
+        const compressed = await gzip(await fs.readFile(path.join(gen, name)), {
+            level: 9,
+        });
+        if (compressed.length > 25 * 1024 * 1024)
+            throw Error(name + " exceeds the static asset cap after gzip");
+        await fs.writeFile(path.join(out, name + ".gz.bin"), compressed);
+    }),
+);
+log("Compressed", config.assets.join(", "));
+
+await fs.writeFile(path.join(out, "stdcxx.h"), header);
+const helper = await helperJob;
+await fs.writeFile(path.join(out, "memory-helpers.o"), helper);
+
+// Newer standards take longest (c++23 about 15 times c++98), so start them
+// first: the short ones then fill the threads while the long ones finish.
+log(`Building ${standards.length} PCHs, ${jobs} at a time`);
+const queue = standards
+    .map((std, i) => ({
+        std,
+        step: `[${i + 1}/${standards.length}] ${std}:`,
+    }))
+    .reverse();
+await Promise.all(
+    Array.from({ length: Math.min(jobs, queue.length) }, async () => {
+        for (let task; (task = queue.shift());)
+            await runWorker({ job: "pch", helper, out, ...task });
+    }),
+);
 
 const wasiShim = path.dirname(
     fileURLToPath(import.meta.resolve("@bjorn3/browser_wasi_shim")),
@@ -301,26 +270,4 @@ function patchWriteStream(bundle) {
             "@yowasp/clang bundle.js: WriteStream.write is not the expected code; update patchWriteStream in prepare-toolchain.mjs",
         );
     return bundle.replace(original, patched);
-}
-
-async function runWasi(bytes) {
-    const file = path.join(out, ".smoke-stdout");
-    const handle = await fs.open(file, "w+");
-    try {
-        const wasi = new WASI({ version: "preview1", stdout: handle.fd });
-        const { instance } = await WebAssembly.instantiate(bytes, {
-            wasi_snapshot_preview1: wasi.wasiImport,
-            env: {
-                memory_limit: () => {
-                    throw Error("memory limit");
-                },
-            },
-        });
-        wasi.start(instance);
-    } finally {
-        await handle.close();
-    }
-    const output = await fs.readFile(file, "utf8");
-    await fs.rm(file);
-    return output;
 }

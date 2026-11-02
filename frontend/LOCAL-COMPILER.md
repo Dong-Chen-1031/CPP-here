@@ -128,7 +128,9 @@ instead of downloading again.
 The script checks the installed `@yowasp/clang` version, builds a PCH per
 standard and compiles and runs a smoke test with each, and skips the work when
 its inputs are unchanged. It deletes toolchains of other ids under
-`public/toolchain/`. It takes about 3 minutes.
+`public/toolchain/`. The PCHs build in parallel worker threads
+(`scripts/toolchain-worker.mjs`, at most `TOOLCHAIN_JOBS` at a time, by
+default one per core): about 1 minute on 4 cores, 2 minutes one at a time.
 
 `build`, `build:static`, `deploy` and `deploy:preview` run it with
 `--if-enabled`, which skips the toolchain when `PUBLIC_LOCAL_COMPILER`
