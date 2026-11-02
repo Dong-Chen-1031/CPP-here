@@ -32,9 +32,11 @@ export async function readToolchainInputs() {
         path.join(frontend, "src/compiler/memory-helpers.cpp"),
     );
     const scripts = await Promise.all(
-        ["prepare-toolchain.mjs", "toolchain-id.mjs"].map((name) =>
-            read(path.join(frontend, "scripts", name)),
-        ),
+        [
+            "prepare-toolchain.mjs",
+            "toolchain-worker.mjs",
+            "toolchain-id.mjs",
+        ].map((name) => read(path.join(frontend, "scripts", name))),
     );
     const hash = crypto
         .createHash("sha256")
