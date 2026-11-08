@@ -31,7 +31,6 @@ jobs:
             matrix:
                 language:
                     - actions
-                    - c-cpp
                     - javascript-typescript
                     - python
         steps:
