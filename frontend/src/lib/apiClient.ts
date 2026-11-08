@@ -3,7 +3,6 @@ import {
     verifyFailedStore,
     verifyJwtStore,
 } from "@/store/atom";
-import axios from "axios";
 import i18next from "i18next";
 import { getDefaultStore } from "jotai";
 import { PUBLIC_API_URL } from "astro:env/client";
@@ -17,18 +16,58 @@ const JWT_RENEW_TIMEOUT_MS = 60_000;
 // Turnstile usually verifies in a few seconds after the page loads.
 const JWT_WAIT_TIMEOUT_MS = 30_000;
 
-const apiAxios = axios.create({
-    baseURL: PUBLIC_API_URL,
-});
-
-apiAxios.interceptors.request.use((config) => {
-    const jwt = defaultStore.get(verifyJwtStore) || "";
-
-    if (jwt) {
-        config.headers.Authorization = `Bearer ${jwt}`;
+/** A response outside 2xx; `fetch` itself only rejects on network errors. */
+export class HttpError extends Error {
+    constructor(
+        readonly status: number,
+        readonly url: string,
+    ) {
+        super(`Request failed with status code ${status}`);
+        this.name = "HttpError";
     }
-    return config;
-});
+}
+
+/**
+ * GET `url` and return its body: parsed JSON when it is JSON, the raw text
+ * otherwise (e.g. an HTML error page), so callers can validate the shape
+ * themselves. Throws HttpError for a non-2xx status.
+ */
+export async function getJSON(url: string) {
+    const res = await fetch(url);
+    return readBody(res, url);
+}
+
+async function readBody(res: Response, url: string): Promise<unknown> {
+    if (!res.ok) throw new HttpError(res.status, url);
+    const text = await res.text();
+    try {
+        return JSON.parse(text);
+    } catch {
+        return text;
+    }
+}
+
+function apiUrl(path: string) {
+    if (!PUBLIC_API_URL) return path;
+    return `${PUBLIC_API_URL.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
+}
+
+async function postAPI(path: string, data: unknown) {
+    const headers: Record<string, string> = {
+        Accept: "application/json",
+    };
+    const jwt = defaultStore.get(verifyJwtStore);
+    if (jwt) headers.Authorization = `Bearer ${jwt}`;
+    if (data !== undefined) headers["Content-Type"] = "application/json";
+
+    const url = apiUrl(path);
+    const res = await fetch(url, {
+        method: "POST",
+        headers,
+        body: data === undefined ? undefined : JSON.stringify(data),
+    });
+    return readBody(res, url);
+}
 
 /**
  * The verified token, waiting for Turnstile if it is still verifying.
@@ -95,7 +134,7 @@ export function renewJwt() {
 // The middleware answers 401 for a missing token and 403 for an invalid one.
 export function isAuthError(error: unknown) {
     return (
-        axios.isAxiosError(error) &&
+        error instanceof HttpError &&
         (error.status === 401 || error.status === 403)
     );
 }
@@ -106,8 +145,9 @@ export async function callAPI<T extends API>(
     allowRetry = true,
 ): Promise<APIResponse<T["apiSchemas"]["_responseSchema"]>> {
     try {
-        const res = await apiAxios.post(url, data);
-        return res.data as APIResponse<T["apiSchemas"]["_responseSchema"]>;
+        return (await postAPI(url, data)) as APIResponse<
+            T["apiSchemas"]["_responseSchema"]
+        >;
     } catch (error) {
         if (!allowRetry || !isAuthError(error)) throw error;
 
@@ -118,6 +158,3 @@ export async function callAPI<T extends API>(
         return await callAPI<T>(url, data, false);
     }
 }
-
-export { apiAxios };
-export { default as axios } from "axios";

@@ -12,7 +12,7 @@ import {
     verifyJwtStore,
 } from "@/store/atom";
 import { addAlert } from "@/lib/alert";
-import { waitForJwt } from "@/lib/axiosInstance";
+import { waitForJwt } from "@/lib/apiClient";
 import { openToolchainCache } from "@/compiler/toolchainCache";
 import { serverBuild } from "./serverBuild";
 import { failedBuild } from "./buildResult";

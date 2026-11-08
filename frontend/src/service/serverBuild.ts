@@ -1,5 +1,5 @@
 import i18next from "i18next";
-import { callAPI, isAuthError } from "@/lib/axiosInstance";
+import { callAPI, isAuthError } from "@/lib/apiClient";
 import type { buildAPI } from "@/pages/api/build";
 import type { BuildResult } from "./build";
 import { createBuildCache } from "./buildCache";

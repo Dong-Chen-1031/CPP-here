@@ -27,7 +27,6 @@ import {
 } from "@/config/runLimits";
 import { timeLimitStore } from "@/store/configStore";
 import i18next from "i18next";
-import { apiAxios } from "@/lib/axiosInstance";
 import { addAlert } from "@/lib/alert";
 import { getDefaultStore } from "jotai";
 import { randomId } from "@/lib/utils";
@@ -39,23 +38,6 @@ import {
 } from "./build";
 
 const defaultStore = getDefaultStore();
-
-async function text2BlobUrl(
-    code: string,
-    type: string = "application/javascript",
-) {
-    const blob = new Blob([code], { type: type });
-    return URL.createObjectURL(blob);
-}
-
-async function url2BlobUrl(
-    url: string,
-    type: string = "application/javascript",
-) {
-    const response = await apiAxios.get(url);
-    const code = response.data;
-    return text2BlobUrl(code, type);
-}
 
 export type LimitKind = "time" | "output" | "memory";
 
