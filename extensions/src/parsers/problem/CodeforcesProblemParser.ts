@@ -160,7 +160,7 @@ export class CodeforcesProblemParser extends Parser {
     const contestName = elem
       .querySelector('#sidebar > div > .rtable')
       .querySelector('a')
-      .textContent.replace('\n', ' ')
+      .textContent.replace(/\n/g, ' ')
       .trim();
 
     task.setCategory(contestName);
@@ -185,7 +185,7 @@ export class CodeforcesProblemParser extends Parser {
     task.setName(`${letter}. ${name}`);
 
     const detailsStr = columns[1].querySelector('div > div:not(:first-child)').textContent;
-    const detailsMatches = /([^/]+)\/([^\n]+)\s+([0-9.]+) s,\s+(\d+) MB/.exec(detailsStr.replace('\n', ' '));
+    const detailsMatches = /([^/]+)\/([^\n]+)\s+([0-9.]+) s,\s+(\d+) MB/.exec(detailsStr.replace(/\n/g, ' '));
 
     const inputFile = detailsMatches[1].trim();
     const outputFile = detailsMatches[2].trim();

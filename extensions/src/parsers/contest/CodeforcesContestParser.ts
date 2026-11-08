@@ -80,7 +80,7 @@ export class CodeforcesContestParser extends SimpleContestParser {
     const contestName = elem
       .querySelector('#sidebar > div > .rtable')
       .querySelector('a')
-      .textContent.replace('\n', ' ')
+      .textContent.replace(/\n/g, ' ')
       .trim();
 
     const rowSelector = '.problems > tbody > tr:not(:first-child)';

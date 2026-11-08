@@ -39,6 +39,9 @@ on:
             - ".github/workflows/browser-compiler.yml"
     workflow_dispatch:
 
+permissions:
+    contents: read
+
 jobs:
     regression:
         name: In-browser compiler regression

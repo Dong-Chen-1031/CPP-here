@@ -1,0 +1,15 @@
+name: CodeQL config
+
+# Load test and browser test scripts: they never run in production, and their
+# alerts (path and shell injection) are about inputs only the developer sets.
+paths-ignore:
+    - backend/load_test
+    - frontend/test
+
+query-filters:
+    # Every parser's match patterns ('https://*.kattis.com/problems/*') reach
+    # new RegExp() through matchPatternToRegExp, which escapes their dots, but
+    # CodeQL reads each pattern as a regex with unescaped dots. That is one
+    # false positive per pattern, so the query is noise in this repository.
+    - exclude:
+          id: js/incomplete-hostname-regexp
