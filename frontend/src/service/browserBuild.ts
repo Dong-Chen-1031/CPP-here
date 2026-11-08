@@ -10,6 +10,7 @@ import {
 import type { BuildResult } from "./build";
 import { createBuildCache } from "./buildCache";
 import { failedBuild as failed } from "./buildResult";
+import { reportBuild } from "./statsReport";
 
 export const NOT_DOWNLOADED = -1;
 export const DOWNLOADED = 101;
@@ -206,6 +207,7 @@ async function compile(source: string, std: string): Promise<BuildResult> {
             cached: true,
             duration_ms: 0,
         });
+        reportBuild(source, hit, 0);
         return { ...hit, durationMs: 0 };
     }
     // The first job in a worker also loads the toolchain into it.
@@ -233,6 +235,7 @@ async function compile(source: string, std: string): Promise<BuildResult> {
             : undefined,
     });
     cache.set(source, std, result);
+    reportBuild(source, result, durationMs);
     return { ...result, durationMs };
 }
 
@@ -267,6 +270,7 @@ function compileInWorker(source: string, std: string): Promise<BuildResult> {
                 unavailable: !!data.reset,
                 usedPch: data.usedPch,
                 wasmModule: data.module,
+                wasmSizeBytes: data.wasmSizeBytes,
                 js_code: data.ok ? LOCAL_WORKER_MARKER : "",
                 wasm_url: "",
             });

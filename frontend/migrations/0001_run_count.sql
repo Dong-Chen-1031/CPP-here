@@ -1,0 +1,1 @@
+ALTER TABLE `build_stats` ADD `total_run_count` integer DEFAULT 0 NOT NULL;

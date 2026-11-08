@@ -22,6 +22,7 @@
             {
                 "binding": "D1",
                 "database_id": "c27d93e5-2925-4547-b28a-44a4a1795089",
+                "migrations_dir": "migrations",
             },
         ],
         "r2_buckets": [
@@ -41,6 +42,22 @@
         {
             "binding": "SESSION",
             "id": "00418d0d89144e979ab8cd851db8eb8e",
+        },
+    ],
+    // Build stats (src/lib/server/db). Schema from drizzle-kit in ./migrations.
+    "d1_databases": [
+        {
+            "binding": "D1",
+            "database_id": "c27d93e5-2925-4547-b28a-44a4a1795089",
+            "migrations_dir": "migrations",
+        },
+    ],
+    // Limits /api/stats, which takes reports without a token.
+    "ratelimits": [
+        {
+            "name": "STATS_RATE_LIMITER",
+            "namespace_id": "1001",
+            "simple": { "limit": 30, "period": 60 },
         },
     ],
     "r2_buckets": [

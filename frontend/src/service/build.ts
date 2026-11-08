@@ -12,7 +12,7 @@ import {
     verifyJwtStore,
 } from "@/store/atom";
 import { addAlert } from "@/lib/alert";
-import { waitForJwt } from "@/lib/axiosInstance";
+import { waitForJwt } from "@/lib/apiClient";
 import { openToolchainCache } from "@/compiler/toolchainCache";
 import { serverBuild } from "./serverBuild";
 import { failedBuild } from "./buildResult";
@@ -42,6 +42,8 @@ export interface BuildResult {
     unavailable?: boolean;
     /** In-browser builds: compile time without the download. */
     durationMs?: number;
+    /** In-browser builds: size of the linked program, for the stats. */
+    wasmSizeBytes?: number;
     /** In-browser builds: whether a precompiled bits/stdc++.h was used. */
     usedPch?: boolean;
     /** The user stopped the build. */

@@ -90,7 +90,9 @@
         "wasmCompiled": "總編譯大小",
         "wasmCompiledDescription": "使用者提交並編譯的原始碼總大小。",
         "totalTimeCompiled": "編譯總時長",
-        "totalTimeCompiledDescription": "所有使用者累計花費在編譯上的 CPU 時間。"
+        "totalTimeCompiledDescription": "所有使用者累計花費在編譯上的 CPU 時間。",
+        "programsRun": "執行次數",
+        "programsRunDescription": "編譯好的程式被執行的總次數"
     },
     "cta": {
         "label": "讓我們開始吧",

@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { toolchainId } from "../../scripts/toolchain-id.mjs";
+import { testEnv } from "./test-env.mjs";
 const frontend = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
     "../..",
@@ -22,7 +23,7 @@ const server = await createServer({
     },
     root: frontend,
     publicDir: path.join(frontend, "public"),
-    plugins: [toolchainId()],
+    plugins: [toolchainId(), testEnv()],
     server: { host: "127.0.0.1", port: 5178 },
 });
 await server.listen();

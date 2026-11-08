@@ -8,7 +8,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     // console.log("Middleware triggered for:", context);
     const pathname = context.url.pathname;
     const isApiPath = pathname.startsWith("/api/");
-    const allowedPaths = ["/api/health", "/api/verify"];
+    const allowedPaths = ["/api/health", "/api/verify", "/api/stats"];
     const isAllowedPath =
         allowedPaths.includes(pathname) ||
         allowedPaths.some((path) => pathname.startsWith(path + "/"));

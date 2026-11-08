@@ -5,7 +5,7 @@ import {
     verifyJwtStore,
 } from "@/store/atom";
 import { PUBLIC_S3_BUCKET_NAME, PUBLIC_S3_BUCKET_URL } from "astro:env/client";
-import { axios, callAPI, isAuthError, waitForJwt } from "@/lib/axiosInstance";
+import { callAPI, getJSON, isAuthError, waitForJwt } from "@/lib/apiClient";
 import { getDefaultStore } from "jotai";
 import { exportOutputCases, outputStore } from "@/store/outputStore";
 import { SHARE_OUTPUT_LIMIT_CHARS } from "@/config/runLimits";
@@ -88,11 +88,11 @@ export async function fetchSharedCode(
         ]
             .filter(Boolean)
             .join("/");
-        const respond = await axios.get(
+        const payload = await getJSON(
             `${baseUrl}/${SHARE_KEY_PREFIX}${encodeURIComponent(shareId)}`,
         );
 
-        const parsed = ShareObjectSchema.safeParse(respond.data);
+        const parsed = ShareObjectSchema.safeParse(payload);
         if (!parsed.success) {
             console.error("Malformed share payload:", parsed.error.issues);
             return { ok: false, errors: ["Malformed share payload."] };

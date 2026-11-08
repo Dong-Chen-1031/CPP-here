@@ -162,13 +162,13 @@ scope.onmessage = async ({ data }) => {
             scope.postMessage({ id, ok: false, errors: [stderr] });
             return;
         }
-        const module = await WebAssembly.compile(
-            output["main.wasm"] as Uint8Array<ArrayBuffer>,
-        );
+        const wasm = output["main.wasm"] as Uint8Array<ArrayBuffer>;
+        const module = await WebAssembly.compile(wasm);
         scope.postMessage({
             id,
             ok: true,
             module,
+            wasmSizeBytes: wasm.byteLength,
             errors: [],
             usedPch: !!pch,
         });

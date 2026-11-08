@@ -14,7 +14,7 @@ import {
     PUBLIC_BYPASS_CAPTCHA,
 } from "astro:env/client";
 import { addAlert } from "@/lib/alert";
-import { callAPI } from "@/lib/axiosInstance";
+import { callAPI } from "@/lib/apiClient";
 import type { verifyAPI } from "@/pages/api/verify";
 
 /** How long before the JWT expires we refresh the Turnstile token. */
