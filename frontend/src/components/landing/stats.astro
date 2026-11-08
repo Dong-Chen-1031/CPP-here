@@ -3,6 +3,7 @@ import { ZapIcon, FileTextIcon, DatabaseIcon, PlayIcon } from "@lucide/astro";
 import Hr from "@/components/landing/hr.astro";
 import { PUBLIC_SKIP_API_FETCH } from "astro:env/client";
 import { PRIVATE_BUILD_TIME_STATUS_URL } from "astro:env/server";
+import { formatStat, type StatFormat } from "@/lib/statsFormat";
 
 interface Props {
     lang?: string;
@@ -17,33 +18,6 @@ interface StatusResponse {
     total_wasm_size_bytes: number;
     total_duration_seconds: number;
     total_run_count?: number;
-}
-
-function formatCount(n: number | undefined): string {
-    if (n === undefined) return "-";
-    if (n >= 1_000_000)
-        return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M+";
-    if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K+";
-    return String(n);
-}
-
-function formatLines(n: number | undefined): string {
-    if (n === undefined) return "-";
-    if (n >= 1_000_000)
-        return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M+";
-    if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K+";
-    return String(n);
-}
-
-function formatBytes(bytes: number | undefined): string {
-    if (bytes === undefined) return "-";
-    if (bytes >= 1_073_741_824)
-        return (bytes / 1_073_741_824).toFixed(1).replace(/\.0$/, "") + " GB+";
-    if (bytes >= 1_048_576)
-        return (bytes / 1_048_576).toFixed(1).replace(/\.0$/, "") + " MB+";
-    if (bytes >= 1_024)
-        return (bytes / 1_024).toFixed(1).replace(/\.0$/, "") + " KB+";
-    return bytes + " B";
 }
 
 let apiData: StatusResponse | null = null;
@@ -70,10 +44,17 @@ if (!PUBLIC_SKIP_API_FETCH) {
     console.log("Skipping API fetch for stats due to configuration.");
 }
 
-const stats = [
+const stats: {
+    icon: typeof ZapIcon;
+    key: keyof StatusResponse;
+    format: StatFormat;
+    label: string;
+    desc: string;
+}[] = [
     {
         icon: ZapIcon,
-        value: formatCount(apiData?.total_count),
+        key: "total_count",
+        format: "count",
         label: t?.compilations,
         desc:
             t?.compilationsDescription ||
@@ -81,7 +62,8 @@ const stats = [
     },
     {
         icon: FileTextIcon,
-        value: formatLines(apiData?.total_lines),
+        key: "total_lines",
+        format: "count",
         label: t?.linesCompiled,
         desc:
             t?.lineCompiledDescription ||
@@ -89,7 +71,8 @@ const stats = [
     },
     {
         icon: DatabaseIcon,
-        value: formatBytes(apiData?.total_wasm_size_bytes),
+        key: "total_wasm_size_bytes",
+        format: "bytes",
         label: t?.wasmCompiled,
         desc:
             t?.wasmCompiledDescription ||
@@ -97,7 +80,8 @@ const stats = [
     },
     {
         icon: PlayIcon,
-        value: formatCount(apiData?.total_run_count),
+        key: "total_run_count",
+        format: "count",
         label: t?.programsRun,
         desc:
             t?.programsRunDescription ||
@@ -121,14 +105,19 @@ const stats = [
     </div>
 
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-px bg-foreground/10 border border-foreground/10 rounded-xl overflow-hidden">
-        {stats.map(({ icon: Icon, value, label, desc }) => (
+        {stats.map(({ icon: Icon, key, format, label, desc }) => (
             <div class="stat-card group relative bg-background sm:p-8 p-5">
                 <div class="relative z-10">
                     <div class="flex items-center justify-center size-10 rounded-md border border-foreground/15 bg-foreground/3 group-hover:border-foreground/30 group-hover:bg-foreground/6 transition-all duration-300 mb-5">
                         <Icon class="size-5 text-foreground/80 group-hover:text-foreground transition-colors" />
                     </div>
-                    <p class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter tabular-nums">
-                        {value}
+                    <p
+                        class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter tabular-nums"
+                        data-stat={key}
+                        data-format={format}
+                        data-value={apiData?.[key]}
+                    >
+                        {formatStat(format, apiData?.[key])}
                     </p>
                     <p class="text-sm font-semibold mt-2 tracking-tight">
                         {label}
@@ -158,6 +147,40 @@ const stats = [
 </style>
 
 <script>
+    import { PUBLIC_API_URL } from "astro:env/client";
+    import { animate, inView } from "motion";
+    import { formatStat, type StatFormat } from "@/lib/statsFormat";
+
+    async function refreshStats() {
+        const res = await fetch(`${PUBLIC_API_URL}/api/stats`);
+        if (!res.ok) return;
+        const totals: Record<string, number | undefined> = await res.json();
+        const reduceMotion = matchMedia(
+            "(prefers-reduced-motion: reduce)",
+        ).matches;
+        document.querySelectorAll<HTMLElement>("[data-stat]").forEach((el) => {
+            const to = totals[el.dataset.stat!];
+            if (typeof to !== "number") return;
+            const from = Number(el.dataset.value) || 0;
+            const format = el.dataset.format as StatFormat;
+            const show = (n: number) =>
+                (el.textContent = formatStat(format, n));
+            if (reduceMotion || to <= from) return show(to);
+            const stop = inView(el, () => {
+                stop();
+                animate(from, to, {
+                    duration: 1.2,
+                    ease: "easeOut",
+                    onUpdate: show,
+                });
+            });
+        });
+    }
+
+    refreshStats().catch((error) =>
+        console.warn("Failed to refresh stats:", error),
+    );
+
     class SpotlightStatCard {
         card: HTMLElement;
         currentX = 0;
