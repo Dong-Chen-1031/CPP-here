@@ -9,7 +9,7 @@
         "preview": "astro preview",
         "astro": "astro",
         "cf-typegen": "wrangler types",
-        "deploy": "node scripts/prepare-toolchain.mjs --if-enabled && astro build && wrangler deploy",
+        "deploy": "wrangler d1 migrations apply D1 --remote && node scripts/prepare-toolchain.mjs --if-enabled && astro build && wrangler deploy",
         "deploy:preview": "node scripts/prepare-toolchain.mjs --if-enabled && astro build && wrangler preview",
         "toolchain": "node scripts/prepare-toolchain.mjs",
         "test:browser": "node test/browser/run.mjs"
