@@ -1,0 +1,76 @@
+{
+    "version": "6",
+    "dialect": "sqlite",
+    "id": "6cff354c-4c2a-4f3b-ab0b-f46714ad4ed8",
+    "prevId": "00000000-0000-0000-0000-000000000000",
+    "tables": {
+        "build_stats": {
+            "name": "build_stats",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": 1
+                },
+                "total_count": {
+                    "name": "total_count",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": 0
+                },
+                "total_lines": {
+                    "name": "total_lines",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": 0
+                },
+                "total_wasm_size_bytes": {
+                    "name": "total_wasm_size_bytes",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": 0
+                },
+                "total_duration_seconds": {
+                    "name": "total_duration_seconds",
+                    "type": "real",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": 0
+                },
+                "browser_count": {
+                    "name": "browser_count",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": 0
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "checkConstraints": {}
+        }
+    },
+    "views": {},
+    "enums": {},
+    "_meta": {
+        "schemas": {},
+        "tables": {},
+        "columns": {}
+    },
+    "internal": {
+        "indexes": {}
+    }
+}

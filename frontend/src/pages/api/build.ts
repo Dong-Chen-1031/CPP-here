@@ -5,6 +5,7 @@ import {
     PRIVATE_BUILDER_NODE_KEY,
 } from "astro:env/server";
 import { env } from "cloudflare:workers";
+import { countLines, recordBuild } from "@/lib/server/stats";
 
 export const prerender = false;
 
@@ -15,6 +16,10 @@ const ResponseSchema = z.object({
     ok: z.boolean(),
     // The builder node failed for a reason other than the code
     unavailable: z.boolean().optional(),
+});
+
+const BuilderResponseSchema = ResponseSchema.extend({
+    wasm_size_bytes: z.number().nullish(),
 });
 
 const FORWARD_HEADERS = [
@@ -29,7 +34,7 @@ export const buildAPI = makeAPI({
     responseSchema: ResponseSchema,
 
     handler: async (
-        { clientAddress, request },
+        { clientAddress, request, locals },
         { code, cppVersion },
         reply,
     ) => {
@@ -40,6 +45,7 @@ export const buildAPI = makeAPI({
             }),
         );
 
+        const started = performance.now();
         const res = await fetch(`${PRIVATE_BUILDER_NODE_ENDPOINT}/api/build`, {
             method: "POST",
             headers: {
@@ -80,7 +86,7 @@ export const buildAPI = makeAPI({
             );
         }
 
-        const parsed = ResponseSchema.safeParse(await res.json());
+        const parsed = BuilderResponseSchema.safeParse(await res.json());
         if (!parsed.success) {
             return reply(
                 {
@@ -93,6 +99,18 @@ export const buildAPI = makeAPI({
             );
         }
         const data = parsed.data;
+
+        if (!data.unavailable)
+            locals.cfContext.waitUntil(
+                recordBuild({
+                    lines: countLines(code),
+                    wasmSizeBytes: data.wasm_size_bytes ?? 0,
+                    durationSeconds: (performance.now() - started) / 1000,
+                    browser: false,
+                }).catch((error) =>
+                    console.error("Failed to record build stats:", error),
+                ),
+            );
 
         return reply(
             {
