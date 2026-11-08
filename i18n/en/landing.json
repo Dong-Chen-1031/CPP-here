@@ -89,7 +89,9 @@
         "wasmCompiled": "Wasm Compiled",
         "wasmCompiledDescription": "Total size of source code submitted and compiled by users.",
         "totalTimeCompiled": "Total Time Compiled",
-        "totalTimeCompiledDescription": "Cumulative CPU time spent compiling across all users."
+        "totalTimeCompiledDescription": "Cumulative CPU time spent compiling across all users.",
+        "programsRun": "Programs Run",
+        "programsRunDescription": "Times a compiled program was run, counting each test case."
     },
     "cta": {
         "label": "get started",

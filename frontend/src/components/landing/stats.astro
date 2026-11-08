@@ -1,5 +1,5 @@
 ---
-import { ZapIcon, FileTextIcon, DatabaseIcon, ClockIcon } from "@lucide/astro";
+import { ZapIcon, FileTextIcon, DatabaseIcon, PlayIcon } from "@lucide/astro";
 import Hr from "@/components/landing/hr.astro";
 import { PUBLIC_SKIP_API_FETCH } from "astro:env/client";
 import { PRIVATE_BUILD_TIME_STATUS_URL } from "astro:env/server";
@@ -16,6 +16,7 @@ interface StatusResponse {
     total_lines: number;
     total_wasm_size_bytes: number;
     total_duration_seconds: number;
+    total_run_count?: number;
 }
 
 function formatCount(n: number | undefined): string {
@@ -43,17 +44,6 @@ function formatBytes(bytes: number | undefined): string {
     if (bytes >= 1_024)
         return (bytes / 1_024).toFixed(1).replace(/\.0$/, "") + " KB+";
     return bytes + " B";
-}
-
-function formatDuration(seconds: number | undefined): string {
-    if (seconds === undefined) return "-";
-    if (seconds >= 86_400)
-        return (seconds / 86_400).toFixed(1).replace(/\.0$/, "") + " days+";
-    if (seconds >= 3_600)
-        return (seconds / 3_600).toFixed(1).replace(/\.0$/, "") + " hrs+";
-    if (seconds >= 60)
-        return (seconds / 60).toFixed(1).replace(/\.0$/, "") + " min+";
-    return seconds.toFixed(0) + " s+";
 }
 
 let apiData: StatusResponse | null = null;
@@ -106,12 +96,12 @@ const stats = [
             "Total size of source code submitted and compiled by users.",
     },
     {
-        icon: ClockIcon,
-        value: formatDuration(apiData?.total_duration_seconds),
-        label: t?.totalTimeCompiled,
+        icon: PlayIcon,
+        value: formatCount(apiData?.total_run_count),
+        label: t?.programsRun,
         desc:
-            t?.totalTimeCompiledDescription ||
-            "Cumulative CPU time spent compiling across all users.",
+            t?.programsRunDescription ||
+            "Times a compiled program was run, counting each test case.",
     },
 ];
 ---

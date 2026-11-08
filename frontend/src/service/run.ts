@@ -36,6 +36,7 @@ import {
     suggestOtherCompiler,
     type BuildTarget,
 } from "./build";
+import { reportRun } from "./statsReport";
 
 const defaultStore = getDefaultStore();
 
@@ -141,6 +142,7 @@ export async function runCode(
             wasmModule = await WebAssembly.compileStreaming(wasmResponse);
         }
         const worker = new CodeWorker({ js_code });
+        reportRun();
         const taskId = randomId();
         let receivedBytes = 0;
         // Set between a TLE and reporting it, see stopForLimit

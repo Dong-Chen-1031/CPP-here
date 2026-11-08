@@ -10,7 +10,7 @@ import {
 import type { BuildResult } from "./build";
 import { createBuildCache } from "./buildCache";
 import { failedBuild as failed } from "./buildResult";
-import { PUBLIC_API_URL } from "astro:env/client";
+import { reportBuild } from "./statsReport";
 
 export const NOT_DOWNLOADED = -1;
 export const DOWNLOADED = 101;
@@ -37,31 +37,6 @@ export type DownloadTrigger = "build" | "background" | "settings";
 function capture(event: string, properties: Record<string, unknown>) {
     if (typeof window !== "undefined")
         window.posthog?.capture(event, properties);
-}
-
-/**
- * Adds a finished in-browser build to the landing page totals, as the server
- * does for its own builds. Only numbers are sent, never the code. A beacon
- * outlives the page. The Worker serves /api/stats on the page's own origin;
- * a static build's backend has no such route, so the report is dropped there.
- */
-function reportBuild(source: string, result: BuildResult, durationMs: number) {
-    if (result.cancelled || result.unavailable) return;
-    const lines = source.split(/\r\n|\r|\n/);
-    if (lines.at(-1) === "") lines.pop();
-    const body = JSON.stringify({
-        lines: lines.length,
-        wasmSizeBytes: result.wasmSizeBytes ?? 0,
-        durationMs,
-    });
-    try {
-        navigator.sendBeacon(
-            `${PUBLIC_API_URL}/api/stats`,
-            new Blob([body], { type: "text/plain" }),
-        );
-    } catch (error) {
-        console.warn("Failed to report build stats:", error);
-    }
 }
 
 function toolchainBase() {

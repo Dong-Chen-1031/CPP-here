@@ -41,7 +41,20 @@ export async function recordBuild({
         });
 }
 
-/** Same shape as the builder node's /api/status. */
+/** Adds started programs to the totals. */
+export async function recordRuns(runs: number) {
+    await db
+        .insert(buildStats)
+        .values({ id: STATS_ID, totalRunCount: runs })
+        .onConflictDoUpdate({
+            target: buildStats.id,
+            set: {
+                totalRunCount: sql`${buildStats.totalRunCount} + ${runs}`,
+            },
+        });
+}
+
+/** Same shape as the builder node's /api/status, plus the browser-only totals. */
 export async function getBuildStats() {
     const row = await db
         .select()
@@ -54,6 +67,7 @@ export async function getBuildStats() {
         total_wasm_size_bytes: row?.totalWasmSizeBytes ?? 0,
         total_duration_seconds: row?.totalDurationSeconds ?? 0,
         browser_count: row?.browserCount ?? 0,
+        total_run_count: row?.totalRunCount ?? 0,
     };
 }
 
