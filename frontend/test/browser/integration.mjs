@@ -3,6 +3,7 @@ import { chromium } from "playwright";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { toolchainId } from "../../scripts/toolchain-id.mjs";
+import { testEnv } from "./test-env.mjs";
 const root = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
     "../..",
@@ -15,19 +16,7 @@ const server = await createServer({
     },
     root,
     resolve: { alias: { "@": path.join(root, "src") } },
-    plugins: [
-        toolchainId(),
-        {
-            name: "test-env",
-            resolveId(id) {
-                if (id === "astro:env/client") return "\0test-env";
-            },
-            load(id) {
-                if (id === "\0test-env")
-                    return 'export const PUBLIC_LOCAL_COMPILER=true; export const PUBLIC_API_URL="";';
-            },
-        },
-    ],
+    plugins: [toolchainId(), testEnv()],
     server: { host: "127.0.0.1", port: 5180 },
 });
 await server.listen();
