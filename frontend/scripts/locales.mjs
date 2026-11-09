@@ -67,7 +67,7 @@ export function readLocales() {
     const read = (code, ns) => {
         const file = path.join(i18n, code, `${ns}.json`);
         if (!fs.existsSync(file)) return {};
-        return JSON.parse(fs.readFileSync(file, "utf8"));
+        return keepCppTogether(JSON.parse(fs.readFileSync(file, "utf8")));
     };
     const source = Object.fromEntries(
         NAMESPACES.map((ns) => [ns, read(SOURCE, ns)]),
@@ -118,6 +118,23 @@ export function readLocales() {
         };
     });
     return { list, messages };
+}
+
+/**
+ * Puts word joiners (U+2060) inside every "C++", so a line never breaks
+ * between its characters ("C+" / "+"). Only the capitalized name: "libc++" and
+ * "bits/stdc++.h" stay untouched, since readers copy them into code. The
+ * joiners are invisible; plainText() in src/lib/utils.ts removes them again
+ * where the text is not laid out on a page (titles, meta tags, JSON-LD, RSS).
+ */
+function keepCppTogether(value) {
+    if (typeof value === "string") return value.replace(/\bC\+\+/g, "C⁠+⁠+");
+    if (Array.isArray(value)) return value.map(keepCppTogether);
+    if (typeof value === "object" && value !== null)
+        return Object.fromEntries(
+            Object.entries(value).map(([k, v]) => [k, keepCppTogether(v)]),
+        );
+    return value;
 }
 
 /** Non-empty strings in `messages` at keys where `source` also has a string. */

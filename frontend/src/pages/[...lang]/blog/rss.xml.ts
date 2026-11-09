@@ -3,6 +3,7 @@ import type { APIContext } from "astro";
 import { getStaticLangPaths, getTranslation } from "@/lib/langList";
 import { findLocale } from "@/lib/locales";
 import { blogPath, getPosts, postPath } from "@/lib/blog";
+import { plainText } from "@/lib/utils";
 
 export { getStaticLangPaths as getStaticPaths };
 
@@ -11,8 +12,8 @@ export async function GET({ params, site }: APIContext) {
     const t = getTranslation(lang);
     const posts = await getPosts(lang);
     return rss({
-        title: t.blog.title,
-        description: t.blog.description,
+        title: plainText(t.blog.title),
+        description: plainText(t.blog.description),
         // The channel's <link>; item links are absolute paths, so they still
         // resolve against the origin.
         site: new URL(blogPath(lang), site),

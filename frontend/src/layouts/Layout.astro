@@ -2,7 +2,7 @@
 import { Font } from "astro:assets";
 import "@/styles/global.css";
 import PostHog from "@/components/posthog.astro";
-import { cn } from "@/lib/utils";
+import { cn, plainText } from "@/lib/utils";
 import { findLocale } from "@/lib/locales";
 
 interface Props {
@@ -23,10 +23,12 @@ interface Props {
 }
 
 const {
-    title = "Online C++ Compiler for Competitive Programming | C++ Here",
-    description = "Free, open-source online C++ compiler built for competitive programming. Compile C++ to WebAssembly and run test cases in your browser. No install, no login.",
+    title: rawTitle = "Online C++ Compiler for Competitive Programming | C++ Here",
+    description:
+        rawDescription = "Free, open-source online C++ compiler built for competitive programming. Compile C++ to WebAssembly and run test cases in your browser. No install, no login.",
     ogImage = "/og-image.png",
-    ogImageAlt = "C++ Here — next-generation online C++ editor for competitive programming",
+    ogImageAlt:
+        rawOgImageAlt = "C++ Here — next-generation online C++ editor for competitive programming",
     ogType = "website",
     noindex = false,
     lang,
@@ -35,6 +37,11 @@ const {
     className = "",
     alternates = [],
 } = Astro.props;
+
+// Only ever in tags and previews, so without the joiners kept inside "C++".
+const title = plainText(rawTitle);
+const description = plainText(rawDescription);
+const ogImageAlt = plainText(rawOgImageAlt);
 
 const siteUrl = "https://cpp.doong.me";
 const canonicalURL = new URL(canonical ?? Astro.url.pathname, siteUrl).href;

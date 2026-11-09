@@ -6,12 +6,23 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+/**
+ * `text` without the word joiners scripts/locales.mjs puts inside "C++". For
+ * text that is not laid out on the page (titles, meta tags, feeds), where they
+ * prevent no line break and could only get in the way of search and copying.
+ */
+export function plainText(text: string): string {
+    return text.replace(/⁠/g, "");
+}
+
 /** Body of a `<script type="application/ld+json">`, safe to inline. */
 export function jsonLd(data: Record<string, unknown>): string {
-    return JSON.stringify({
-        "@context": "https://schema.org",
-        ...data,
-    }).replace(/</g, "\\u003c");
+    return plainText(
+        JSON.stringify({
+            "@context": "https://schema.org",
+            ...data,
+        }),
+    ).replace(/</g, "\\u003c");
 }
 
 /** crypto.randomUUID, which insecure origins (the dev server by LAN IP) lack. */

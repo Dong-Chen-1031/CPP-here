@@ -37,5 +37,8 @@ function withFallback<T>(base: T, override: unknown): T {
 
 export function getTranslation(lang?: string) {
     const { code } = findLocale(lang);
-    return withFallback(enLanding, landing[code]);
+    // The English from virtual:locales, not the imported file (which only
+    // gives the type): it has been through the same processing, e.g. the word
+    // joiners inside "C++" (scripts/locales.mjs).
+    return withFallback(landing.en as typeof enLanding, landing[code]);
 }
