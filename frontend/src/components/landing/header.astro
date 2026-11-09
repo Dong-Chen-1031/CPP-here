@@ -26,9 +26,7 @@ const languages = LOCALES.map((l) => ({
 <header class="w-full fixed top-0 h-16 py-4 px-5 border-b-2 border-border flex items-center bg-background/50 backdrop-blur-md z-100">
     <a href={localePath(lang, "/")} class="flex items-center">
         <CodeIcon class="size-5 shrink-0" />
-        <p class="ml-2 font-bold text-md tracking-normal hidden min-[25rem]:block">
-            C++ Here
-        </p>
+        <p class="ml-2 font-bold text-md tracking-normal">C++ Here</p>
     </a>
 
     <div class="flex-1"></div>
@@ -45,9 +43,12 @@ const languages = LOCALES.map((l) => ({
         links={languages}
     />
     <a href={PUBLIC_GITHUB_LINK} target="_blank" rel="noopener noreferrer">
-        <Button className="hover:bg-primary/80 flex-1" variant={"outline"}>
+        <Button
+            className="hover:bg-primary/80 flex-1 max-[25rem]:size-7 max-[25rem]:rounded-[min(var(--radius-md),12px)]"
+            variant={"outline"}
+        >
             <SiGithub />
-            <p class="ml-1">{t?.github}</p>
+            <p class="ml-1 max-[25rem]:hidden">{t?.github}</p>
         </Button>
     </a>
     <a href="/editor">
