@@ -33,7 +33,13 @@ const faqSchema = jsonLd({
                 {t?.label}
             </p>
         )}
-        <h2 class="text-[min(3rem,9vw)] leading-[1.05] font-bold text-balance">
+        <h2
+            class="text-[min(3rem,9vw)] leading-[1.05] font-bold text-balance align-top"
+            data-fit
+            data-fit-min="22"
+            data-fit-max="48"
+            data-fit-vw="8"
+        >
             {t?.heading}
             <br />
             {t?.subheading && (

@@ -28,13 +28,20 @@ const { t } = Astro.props as Props;
                     Support 1,000+ competitive programming websites!
                 </p>
             </div> */}
-    <div class="mt-40">
-        <h1 class="text-[min(4.5rem,7vw)] leading-none font-bold text-balance text-center tracking-tighter">
-            {t?.title}
-            <br />
-            {t?.title2}
-        </h1>
-        <p class="text-muted-foreground text-center mt-5 md:text-lg text-balance px-5">
+    <div class="mt-40 w-full px-5">
+        <div class="text-center">
+            <h1
+                class="text-[min(4.5rem,7vw)] leading-none font-bold text-balance text-center tracking-tighter align-top"
+                data-fit
+                data-fit-min="24"
+                data-fit-max="72"
+            >
+                {t?.title}
+                <br />
+                {t?.title2}
+            </h1>
+        </div>
+        <p class="text-muted-foreground text-center mt-5 md:text-lg text-balance">
             {t?.description}
         </p>
     </div>

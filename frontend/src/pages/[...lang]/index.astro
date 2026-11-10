@@ -107,3 +107,45 @@ const alternates = [
         <Footer lang={lang} t={t.footer} />
     </div>
 </Layout>
+
+<script>
+    import fitty, { type FittyInstance } from "fitty";
+
+    // Scales each [data-fit] heading so its longest line fills the parent's
+    // width, between data-fit-min and data-fit-max (px). Below the minimum the
+    // heading wraps instead. data-fit-vw also caps it at that share of the
+    // viewport, so short section headings don't outgrow the hero on phones.
+    // fitty measures the parent's clientWidth, which includes padding, so
+    // every fitted heading sits in a padding-free parent.
+    const headings = [...document.querySelectorAll<HTMLElement>("[data-fit]")];
+    let fitted: FittyInstance[] = [];
+    let fittedWidth = 0;
+
+    // fitty fixes maxSize when it starts, so a new width means new instances.
+    function fit() {
+        fittedWidth = innerWidth;
+        for (const f of fitted) f.unsubscribe();
+        fitted = headings.map((el) => {
+            const minSize = Number(el.dataset.fitMin);
+            let maxSize = Number(el.dataset.fitMax);
+            if (el.dataset.fitVw)
+                maxSize = Math.min(
+                    maxSize,
+                    (Number(el.dataset.fitVw) * innerWidth) / 100,
+                );
+            return fitty(el, { minSize, maxSize: Math.max(minSize, maxSize) });
+        });
+    }
+
+    fitty.observeWindow = false;
+    fit();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    addEventListener("resize", () => {
+        // Phones fire resize when the URL bar slides; only width matters.
+        if (innerWidth === fittedWidth) return;
+        clearTimeout(timer);
+        timer = setTimeout(fit, 100);
+    });
+    // The first fit may run with the fallback font; refit once fonts load.
+    document.fonts.ready.then(fit);
+</script>

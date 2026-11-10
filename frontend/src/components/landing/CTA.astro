@@ -32,12 +32,20 @@ const { t } = Astro.props as Props;
             <span class="mr-1 tracking-widest">//</span>
             {t?.label}
         </p>
-        <h2 class="text-[min(3.5rem,6vw)] leading-[1.15] font-bold tracking-tighter text-balance max-w-4xl">
-            {t?.heading}
-            <span class="text-muted-foreground mt-0.5 md:mt-0 block">
-                {t?.subheading}
-            </span>
-        </h2>
+        <div class="w-full">
+            <h2
+                class="text-[min(3.5rem,6vw)] leading-[1.15] font-bold tracking-tighter text-balance align-top"
+                data-fit
+                data-fit-min="22"
+                data-fit-max="56"
+                data-fit-vw="8"
+            >
+                {t?.heading}
+                <span class="text-muted-foreground mt-0.5 md:mt-0 block">
+                    {t?.subheading}
+                </span>
+            </h2>
+        </div>
         <p class="text-muted-foreground mt-5 md:text-lg text-balance max-w-2xl">
             {t?.description1}
             <br />

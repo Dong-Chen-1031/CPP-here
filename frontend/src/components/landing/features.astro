@@ -66,7 +66,13 @@ const features: Feature[] = translatedList.map(
             <span class="mr-1 tracking-widest">//</span>
             {t?.label}
         </p>
-        <h2 class="text-[min(3rem,7vw)] leading-[1.05] font-bold tracking-tighter text-balance">
+        <h2
+            class="text-[min(3rem,7vw)] leading-[1.05] font-bold tracking-tighter text-balance align-top"
+            data-fit
+            data-fit-min="22"
+            data-fit-max="48"
+            data-fit-vw="8"
+        >
             {t?.heading}
             <br />
             <span class="text-muted-foreground">{t?.subheading}</span>
