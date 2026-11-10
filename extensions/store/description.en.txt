@@ -1,0 +1,26 @@
+Send a problem's sample tests to the C++ Here online editor with one click. No more copying and pasting.
+
+WHAT IT DOES
+Open a problem on an online judge and click the toolbar button (or press Ctrl+Shift+U, ⌘+Shift+U on Mac). The editor opens with every example input and output already loaded as a test case. Write your solution, press "Run All", and each one runs on its own and is checked against the expected answer. Passing ones turn green.
+
+WHY INSTALL IT
+• Save time: three or four examples mean six to eight copy-and-paste trips. Now it is one click.
+• No pasting mistakes: everything is read straight from the page, down to the trailing newline.
+• Works on more than 100 websites, including Codeforces, AtCoder and CSES. The full list is on GitHub (link below).
+• Works for contests too: on a supported contest page, import the whole contest at once.
+• No compiler to install: you write, run and check your code right in the browser.
+
+MORE FEATURES
+• A tab that is already open is reused instead of opening a new one. If it already has test cases, you are asked whether to replace them or add the new ones.
+• On a page that isn't recognized automatically, right-click the toolbar button and choose from the "Parse with" menu.
+• Custom rules in the options let you always use a specific parser for URLs that match a pattern.
+
+PRIVACY
+• The extension reads a page only when you click its button, press its shortcut, or choose from its menu.
+• It contains no analytics or tracking code, and it never reads your browsing history, form fields, passwords or cookies.
+• What it reads goes only to the editor tab in your browser. The extension does not send it to any server.
+
+OPEN SOURCE
+Open source under the MIT license, based on Competitive Companion by Jasper van Merle.
+Source code, issues and the list of supported websites: https://github.com/Dong-Chen-1031/CPP-here
+Online editor: https://cpp.doong.me

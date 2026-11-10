@@ -59,13 +59,21 @@ npm run package
 # Regenerate media/icons/ and the store banners in media/banners/
 npm run generate-icons
 npm run generate-banners
+
+# Regenerate the store screenshots in media/screenshots/ (needs a running editor, see below)
+npm run generate-screenshots
 ```
+
+The store screenshots combine real screenshots of the C++ Here editor with the layout in [`scripts/screenshots/slides.html`](./scripts/screenshots/slides.html). Start the editor first (`bun run dev` in `frontend/`), then run `npm run generate-screenshots`, adding `-- <editor URL>` if it isn't at `http://localhost:4321/editor/`.
+
+Every screenshot comes in two sizes: `<language>-<n>-<slide>.png` is the 1280x800 that the Chrome Web Store asks for, and `<language>-<n>-<slide>@2x.png` is the same picture at 2560x1600 for the places that take a larger image. The last slide lists the judges from the table under [Supported websites](#supported-websites); which ones each language puts first is set at the top of [`scripts/generate-screenshots.ts`](./scripts/generate-screenshots.ts).
 
 The version shown in the stores comes from `version` in [`package.json`](./package.json). Bump it before packaging a new release; the stores reject an upload whose version hasn't changed.
 
 ### Store submission
 
 - [`PRIVACY.md`](./PRIVACY.md) is the privacy policy linked from both store listings. Update it whenever the extension or the editor starts handling problem data differently.
+- [`store/`](./store) holds the description for the store listing, one plain-text file per language, ready to paste. The Chrome Web Store rejected an earlier version for keyword spam: name at most five supported websites in a description, and avoid repeating any one keyword more than five times.
 - Mozilla reviews bundled code against its source, so a Firefox upload also needs a source archive. From the repository root, `git archive -o cpp-here-source.zip HEAD` makes one; the reviewer builds it with `bun install --frozen-lockfile`, then `bun run build:firefox` in `extensions/`, which produces `extensions/build-firefox/`.
 
 ### Testing

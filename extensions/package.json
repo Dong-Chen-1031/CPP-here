@@ -21,6 +21,7 @@
     "package:firefox": "npm run build:firefox && web-ext build -s build-firefox/ -a dist/ -o -n cpp-here-{version}-firefox.zip",
     "generate-banners": "tsx scripts/generate-banners.ts",
     "generate-icons": "tsx scripts/generate-icons.ts",
+    "generate-screenshots": "tsx scripts/generate-screenshots.ts",
     "lint": "concurrently \"npm:lint:*\"",
     "lint:eslint": "eslint --format codeframe \"src/**/*.ts\" \"tests/**/*.ts\" \"scripts/**/*.ts\" jest.config.cts",
     "lint:prettier": "prettier --check --ignore-path .gitignore \"**/*.{ts,js,cts,html,yml,json}\"",

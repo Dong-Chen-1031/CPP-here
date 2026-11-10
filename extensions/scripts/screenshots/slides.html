@@ -1,0 +1,526 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <!-- Store screenshot template. scripts/generate-screenshots.ts opens it and calls renderSlide() for each slide. -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=block"
+    />
+    <style>
+      @font-face {
+        font-family: 'JBM';
+        src: url('../../media/fonts/JetBrainsMono-latin.woff2') format('woff2');
+        font-weight: 100 800;
+      }
+      :root {
+        --bg: #0a0a0a;
+        --fg: #fafafa;
+        --soft: #d4d4d8;
+        --muted: #a1a1aa;
+        --faint: #71717a;
+        --line: rgba(255, 255, 255, 0.1);
+        --mono: 'JBM', 'Noto Sans TC', monospace;
+        --sans: 'Inter', 'Noto Sans TC', sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--bg);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: geometricPrecision;
+      }
+      .slide {
+        position: relative;
+        width: 1280px;
+        height: 800px;
+        overflow: hidden;
+        background: radial-gradient(900px 420px at 50% -80px, rgba(255, 255, 255, 0.09), transparent 70%), var(--bg);
+        color: var(--fg);
+        font-family: var(--sans);
+      }
+      /* The website's grid, fading out away from the heading */
+      .slide::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+        background-size: 64px 64px;
+        background-position: center top;
+        mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 20%, transparent 100%);
+      }
+
+      /* Heading */
+      .head {
+        position: absolute;
+        top: 34px;
+        left: 0;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        height: 30px;
+        padding: 0 13px 0 11px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--soft);
+        font: 700 13px var(--mono);
+        font-variant-ligatures: none;
+      }
+      .brand svg {
+        color: var(--fg);
+      }
+      h1 {
+        margin-top: 16px;
+        font: 800 48px/1.15 var(--mono);
+        font-variant-ligatures: none;
+        letter-spacing: -0.03em;
+      }
+      .zh h1 {
+        font-weight: 700;
+        letter-spacing: 0.01em;
+      }
+      .sub {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.6;
+      }
+      kbd {
+        display: inline-block;
+        margin: 0 2px;
+        padding: 0 7px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-bottom-width: 2px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--fg);
+        font: 500 13px/22px var(--mono);
+        vertical-align: 2px;
+      }
+      ul.checks {
+        margin-top: 16px;
+        display: flex;
+        gap: 30px;
+        list-style: none;
+        color: var(--soft);
+        font-size: 16px;
+        line-height: 22px;
+      }
+      ul.checks li {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+      ul.checks svg {
+        flex: none;
+        padding: 4px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Browser windows */
+      .window {
+        position: absolute;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.13);
+        border-radius: 12px;
+        background: #0a0a0a;
+        box-shadow:
+          0 30px 80px -10px rgba(0, 0, 0, 0.9),
+          0 0 120px -20px rgba(255, 255, 255, 0.1);
+      }
+      .bar {
+        height: 36px;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        padding: 0 12px;
+        background: #171719;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .dots {
+        display: flex;
+        gap: 7px;
+      }
+      .dots i {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #3a3a40;
+      }
+      .url {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-width: 230px;
+        height: 22px;
+        padding: 0 12px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--muted);
+        font: 11.5px var(--sans);
+      }
+      .tools {
+        justify-self: end;
+        display: flex;
+        align-items: center;
+      }
+      .light {
+        background: #fff;
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+      .light .bar {
+        background: #f1f1f3;
+        border-bottom-color: #e4e4e7;
+      }
+      .light .dots i {
+        background: #d0d0d6;
+      }
+      .light .url {
+        min-width: 200px;
+        background: #fff;
+        box-shadow: 0 0 0 1px #e4e4e7;
+        color: #52525b;
+      }
+      .shot {
+        display: block;
+      }
+
+      /* The extension's toolbar button, being clicked */
+      .ext {
+        position: relative;
+        width: 26px;
+        height: 26px;
+        display: grid;
+        place-items: center;
+        border-radius: 7px;
+        background: #dcdce1;
+        box-shadow: 0 0 0 4px rgba(24, 24, 27, 0.07);
+      }
+      .ext img {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+      }
+      .ext .cursor {
+        position: absolute;
+        left: 18px;
+        top: 17px;
+        z-index: 4;
+        filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+      }
+      .ext .tip {
+        position: absolute;
+        top: 42px;
+        right: -2px;
+        z-index: 3;
+        padding: 5px 9px;
+        border-radius: 6px;
+        background: #27272a;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+        color: #fafafa;
+        font: 500 11.5px var(--sans);
+        white-space: nowrap;
+      }
+
+      /* The problem page the extension reads */
+      .page {
+        padding: 24px 26px;
+        color: #18181b;
+        font: 13px/1.6 var(--sans);
+      }
+      .page h2 {
+        font: 600 19px/1.3 var(--sans);
+        text-align: center;
+      }
+      .page .limits {
+        margin: 6px 0 16px;
+        color: #71717a;
+        font-size: 11.5px;
+        line-height: 1.5;
+        text-align: center;
+      }
+      .page p {
+        color: #3f3f46;
+      }
+      .page .nowrap {
+        white-space: nowrap;
+      }
+      .page code {
+        padding: 1px 4px;
+        border-radius: 4px;
+        background: #f4f4f5;
+        color: #18181b;
+        font: 12px var(--mono);
+      }
+      .page h3 {
+        margin: 18px 0 8px;
+        font: 600 13px var(--sans);
+      }
+      .samples {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .samples div {
+        overflow: hidden;
+        border: 1px solid #e4e4e7;
+        border-radius: 7px;
+      }
+      .samples b {
+        display: block;
+        padding: 4px 9px;
+        border-bottom: 1px solid #e4e4e7;
+        background: #fafafa;
+        color: #71717a;
+        font: 500 11px var(--sans);
+      }
+      .samples pre {
+        min-height: 50px;
+        padding: 7px 9px;
+        font: 12px/1.5 var(--mono);
+      }
+
+      /* Between the problem page and the editor */
+      .flow {
+        position: absolute;
+        width: 36px;
+        height: 36px;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 50%;
+        background: #1c1c1f;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      }
+
+      /* Judges */
+      .featured {
+        position: absolute;
+        left: 72px;
+        right: 72px;
+        top: 240px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+      }
+      .featured div {
+        height: 86px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 7px;
+        padding: 0 20px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: linear-gradient(rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.025));
+      }
+      .featured b {
+        font: 600 19px/1.2 var(--sans);
+        letter-spacing: -0.01em;
+      }
+      .featured span {
+        color: var(--faint);
+        font: 12px/1.2 var(--mono);
+      }
+      .more {
+        position: absolute;
+        left: 72px;
+        right: 72px;
+        top: 448px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        color: var(--faint);
+        font: 500 13px/20px var(--sans);
+      }
+      .more::before,
+      .more::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--line);
+      }
+      .wall {
+        position: absolute;
+        left: 72px;
+        right: 72px;
+        top: 490px;
+        bottom: 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-content: flex-start;
+        gap: 8px;
+        mask-image: linear-gradient(#000 30%, transparent 96%);
+      }
+      /* Growing to fill their row gives the wall straight edges on both sides */
+      .wall span {
+        flex: 1 1 auto;
+        padding: 0 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--muted);
+        font: 13px/30px var(--mono);
+        text-align: center;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      const copy = {
+        en: {
+          importTitle: 'Sample tests, one click away',
+          importSub:
+            'Click the toolbar button or press <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>U</kbd> on a problem page,<br>and its examples become test cases in C++ Here.',
+          tooltip: 'Send to C++ Here',
+          limits: 'time limit per test: 1 second<br>memory limit per test: 256 megabytes',
+          statement:
+            'You are given <code>n</code> integers and a number <code>k</code>. Count the pairs <code>i &lt; j</code> with <code>a<sub>i</sub> + a<sub>j</sub> = k</code>.',
+          examples: 'Examples',
+          input: 'input',
+          output: 'output',
+          runTitle: 'Run every sample at once',
+          runChecks: ['Each case runs on its own', 'Output checked against the answer', 'Passing cases turn green'],
+          judgesTitle: 'Works on 100+ online judges',
+          judgesSub:
+            "Popular judges are parsed automatically. On a page it doesn't recognize,<br>right-click the button to pick a parser by hand.",
+          more: count => `and ${count} more`,
+        },
+        'zh-TW': {
+          importTitle: '一鍵把範例測資送進編輯器',
+          importSub:
+            '在題目頁按下工具列按鈕，或按 <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>U</kbd>，<br>範例輸入與輸出就會變成 C++ Here 的測資。',
+          tooltip: '送到 C++ Here',
+          limits: '時間限制：1 秒<br>記憶體限制：256 MB',
+          statement:
+            '給定 <code>n</code> 個整數與一個數字 <code>k</code>，請計算有多少組 <code>i &lt; j</code> <span class="nowrap">滿足 <code>a<sub>i</sub> + a<sub>j</sub> = k</code>。</span>',
+          examples: '範例',
+          input: '輸入',
+          output: '輸出',
+          runTitle: '一次跑完所有範例測資',
+          runChecks: ['每筆測資各自執行', '自動比對預期答案', '通過的測資顯示綠框'],
+          judgesTitle: '支援超過 100 個解題網站',
+          judgesSub: '常見的解題網站都能直接解析；遇到認不得的頁面，<br>在按鈕上按右鍵就能手動選擇解析器。',
+          more: count => `以及另外 ${count} 個網站`,
+        },
+      };
+
+      const escapeHtml = text => text.replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`);
+
+      const lockIcon =
+        '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+
+      function bar(url, tools = '') {
+        return `<div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">${lockIcon}${url}</span><span class="tools">${tools}</span></div>`;
+      }
+
+      function head(data, title, below) {
+        return `<div class="head"><div class="brand">${data.brandGlyph}C++ Here</div><h1>${title}</h1>${below}</div>`;
+      }
+
+      // An editor screenshot in a browser window. The screenshot was taken at the size it is shown at.
+      function editorWindow(shot, left, top) {
+        return `<div class="window" style="left:${left}px;top:${top}px;width:${shot.width + 2}px">${bar('cpp.doong.me/editor')}<img class="shot" src="${shot.src}" style="width:${shot.width}px"></div>`;
+      }
+
+      const slides = {
+        import(data, t) {
+          const margin = 72;
+          const gap = 48;
+          const top = 240;
+          const editorLeft = 1280 - margin - data.shots.imported.width - 2;
+          const pageWidth = editorLeft - gap - margin;
+
+          const extension = `<span class="ext"><img src="../../media/icons/icon-128.png">
+            <svg class="cursor" width="20" height="20" viewBox="0 0 24 24"><path d="M5 2.5v17l4.6-4.1 3 6.6 2.7-1.2-3-6.5h6.2z" fill="#18181b" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>
+            <span class="tip">${t.tooltip}</span></span>`;
+          const samples = data.problem.tests
+            .map(
+              test =>
+                `<div><b>${t.input}</b><pre>${escapeHtml(test.input.trimEnd())}</pre></div><div><b>${t.output}</b><pre>${escapeHtml(test.output.trimEnd())}</pre></div>`,
+            )
+            .join('');
+
+          return `
+            ${head(data, t.importTitle, `<p class="sub">${t.importSub}</p>`)}
+            <div class="window light" style="left:${margin}px;top:${top}px;width:${pageWidth}px;height:640px">
+              ${bar('judge.example.com/problem/B', extension)}
+              <div class="page">
+                <h2>${escapeHtml(data.problem.name)}</h2>
+                <div class="limits">${t.limits}</div>
+                <p>${t.statement}</p>
+                <h3>${t.examples}</h3>
+                <div class="samples">${samples}</div>
+              </div>
+            </div>
+            <div class="flow" style="left:${margin + pageWidth + gap / 2 - 18}px;top:${top + 250}px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fafafa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </div>
+            ${editorWindow(data.shots.imported, editorLeft, top)}`;
+        },
+
+        run(data, t) {
+          const check =
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fafafa" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+          const checks = t.runChecks.map(text => `<li>${check}${text}</li>`).join('');
+
+          return `
+            ${head(data, t.runTitle, `<ul class="checks">${checks}</ul>`)}
+            ${editorWindow(data.shots.ran, (1280 - data.shots.ran.width - 2) / 2, 192)}`;
+        },
+
+        judges(data, t) {
+          const featured = data.judges.featured
+            .map(judge => `<div><b>${escapeHtml(judge.name)}</b><span>${escapeHtml(judge.host)}</span></div>`)
+            .join('');
+          const others = data.judges.others.map(name => `<span>${escapeHtml(name)}</span>`).join('');
+
+          return `
+            ${head(data, t.judgesTitle, `<p class="sub">${t.judgesSub}</p>`)}
+            <div class="featured">${featured}</div>
+            <div class="more">${t.more(data.judges.others.length)}</div>
+            <div class="wall">${others}</div>`;
+        },
+      };
+
+      // Draws a slide and resolves, once it is ready for a screenshot, with the font families it loaded
+      window.renderSlide = async data => {
+        document.body.className = data.language.startsWith('zh') ? 'zh' : '';
+        document.getElementById('root').innerHTML =
+          `<div class="slide">${slides[data.slide](data, copy[data.language])}</div>`;
+
+        await Promise.all([...document.images].map(image => image.decode()));
+        // Fonts only start loading once a layout needs them
+        document.body.getBoundingClientRect();
+        await document.fonts.ready;
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        await document.fonts.ready;
+
+        const loaded = new Set();
+        document.fonts.forEach(face => {
+          if (face.status === 'loaded') {
+            loaded.add(face.family.replace(/["']/g, ''));
+          }
+        });
+        return [...loaded];
+      };
+    </script>
+  </body>
+</html>
