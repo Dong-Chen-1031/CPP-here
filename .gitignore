@@ -4,7 +4,6 @@ package-lock.json
 
 # bun.lock
 
-frontend/public/i18n
 frontend/public/script
 
 # Byte-compiled / optimized / DLL files

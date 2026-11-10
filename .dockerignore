@@ -2,7 +2,6 @@ build-chrome
 build-firefox
 package-lock.json
 
-frontend/public/i18n
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -233,7 +232,6 @@ backend/logs
 frontend/dist
 frontend/.astro
 frontend/.wrangler
-frontend/public/i18n
 frontend/public/script
 frontend/test/browser/results
 # Built inside the image by docker/frontend/Dockerfile instead.

@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { rememberLang } from "@/lib/langCookie";
 import {
     Dialog,
     DialogContent,
@@ -351,6 +352,7 @@ export function Settings({ allLangs }: SettingsProps) {
         if (newLang) {
             setLocalLang(newLang);
             i18n.changeLanguage(allLangs[newLang]);
+            rememberLang(allLangs[newLang]);
             setComboOpen(false);
             window.posthog?.capture("settings_language_changed", {
                 language: allLangs[newLang],

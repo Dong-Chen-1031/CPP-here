@@ -13,3 +13,6 @@ frontend/worker-configuration.d.ts
 # Lockfiles
 *.lock
 package-lock.json
+
+# Vendored from https://ui.shadcn.com/typeset.css; replaced, not edited, on update
+frontend/src/styles/typeset.css

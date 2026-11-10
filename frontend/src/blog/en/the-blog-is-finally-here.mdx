@@ -1,0 +1,51 @@
+---
+title: "The blog is finally here"
+description: "C++ Here has a blog now. Why we made it, how it works, and what we'll write about next."
+pubDate: "2026-10-30"
+---
+
+Until now, C++ Here had two pages: the landing page and the editor. Some things fit in neither, such as what a new feature does, competitive programming tips, or the stories behind the compiler. So we added this blog, and its first real post is about the blog itself.
+
+## Why a blog
+
+The editor is meant to let you start coding the moment it opens, so there's little room on screen for explanations. Plenty of features are finished but never properly introduced:
+
+- Why your code compiles right in the browser, without being sent to a server
+- How to use test cases to save the most time during a contest
+- Mistakes we made while building C++ Here that seem worth sharing
+
+All of that will end up here.
+
+## How it's built
+
+The whole site was already built with [Astro](https://astro.build), so the blog uses it too. Each post is a Markdown file that the site turns into a web page when it's built, with no database and no admin panel. Writing a post is like writing a note: save the file, and it's a new post.
+
+The layout comes from [shadcn/typeset](https://ui.shadcn.com/docs/typeset), a stylesheet made for articles. Headings, lists, tables, and code are styled automatically, so we can focus on the writing.
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+    cout << "Hello, blog!\n";
+}
+```
+
+> It's a C++ site, so code blocks had better be easy to read.
+
+## English and Chinese
+
+C++ Here already supports many languages, and so does the blog. We'll try to publish each post in both English and Chinese, linked to each other. When a post has no Chinese version yet, the Chinese post list shows the English one, so you never land on an empty page.
+
+## Following new posts
+
+The easiest way is RSS:
+
+- English: [`/en/blog/rss.xml`](/en/blog/rss.xml)
+- Chinese: [`/zh-tw/blog/rss.xml`](/zh-tw/blog/rss.xml)
+
+Or check back now and then; there's a Blog link at the bottom of the landing page.
+
+## What's next
+
+Upcoming posts will cover more of C++ Here itself. If there's a topic you'd like to read about, open an issue on [GitHub](https://github.com/Dong-Chen-1031/CPP-here).

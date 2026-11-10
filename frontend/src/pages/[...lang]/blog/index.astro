@@ -1,0 +1,105 @@
+---
+import { ArrowRightIcon } from "@lucide/astro";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/landing/header.astro";
+import Footer from "@/components/landing/footer.astro";
+import { getStaticLangPaths, getTranslation } from "@/lib/langList";
+import { LOCALES, findLocale } from "@/lib/locales";
+import { jsonLd } from "@/lib/utils";
+import { blogPath, formatDate, getPosts, postPath, rssPath } from "@/lib/blog";
+
+export { getStaticLangPaths as getStaticPaths };
+
+const { lang } = Astro.params;
+
+const t = getTranslation(lang);
+const posts = await getPosts(lang);
+
+const alternates = [
+    ...LOCALES.map((l) => ({ hreflang: l.code, path: blogPath(l.code) })),
+    // Redirects to the visitor's preferred language
+    { hreflang: "x-default", path: "/blog/" },
+];
+
+const structuredData = jsonLd({
+    "@type": "Blog",
+    name: t.blog.title,
+    description: t.blog.description,
+    inLanguage: findLocale(lang).code,
+    url: new URL(blogPath(lang), Astro.site).href,
+    blogPost: posts.map((post) => ({
+        "@type": "BlogPosting",
+        headline: post.data.title,
+        url: new URL(postPath(post), Astro.site).href,
+        datePublished: post.data.pubDate.toISOString(),
+    })),
+});
+---
+
+<Layout
+    title={t.blog.title}
+    description={t.blog.description}
+    canonical={blogPath(lang)}
+    {alternates}
+>
+    <meta
+        slot="head"
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
+    <link
+        slot="head"
+        rel="alternate"
+        type="application/rss+xml"
+        title={t.blog.title}
+        href={rssPath(lang)}
+    />
+    <script
+        slot="head"
+        type="application/ld+json"
+        is:inline
+        set:html={structuredData}
+    ></script>
+    <div class="font-jetbrains tabular-nums tracking-tight min-h-dvh flex flex-col">
+        <Header lang={lang} t={t.header} />
+        <section class="flex-1 mx-auto w-full max-w-[42em] px-5 pt-32 pb-20">
+            <h1 class="text-4xl font-bold">{t.blog.heading}</h1>
+            <p class="mt-3 text-muted-foreground">{t.blog.subheading}</p>
+
+            {posts.length === 0 ? (
+                <p class="mt-12 text-muted-foreground">{t.blog.empty}</p>
+            ) : (
+                <ul class="mt-12 divide-y divide-border border-y border-border">
+                    {posts.map((post) => (
+                        <li>
+                            <a
+                                href={postPath(post)}
+                                class="group flex items-center gap-6 py-6 focus-visible:outline-none"
+                            >
+                                <div class="min-w-0 flex-1">
+                                    <time
+                                        datetime={post.data.pubDate.toISOString()}
+                                        class="text-sm text-muted-foreground"
+                                    >
+                                        {formatDate(post.data.pubDate, lang)}
+                                    </time>
+                                    <h2 class="mt-1 text-xl font-semibold">
+                                        {/* An underline that draws in from the left */}
+                                        <span class="bg-linear-to-r from-current to-current bg-size-[0%_1px] bg-bottom-left bg-no-repeat pb-0.5 transition-[background-size] duration-300 ease-out group-hover:bg-size-[100%_1px] group-focus-visible:bg-size-[100%_1px] motion-reduce:transition-none">
+                                            {post.data.title}
+                                        </span>
+                                    </h2>
+                                    <p class="mt-2 text-muted-foreground transition-colors duration-300 group-hover:text-foreground/80 group-hover:duration-150">
+                                        {post.data.description}
+                                    </p>
+                                </div>
+                                <ArrowRightIcon class="size-5 shrink-0 -translate-x-2 text-muted-foreground opacity-0 transition duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 motion-reduce:transition-none" />
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </section>
+        <Footer lang={lang} t={t.footer} />
+    </div>
+</Layout>
