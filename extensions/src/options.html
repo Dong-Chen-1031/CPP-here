@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>C++ Here Options</title>
+    <title data-i18n="options.title">C++ Here Options</title>
     <style>
       @font-face {
         font-family: 'JetBrains Mono';
@@ -357,7 +357,7 @@
           <path d="m8 6-6 6 6 6" />
         </svg>
         <span class="brand">C++ Here</span>
-        <span class="badge">Extension options</span>
+        <span class="badge" data-i18n="options.badge">Extension options</span>
       </header>
 
       <section class="panel">
@@ -366,12 +366,12 @@
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
           </svg>
-          <label for="target-url">Target URL</label>
+          <label for="target-url" data-i18n="options.targetUrl">Target URL</label>
         </h2>
-        <p class="description">
+        <p class="description" data-i18n="options.targetUrlDescription">
           The C++ Here editor that parsed problems are sent to. Only change this to test a local dev server (any port on
-          <code>localhost</code> or <code>127.0.0.1</code>) or a preview deployment on
-          <code>*.cpp-insiders.doong.me</code>.
+          <code data-i18n-slot="localhost">localhost</code> or <code data-i18n-slot="loopback">127.0.0.1</code>) or a
+          preview deployment on <code data-i18n-slot="previewHost">*.cpp-insiders.doong.me</code>.
         </p>
         <div class="field-row">
           <input
@@ -388,7 +388,7 @@
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
               <path d="M3 3v5h5" />
             </svg>
-            Reset
+            <span data-i18n="options.reset">Reset</span>
           </button>
         </div>
         <p id="target-url-error" class="error hidden" role="alert">
@@ -397,7 +397,7 @@
             <line x1="12" x2="12" y1="8" y2="12" />
             <line x1="12" x2="12.01" y1="16" y2="16" />
           </svg>
-          <span><span id="target-url-error-message"></span> This URL is not saved.</span>
+          <span id="target-url-error-message"></span>
         </p>
       </section>
 
@@ -409,9 +409,9 @@
             <path d="m12.67 10.5 8.66-5" />
             <path d="M9 17a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2z" />
           </svg>
-          Custom rules
+          <span data-i18n="options.customRules">Custom rules</span>
         </h2>
-        <p class="description">
+        <p class="description" data-i18n="options.customRulesDescription">
           Use a specific parser for pages whose URL matches a regular expression, instead of the parser C++ Here picks
           automatically.
         </p>
@@ -436,9 +436,11 @@
                 <path d="M22 13h-4" />
                 <path d="M17.2 17c2.1.1 3.8 1.9 3.8 4" />
               </svg>
-              <label for="debug-mode">Debug mode</label>
+              <label for="debug-mode" data-i18n="options.debugMode">Debug mode</label>
             </h2>
-            <p class="description">Also log the parsed problem data to the console of the problem page.</p>
+            <p class="description" data-i18n="options.debugModeDescription">
+              Also log the parsed problem data to the console of the problem page.
+            </p>
           </div>
           <input type="checkbox" id="debug-mode" class="switch" role="switch" />
         </div>

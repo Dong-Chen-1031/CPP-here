@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import * as esbuild from 'esbuild';
 import { requiredPermissions } from '../../src/utils/request';
 import { projectRoot } from '../utils';
+import { writeLocales } from './locales';
 import { commonOptions, getBuildDirectory } from './utils';
 
 const target = process.argv[2];
@@ -33,7 +34,8 @@ await Promise.all(
           manifest_version: 3,
 
           name: packageJson.productName,
-          description: packageJson.description,
+          description: '__MSG_manifest_description__',
+          default_locale: 'en',
           version: packageJson.version,
 
           author: packageJson.author,
@@ -61,7 +63,7 @@ await Promise.all(
           },
 
           action: {
-            default_title: 'Parse task',
+            default_title: '__MSG_manifest_actionTitle__',
             default_icon: {
               '16': 'icons/icon-16.png',
               '19': 'icons/icon-19.png',
@@ -146,6 +148,8 @@ await Promise.all(
     console.log(`Created ${path.relative(projectRoot, to)}`);
   }),
 );
+
+await writeLocales(buildDirectory);
 
 const options: esbuild.BuildOptions = {
   ...commonOptions,

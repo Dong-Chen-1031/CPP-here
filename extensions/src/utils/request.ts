@@ -7,13 +7,12 @@ import { uuidv4 } from './random';
 
 // When the parser is requested on a URL starting with <key>, request permission for <value>
 export const requiredPermissions: Record<string, string> = {
-  'https://codingcompetitions.withgoogle.com/': 'https://codejam.googleapis.com/dashboard/get_file/*',
   'https://tlx.toki.id/': 'https://api.tlx.toki.id/v2/*',
   'https://judge.beecrowd.com/': 'https://resources.beecrowd.com/*',
 };
 
 const defaultHeaders = {
-  'X-Competitive-Companion': version,
+  'X-CPP-Here': version,
 } as const;
 
 /**

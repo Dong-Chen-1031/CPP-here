@@ -2,6 +2,7 @@ import type { Menus, Runtime, Tabs } from 'webextension-polyfill';
 import { Message, MessageAction } from './models/messaging';
 import { browser } from './utils/browser';
 import { config } from './utils/config';
+import { formatList, t } from './utils/i18n';
 import { sendToContent } from './utils/messaging';
 import { noop } from './utils/noop';
 import { request, requiredPermissions } from './utils/request';
@@ -18,21 +19,21 @@ let targetUrlSetting = DEFAULT_TARGET_URL;
 function createContextMenu(): void {
   browser.contextMenus.create({
     id: 'parse-with',
-    title: 'Parse with',
+    title: t('menu.parseWith'),
     contexts: ['action'],
   });
 
   browser.contextMenus.create({
     id: 'problem-parser',
     parentId: 'parse-with',
-    title: 'Problem parser',
+    title: t('menu.problemParser'),
     contexts: ['action'],
   });
 
   browser.contextMenus.create({
     id: 'contest-parser',
     parentId: 'parse-with',
-    title: 'Contest parser',
+    title: t('menu.contestParser'),
     contexts: ['action'],
   });
 
@@ -96,7 +97,7 @@ async function showErrorOnTab(tabId: number, message: string): Promise<void> {
 function parseTab(tab: Tabs.Tab, parserName: string): void {
   loadContentScript(tab, parserName).catch(err => {
     const message = err instanceof Error ? err.message : `${err}`;
-    void showErrorOnTab(tab.id, `C++ Here could not parse this page. ${message}`);
+    void showErrorOnTab(tab.id, t('errors.parseFailed', { message }));
   });
 }
 
@@ -140,13 +141,13 @@ function waitForTabLoad(tabId: number): Promise<void> {
     const onRemoved = (removedTabId: number): void => {
       if (removedTabId === tabId) {
         cleanup();
-        reject(new Error('The C++ Here tab was closed before it finished loading.'));
+        reject(new Error(t('errors.tabClosed')));
       }
     };
 
     const timeout = setTimeout(() => {
       cleanup();
-      reject(new Error(`The C++ Here tab did not finish loading within ${TAB_LOAD_TIMEOUT_MS / 1000} seconds.`));
+      reject(new Error(t('errors.tabTimeout', { seconds: TAB_LOAD_TIMEOUT_MS / 1000 })));
     }, TAB_LOAD_TIMEOUT_MS);
 
     // Listen before checking the current status so a load that completes in between is not missed
@@ -218,23 +219,21 @@ async function dispatchExtEvent(tabId: number, payload: unknown): Promise<void> 
   }
 
   if (result === 'rejected') {
-    throw new Error('The C++ Here editor did not accept the problem data. Try reloading the editor tab.');
+    throw new Error(t('errors.editorRejected'));
   }
 
   if (result === 'timeout') {
-    throw new Error(
-      `The C++ Here editor was not ready within ${LISTENER_READY_TIMEOUT_MS / 1000} seconds. Make sure the editor tab has finished loading and try again.`,
-    );
+    throw new Error(t('errors.editorNotReady', { seconds: LISTENER_READY_TIMEOUT_MS / 1000 }));
   }
 
-  throw new Error('Could not send the problem data to the C++ Here editor tab.');
+  throw new Error(t('errors.dispatchFailed'));
 }
 
 function getTargetUrl(targetUrl: string): TargetUrl {
   const target = checkTargetUrl(targetUrl);
 
   if ('error' in target) {
-    throw new Error(`${target.error} Change the target URL in the C++ Here extension options.`);
+    throw new Error(t('errors.targetUrlSetting', { error: target.error }));
   }
 
   return target;
@@ -246,9 +245,7 @@ async function ensurePermissionsOnGesture(origins: string[]): Promise<void> {
   const granted = await browser.permissions.request({ origins: combinedOrigins });
 
   if (!granted) {
-    throw new Error(
-      `C++ Here needs access to ${combinedOrigins.join(', ')} to send problems to the editor. Click the button again and allow access.`,
-    );
+    throw new Error(t('errors.accessDenied', { origins: formatList(combinedOrigins) }));
   }
 }
 
@@ -273,7 +270,7 @@ async function sendTask(tabId: number, messageId: string, data: string): Promise
 
     // Without access, open editor tabs can't be found by URL or scripted, and their load can't be detected
     if (!(await browser.permissions.contains({ origins: [targetUrl] }))) {
-      throw new Error(`C++ Here doesn't have access to ${targetUrl}. Click the button again and allow access.`);
+      throw new Error(t('errors.noTargetAccess', { url: targetUrl }));
     }
 
     let targetTabId: number;
@@ -320,7 +317,7 @@ async function makeRequest(
   if (!permissionGranted) {
     sendToContent(tabId, MessageAction.FetchFailed, {
       messageId,
-      message: `C++ Here does not have permission to request ${url}`,
+      message: t('errors.noRequestPermission', { url }),
     });
 
     return;

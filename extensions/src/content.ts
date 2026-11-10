@@ -7,6 +7,7 @@ import { Parser } from './parsers/Parser';
 import { parsers } from './parsers/parsers';
 import { browser } from './utils/browser';
 import { config } from './utils/config';
+import { t } from './utils/i18n';
 import { noop } from './utils/noop';
 
 declare global {
@@ -76,13 +77,7 @@ async function parse(parser: Parser): Promise<void> {
   } catch (err) {
     console.error(err);
 
-    alert(
-      [
-        `Something went wrong while running C++ Here's ${parser.constructor.name}.`,
-        'Open the browser console to see the error.',
-        `If you think this is a bug, please open an issue at ${ISSUES_URL} and include a link to this page.`,
-      ].join(' '),
-    );
+    alert(t('errors.parserFailed', { parser: parser.constructor.name, url: ISSUES_URL }));
   }
 
   if (sendable !== null) {
@@ -92,7 +87,7 @@ async function parse(parser: Parser): Promise<void> {
       console.error(err);
 
       const message = err instanceof Error ? err.message : `${err}`;
-      alert(`C++ Here could not send this problem to the editor. ${message}`);
+      alert(t('errors.sendFailed', { message }));
     }
   }
 
@@ -112,13 +107,7 @@ async function handleMessage(message: Message | any, sender: Runtime.MessageSend
     if (parserName === null) {
       getParserToUse().then(parser => {
         if (parser === null) {
-          alert(
-            [
-              'C++ Here could not determine which parser to parse this page with.',
-              'Please right-click on the extension icon and select the parser to use via the "Parse with" context menu.',
-              `If you think this page should be supported, please open an issue at ${ISSUES_URL}.`,
-            ].join(' '),
-          );
+          alert(t('errors.noParser', { url: ISSUES_URL }));
           return;
         }
 

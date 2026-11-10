@@ -1,0 +1,50 @@
+{
+    "manifest": {
+        "description": "Parses competitive programming problems and sends them to C++ Here.",
+        "actionTitle": "Send to C++ Here"
+    },
+    "menu": {
+        "parseWith": "Parse with",
+        "problemParser": "Problem parser",
+        "contestParser": "Contest parser"
+    },
+    "errors": {
+        "parserFailed": "Something went wrong while running C++ Here's {{parser}}. Open the browser console to see the error. If you think this is a bug, please open an issue at {{url}} and include a link to this page.",
+        "noParser": "C++ Here could not determine which parser to parse this page with. Please right-click on the extension icon and select the parser to use via the \"Parse with\" context menu. If you think this page should be supported, please open an issue at {{url}}.",
+        "sendFailed": "C++ Here could not send this problem to the editor. {{message}}",
+        "parseFailed": "C++ Here could not parse this page. {{message}}",
+        "tabClosed": "The C++ Here tab was closed before it finished loading.",
+        "tabTimeout": "The C++ Here tab did not finish loading within {{seconds}} seconds.",
+        "editorRejected": "The C++ Here editor did not accept the problem data. Try reloading the editor tab.",
+        "editorNotReady": "The C++ Here editor was not ready within {{seconds}} seconds. Make sure the editor tab has finished loading and try again.",
+        "dispatchFailed": "Could not send the problem data to the C++ Here editor tab.",
+        "targetUrlSetting": "{{error}} Change the target URL in the C++ Here extension options.",
+        "accessDenied": "C++ Here needs access to {{origins}} to send problems to the editor. Click the button again and allow access.",
+        "noTargetAccess": "C++ Here doesn't have access to {{url}}. Click the button again and allow access.",
+        "noRequestPermission": "C++ Here does not have permission to request {{url}}"
+    },
+    "targetUrl": {
+        "invalid": "\"{{url}}\" is not a valid URL.",
+        "badProtocol": "The target URL must start with http:// or https://.",
+        "hasQuery": "The target URL cannot contain a query string (?) or a fragment (#).",
+        "badWildcard": "The target URL can only contain * at the end.",
+        "hostNotAllowed": "C++ Here can't be given access to {{host}}. The target URL must be on https://cpp.doong.me, a local dev server on localhost or 127.0.0.1 (any port), or a preview deployment on *.cpp-insiders.doong.me."
+    },
+    "options": {
+        "title": "C++ Here Options",
+        "badge": "Extension options",
+        "targetUrl": "Target URL",
+        "targetUrlDescription": "The C++ Here editor that parsed problems are sent to. Only change this to test a local dev server (any port on {{localhost}} or {{loopback}}) or a preview deployment on {{previewHost}}.",
+        "reset": "Reset",
+        "resetTitle": "Use {{url}}",
+        "notSaved": "{{error}} This URL is not saved.",
+        "customRules": "Custom rules",
+        "customRulesDescription": "Use a specific parser for pages whose URL matches a regular expression, instead of the parser C++ Here picks automatically.",
+        "regexPlaceholder": "Regular expression",
+        "removeRule": "Remove rule",
+        "invalidRegex": "The following regular expression is invalid: {{expression}}",
+        "invalidRegexes": "The following regular expressions are invalid: {{expressions}}",
+        "debugMode": "Debug mode",
+        "debugModeDescription": "Also log the parsed problem data to the console of the problem page."
+    }
+}

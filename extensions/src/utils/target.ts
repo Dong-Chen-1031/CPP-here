@@ -1,12 +1,7 @@
 import { browser } from './browser';
+import { t } from './i18n';
 
 export const DEFAULT_TARGET_URL = 'https://cpp.doong.me/editor/*';
-
-/**
- * Human-readable version of the target hosts the manifest allows, see scripts/build/extension.ts.
- */
-export const ALLOWED_TARGETS_DESCRIPTION =
-  'https://cpp.doong.me, a local dev server on localhost or 127.0.0.1 (any port), or a preview deployment on *.cpp-insiders.doong.me';
 
 export interface TargetUrl {
   /**
@@ -37,26 +32,25 @@ export function checkTargetUrl(rawTargetUrl: string): TargetUrlCheck {
   try {
     url = new URL(withoutWildcard);
   } catch {
-    return { error: `"${candidate}" is not a valid URL.` };
+    return { error: t('targetUrl.invalid', { url: candidate }) };
   }
 
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-    return { error: 'The target URL must start with http:// or https://.' };
+    return { error: t('targetUrl.badProtocol') };
   }
 
   // Match patterns compare the query string as part of the path and never match a URL with a fragment
   if (withoutWildcard.includes('?') || withoutWildcard.includes('#')) {
-    return { error: 'The target URL cannot contain a query string (?) or a fragment (#).' };
+    return { error: t('targetUrl.hasQuery') };
   }
 
   if (withoutWildcard.includes('*')) {
-    return { error: 'The target URL can only contain * at the end.' };
+    return { error: t('targetUrl.badWildcard') };
   }
 
   if (!getManifestHostPatterns().some(pattern => matchesPattern(pattern, url))) {
-    return {
-      error: `C++ Here can't be given access to ${url.host}. The target URL must be on ${ALLOWED_TARGETS_DESCRIPTION}.`,
-    };
+    // The message lists the hosts allowed by the manifest's optional host permissions, see scripts/build/extension.ts
+    return { error: t('targetUrl.hostNotAllowed', { host: url.host }) };
   }
 
   const path = url.pathname.endsWith('/') ? url.pathname : `${url.pathname}/`;

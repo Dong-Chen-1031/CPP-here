@@ -1,4 +1,5 @@
 import { config } from './utils/config';
+import { formatList, getLanguage, t } from './utils/i18n';
 import { noop } from './utils/noop';
 import { checkTargetUrl, DEFAULT_TARGET_URL } from './utils/target';
 
@@ -10,6 +11,28 @@ const targetUrlErrorMessage = document.querySelector<HTMLSpanElement>('#target-u
 const debugModeInput = document.querySelector<HTMLInputElement>('#debug-mode');
 
 const trashIconTemplate = document.querySelector<HTMLTemplateElement>('#trash-icon');
+
+/**
+ * Replaces an element's text with the string data-i18n names. Children marked data-i18n-slot, like the <code> in a
+ * description, are kept and put where the string has their {{name}}.
+ */
+function translateElement(elem: HTMLElement): void {
+  const slots = new Map(
+    [...elem.querySelectorAll<HTMLElement>('[data-i18n-slot]')].map(slot => [slot.dataset.i18nSlot, slot]),
+  );
+
+  // Private-use characters mark where each slot goes, since the string can't contain elements
+  const markers = Object.fromEntries([...slots.keys()].map(name => [name, `\uE000${name}\uE000`]));
+  const parts = t(elem.dataset.i18n, markers).split(/\uE000(\w+)\uE000/);
+
+  // split() puts the captured slot names at the odd indices
+  elem.replaceChildren(...parts.map((part, i) => (i % 2 === 1 ? slots.get(part) : document.createTextNode(part))));
+}
+
+// options.html holds the English text, and marks what to translate with data-i18n
+document.documentElement.lang = getLanguage();
+document.querySelectorAll<HTMLElement>('[data-i18n]').forEach(translateElement);
+targetUrlResetButton.title = t('options.resetTitle', { url: DEFAULT_TARGET_URL });
 
 function updateCustomRules(): void {
   const rows = customRulesContainer.querySelectorAll('.custom-rules-row');
@@ -39,10 +62,9 @@ function updateCustomRules(): void {
   if (invalidExpressions.length > 0) {
     const formattedExpressions = invalidExpressions.map(expression => `'${expression}'`);
     if (formattedExpressions.length === 1) {
-      errorElem.textContent = `The following regular expression is invalid: ${formattedExpressions[0]}`;
+      errorElem.textContent = t('options.invalidRegex', { expression: formattedExpressions[0] });
     } else {
-      const expressionList = formattedExpressions.slice(0, -1).join(', ') + ' and ' + formattedExpressions.slice(-1);
-      errorElem.textContent = `The following regular expressions are invalid: ${expressionList}`;
+      errorElem.textContent = t('options.invalidRegexes', { expressions: formatList(formattedExpressions) });
     }
 
     errorElem.classList.remove('hidden');
@@ -62,7 +84,7 @@ function addCustomRulesRow(regex?: string, parserName?: string): void {
 
   const input = document.createElement('input');
   input.classList.add('input');
-  input.placeholder = 'Regular expression';
+  input.placeholder = t('options.regexPlaceholder');
   input.spellcheck = false;
   input.value = regex !== undefined ? regex : '';
 
@@ -84,8 +106,8 @@ function addCustomRulesRow(regex?: string, parserName?: string): void {
   const button = document.createElement('button');
   button.type = 'button';
   button.classList.add('icon-button');
-  button.title = 'Remove rule';
-  button.setAttribute('aria-label', 'Remove rule');
+  button.title = t('options.removeRule');
+  button.setAttribute('aria-label', t('options.removeRule'));
   button.appendChild(trashIconTemplate.content.cloneNode(true));
 
   // The last row is the empty one for adding a rule, so it has nothing to remove
@@ -120,7 +142,7 @@ function validateTargetUrl(value: string): boolean {
 
   targetUrlInput.setAttribute('aria-invalid', `${!isValid}`);
   targetUrlError.classList.toggle('hidden', isValid);
-  targetUrlErrorMessage.textContent = 'error' in target ? target.error : '';
+  targetUrlErrorMessage.textContent = 'error' in target ? t('options.notSaved', { error: target.error }) : '';
 
   return isValid;
 }

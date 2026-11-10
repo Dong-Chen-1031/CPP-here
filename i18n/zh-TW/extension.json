@@ -1,0 +1,50 @@
+{
+    "manifest": {
+        "description": "解析程式競賽題目，並把範例測資送進 C++ Here 編輯器。",
+        "actionTitle": "送到 C++ Here"
+    },
+    "menu": {
+        "parseWith": "使用解析器",
+        "problemParser": "題目解析器",
+        "contestParser": "比賽解析器"
+    },
+    "errors": {
+        "parserFailed": "C++ Here 執行 {{parser}} 時發生錯誤，請打開瀏覽器主控台查看錯誤內容。如果你認為這是程式錯誤，請到 {{url}} 回報，並附上這個頁面的連結。",
+        "noParser": "C++ Here 無法判斷要用哪個解析器處理這個頁面。請在擴充功能圖示上按右鍵，從「使用解析器」選單中選擇。如果你認為這個網站應該支援，請到 {{url}} 回報。",
+        "sendFailed": "C++ Here 無法把這題送到編輯器。{{message}}",
+        "parseFailed": "C++ Here 無法解析這個頁面。{{message}}",
+        "tabClosed": "C++ Here 分頁在載入完成前就被關閉了。",
+        "tabTimeout": "C++ Here 分頁在 {{seconds}} 秒內沒有載入完成。",
+        "editorRejected": "C++ Here 編輯器沒有接收題目資料，請重新整理編輯器分頁後再試一次。",
+        "editorNotReady": "C++ Here 編輯器在 {{seconds}} 秒內沒有準備好。請確認編輯器分頁已載入完成，再試一次。",
+        "dispatchFailed": "無法把題目資料送到 C++ Here 編輯器分頁。",
+        "targetUrlSetting": "{{error}}請到 C++ Here 擴充功能的選項中修改目標網址。",
+        "accessDenied": "C++ Here 需要 {{origins}} 的存取權限才能把題目送到編輯器。請再按一次按鈕並允許存取。",
+        "noTargetAccess": "C++ Here 沒有 {{url}} 的存取權限。請再按一次按鈕並允許存取。",
+        "noRequestPermission": "C++ Here 沒有請求 {{url}} 的權限"
+    },
+    "targetUrl": {
+        "invalid": "「{{url}}」不是有效的網址。",
+        "badProtocol": "目標網址必須以 http:// 或 https:// 開頭。",
+        "hasQuery": "目標網址不能包含查詢字串（?）或片段（#）。",
+        "badWildcard": "目標網址只能在結尾使用 *。",
+        "hostNotAllowed": "C++ Here 無法取得 {{host}} 的存取權限。目標網址必須是 https://cpp.doong.me、localhost 或 127.0.0.1 上的本機開發伺服器（任何連接埠），或 *.cpp-insiders.doong.me 上的預覽部署。"
+    },
+    "options": {
+        "title": "C++ Here 選項",
+        "badge": "擴充功能選項",
+        "targetUrl": "目標網址",
+        "targetUrlDescription": "解析後的題目會送到這個 C++ Here 編輯器。只有在測試本機開發伺服器（{{localhost}} 或 {{loopback}} 的任何連接埠）或預覽部署（{{previewHost}}）時才需要修改。",
+        "reset": "重設",
+        "resetTitle": "改回 {{url}}",
+        "notSaved": "{{error}}這個網址不會被儲存。",
+        "customRules": "自訂規則",
+        "customRulesDescription": "網址符合正規表示式的頁面改用指定的解析器，而不是由 C++ Here 自動選擇。",
+        "regexPlaceholder": "正規表示式",
+        "removeRule": "移除規則",
+        "invalidRegex": "這個正規表示式無效：{{expression}}",
+        "invalidRegexes": "這些正規表示式無效：{{expressions}}",
+        "debugMode": "除錯模式",
+        "debugModeDescription": "同時把解析出的題目資料輸出到題目頁面的主控台。"
+    }
+}

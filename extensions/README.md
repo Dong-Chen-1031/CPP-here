@@ -67,6 +67,12 @@ The version shown in the stores comes from `version` in [`package.json`](./packa
 
 `npm test` runs the parser tests, which open real problem pages in a headless Chrome and compare the parsed data with [`tests/data/`](./tests/data). Use `npm run test:no-headless` to watch the browser, and append `-- -t <pattern>` to run only the tests whose names match.
 
+### Translations
+
+The extension's strings live with the website's, in [`i18n/<language>/extension.json`](../i18n/en/extension.json), so Crowdin translates them too. They follow the browser's language and fall back to English. The build turns each translated language into the `_locales/<locale>/messages.json` that browsers read (see [`scripts/build/locales.ts`](./scripts/build/locales.ts)).
+
+Use them like the website's i18next strings: scripts call `t('errors.tabTimeout', { seconds: 30 })` from `src/utils/i18n.ts`, the manifest refers to `options.title` as `__MSG_options_title__`, and `options.html` marks elements with `data-i18n="<key>"` (with `data-i18n-slot` on children that the string places with `{{<name>}}`). Problem parsers' own messages stay in English, since the parser tests run them outside the extension.
+
 ## Supported websites
 
 | Website                    | Problem parser | Contest parser |
