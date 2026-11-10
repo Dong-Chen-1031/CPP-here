@@ -63,6 +63,11 @@ npm run generate-banners
 
 The version shown in the stores comes from `version` in [`package.json`](./package.json). Bump it before packaging a new release; the stores reject an upload whose version hasn't changed.
 
+### Store submission
+
+- [`PRIVACY.md`](./PRIVACY.md) is the privacy policy linked from both store listings. Update it whenever the extension or the editor starts handling problem data differently.
+- Mozilla reviews bundled code against its source, so a Firefox upload also needs a source archive. From the repository root, `git archive -o cpp-here-source.zip HEAD` makes one; the reviewer builds it with `bun install --frozen-lockfile`, then `bun run build:firefox` in `extensions/`, which produces `extensions/build-firefox/`.
+
 ### Testing
 
 `npm test` runs the parser tests, which open real problem pages in a headless Chrome and compare the parsed data with [`tests/data/`](./tests/data). Use `npm run test:no-headless` to watch the browser, and append `-- -t <pattern>` to run only the tests whose names match.
