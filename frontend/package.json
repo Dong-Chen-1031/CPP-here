@@ -39,7 +39,7 @@
         "@uiw/codemirror-theme-vscode": "^4.25.10",
         "@uiw/react-codemirror": "^4.25.10",
         "@wasm-fmt/clang-format": "^22.1.6",
-        "astro": "^6.4.8",
+        "astro": "^7.4.8",
         "astro-expressive-code": "^0.44.3",
         "bs58": "^6.0.0",
         "class-variance-authority": "^0.7.1",
