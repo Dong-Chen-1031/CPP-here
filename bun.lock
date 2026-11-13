@@ -16,7 +16,7 @@
     },
     "extensions": {
       "name": "cpp-here",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "dependencies": {
         "cyrillic-to-translit-js": "3.2.1",
         "jszip": "3.10.1",

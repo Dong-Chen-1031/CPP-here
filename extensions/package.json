@@ -1,7 +1,7 @@
 {
   "name": "cpp-here",
   "productName": "C++ Here",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Parses competitive programming problems and sends them to C++ Here.",
   "homepage": "https://cpp.doong.me",
   "repository": "https://github.com/Dong-Chen-1031/CPP-here",
