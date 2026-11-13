@@ -23,6 +23,11 @@ export const commonOptions: esbuild.BuildOptions = {
     {
       name: 'remove-dangerous-code',
       setup: build => {
+        // pdfjs-dist optionally imports the native canvas package, which only Node.js uses. Whether it is installed
+        // differs between machines, so it is always left out to keep the bundle identical everywhere
+        build.onResolve({ filter: /^canvas$/ }, () => ({ path: 'canvas', namespace: 'omitted' }));
+        build.onLoad({ filter: /.*/, namespace: 'omitted' }, () => ({ contents: '', loader: 'js' }));
+
         build.onLoad({ filter: /jszip|pdfjs-dist/ }, async args => {
           let content = await fs.promises.readFile(args.path, 'utf-8');
 

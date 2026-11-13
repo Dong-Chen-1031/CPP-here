@@ -74,7 +74,7 @@ The version shown in the stores comes from `version` in [`package.json`](./packa
 
 - [`PRIVACY.md`](./PRIVACY.md) is the privacy policy linked from both store listings. Update it whenever the extension or the editor starts handling problem data differently.
 - [`store/`](./store) holds the description for the store listing, one plain-text file per language, ready to paste. The Chrome Web Store rejected an earlier version for keyword spam: name at most five supported websites in a description, and avoid repeating any one keyword more than five times.
-- Mozilla reviews bundled code against its source, so a Firefox upload also needs a source archive. From the repository root, `git archive -o cpp-here-source.zip HEAD` makes one; the reviewer builds it with `bun install --frozen-lockfile`, then `bun run build:firefox` in `extensions/`, which produces `extensions/build-firefox/`.
+- Mozilla reviews bundled code against its source, so a Firefox upload also needs a source archive. Commit first, package with `npm run package:firefox`, then run `git archive -o extensions/dist/cpp-here-source.zip HEAD` from the repository root. The reviewer follows the steps under [Mozilla reviewers](#mozilla-reviewers) and compares the result with the uploaded package, and the two must be identical. Keep the versions listed there in line with the ones the package was built with.
 
 ### Testing
 
@@ -216,10 +216,18 @@ Use them like the website's i18next strings: scripts call `t('errors.tabTimeout'
 
 The information below is for Mozilla add-on reviewers.
 
-Software versions used:
+The submitted package was built with:
 
+- macOS 27.2 on Apple silicon (arm64)
 - Node.js 26.5.0
-- Bun 1.4.0
+- [Bun](https://bun.sh) 1.4.4, installed with `curl -fsSL https://bun.sh/install | bash -s "bun-v1.4.4"`
+
+To build the submitted source, which is this whole repository with the extension in `extensions/`:
+
+1. In the repository root, run `bun install --frozen-lockfile`. Bun is required, since the lockfile is the root `bun.lock`.
+2. Run `cd extensions && npm run package:firefox`.
+
+The unpacked build is in `extensions/build-firefox/`, and the packaged one is `extensions/dist/cpp-here-<version>-firefox.zip`. The build script is [`scripts/build/extension.ts`](./scripts/build/extension.ts), which bundles and minifies with esbuild.
 
 Third-party libraries that can be found in the minified extension:
 
@@ -231,8 +239,6 @@ Third-party libraries that can be found in the minified extension:
 - [p-limit 7.3.0](https://github.com/sindresorhus/p-limit/blob/v7.3.0/index.js)
 
 The options page uses the [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) font (latin subset from [Fontsource](https://fontsource.org/fonts/jetbrains-mono)), licensed under the [SIL Open Font License](./media/fonts/OFL.txt).
-
-To build the submitted source: run `bun install` in the repository root (the lockfile is the root `bun.lock`), then `cd extensions && npm run package:firefox`. The result is in `extensions/dist/`.
 
 ## License
 
