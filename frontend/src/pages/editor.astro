@@ -72,3 +72,9 @@ const lsVersion = {
         <ExtensionReceiver client:only="react" />
     </div>
 </Layout>
+
+<script>
+    import { registerServiceWorker } from "@/lib/offline";
+
+    registerServiceWorker();
+</script>

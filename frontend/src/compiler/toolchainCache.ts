@@ -9,6 +9,9 @@ const CACHE_NAME = CACHE_PREFIX + TOOLCHAIN_ID;
 
 /** Every file a build needs, except the per-standard PCHs (fetched on use). */
 export const TOOLCHAIN_FILES = [
+    // Imported by the compile worker, which the service worker (public/sw.js)
+    // answers from this cache, so that it loads offline too.
+    "bundle.js",
     ...TOOLCHAIN_ASSETS.map((name) => name + ".gz.bin"),
     "stdcxx.h",
     "manifest.json",

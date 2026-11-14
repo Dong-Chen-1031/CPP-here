@@ -230,6 +230,7 @@
     "compiler": {
         "browserUnsupported": "此瀏覽器無法執行瀏覽器內編譯，請更新至最新版本。",
         "downloadFailed": "無法下載瀏覽器內編譯，請檢查網路連線後再試一次。",
+        "offline": "目前沒有網路連線，無法使用伺服器編譯。在有網路時下載瀏覽器內編譯，之後離線也能編譯。",
         "timedOut": "瀏覽器編譯超過 180 秒，已逾時。",
         "downloadingTitle": "正在下載瀏覽器內編譯",
         "downloadingDescription": "首次下載約 26 MB。在自動模式下，下載期間會先在伺服器上編譯，瀏覽器內編譯則在背景下載。",

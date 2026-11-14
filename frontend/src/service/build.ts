@@ -14,6 +14,7 @@ import {
 import { addAlert } from "@/lib/alert";
 import { waitForJwt } from "@/lib/apiClient";
 import { openToolchainCache } from "@/compiler/toolchainCache";
+import { isOffline } from "@/lib/offline";
 import { serverBuild } from "./serverBuild";
 import { failedBuild } from "./buildResult";
 import {
@@ -161,8 +162,9 @@ function chooseTarget(getter: Getter): BuildTarget {
     const mode = effectiveCompilerMode(getter);
     if (mode !== "auto") return mode;
     if (getter(serverUnavailableStore)) return "browser";
-    return getter(browserCompilerProgressStore) === DOWNLOADED &&
-        deviceCanCompile()
+    const downloaded = getter(browserCompilerProgressStore) === DOWNLOADED;
+    // Offline the server cannot be reached, however slow this device is.
+    return downloaded && (deviceCanCompile() || isOffline())
         ? "browser"
         : "server";
 }
@@ -289,7 +291,10 @@ async function buildWith(
     fallbackFrom?: BuildTarget,
 ): Promise<BuildResult | null> {
     let result: BuildResult | null;
-    if (target === "server") {
+    if (target === "server" && isOffline()) {
+        // Without this the build would wait for Turnstile until it times out.
+        result = failedBuild(i18next.t("editor:compiler.offline"));
+    } else if (target === "server") {
         const verifying = !store.get(verifyJwtStore);
         store.set(buildingWithStore, {
             target,

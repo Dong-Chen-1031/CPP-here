@@ -230,6 +230,7 @@
     "compiler": {
         "browserUnsupported": "This browser cannot run the in-browser compiler. Please update it to a recent version.",
         "downloadFailed": "Could not download the in-browser compiler. Check your connection and try again.",
+        "offline": "You are offline, so the server cannot compile your code. Download the in-browser compiler while online to compile without a connection.",
         "timedOut": "In-browser compilation timed out after 180 seconds.",
         "downloadingTitle": "Downloading the in-browser compiler",
         "downloadingDescription": "The first download is about 26 MB. In Auto mode your code compiles on the server meanwhile, and the compiler downloads in the background.",

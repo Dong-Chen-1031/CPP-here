@@ -89,6 +89,18 @@ const t = getTranslation().reset;
             errors.push(`IndexedDB: ${e}`);
         }
 
+        try {
+            if ("serviceWorker" in navigator)
+                for (const registration of await navigator.serviceWorker.getRegistrations())
+                    await registration.unregister();
+            if (typeof caches !== "undefined")
+                for (const name of await caches.keys())
+                    if (name.startsWith("cpp-here-offline:"))
+                        await caches.delete(name);
+        } catch (e) {
+            errors.push(`Service worker: ${e}`);
+        }
+
         return errors;
     }
 

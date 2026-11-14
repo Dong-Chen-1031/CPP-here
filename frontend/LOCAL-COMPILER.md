@@ -105,6 +105,36 @@ copied a file on every write, quadratic in the file's size, so an object file
 with a large zero-initialized array (`int a[8000000];`, 32 MB) took 30 to 70
 seconds to write. The script fails if a new release changes that code.
 
+## Offline
+
+Once the compiler is downloaded, the editor opens, compiles and runs without a
+network. `public/sw.js`, a service worker registered by the editor page
+(`src/lib/offline.ts`, production builds only), keeps what the toolchain cache
+does not:
+
+- The editor page, network first: after 4 seconds without an answer, or none
+  at all, the cached copy. Offline, `/` opens the editor too (on the server it
+  redirects to a language).
+- Every script, stylesheet and wasm module the editor can load, including both
+  workers, cache first (they are named by content hash). They are precached
+  when the worker installs, so features not yet used work offline too.
+- `/toolchain/<id>/` from Cache Storage: `bundle.js` is one of the toolchain
+  files, so the compile worker's `import()` of it works offline. Other files
+  of `public/` (icons, fonts) are cached as they load.
+
+`/api/*` and other origins (Turnstile, PostHog) are never touched. Offline
+(`navigator.onLine` false), Auto mode builds in the browser on any device that
+has the compiler downloaded, and a server build fails at once instead of
+waiting 30 seconds for Turnstile.
+
+`scripts/service-worker.mjs` writes the worker's manifest after `astro build`:
+the precache list, found by following references from the editor's HTML, and
+every file of `_astro/`. Its version is a hash of both, so each deploy that
+changes an asset installs a new worker; it copies over the cached files the
+new build still has (fonts loaded on use), then deletes the old cache. A
+failed install leaves the previous version serving. `/reset` unregisters the
+worker and deletes its cache.
+
 ## Generated assets
 
 `npm run toolchain` (in `frontend`) writes
@@ -182,8 +212,7 @@ Not yet measured on phones, Safari or Firefox.
 
 - First use downloads about 26 MB, plus the PCH; the in-memory build cache
   (eight entries) does not survive a reload.
-- `bundle.js` is imported by URL, so it comes from the HTTP cache, not Cache
-  Storage.
+- Offline, a `-std` whose PCH was never used compiles without one (slower).
 - Compiler timeout is 180 seconds after the download.
 - Browsers without `DecompressionStream` (Safari before 16.4) get an error
   asking them to update.

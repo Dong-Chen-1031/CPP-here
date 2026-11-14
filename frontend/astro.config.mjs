@@ -12,6 +12,7 @@ import { blogLastmod } from "./scripts/blog-lastmod.mjs";
 import { rehypeNewTabLinks } from "./scripts/rehype-new-tab-links.mjs";
 import { locales } from "./scripts/locales.mjs";
 import { codeBlocks } from "./scripts/code-blocks.mjs";
+import { serviceWorker } from "./scripts/service-worker.mjs";
 
 const isProd = process.env.NODE_ENV === "production";
 const lastmod = blogLastmod();
@@ -67,6 +68,8 @@ export default defineConfig({
                 return item;
             },
         }),
+        // Fills in public/sw.js once the build is done.
+        serviceWorker(),
         // starlight({
         //     title: "C++ Here Docs",
         //     Logo: `./public/favicon.svg`,
