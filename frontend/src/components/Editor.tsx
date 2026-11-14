@@ -3,7 +3,7 @@ import CodeMirror, {
     type ReactCodeMirrorProps,
     type ReactCodeMirrorRef,
 } from "@uiw/react-codemirror";
-import { cpp } from "@codemirror/lang-cpp";
+import { cpp } from "@/lib/cppLanguage";
 // import { oneDark } from "@codemirror/theme-one-dark";
 import { vscodeDarkInit } from "@uiw/codemirror-theme-vscode";
 import { EditorView } from "@codemirror/view";

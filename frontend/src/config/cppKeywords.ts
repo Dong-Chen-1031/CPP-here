@@ -2,6 +2,7 @@ import type { Completion } from "@codemirror/autocomplete";
 
 const keywords: string[] = [
     // 關鍵字
+    "assign",
     "alignas",
     "alignof",
     "and",
