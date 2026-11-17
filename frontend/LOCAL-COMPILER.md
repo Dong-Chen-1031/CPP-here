@@ -38,7 +38,9 @@ the toolchain loaded. In headless Chromium on 4 cores, `#include <iostream>`:
 first build 3.9 s, 2.1 s after a warm-up (loading only: 3.0 s);
 `bits/stdc++.h` with its PCH: 2.5 s, 1.0 s after a warm-up. The warm-up never
 downloads the compiler, and loads a PCH that was never used only where the
-background download would run (fast, unmetered, online). A build started
+background download would run (fast, unmetered, online). The page downloads
+that PCH into Cache Storage before the warm-up takes the worker, so a build
+does not wait for the download unless it needs that PCH itself. A build started
 during a warm-up waits for it, and a warm-up queued behind a build only loads
 files. Stopping a build that waits for a warm-up skips it. It runs
 again after the standard changes, the headers the code starts with change

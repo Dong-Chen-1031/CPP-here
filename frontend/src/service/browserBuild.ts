@@ -4,10 +4,12 @@ import { LOCAL_WORKER_MARKER, TOOLCHAIN_ID } from "../compiler/config";
 import { leadingIncludes, startsWithStdcxx } from "../compiler/pchRule";
 import {
     TOOLCHAIN_FILES,
+    cacheToolchainFile,
     deleteOldToolchains,
     isToolchainCached,
     isToolchainFileCached,
     openToolchainCache,
+    toolchainCacheSupported,
 } from "../compiler/toolchainCache";
 import type { BuildResult } from "./build";
 import { createBuildCache } from "./buildCache";
@@ -38,6 +40,8 @@ let waitingBuilds = 0;
 // when the user stops it is skipped.
 let stops = 0;
 let download: Promise<boolean> | undefined;
+
+const pchDownloads = new Map<string, Promise<boolean>>();
 let nextJobId = 0;
 // Ends the compile running in the worker, if any.
 let stopJob: (() => void) | undefined;
@@ -241,24 +245,43 @@ export function warmBrowserCompiler(
     downloadPch: boolean,
 ): Promise<boolean> {
     if (!browserCompilerSupported()) return Promise.resolve(true);
-    const job = queue.then(() =>
-        warmUp(std, source, downloadPch).catch((error) => {
-            console.warn("In-browser compiler warm-up failed:", error);
+    const pch = preparePch(std, source, downloadPch).catch(() => false);
+    return pch.then((pch) => {
+        const job = queue.then(() =>
+            warmUp(std, source, pch).catch((error) => {
+                console.warn("In-browser compiler warm-up failed:", error);
+                return false;
+            }),
+        );
+        queue = job.then(() => {});
+        return job;
+    });
+}
+
+const pchUrl = (std: string) => toolchainBase() + std + ".pch.gz.bin";
+
+async function preparePch(std: string, source: string, downloadPch: boolean) {
+    if (!startsWithStdcxx(source)) return false;
+    if (!toolchainCacheSupported()) return downloadPch;
+    if (!(await isBrowserCompilerDownloaded())) return false;
+    const url = pchUrl(std);
+    const pending = pchDownloads.get(url);
+    if (pending) return pending;
+    if (await isToolchainFileCached(url).catch(() => false)) return true;
+    if (!downloadPch) return false;
+    const job = cacheToolchainFile(url)
+        .catch((error) => {
+            console.warn("In-browser compiler PCH download failed:", error);
             return false;
-        }),
-    );
-    queue = job.then(() => {});
+        })
+        .finally(() => pchDownloads.delete(url));
+    pchDownloads.set(url, job);
     return job;
 }
 
-async function warmUp(std: string, source: string, downloadPch: boolean) {
+async function warmUp(std: string, source: string, pch: boolean) {
     if (!(await isBrowserCompilerDownloaded())) return true;
     const headers = precompiledHeadersOf(source);
-    let pch = headers === "pch";
-    if (pch && !downloadPch)
-        pch = await isToolchainFileCached(
-            toolchainBase() + std + ".pch.gz.bin",
-        ).catch(() => false);
     // A build that waits behind this wants the worker now: it only loads
     // files then, and the next warm-up, after that build, does the rest.
     const idle = waitingBuilds === 0;
@@ -302,6 +325,8 @@ async function compile(source: string, std: string): Promise<BuildResult> {
         reportBuild(source, hit, 0);
         return { ...hit, durationMs: 0 };
     }
+    if (startsWithStdcxx(source))
+        await pchDownloads.get(pchUrl(std))?.catch(() => {});
     // The first job in a worker also loads the toolchain into it.
     const cold = !worker;
     const warm = !!worker && warmed;

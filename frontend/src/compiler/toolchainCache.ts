@@ -73,6 +73,29 @@ export async function fetchToolchainFile(url: string): Promise<Response> {
     return new Response(body, init);
 }
 
+export async function cacheToolchainFile(url: string): Promise<boolean> {
+    const cache = await openToolchainCache();
+    if (!cache) return false;
+    if (await cache.match(url)) return true;
+    const response = await fetch(url);
+    if (!response.ok)
+        throw new Error(
+            `Toolchain download failed (${response.status}): ${url}`,
+        );
+    const body = await response.blob();
+    await cache.put(
+        url,
+        new Response(body, {
+            headers: {
+                "Content-Type":
+                    response.headers.get("Content-Type") ??
+                    "application/octet-stream",
+            },
+        }),
+    );
+    return true;
+}
+
 // PCHs the compile worker makes of the headers a source starts with (see
 // compile.worker.ts) are kept here too, so that a returning visitor's first
 // build has one. They are named by what they were made from and belong to this

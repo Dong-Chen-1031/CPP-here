@@ -172,8 +172,8 @@ try {
         const build = await compile(page, bits(1));
         assert.equal(build.ok, true, build.errors.join("\n"));
         assert.equal(build.usedPch, true);
-        // The worker stores the PCH in Cache Storage as it reads it; closing
-        // the page before that write ends would drop it.
+        // Chrome shows the stored PCH to this page before the write is
+        // durable; closing the page before that would drop it.
         await page.waitForFunction(
             async ({ name, size }) => {
                 for (const cacheName of await caches.keys()) {
@@ -190,6 +190,75 @@ try {
             { name: STD + ".pch.gz.bin", size: pchSize },
             { polling: 500 },
         );
+        await page.close();
+    }
+
+    {
+        const OTHER_STD = "c++14";
+        const { page } = await openPage(context);
+        let release;
+        const released = new Promise((resolve) => (release = resolve));
+        let pchRequests = 0;
+        let requested;
+        const pchRequested = new Promise((resolve) => (requested = resolve));
+        await context.route(
+            "**/" + OTHER_STD + ".pch.gz.bin",
+            async (route) => {
+                pchRequests++;
+                requested();
+                await released;
+                await route.continue();
+            },
+        );
+        await page.evaluate(
+            ({ std, source }) => {
+                window.otherWarmUp = window.compilerTest.warm(
+                    std,
+                    source,
+                    true,
+                );
+                window.otherWarmUp.then(() => (window.otherWarmedUp = true));
+            },
+            { std: OTHER_STD, source: bits(0) },
+        );
+        await pchRequested;
+        // Waiting for the download would wait forever.
+        const build = await Promise.race([
+            compile(page, plain(5)),
+            new Promise((_, reject) =>
+                setTimeout(
+                    () => reject(new Error("the build waited for the PCH")),
+                    60_000,
+                ),
+            ),
+        ]);
+        assert.equal(build.ok, true, build.errors.join("\n"));
+        assert.equal(
+            await page.evaluate(() => !!window.otherWarmedUp),
+            false,
+            "the PCH download ended before the build",
+        );
+        const withPch = page.evaluate(
+            async ({ std, source }) => {
+                const result = await window.compilerTest.compileLocal(
+                    source,
+                    std,
+                );
+                return {
+                    ok: result.ok,
+                    errors: result.errors,
+                    usedPch: !!result.usedPch,
+                };
+            },
+            { std: OTHER_STD, source: bits(9) },
+        );
+        release();
+        assert.equal(await page.evaluate(() => window.otherWarmUp), true);
+        const built = await withPch;
+        assert.equal(built.ok, true, built.errors.join("\n"));
+        assert.equal(built.usedPch, true);
+        assert.equal(pchRequests, 1, "the PCH was downloaded twice");
+        await context.unroute("**/" + OTHER_STD + ".pch.gz.bin");
         await page.close();
     }
 
@@ -303,12 +372,16 @@ try {
         await page.close();
     }
 
-    // Small headers that make a set of includes no page has precompiled.
+    // Small headers whose subsets make sets of includes no page has
+    // precompiled: round r uses the subset numbered r + 1 (by its bits), a
+    // different one for each of up to 2^5 - 1 rounds.
     const SMALL_HEADERS = ["cstddef", "climits", "cctype", "cstdint", "cfloat"];
+    assert.ok(ROUNDS < 2 ** SMALL_HEADERS.length, "ROUNDS is too large");
     let unseen = 0;
     const neverPrecompiled = (n) =>
-        `#include <${SMALL_HEADERS[unseen % SMALL_HEADERS.length]}>\n` +
-        plain(n);
+        SMALL_HEADERS.filter((_, bit) => (unseen + 1) & (1 << bit))
+            .map((header) => `#include <${header}>\n`)
+            .join("") + plain(n);
     const rows = [];
     // What the first build of a page uses without a warm-up.
     for (const [kind, source, coldUses, prepare] of [
