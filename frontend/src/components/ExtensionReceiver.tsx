@@ -7,28 +7,23 @@ import { z } from "zod";
 import {
     alertDialogStore,
     panelDrawerStore,
+    runModeStore,
     testCasesStore,
     type TestCase,
 } from "@/store/atom";
 import { randomId, useIsMobile } from "@/lib/utils";
 import { addAlert } from "@/lib/alert";
+import { defCodeStore } from "@/store/configStore";
 
 declare global {
     interface Window {
-        /** Polled by the browser extension before it dispatches an "ext" event. */
         eventListenerLoaded?: boolean;
     }
 }
 
-/**
- * The "ext" event can be dispatched by anything running on the page, so only
- * the fields we actually consume are trusted — and only after validation.
- */
 const ExtEventSchema = z.object({
     name: z.string(),
     group: z.string().optional(),
-    // Every problem of a parsed contest shares one batch id; size is the
-    // number of problems in the contest (1 for a single problem)
     batch: z
         .object({
             id: z.string(),
@@ -45,18 +40,12 @@ const ExtEventSchema = z.object({
 
 type ExtEvent = z.infer<typeof ExtEventSchema>;
 
-/** A received problem, already turned into the test cases it adds. */
 interface ReceivedProblem {
     name: string;
     group?: string;
     testCases: TestCase[];
 }
 
-/**
- * The extension sends a contest's problems one event at a time. If a send
- * fails midway it stops, so a batch that never fills up is imported with
- * whatever arrived once no more problems come in for this long.
- */
 const BATCH_FLUSH_DELAY_MS = 3000;
 
 interface PendingBatch {
@@ -64,29 +53,19 @@ interface PendingBatch {
     timer?: number;
 }
 
-/**
- * Receives test cases from the browser extension. Mounted once on the editor
- * page (not inside a panel) so it listens on mobile too, where the test case
- * panel only exists while its drawer is open.
- */
 export function ExtensionReceiver() {
     const setTestCases = useSetAtom(testCasesStore);
     const setPanel = useSetAtom(panelDrawerStore);
     const setAlertDialog = useSetAtom(alertDialogStore);
+    const setRunMode = useSetAtom(runModeStore);
     const isMobile = useIsMobile();
     const { t } = useTranslation(["editor"]);
 
-    // Read when an import happens rather than captured by the listener, so
-    // the listener doesn't have to be re-attached when the layout changes
     const isMobileRef = useRef(isMobile);
     isMobileRef.current = isMobile;
 
-    // Contest problems collected so far, by batch id. Outlives the effect so
-    // a re-run doesn't drop problems that have already arrived.
     const pendingBatchesRef = useRef(new Map<string, PendingBatch>());
 
-    // ...but not the component: an unmounted receiver must not import a
-    // batch or open a dialog when its flush timer fires
     useEffect(() => {
         const pendingBatches = pendingBatchesRef.current;
         return () => {
@@ -101,8 +80,6 @@ export function ExtensionReceiver() {
         const defaultStore = getDefaultStore();
         const pendingBatches = pendingBatchesRef.current;
 
-        // Imports every problem of a batch at once, so a contest asks to
-        // overwrite or insert only once instead of once per problem.
         const importProblems = (problems: ReceivedProblem[]) => {
             const testCasesFromExtension = problems.flatMap(
                 (problem) => problem.testCases,
@@ -124,6 +101,7 @@ export function ExtensionReceiver() {
                     problem_name: displayName,
                     mode,
                 });
+                setRunMode("all");
                 if (isMobileRef.current) {
                     setPanel("testCases");
                 }
@@ -160,10 +138,10 @@ export function ExtensionReceiver() {
                     {
                         text: t("testCase.extension.alertDialog.overwrite"),
                         onClick: () => importTestCases("overwrite"),
+                        autoFocus: true,
                     },
                     {
                         text: t("testCase.extension.alertDialog.insert"),
-                        autoFocus: true,
                         onClick: () => importTestCases("insert"),
                     },
                 ],
@@ -202,10 +180,6 @@ export function ExtensionReceiver() {
 
             receiveProblem(problem, batch);
 
-            // Tells the extension the payload was accepted: it dispatches a
-            // cancelable event and treats a canceled one as delivered. Called
-            // last, so a payload this handler failed on isn't reported as
-            // delivered.
             event.preventDefault();
         };
 
@@ -236,8 +210,6 @@ export function ExtensionReceiver() {
         };
 
         window.addEventListener("ext", handleExtEvent);
-        // The extension waits for this flag before dispatching, so it must
-        // only be true while the listener above is actually attached.
         window.eventListenerLoaded = true;
         return () => {
             window.eventListenerLoaded = false;
