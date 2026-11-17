@@ -1,6 +1,5 @@
 User-agent: *
 Allow: /
-Disallow: /editor
 Disallow: /test
 Disallow: /test2
 
