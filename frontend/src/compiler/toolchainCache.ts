@@ -34,6 +34,11 @@ export async function isToolchainCached(base: string): Promise<boolean> {
     return hits.every(Boolean);
 }
 
+export async function isToolchainFileCached(url: string): Promise<boolean> {
+    const cache = await openToolchainCache();
+    return !!(await cache?.match(url));
+}
+
 /** Drops toolchains of other versions. */
 export async function deleteOldToolchains() {
     if (!toolchainCacheSupported()) return;
@@ -52,6 +57,18 @@ export async function fetchToolchainFile(url: string): Promise<Response> {
         throw new Error(
             `Toolchain download failed (${response.status}): ${url}`,
         );
-    cache?.put(url, response.clone()).catch(() => {});
-    return response;
+    if (!cache) return response;
+    // Stored from a Blob: putting a clone of the streamed response took Chrome
+    // seconds to commit after the body was read, and closing the page before
+    // that dropped the file (a PCH was then downloaded again on every visit).
+    const init = {
+        headers: {
+            "Content-Type":
+                response.headers.get("Content-Type") ??
+                "application/octet-stream",
+        },
+    };
+    const body = await response.blob();
+    cache.put(url, new Response(body, init)).catch(() => {});
+    return new Response(body, init);
 }

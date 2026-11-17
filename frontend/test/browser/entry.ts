@@ -1,6 +1,10 @@
-import { browserBuild } from "../../src/service/browserBuild";
+import {
+    browserBuild,
+    warmBrowserCompiler,
+} from "../../src/service/browserBuild";
 const api = {
     compileLocal: browserBuild,
+    warm: warmBrowserCompiler,
     run: (module: WebAssembly.Module, input: string, timeout = 10_000) =>
         new Promise((resolve) => {
             const worker = new Worker(

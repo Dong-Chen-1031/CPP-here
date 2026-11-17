@@ -25,6 +25,26 @@ downloaded in the background 10 seconds after the editor loads and after each
 server build. A failed verification or server build marks the server
 unavailable for the session, so Auto then builds in the browser.
 
+Whenever the next build would use the in-browser compiler (the mode, the
+device and the server's state say so) and it is downloaded, it is warmed up
+in the background: 3 seconds after the page's load event, while the page is
+visible, in an idle callback (a timeout on Safari, which has none). The
+compile worker loads the toolchain from Cache Storage and compiles a small
+program with the same headers as the editor's code. Loading alone saves less
+than half: V8 runs clang's code unoptimized at first and optimizes it as it runs,
+so the first compile in a worker was about twice as slow as the next even with
+the toolchain loaded. In headless Chromium on 4 cores, `#include <iostream>`:
+first build 3.9 s, 2.1 s after a warm-up (loading only: 3.0 s);
+`bits/stdc++.h` with its PCH: 2.5 s, 1.0 s after a warm-up. The warm-up never
+downloads the compiler, and loads a PCH that was never used only where the
+background download would run (fast, unmetered, online). A build started
+during a warm-up waits for it, and a warm-up queued behind a build only loads
+files. Stopping a build that waits for a warm-up skips it. It runs
+again after the standard changes, the code starts or stops using
+`bits/stdc++.h`, the download finishes, the mode changes, and after each build
+(stopping a compile discards the worker). A warm-up that fails stops them for
+the page.
+
 An in-browser compile slower than 7 seconds suggests the server, once per
 session. Measured on an iPhone in production: 4 to 6 seconds for the first
 compile after a page load (the toolchain is loaded into the worker), about 2
@@ -51,7 +71,8 @@ alert.
 PostHog events: `browser_compiler_download` (`success`, `trigger`: build,
 background or settings, `duration_ms`, `bytes`, `files`, `error`) and
 `browser_compiler_build` (`success`, `cpp_version`, `cached`, `cold`: the
-first compile in a worker, which loads the toolchain, `used_pch`,
+first compile in a worker, which loads the toolchain, `warmed`: the worker was
+warmed up before this build, `used_pch`,
 `duration_ms` without the download, `failure`: compile_error, unavailable,
 cancelled or exception, `error` except for compile errors, which quote the
 user's code). Stopping a build sends `code_build_cancelled`.
@@ -75,7 +96,9 @@ user's code). Stopping a build sends `code_build_cancelled`.
   (`cpp-here-toolchain:<id>`, other ids deleted on download), so it
   survives reloads and "downloaded" can be checked offline. Insecure origins
   have no Cache Storage and fetch from the network every time. PCHs are cached
-  there on first use.
+  there on first use, stored from a Blob: Chrome took seconds to commit a
+  stored clone of the streamed response, and a page closed before that lost
+  the PCH.
 - `src/compiler/compile.worker.ts` loads the toolchain once per worker, then
   runs `clang++` for each build. Every clang/wasm-ld run gets a fresh wasm
   instance; only the downloaded and compiled modules are kept.
@@ -188,6 +211,7 @@ npm run test:browser                # regression cases × standards
 node test/browser/pch-rule.mjs      # PCH eligibility matches the backend rule
 node test/browser/build.mjs && node test/browser/bundled.mjs
 node test/browser/integration.mjs   # run flows, asserts no /api/build request
+node test/browser/warmup.mjs        # first build with and without a warm-up
 npx astro sync && npx wrangler types && npx tsc --noEmit
 ```
 
@@ -203,6 +227,10 @@ Verified in headless Chromium:
 - 73/73 regression case/standard combinations, including `cpp23_features`
   (`std::flat_map`) and the new `large_local_array` (needs the 8 MB stack).
 - 46 PCH eligibility cases match `cpp-here-build`.
+- `warmup.mjs`: a warm-up downloads nothing without the compiler, and no PCH
+  unless allowed; the first build after one is faster. `integration.mjs`: a
+  new page warms up by itself 3 seconds after `prepareBuild()`, and its first
+  build reports `warmed` and not `cold`.
 - Production build with the feature enabled; clicking Run in the built
   editor compiles and runs locally with no `/api/build` request.
 
