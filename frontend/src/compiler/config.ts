@@ -8,6 +8,7 @@ declare const __TOOLCHAIN_ID__: string;
 export const TOOLCHAIN_ID = __TOOLCHAIN_ID__;
 export const STANDARDS = toolchain.standards;
 export const COMPILE_FLAGS = toolchain.compileFlags;
+export const PCH_FLAGS = toolchain.pchFlags;
 export const LINK_FLAGS = toolchain.linkFlags;
 export const TOOLCHAIN_ASSETS = toolchain.assets;
 export const LOCAL_WORKER_MARKER = "cpp-here:wasi-worker:v1";

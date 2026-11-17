@@ -72,3 +72,72 @@ export async function fetchToolchainFile(url: string): Promise<Response> {
     cache.put(url, new Response(body, init)).catch(() => {});
     return new Response(body, init);
 }
+
+// PCHs the compile worker makes of the headers a source starts with (see
+// compile.worker.ts) are kept here too, so that a returning visitor's first
+// build has one. They are named by what they were made from and belong to this
+// toolchain only: deleteOldToolchains() drops them with it.
+const INCLUDES_PCH_DIR = "includes/";
+// About 13 MB each (libc++'s <iostream> alone is most of that).
+const MAX_STORED_INCLUDES_PCHS = 3;
+
+/** Where the PCH of `key` is stored; undefined without Cache Storage. */
+async function includesPchUrl(base: string, key: string) {
+    // Insecure origins have neither Cache Storage nor crypto.subtle.
+    if (!toolchainCacheSupported() || !globalThis.crypto?.subtle) return;
+    const digest = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(key),
+    );
+    const name = Array.from(new Uint8Array(digest).subarray(0, 16), (byte) =>
+        byte.toString(16).padStart(2, "0"),
+    ).join("");
+    return base + INCLUDES_PCH_DIR + name + ".pch";
+}
+
+export async function readIncludesPch(
+    base: string,
+    key: string,
+): Promise<Uint8Array<ArrayBuffer> | null> {
+    try {
+        const url = await includesPchUrl(base, key);
+        const hit = url && (await (await openToolchainCache())?.match(url));
+        return hit ? new Uint8Array(await hit.arrayBuffer()) : null;
+    } catch {
+        return null;
+    }
+}
+
+/** Stores a PCH, dropping the oldest ones over the limit. Never rejects. */
+export async function storeIncludesPch(
+    base: string,
+    key: string,
+    bytes: Uint8Array<ArrayBuffer>,
+) {
+    try {
+        const url = await includesPchUrl(base, key);
+        const cache = url && (await openToolchainCache());
+        if (!cache) return;
+        await cache.put(
+            url,
+            new Response(new Blob([bytes]), {
+                headers: { "Content-Type": "application/octet-stream" },
+            }),
+        );
+        // keys() lists entries in the order they were stored.
+        const stored = (await cache.keys()).filter((request) =>
+            request.url.startsWith(base + INCLUDES_PCH_DIR),
+        );
+        for (const request of stored.slice(0, -MAX_STORED_INCLUDES_PCHS))
+            await cache.delete(request);
+    } catch {
+        // Out of quota, or storage was cleared: the PCH is made again.
+    }
+}
+
+export async function deleteIncludesPch(base: string, key: string) {
+    try {
+        const url = await includesPchUrl(base, key);
+        if (url) await (await openToolchainCache())?.delete(url);
+    } catch {}
+}

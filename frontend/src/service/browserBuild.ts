@@ -1,6 +1,7 @@
 import { atom, getDefaultStore } from "jotai";
 import i18next from "i18next";
 import { LOCAL_WORKER_MARKER, TOOLCHAIN_ID } from "../compiler/config";
+import { leadingIncludes, startsWithStdcxx } from "../compiler/pchRule";
 import {
     TOOLCHAIN_FILES,
     deleteOldToolchains,
@@ -217,20 +218,31 @@ export function browserBuild(
 }
 
 /**
+ * What a build of `source` loads besides the compiler: "pch" for the PCH of
+ * bits/stdc++.h, otherwise the headers the source starts with, which the
+ * compile worker makes a PCH of. A warm-up is due again when this changes.
+ */
+export function precompiledHeadersOf(source: string): "pch" | string[] {
+    return startsWithStdcxx(source) ? "pch" : leadingIncludes(source);
+}
+
+/**
  * Loads the downloaded compiler into its worker and compiles a small program
- * there, so that the user's first build takes as long as later ones. `pch`
- * also loads the PCH of `std`, fetching it only when `downloadPch` allows.
- * Never downloads the compiler itself. Resolves to false when the compiler
- * failed, true otherwise (also when there was nothing to do).
+ * there, so that the user's first build takes as long as later ones, and gets
+ * the precompiled headers of `source` ready: the PCH of `std` for
+ * bits/stdc++.h, fetched only when `downloadPch` allows, or one made of the
+ * headers the source starts with. Never downloads the compiler itself.
+ * Resolves to false when the compiler failed, true otherwise (also when there
+ * was nothing to do).
  */
 export function warmBrowserCompiler(
     std: string,
-    pch: boolean,
+    source: string,
     downloadPch: boolean,
 ): Promise<boolean> {
     if (!browserCompilerSupported()) return Promise.resolve(true);
     const job = queue.then(() =>
-        warmUp(std, pch, downloadPch).catch((error) => {
+        warmUp(std, source, downloadPch).catch((error) => {
             console.warn("In-browser compiler warm-up failed:", error);
             return false;
         }),
@@ -239,19 +251,28 @@ export function warmBrowserCompiler(
     return job;
 }
 
-async function warmUp(std: string, pch: boolean, downloadPch: boolean) {
+async function warmUp(std: string, source: string, downloadPch: boolean) {
     if (!(await isBrowserCompilerDownloaded())) return true;
+    const headers = precompiledHeadersOf(source);
+    let pch = headers === "pch";
     if (pch && !downloadPch)
         pch = await isToolchainFileCached(
             toolchainBase() + std + ".pch.gz.bin",
         ).catch(() => false);
-    const prime = !ready.has("toolchain") && waitingBuilds === 0;
+    // A build that waits behind this wants the worker now: it only loads
+    // files then, and the next warm-up, after that build, does the rest.
+    const idle = waitingBuilds === 0;
+    const prime = !ready.has("toolchain") && idle;
     const loadPch = pch && !ready.has("pch:" + std);
-    if (!prime && !loadPch) return true;
+    // The worker keeps few PCHs of includes, and answers at once when it has
+    // this one.
+    const includes =
+        headers !== "pch" && headers.length > 0 && idle ? headers : undefined;
+    if (!prime && !loadPch && !includes) return true;
     const reply = await ask({
         std,
         base: toolchainBase(),
-        warm: { pch: loadPch, prime },
+        warm: { pch: loadPch, prime, includes },
     });
     if (!reply.data?.ok) {
         console.warn(
@@ -299,6 +320,7 @@ async function compile(source: string, std: string): Promise<BuildResult> {
         cold,
         warmed: warm,
         used_pch: !!result.usedPch,
+        used_includes_pch: !!result.usedIncludesPch,
         duration_ms: durationMs,
         failure: result.ok
             ? undefined
@@ -324,6 +346,7 @@ interface WorkerMessage {
     /** The compiler itself failed: the worker is discarded. */
     reset?: boolean;
     usedPch?: boolean;
+    usedIncludesPch?: boolean;
     module?: WebAssembly.Module;
     wasmSizeBytes?: number;
 }
@@ -408,6 +431,7 @@ async function compileInWorker(
         errors: data.errors,
         unavailable: !!data.reset,
         usedPch: data.usedPch,
+        usedIncludesPch: data.usedIncludesPch,
         wasmModule: data.module,
         wasmSizeBytes: data.wasmSizeBytes,
         js_code: data.ok ? LOCAL_WORKER_MARKER : "",

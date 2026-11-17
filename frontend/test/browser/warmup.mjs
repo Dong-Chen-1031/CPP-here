@@ -73,21 +73,34 @@ const compile = (page, source) =>
                 ok: result.ok,
                 errors: result.errors,
                 usedPch: !!result.usedPch,
+                usedIncludesPch: !!result.usedIncludesPch,
                 ms: Math.round(performance.now() - t),
             };
         },
         { source, std: STD },
     );
 
-const warm = (page, pch, downloadPch) =>
+// Warms up for `source`, as the editor does for its code.
+const warm = (page, source, downloadPch) =>
     page.evaluate(
-        async ({ std, pch, downloadPch }) => {
+        async ({ std, source, downloadPch }) => {
             const t = performance.now();
-            const ok = await window.compilerTest.warm(std, pch, downloadPch);
+            const ok = await window.compilerTest.warm(std, source, downloadPch);
             return { ok, ms: Math.round(performance.now() - t) };
         },
-        { std: STD, pch, downloadPch },
+        { std: STD, source, downloadPch },
     );
+
+// Runs in the page: how many PCHs of a source's own includes are stored.
+const storedIncludesPchs = async () => {
+    let count = 0;
+    for (const cacheName of await caches.keys()) {
+        const cache = await caches.open(cacheName);
+        for (const request of await cache.keys())
+            if (request.url.includes("/includes/")) count++;
+    }
+    return count;
+};
 
 const median = (values) =>
     [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)];
@@ -98,7 +111,7 @@ try {
     // Nothing downloaded yet: a warm-up must not start the download.
     {
         const { page, toolchainRequests } = await openPage(context);
-        const result = await warm(page, true, true);
+        const result = await warm(page, bits(0), true);
         assert.equal(result.ok, true);
         assert.deepEqual(toolchainRequests, [], "warm-up downloaded files");
         // Downloads the compiler (not the PCH) for the cases below.
@@ -110,12 +123,12 @@ try {
     // leaves it alone; one that may fetches it.
     {
         const { page, toolchainRequests } = await openPage(context);
-        assert.equal((await warm(page, true, false)).ok, true);
+        assert.equal((await warm(page, bits(0), false)).ok, true);
         assert.ok(
             !toolchainRequests.some((name) => name.includes(".pch")),
             "warm-up downloaded a PCH: " + toolchainRequests,
         );
-        assert.equal((await warm(page, true, true)).ok, true);
+        assert.equal((await warm(page, bits(0), true)).ok, true);
         assert.ok(
             toolchainRequests.includes(STD + ".pch.gz.bin"),
             "warm-up did not fetch the PCH",
@@ -144,11 +157,104 @@ try {
         await page.close();
     }
 
+    // A PCH of the code's own includes: made by a warm-up, used by the builds
+    // that follow, and stored for the next page.
+    {
+        const { page, toolchainRequests } = await openPage(context);
+        assert.equal((await warm(page, plain(0), false)).ok, true);
+        const build = await compile(page, plain(1));
+        assert.equal(build.ok, true, build.errors.join("\n"));
+        assert.equal(build.usedIncludesPch, true);
+        assert.equal(build.usedPch, false);
+        assert.deepEqual(
+            toolchainRequests.filter((name) => name !== "bundle.js"),
+            [],
+        );
+        // Not for code that starts with something else, whose headers could
+        // mean something different: it compiles without, as before.
+        const defined = await compile(page, "#define NDEBUG\n" + plain(2));
+        assert.equal(defined.ok, true, defined.errors.join("\n"));
+        assert.equal(defined.usedIncludesPch, false);
+        // A header that does not exist is clang's to report, on its line.
+        const missing = "#include <iostream>\n#include <no_such_header>\n";
+        assert.equal((await warm(page, missing, false)).ok, true);
+        const failed = await compile(page, missing + "int main() {}\n");
+        assert.equal(failed.ok, false);
+        assert.match(
+            failed.errors.join("\n"),
+            /main\.cpp:2:10: fatal error: 'no_such_header' file not found/,
+        );
+        // An error below the includes reads the same with the PCH.
+        const wrong = await compile(
+            page,
+            "#include <iostream>\nint main() { undeclared = 1; }\n",
+        );
+        assert.equal(wrong.ok, false);
+        assert.match(
+            wrong.errors.join("\n"),
+            /main\.cpp:2:14: error: use of undeclared identifier 'undeclared'/,
+        );
+        await page.waitForFunction(storedIncludesPchs, null, { polling: 200 });
+        await page.close();
+    }
+    // The next page builds with the stored PCH, without a warm-up.
+    {
+        const { page } = await openPage(context);
+        const build = await compile(page, plain(3));
+        assert.equal(build.ok, true, build.errors.join("\n"));
+        assert.equal(build.usedIncludesPch, true);
+        // A stored PCH that clang cannot read must not fail the build: the
+        // code compiles without it, and the PCH is deleted.
+        await page.evaluate(async () => {
+            for (const cacheName of await caches.keys()) {
+                const cache = await caches.open(cacheName);
+                for (const request of await cache.keys())
+                    if (request.url.includes("/includes/"))
+                        await cache.put(
+                            request,
+                            new Response(new Blob([new Uint8Array(1 << 20)])),
+                        );
+            }
+        });
+        await page.close();
+    }
+    {
+        const { page } = await openPage(context);
+        const build = await compile(page, plain(4));
+        assert.equal(build.ok, true, build.errors.join("\n"));
+        assert.equal(build.usedIncludesPch, false);
+        await page.waitForFunction(
+            `(${storedIncludesPchs})().then((count) => count === 0)`,
+            null,
+            { polling: 200 },
+        );
+        await page.close();
+    }
+
+    // Small headers that make a set of includes no page has precompiled.
+    const SMALL_HEADERS = ["cstddef", "climits", "cctype", "cstdint", "cfloat"];
+    let unseen = 0;
+    const neverPrecompiled = (n) =>
+        `#include <${SMALL_HEADERS[unseen % SMALL_HEADERS.length]}>\n` +
+        plain(n);
     const rows = [];
-    for (const [kind, source, pch] of [
-        ["iostream", plain, false],
-        ["bits/stdc++.h", bits, true],
+    for (const [kind, source, prepare] of [
+        ["iostream, includes not precompiled before", neverPrecompiled],
+        [
+            "iostream, includes precompiled on an earlier visit",
+            plain,
+            async () => {
+                const { page } = await openPage(context);
+                assert.equal((await warm(page, plain(0), false)).ok, true);
+                await page.waitForFunction(storedIncludesPchs, null, {
+                    polling: 200,
+                });
+                await page.close();
+            },
+        ],
+        ["bits/stdc++.h", bits],
     ]) {
+        await prepare?.();
         const cold = [],
             warmed = [],
             warmUps = [];
@@ -163,11 +269,12 @@ try {
             }
             {
                 const { page, toolchainRequests } = await openPage(context);
-                const result = await warm(page, pch, false);
+                const result = await warm(page, source(0), false);
                 assert.equal(result.ok, true);
                 warmUps.push(result.ms);
                 const build = await compile(page, source(round + 100));
                 assert.equal(build.ok, true, build.errors.join("\n"));
+                assert.equal(build.usedPch || build.usedIncludesPch, true);
                 warmed.push(build.ms);
                 // Everything came from Cache Storage.
                 assert.deepEqual(
@@ -176,6 +283,7 @@ try {
                 );
                 await page.close();
             }
+            unseen++;
         }
         rows.push({
             code: kind,

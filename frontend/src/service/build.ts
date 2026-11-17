@@ -16,7 +16,6 @@ import {
 import { addAlert } from "@/lib/alert";
 import { waitForJwt } from "@/lib/apiClient";
 import { openToolchainCache } from "@/compiler/toolchainCache";
-import { startsWithStdcxx } from "@/compiler/pchRule";
 import { isOffline } from "@/lib/offline";
 import { serverBuild } from "./serverBuild";
 import { failedBuild } from "./buildResult";
@@ -29,6 +28,7 @@ import {
     cancelBrowserBuild,
     downloadBrowserCompiler,
     isBrowserCompilerDownloaded,
+    precompiledHeadersOf,
     warmBrowserCompiler,
 } from "./browserBuild";
 
@@ -51,6 +51,8 @@ export interface BuildResult {
     wasmSizeBytes?: number;
     /** In-browser builds: whether a precompiled bits/stdc++.h was used. */
     usedPch?: boolean;
+    /** In-browser builds: whether a PCH of the code's own includes was. */
+    usedIncludesPch?: boolean;
     /** The user stopped the build. */
     cancelled?: boolean;
     /** The compiler that produced this result. */
@@ -80,6 +82,9 @@ const SLOW_BUILD_MS = 7_000;
 const SERVER_RETRY_MS = 60_000;
 // After the page has loaded, before the compiler is warmed up in its worker.
 const WARM_UP_DELAY_MS = 3_000;
+// After the code's leading #include lines last changed, before a warm-up
+// precompiles them.
+const HEADERS_SETTLE_MS = 2_000;
 
 let serverRetryTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -237,12 +242,19 @@ export function prepareBuild() {
     store.sub(compilerModeStore, scheduleWarmUp);
     store.sub(serverUnavailableStore, scheduleWarmUp);
     store.sub(cppVersionStore, scheduleWarmUp);
-    let usesPch = startsWithStdcxx(store.get(codeStore));
+    // Which headers are precompiled for the code: the PCH of bits/stdc++.h,
+    // or one made of the headers it starts with. Wait until an #include being
+    // typed has stopped changing, not to precompile every prefix of its name.
+    const headersOf = () =>
+        JSON.stringify(precompiledHeadersOf(store.get(codeStore)));
+    let headers = headersOf();
+    let headersTimer: ReturnType<typeof setTimeout> | undefined;
     store.sub(codeStore, () => {
-        const now = startsWithStdcxx(store.get(codeStore));
-        if (now === usesPch) return;
-        usesPch = now;
-        scheduleWarmUp();
+        const now = headersOf();
+        if (now === headers) return;
+        headers = now;
+        clearTimeout(headersTimer);
+        headersTimer = setTimeout(scheduleWarmUp, HEADERS_SETTLE_MS);
     });
 }
 
@@ -275,7 +287,7 @@ async function warmUp() {
     if (store.get(buildingWithStore)) return;
     const ok = await warmBrowserCompiler(
         store.get(cppVersionStore),
-        startsWithStdcxx(store.get(codeStore)),
+        store.get(codeStore),
         canDownloadInBackground() && !isOffline(),
     );
     if (!ok) warmUpFailed = true;

@@ -48,13 +48,32 @@ try {
         ? Date.now() + Number(process.env.MAX_MS)
         : Infinity;
     let last = "";
-    cases: for (const name of (await fs.readdir(dir))
+    // INCLUDES_PCH=1 runs every case with a PCH of its own includes, made by
+    // a warm-up as in the editor, instead of the shipped PCH of
+    // bits/stdc++.h: <bits/./stdc++.h> is the same header under a name the
+    // shipped PCH's rule does not match. One standard after another, so that
+    // each PCH is made once.
+    const includesPch = process.env.INCLUDES_PCH === "1";
+    let usedIncludesPch = 0;
+    const files = (await fs.readdir(dir))
         .filter((f) => f.endsWith(".cpp"))
-        .sort()) {
+        .sort();
+    const order = includesPch
+        ? ["c++98", "c++11", "c++14", "c++17", "c++20", "c++23"].flatMap(
+              (only) => files.map((name) => ({ name, only })),
+          )
+        : files.map((name) => ({ name, only: null }));
+    cases: for (const { name, only } of order) {
         if (process.env.CASE && !name.includes(process.env.CASE)) continue;
         if (process.env.AFTER && name <= process.env.AFTER) continue;
-        const source = await read(path.join(dir, name)),
+        const original = await read(path.join(dir, name)),
             base = name.slice(0, -4);
+        const source = includesPch
+            ? original.replace(
+                  /^([ \t]*#[ \t]*include[ \t]*<)bits\/stdc\+\+\.h>/m,
+                  "$1bits/./stdc++.h>",
+              )
+            : original;
         const stds = (
             source.match(/@std:\s*(.*)/)?.[1] || "c++11 c++14 c++17 c++20 c++23"
         )
@@ -63,8 +82,11 @@ try {
         const expectation = source.match(/@expect:\s*(.*)/)?.[1] || "ok";
         const [kind, ...pattern] = expectation.split(" ");
         for (const std of stds) {
+            if (only && std !== only) continue;
             const row = await page.evaluate(
-                async ({ source, std, input, timeout }) => {
+                async ({ source, std, input, timeout, warm }) => {
+                    if (warm)
+                        await window.compilerTest.warm(std, source, false);
                     const t = performance.now();
                     const build = await window.compilerTest.compileLocal(
                         source,
@@ -80,6 +102,7 @@ try {
                     return {
                         ok: true,
                         usedPch: build.usedPch,
+                        usedIncludesPch: build.usedIncludesPch,
                         compileMs,
                         ...(await window.compilerTest.run(
                             build.wasmModule,
@@ -93,6 +116,7 @@ try {
                     std,
                     input: await read(path.join(dir, base + ".in")),
                     timeout: kind === "tle" ? 3000 : 20_000,
+                    warm: includesPch,
                 },
             );
             let success = false;
@@ -118,20 +142,23 @@ try {
                     row.stderr === (await read(path.join(dir, base + ".err")));
             else success = row.status === "limit:" + kind.replace("limit-", "");
             success ? pass++ : fail++;
+            if (row.usedIncludesPch) usedIncludesPch++;
             summary.push({ case: base, std, success, ...row });
             console.log(
                 success ? "PASS" : "FAIL",
                 base,
                 std,
                 Math.round(row.compileMs) + "ms",
-                row.usedPch ? "PCH" : "",
+                row.usedPch ? "PCH" : row.usedIncludesPch ? "includes PCH" : "",
                 row.status ||
                     row.error?.split("\n").find((x) => x.includes("error")),
             );
             await fs.writeFile(
                 path.join(
                     resultsDir,
-                    (process.env.AFTER || "start") + "-summary.json",
+                    (includesPch ? "includes-pch-" : "") +
+                        (process.env.AFTER || "start") +
+                        "-summary.json",
                 ),
                 JSON.stringify({ pass, fail, results: summary }, null, 2),
             );
@@ -157,6 +184,13 @@ try {
         if (Date.now() > deadline) break cases;
     }
     console.log("Last file:", last);
+    if (includesPch) {
+        console.log(usedIncludesPch, "builds used a PCH of their includes");
+        if (!usedIncludesPch) {
+            console.error("FAIL no build used a PCH of its includes");
+            fail++;
+        }
+    }
     // Cache hit: same source/std returns without another compiler job.
     const cache = await page.evaluate(async () => {
         const src = '#include <cstdio>\nint main(){puts("cache");}';

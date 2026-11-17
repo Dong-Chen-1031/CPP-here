@@ -119,28 +119,33 @@ const store = getDefaultStore();
     return { single, auto, all, a, b, queued, stopped, matches };
 };
 
-const warmUpCode =
-    '#include <bits/stdc++.h>\nint main(){int n;std::cin>>n;std::cout<<n+1<<"\\n";}';
+// The first has a PCH of its own, the second gets one made of its includes.
+const warmUpCodes = {
+    stdcxx: '#include <bits/stdc++.h>\nint main(){int n;std::cin>>n;std::cout<<n+1<<"\\n";}',
+    includes:
+        '#include <iostream>\n#include <vector>\nint main(){int n;std::cin>>n;std::vector<int> v(1,n+1);std::cout<<v[0]<<"\\n";}',
+};
+type WarmUpCode = keyof typeof warmUpCodes;
 type Captured = { event: string; properties: Record<string, unknown> };
 const captured: Captured[] = [];
 
 // A new page with the compiler downloaded, as the editor's run button does.
-(window as any).startWarmUp = () => {
+(window as any).startWarmUp = (code: WarmUpCode) => {
     (window as any).posthog = {
         capture: (event: string, properties: Record<string, unknown>) =>
             captured.push({ event, properties }),
     };
     store.set(cppVersionStore, "c++17");
     store.set(compilerModeStore, "browser");
-    store.set(codeStore, warmUpCode);
+    store.set(codeStore, warmUpCodes[code]);
     prepareBuild();
 };
 
 // Called once the warm-up has started its worker: waits for it (this one
 // finds nothing left to do), then builds and runs.
-(window as any).afterWarmUp = async () => {
-    await warmBrowserCompiler("c++17", true, false);
-    await handleRun({ code: warmUpCode, input: "41" });
+(window as any).afterWarmUp = async (code: WarmUpCode) => {
+    await warmBrowserCompiler("c++17", warmUpCodes[code], false);
+    await handleRun({ code: warmUpCodes[code], input: "41" });
     while (store.get(runStatusStore) !== "idle")
         await new Promise((r) => setTimeout(r, 20));
     const build = captured.find((c) => c.event === "browser_compiler_build");
