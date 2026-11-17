@@ -158,8 +158,8 @@ loads them precompiled:
   visitor's first build has one. A build never waits for one to be made:
   without one it compiles as before, and the warm-up after that build makes
   it for the next. A stored PCH is not trusted until a build with it has
-  succeeded: a build that fails with it is repeated without, and the PCH is
-  deleted if that one succeeds.
+  succeeded, or failed with the same errors as without it: a build that fails
+  with it is repeated without, and the PCH is deleted if that one succeeds.
 
 Both are built with `-fpch-instantiate-templates` (`pchFlags` in
 `toolchain.json`). Without it clang repeated, in every build, the template

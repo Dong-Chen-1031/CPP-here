@@ -1,9 +1,11 @@
 import {
     browserBuild,
+    cancelBrowserBuild,
     warmBrowserCompiler,
 } from "../../src/service/browserBuild";
 const api = {
     compileLocal: browserBuild,
+    cancel: cancelBrowserBuild,
     warm: warmBrowserCompiler,
     run: (module: WebAssembly.Module, input: string, timeout = 10_000) =>
         new Promise((resolve) => {

@@ -386,7 +386,12 @@ function ask(payload: Record<string, unknown>, stoppable = false) {
         };
         const discard = () => {
             current.terminate();
-            if (worker === current) worker = undefined;
+            if (worker !== current) return;
+            worker = undefined;
+            // What was loaded went with the worker: the next warm-up, such
+            // as the one after a stopped build, starts over.
+            ready = new Set();
+            warmed = false;
         };
         const message = ({ data }: MessageEvent<WorkerMessage>) => {
             if (data.id !== id) return;

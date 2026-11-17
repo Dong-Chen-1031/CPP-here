@@ -302,10 +302,13 @@ function whenIdle(callback: () => void) {
             });
             return;
         }
+        // The page may be hidden again by the time the browser is idle.
+        const run = () =>
+            document.visibilityState === "visible" ? callback() : idle();
         // Safari has no requestIdleCallback.
         if (typeof requestIdleCallback === "function")
-            requestIdleCallback(callback, { timeout: 5_000 });
-        else setTimeout(callback, 0);
+            requestIdleCallback(run, { timeout: 5_000 });
+        else setTimeout(run, 0);
     };
     const wait = () => setTimeout(idle, WARM_UP_DELAY_MS);
     if (document.readyState === "complete") wait();

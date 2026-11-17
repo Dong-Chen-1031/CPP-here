@@ -99,15 +99,21 @@ async function load(base: string): Promise<Toolchain> {
 }
 
 function loadPch(base: string, std: string) {
-    if (!pchs.has(std))
-        pchs.set(
-            std,
-            compressed(base + std + ".pch")
-                .then((r) => r.arrayBuffer())
-                .then((b) => new Uint8Array(b))
-                .catch(() => null),
-        );
-    return pchs.get(std)!;
+    let pch = pchs.get(std);
+    if (!pch) {
+        pch = compressed(base + std + ".pch")
+            .then((r) => r.arrayBuffer())
+            .then((b) => new Uint8Array(b))
+            .catch(() => null);
+        pchs.set(std, pch);
+        // A failed load (offline, a network error, storage full) is tried
+        // again by the next build or warm-up, not remembered for the
+        // worker's lifetime.
+        void pch.then((bytes) => {
+            if (!bytes && pchs.get(std) === pch) pchs.delete(std);
+        });
+    }
+    return pch;
 }
 
 // What `clang++ <args>` runs: the compiler, then the linker. YoWASP's runClang
@@ -344,16 +350,24 @@ async function compile(
     } catch {
         // clang itself failed: on to the build without the PCH.
     }
-    if (!result?.ok) {
-        result = await build(null);
-        if (result.ok) {
-            includesPchs.delete(includesKey(std, headers));
-            void deleteIncludesPch(base, includesKey(std, headers));
-            return result;
-        }
+    if (result?.ok) {
+        own.trusted = true;
+        return result;
     }
-    own.trusted = true;
-    return result;
+    const without = await build(null);
+    if (without.ok) {
+        includesPchs.delete(includesKey(std, headers));
+        void deleteIncludesPch(base, includesKey(std, headers));
+    } else if (
+        result &&
+        !result.ok &&
+        result.errors.join("\n") === without.errors.join("\n")
+    )
+        // The same errors with the PCH as without: the code's, and the PCH
+        // reads fine. Otherwise it stays untrusted, as clang may have
+        // rejected it besides the code's errors.
+        own.trusted = true;
+    return without;
 }
 
 // Compiled for a warm-up: clang's code starts in V8's baseline tier and is

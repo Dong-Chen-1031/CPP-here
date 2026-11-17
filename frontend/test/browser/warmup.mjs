@@ -4,6 +4,7 @@
 import { createServer } from "vite";
 import { chromium } from "playwright";
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -91,16 +92,51 @@ const warm = (page, source, downloadPch) =>
         { std: STD, source, downloadPch },
     );
 
-// Runs in the page: how many PCHs of a source's own includes are stored.
+// Runs in the page: the URLs of the stored PCHs of a source's own includes.
 const storedIncludesPchs = async () => {
-    let count = 0;
+    const urls = [];
     for (const cacheName of await caches.keys()) {
         const cache = await caches.open(cacheName);
         for (const request of await cache.keys())
-            if (request.url.includes("/includes/")) count++;
+            if (request.url.includes("/includes/")) urls.push(request.url);
     }
-    return count;
+    return urls;
 };
+
+// The name the compile worker stores the PCH of these headers under
+// (toolchainCache.ts): a hash of the standard and the headers.
+const includesPchName = (headers) =>
+    crypto
+        .createHash("sha256")
+        .update(STD + "\n" + headers.join("\n"))
+        .digest("hex")
+        .slice(0, 32) + ".pch";
+
+// Warms up for `source` and waits until the PCH of its includes is stored:
+// the worker does not wait for that write. Chrome shows an entry to the page
+// that wrote it before the write is done, and closing that page right after
+// can lose it, so another page of the same context must see it.
+async function warmAndStore(page, source, headers) {
+    assert.equal((await warm(page, source, false)).ok, true);
+    const probe = await page.context().newPage();
+    await probe.goto(page.url());
+    await probe.waitForFunction(
+        async (name) => {
+            for (const cacheName of await caches.keys()) {
+                const cache = await caches.open(cacheName);
+                for (const request of await cache.keys())
+                    if (request.url.endsWith("/includes/" + name)) {
+                        const hit = await cache.match(request);
+                        return (await hit.arrayBuffer()).byteLength > 0;
+                    }
+            }
+            return false;
+        },
+        includesPchName(headers),
+        { polling: 200 },
+    );
+    await probe.close();
+}
 
 const median = (values) =>
     [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)];
@@ -161,7 +197,7 @@ try {
     // that follow, and stored for the next page.
     {
         const { page, toolchainRequests } = await openPage(context);
-        assert.equal((await warm(page, plain(0), false)).ok, true);
+        await warmAndStore(page, plain(0), ["iostream"]);
         const build = await compile(page, plain(1));
         assert.equal(build.ok, true, build.errors.join("\n"));
         assert.equal(build.usedIncludesPch, true);
@@ -194,7 +230,6 @@ try {
             wrong.errors.join("\n"),
             /main\.cpp:2:14: error: use of undeclared identifier 'undeclared'/,
         );
-        await page.waitForFunction(storedIncludesPchs, null, { polling: 200 });
         await page.close();
     }
     // The next page builds with the stored PCH, without a warm-up.
@@ -220,14 +255,51 @@ try {
     }
     {
         const { page } = await openPage(context);
+        // Code with an error first: it fails without the PCH too, but not
+        // with the same errors, so the PCH must not be trusted from then on.
+        const wrong = await compile(
+            page,
+            "#include <iostream>\nint main() { undeclared = 1; }\n",
+        );
+        assert.equal(wrong.ok, false);
+        assert.match(wrong.errors.join("\n"), /undeclared identifier/);
+        assert.doesNotMatch(wrong.errors.join("\n"), /precompiled|PCH/i);
+        // The code fixed: it builds, without the PCH, which is deleted.
         const build = await compile(page, plain(4));
         assert.equal(build.ok, true, build.errors.join("\n"));
         assert.equal(build.usedIncludesPch, false);
         await page.waitForFunction(
-            `(${storedIncludesPchs})().then((count) => count === 0)`,
+            `(${storedIncludesPchs})().then((urls) => urls.length === 0)`,
             null,
             { polling: 200 },
         );
+        await page.close();
+    }
+
+    // A stopped build discards the worker, and what it had loaded with it:
+    // the next warm-up loads the compiler into a new worker again.
+    {
+        const { page } = await openPage(context);
+        let workers = 0;
+        page.on("worker", (worker) => {
+            if (worker.url().includes("compile.worker")) workers++;
+        });
+        assert.equal((await warm(page, bits(0), false)).ok, true);
+        assert.equal(workers, 1);
+        const stopped = await page.evaluate(
+            async ({ source, std }) => {
+                const build = window.compilerTest.compileLocal(source, std);
+                setTimeout(() => window.compilerTest.cancel(), 50);
+                return !!(await build).cancelled;
+            },
+            { source: bits(7), std: STD },
+        );
+        assert.equal(stopped, true);
+        assert.equal((await warm(page, bits(0), false)).ok, true);
+        assert.equal(workers, 2, "no warm-up after a stopped build");
+        const build = await compile(page, bits(8));
+        assert.equal(build.ok, true, build.errors.join("\n"));
+        assert.equal(build.usedPch, true);
         await page.close();
     }
 
@@ -238,21 +310,20 @@ try {
         `#include <${SMALL_HEADERS[unseen % SMALL_HEADERS.length]}>\n` +
         plain(n);
     const rows = [];
-    for (const [kind, source, prepare] of [
-        ["iostream, includes not precompiled before", neverPrecompiled],
+    // What the first build of a page uses without a warm-up.
+    for (const [kind, source, coldUses, prepare] of [
+        ["iostream, includes not precompiled before", neverPrecompiled, null],
         [
             "iostream, includes precompiled on an earlier visit",
             plain,
+            "usedIncludesPch",
             async () => {
                 const { page } = await openPage(context);
-                assert.equal((await warm(page, plain(0), false)).ok, true);
-                await page.waitForFunction(storedIncludesPchs, null, {
-                    polling: 200,
-                });
+                await warmAndStore(page, plain(0), ["iostream"]);
                 await page.close();
             },
         ],
-        ["bits/stdc++.h", bits],
+        ["bits/stdc++.h", bits, "usedPch"],
     ]) {
         await prepare?.();
         const cold = [],
@@ -264,6 +335,13 @@ try {
                 const { page } = await openPage(context);
                 const build = await compile(page, source(round + 1));
                 assert.equal(build.ok, true, build.errors.join("\n"));
+                const uses = `${kind}, round ${round}: ${JSON.stringify(build)}`;
+                assert.equal(build.usedPch, coldUses === "usedPch", uses);
+                assert.equal(
+                    build.usedIncludesPch,
+                    coldUses === "usedIncludesPch",
+                    uses,
+                );
                 cold.push(build.ms);
                 await page.close();
             }
