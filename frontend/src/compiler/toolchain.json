@@ -12,6 +12,11 @@
         "-fsanitize-trap=integer-divide-by-zero",
         "-D_WASI_EMULATED_PROCESS_CLOCKS"
     ],
+    "pchFlags": [
+        "-Xclang",
+        "-fno-pch-timestamp",
+        "-fpch-instantiate-templates"
+    ],
     "linkFlags": [
         "-Wl,-z,stack-size=8388608",
         "-Wl,--stack-first",
