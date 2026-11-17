@@ -73,16 +73,26 @@ export async function fetchToolchainFile(url: string): Promise<Response> {
     return new Response(body, init);
 }
 
-export async function cacheToolchainFile(url: string): Promise<boolean> {
+export async function cacheToolchainFile(
+    url: string,
+    timeoutMs: number,
+): Promise<boolean> {
     const cache = await openToolchainCache();
     if (!cache) return false;
     if (await cache.match(url)) return true;
-    const response = await fetch(url);
-    if (!response.ok)
-        throw new Error(
-            `Toolchain download failed (${response.status}): ${url}`,
-        );
-    const body = await response.blob();
+    const abort = new AbortController();
+    const timer = setTimeout(() => abort.abort(), timeoutMs);
+    let body: Blob, response: Response;
+    try {
+        response = await fetch(url, { signal: abort.signal });
+        if (!response.ok)
+            throw new Error(
+                `Toolchain download failed (${response.status}): ${url}`,
+            );
+        body = await response.blob();
+    } finally {
+        clearTimeout(timer);
+    }
     await cache.put(
         url,
         new Response(body, {

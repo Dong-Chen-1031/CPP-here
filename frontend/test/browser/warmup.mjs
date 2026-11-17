@@ -262,6 +262,115 @@ try {
         await page.close();
     }
 
+    // Stalls the first download of a standard's PCH until released.
+    async function stallPch(std, all) {
+        let release;
+        const released = new Promise((resolve) => (release = resolve));
+        let requested;
+        const firstRequest = new Promise((resolve) => (requested = resolve));
+        const pattern = "**/" + std + ".pch.gz.bin";
+        let requests = 0;
+        const handled = [];
+        await context.route(pattern, (route) => {
+            requests++;
+            requested();
+            const stalled = all || requests === 1;
+            handled.push(
+                (stalled ? released : Promise.resolve()).then(() =>
+                    route.continue(),
+                ),
+            );
+        });
+        return {
+            firstRequest,
+            requests: () => requests,
+            done: async () => {
+                release();
+                await Promise.all(handled);
+                await context.unroute(pattern);
+            },
+        };
+    }
+
+    const startWarmUp = (page, std) =>
+        page.evaluate(
+            ({ std, source }) => {
+                window.stalledWarmUp = window.compilerTest.warm(
+                    std,
+                    source,
+                    true,
+                );
+            },
+            { std, source: bits(0) },
+        );
+
+    const buildBits = (page, std, stopAfterMs) =>
+        Promise.race([
+            buildBitsIn(page, std, stopAfterMs),
+            new Promise((_, reject) =>
+                setTimeout(
+                    () => reject(new Error("the build waited too long")),
+                    90_000,
+                ),
+            ),
+        ]);
+    const buildBitsIn = (page, std, stopAfterMs) =>
+        page.evaluate(
+            async ({ std, source, stopAfterMs }) => {
+                const t = performance.now();
+                const build = window.compilerTest.compileLocal(source, std);
+                if (stopAfterMs !== undefined)
+                    setTimeout(() => window.compilerTest.cancel(), stopAfterMs);
+                const result = await build;
+                return {
+                    ok: result.ok,
+                    errors: result.errors,
+                    cancelled: !!result.cancelled,
+                    usedPch: !!result.usedPch,
+                    ms: Math.round(performance.now() - t),
+                };
+            },
+            { std, source: bits(10), stopAfterMs },
+        );
+
+    // A stalled download keeps a build waiting only so long: the worker then
+    // fetches the PCH itself.
+    {
+        const { page } = await openPage(context);
+        const stall = await stallPch("c++11", false);
+        await startWarmUp(page, "c++11");
+        await stall.firstRequest;
+        const build = await buildBits(page, "c++11");
+        assert.equal(build.ok, true, build.errors.join("\n"));
+        assert.equal(build.usedPch, true);
+        assert.ok(build.ms >= 14_000, `waited only ${build.ms} ms`);
+        assert.ok(build.ms < 60_000, `waited ${build.ms} ms`);
+        await stall.done();
+        assert.equal(await page.evaluate(() => window.stalledWarmUp), true);
+        await page.close();
+    }
+
+    // Stopping a build that waits for a PCH download stops it at once. Two
+    // warm-ups at once download the PCH once.
+    {
+        const { page } = await openPage(context);
+        const stall = await stallPch("c++20", true);
+        await Promise.all([
+            startWarmUp(page, "c++20"),
+            startWarmUp(page, "c++20"),
+        ]);
+        await stall.firstRequest;
+        const build = await buildBits(page, "c++20", 500);
+        assert.equal(build.cancelled, true, JSON.stringify(build));
+        assert.ok(build.ms < 5_000, `stopped after ${build.ms} ms`);
+        assert.equal(stall.requests(), 1);
+        const next = await compile(page, plain(6));
+        assert.equal(next.ok, true, next.errors.join("\n"));
+        await stall.done();
+        assert.equal(await page.evaluate(() => window.stalledWarmUp), true);
+        await page.close();
+    }
+
     // A PCH of the code's own includes: made by a warm-up, used by the builds
     // that follow, and stored for the next page.
     {

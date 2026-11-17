@@ -40,7 +40,8 @@ first build 3.9 s, 2.1 s after a warm-up (loading only: 3.0 s);
 downloads the compiler, and loads a PCH that was never used only where the
 background download would run (fast, unmetered, online). The page downloads
 that PCH into Cache Storage before the warm-up takes the worker, so a build
-does not wait for the download unless it needs that PCH itself. A build started
+does not wait for the download unless it needs that PCH itself, and then at
+most 15 seconds before the worker fetches it. A build started
 during a warm-up waits for it, and a warm-up queued behind a build only loads
 files. Stopping a build that waits for a warm-up skips it. It runs
 again after the standard changes, the headers the code starts with change
