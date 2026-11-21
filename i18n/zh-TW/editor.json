@@ -121,7 +121,9 @@
         "uploadCode": "上傳",
         "uploadCodeTip": "上傳 .cpp 檔案",
         "downloadingCompiler": "下載中 {{progress}}%",
-        "stopBuilding": "停止編譯"
+        "stopBuilding": "停止編譯",
+        "resetDoneTitle": "編輯器已重置",
+        "undoReset": "復原"
     },
     "turnstile": {
         "verificationFailed": "驗證失敗",

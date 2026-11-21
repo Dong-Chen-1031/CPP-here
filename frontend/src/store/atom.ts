@@ -8,7 +8,11 @@ import type { CodeWorker } from "@/service/run";
 import type { AlertDialogOptions } from "@/components/Alert";
 import type { EditDialogOptions } from "@/components/panel/TestEditDialog";
 import { defCodeStore } from "./configStore";
-import { clearOutputBuffer, outputStore } from "./outputStore";
+import {
+    clearOutputBuffer,
+    flushOutputChunks,
+    outputStore,
+} from "./outputStore";
 export interface TestCase {
     id: string;
     name: string;
@@ -20,7 +24,7 @@ export type PanelDrawerView = "input" | "testCases" | "output";
 
 export type Alert = {
     title: string;
-    description: string;
+    description?: string;
     variant?: "default" | "destructive";
     className?: string;
     id: string;
@@ -103,7 +107,7 @@ export const panelDrawerStore = atom<PanelDrawerView | null>(null);
 export const testCaseEditStore = atom<EditDialogOptions | null>(null);
 export const settingsPanelStore = atom(false);
 
-export function useResetEditorAtoms() {
+export function useResetEditorAtoms({ keepSavedOutput = false } = {}) {
     const resetCode = useResetAtom(codeStore);
     const resetCppVersion = useResetAtom(cppVersionStore);
     const resetInput = useResetAtom(inputStore);
@@ -117,7 +121,8 @@ export function useResetEditorAtoms() {
         resetCppVersion();
         resetInput();
         resetOutput();
-        clearOutputBuffer();
+        if (keepSavedOutput) flushOutputChunks();
+        else clearOutputBuffer();
         resetRunMode();
         resetTestCases();
         resetEditorErrors();

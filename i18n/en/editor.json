@@ -121,7 +121,9 @@
         "uploadCode": "Upload",
         "uploadCodeTip": "Upload a .cpp file",
         "downloadingCompiler": "Downloading {{progress}}%",
-        "stopBuilding": "Stop compiling"
+        "stopBuilding": "Stop compiling",
+        "resetDoneTitle": "Editor reset",
+        "undoReset": "Undo"
     },
     "turnstile": {
         "verificationFailed": "Verification Failed",

@@ -105,6 +105,8 @@ export function Alerts() {
                                 "md:max-w-md max-w-[96vw] border-border",
                                 // The action sits under the text, not beside it
                                 "has-data-[slot=alert-action]:pr-2.5",
+                                !item.description &&
+                                    "flex items-center gap-2 py-1.5 has-data-[slot=alert-action]:pr-1.5 *:[svg]:translate-y-0",
                                 item.className,
                             )}
                             onClick={() =>
@@ -117,11 +119,19 @@ export function Alerts() {
                                 <AlertCircleIcon className="w-4 h-4" />
                             )}
                             <AlertTitle>{item.title}</AlertTitle>
-                            <AlertDescription className="text-[0.8rem] wrap-normal">
-                                {item.description}
-                            </AlertDescription>
+                            {item.description && (
+                                <AlertDescription className="text-[0.8rem] wrap-normal">
+                                    {item.description}
+                                </AlertDescription>
+                            )}
                             {item.action && (
-                                <AlertAction className="static col-start-2 mt-1.5 justify-self-start">
+                                <AlertAction
+                                    className={
+                                        item.description
+                                            ? "static col-start-2 mt-1.5 justify-self-start"
+                                            : "static ml-2"
+                                    }
+                                >
                                     <Button
                                         size="sm"
                                         variant="outline"

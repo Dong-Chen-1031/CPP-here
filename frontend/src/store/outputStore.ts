@@ -67,7 +67,14 @@ export async function getOutputChunks(testCaseId: string) {
         .toArray();
 }
 
+let clearCount = 0;
+
+export function outputClearCount() {
+    return clearCount;
+}
+
 export async function clearOutputBuffer() {
+    clearCount++;
     if (flushTimer) {
         clearTimeout(flushTimer);
         flushTimer = null;
