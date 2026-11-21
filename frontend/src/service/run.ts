@@ -30,6 +30,7 @@ import i18next from "i18next";
 import { addAlert } from "@/lib/alert";
 import { getDefaultStore } from "jotai";
 import { randomId } from "@/lib/utils";
+import { judgedLines } from "@/lib/outputDiff";
 import {
     build,
     cancelBuild,
@@ -688,12 +689,7 @@ async function runAll({
  * judges do: `cout << x << " "` leaves a space before every newline.
  */
 export function outputMatches(output: string, expected: string) {
-    const lines = (text: string) =>
-        text
-            .trim()
-            .split("\n")
-            .map((line) => line.trimEnd());
-    const a = lines(output);
-    const b = lines(expected);
+    const a = judgedLines(output);
+    const b = judgedLines(expected);
     return a.length === b.length && a.every((line, i) => line === b[i]);
 }

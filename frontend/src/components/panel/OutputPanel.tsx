@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Trash, SquareTerminal, ClipboardCopy, SquareIcon } from "lucide-react";
+import {
+    Trash,
+    SquareTerminal,
+    ClipboardCopy,
+    SquareIcon,
+    ChevronRight,
+} from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
 import Tip from "../ui/tips";
@@ -7,6 +13,13 @@ import { useAtom, useAtomValue } from "jotai";
 import { runStatusStore } from "@/store/atom";
 import { buildingWithStore } from "@/service/build";
 import { stopBuild } from "@/service/run";
+import {
+    diffOutput,
+    type DiffSegment,
+    type OutputDiff,
+} from "@/lib/outputDiff";
+import { AnimatePresence, motion } from "motion/react";
+import { ReducedMotion, spring } from "@/lib/motion";
 import { browserCompilerProgressStore } from "@/service/browserBuild";
 import { BetaBadge } from "@/components/BetaBadge";
 import { cn, randomId } from "@/lib/utils";
@@ -96,6 +109,172 @@ interface OutputCaseJSXProps {
     setCopiedCases: React.Dispatch<
         React.SetStateAction<Record<string, string>>
     >;
+}
+
+function DiffCell({
+    segments,
+    side,
+}: {
+    segments?: DiffSegment[];
+    side: "expected" | "actual";
+}) {
+    const { t } = useTranslation(["editor"]);
+    if (!segments)
+        return (
+            <span className="italic text-muted-foreground">
+                {t(
+                    side === "actual"
+                        ? "output.missingLine"
+                        : "output.extraLine",
+                )}
+            </span>
+        );
+    if (segments.every((segment) => !segment.text))
+        return (
+            <span className="italic text-muted-foreground">
+                {t("output.emptyLine")}
+            </span>
+        );
+    return segments.map((segment, i) =>
+        segment.changed ? (
+            <mark
+                key={i}
+                className={cn(
+                    "rounded-[2px] text-inherit",
+                    side === "expected"
+                        ? "bg-(--success)/35"
+                        : "bg-destructive/45",
+                )}
+            >
+                {segment.text}
+            </mark>
+        ) : (
+            <span key={i}>{segment.text}</span>
+        ),
+    );
+}
+
+function DiffTable({ diff }: { diff: OutputDiff }) {
+    const { t } = useTranslation(["editor"]);
+    const lineNo =
+        "pl-1.5 pr-2 text-right text-muted-foreground/60 select-none tabular-nums";
+    return (
+        <div className="mt-1.5 grid grid-cols-[auto_1fr_auto_1fr] rounded-sm overflow-hidden border border-border">
+            <div className="col-span-2 px-1.5 py-0.5 bg-muted/60 text-muted-foreground">
+                {t("output.expected")}
+            </div>
+            <div className="col-span-2 px-1.5 py-0.5 bg-muted/60 text-muted-foreground border-l border-border">
+                {t("output.actual")}
+            </div>
+            {diff.rows.map((row, i) => {
+                if ("count" in row)
+                    return (
+                        <div
+                            key={i}
+                            className="col-span-4 px-1.5 py-0.5 text-center text-muted-foreground bg-muted/30"
+                        >
+                            {row.kind === "skip" && "⋯ "}
+                            {t(
+                                row.kind === "skip"
+                                    ? "output.skippedLines"
+                                    : "output.moreLines",
+                                { count: row.count },
+                            )}
+                        </div>
+                    );
+                const differs = row.kind !== "same";
+                const expectedBg = differs
+                    ? row.expected
+                        ? "bg-(--success)/10"
+                        : "bg-muted/40"
+                    : "";
+                const actualBg = differs
+                    ? row.actual
+                        ? "bg-destructive/15"
+                        : "bg-muted/40"
+                    : "";
+                return (
+                    <React.Fragment key={i}>
+                        <div className={cn(lineNo, expectedBg)}>
+                            {row.expectedNo}
+                        </div>
+                        <div className={cn("pr-1.5", expectedBg)}>
+                            <DiffCell segments={row.expected} side="expected" />
+                        </div>
+                        <div
+                            className={cn(
+                                lineNo,
+                                "border-l border-border",
+                                actualBg,
+                            )}
+                        >
+                            {row.actualNo}
+                        </div>
+                        <div className={cn("pr-1.5", actualBg)}>
+                            <DiffCell segments={row.actual} side="actual" />
+                        </div>
+                    </React.Fragment>
+                );
+            })}
+        </div>
+    );
+}
+
+function WrongAnswerDiff({ line }: { line: OutputCase }) {
+    const { t } = useTranslation(["editor"]);
+    const [diff, setDiff] = useState<OutputDiff | null>(null);
+    const [open, setOpen] = useState(false);
+    const { status, expectedOutput, testCaseId } = line;
+
+    useEffect(() => {
+        setDiff(null);
+        if (status !== "wa" || expectedOutput === undefined) return;
+        let cancelled = false;
+        getOutputString(testCaseId).then((actual) => {
+            if (!cancelled) setDiff(diffOutput(actual, expectedOutput));
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [status, expectedOutput, testCaseId]);
+
+    if (!diff) return null;
+    return (
+        <div className="mt-2 pt-1.5 border-t border-border whitespace-normal">
+            <button
+                type="button"
+                aria-expanded={open}
+                onClick={() => setOpen((value) => !value)}
+                className="flex items-center gap-1 rounded-sm text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+                <ChevronRight
+                    className={cn(
+                        "size-3 transition-transform",
+                        open && "rotate-90",
+                    )}
+                />
+                <span>{t("output.diffCount", { count: diff.differing })}</span>
+                <span aria-hidden>·</span>
+                <span>{t(open ? "output.hideDiff" : "output.showDiff")}</span>
+            </button>
+            <ReducedMotion>
+                <AnimatePresence initial={false}>
+                    {open && (
+                        <motion.div
+                            key="diff"
+                            className="overflow-hidden whitespace-pre-wrap"
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={spring}
+                        >
+                            <DiffTable diff={diff} />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </ReducedMotion>
+        </div>
+    );
 }
 
 function OutputCaseJSX({
@@ -250,6 +429,7 @@ function OutputCaseJSX({
                 </div>
             )}
             <div ref={outputPlace}></div>
+            <WrongAnswerDiff line={line} />
             {note && <p className="text-muted-foreground italic">{t(note)}</p>}
             {truncated && (
                 <p className="mt-2 text-muted-foreground italic">

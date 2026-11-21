@@ -48,6 +48,7 @@
         "concurrently": "^9.2.1",
         "dexie": "^4.4.6",
         "dexie-react-hooks": "^4.4.0",
+        "diff": "^9.0.0",
         "drizzle-orm": "^0.45.4",
         "escape-html": "^1.0.3",
         "fitty": "^2.4.2",

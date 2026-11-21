@@ -56,7 +56,20 @@
             "fallbackToServer": "The in-browser compiler could not be used, so the server compiles the code instead."
         },
         "copyFailedTitle": "Couldn't copy",
-        "copyFailedDescription": "Your browser didn't allow writing to the clipboard."
+        "copyFailedDescription": "Your browser didn't allow writing to the clipboard.",
+        "expected": "Expected",
+        "actual": "Your output",
+        "missingLine": "(missing line)",
+        "extraLine": "(extra line)",
+        "emptyLine": "(empty line)",
+        "diffCount_one": "{{count}} line differs",
+        "diffCount_other": "{{count}} lines differ",
+        "showDiff": "Show differences",
+        "hideDiff": "Hide differences",
+        "skippedLines_one": "{{count}} matching line",
+        "skippedLines_other": "{{count}} matching lines",
+        "moreLines_one": "{{count}} more line not shown",
+        "moreLines_other": "{{count}} more lines not shown"
     },
     "testCase": {
         "label": "Test Case",

@@ -56,7 +56,17 @@
             "fallbackToServer": "瀏覽器內編譯目前無法使用，改由伺服器編譯程式碼。"
         },
         "copyFailedTitle": "無法複製",
-        "copyFailedDescription": "瀏覽器不允許寫入剪貼簿。"
+        "copyFailedDescription": "瀏覽器不允許寫入剪貼簿。",
+        "expected": "預期",
+        "actual": "你的輸出",
+        "missingLine": "（少了這一行）",
+        "extraLine": "（多出來的一行）",
+        "emptyLine": "（空行）",
+        "diffCount_other": "{{count}} 行不同",
+        "showDiff": "顯示差異",
+        "hideDiff": "隱藏差異",
+        "skippedLines_other": "{{count}} 行相同",
+        "moreLines_other": "還有 {{count}} 行未顯示"
     },
     "testCase": {
         "label": "測資",
