@@ -9,7 +9,14 @@ import { cn, useIsMobile } from "@/lib/utils";
 import { alertDialogStore, alertStore } from "@/store/atom";
 import { useAtom } from "jotai";
 import { AlertCircleIcon } from "lucide-react";
-import { use, useEffect, type ReactElement } from "react";
+import {
+    use,
+    useEffect,
+    useLayoutEffect,
+    useState,
+    type CSSProperties,
+    type ReactElement,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "motion/react";
 import {
@@ -23,9 +30,37 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+function useAlertAnchor(active: boolean) {
+    const [style, setStyle] = useState<CSSProperties | null>(null);
+
+    useLayoutEffect(() => {
+        if (!active) return;
+        const measure = () => {
+            const rect = document
+                .querySelector("[data-alert-anchor]")
+                ?.getBoundingClientRect();
+            setStyle(
+                rect && rect.width > 0
+                    ? {
+                          top: rect.top,
+                          right:
+                              document.documentElement.clientWidth - rect.right,
+                      }
+                    : null,
+            );
+        };
+        measure();
+        window.addEventListener("resize", measure);
+        return () => window.removeEventListener("resize", measure);
+    }, [active]);
+
+    return active ? style : null;
+}
+
 export function Alerts() {
     const [alerts, setAlerts] = useAtom(alertStore);
     const isMobile = useIsMobile();
+    const anchorStyle = useAlertAnchor(!isMobile && alerts.length > 0);
     // No early return before this hook: alertStore always holds an array, and an
     // early return would make the hook order conditional.
     useEffect(() => {
@@ -38,7 +73,10 @@ export function Alerts() {
     }, [alerts]);
 
     return (
-        <div className="fixed top-12 md:top-14 right-[2vw] md:right-4 z-100 flex flex-col gap-2">
+        <div
+            className="fixed top-12 md:top-13 right-[2vw] md:right-4 z-100 flex flex-col gap-2"
+            style={anchorStyle ?? undefined}
+        >
             <AnimatePresence>
                 {alerts.map((item, index) => (
                     <motion.div

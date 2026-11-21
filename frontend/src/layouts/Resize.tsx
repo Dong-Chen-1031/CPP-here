@@ -23,15 +23,20 @@ const LAYOUT2 = { InputPanel: 22, TestCasePanel: 36, OutputPanel: 42 };
 function LoadingPanel({
     children,
     className,
+    alertAnchor = false,
     // className2,
 }: {
     children: React.ReactNode;
     className?: string;
+    alertAnchor?: boolean;
 }) {
     const [Loaded] = useAtom(loadedStore);
 
     return (
-        <div className={cn("relative", className)}>
+        <div
+            className={cn("relative", className)}
+            data-alert-anchor={alertAnchor || undefined}
+        >
             <AnimatePresence initial={false} mode="popLayout">
                 {!Loaded ? (
                     <motion.div
@@ -94,7 +99,10 @@ function ComputerLayout({
                         id="InputPanel"
                         defaultSize={LAYOUT2.InputPanel}
                     >
-                        <LoadingPanel className="mr-4 ml-2 mt-0 mb-2 h-[calc(100%-0.5rem)]">
+                        <LoadingPanel
+                            alertAnchor
+                            className="mr-4 ml-2 mt-0 mb-2 h-[calc(100%-0.5rem)]"
+                        >
                             <InputPanel />
                         </LoadingPanel>
                     </ResizablePanel>
