@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { ClipboardPaste, Keyboard, Trash } from "lucide-react";
+import { ClipboardPaste, Keyboard, Play, Trash } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import React from "react";
 
-import { useAtom } from "jotai";
-import { inputStore } from "@/store/atom";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { inputStore, runModeStore, runStatusStore } from "@/store/atom";
+import { handleRun } from "@/service/run";
 import { cn, commandKeyIcon } from "@/lib/utils";
 import { addAlert } from "@/lib/alert";
 import { EzIconMotion } from "../IconMotion";
@@ -14,6 +15,8 @@ export default function InputPanel({ drawer = false }: { drawer?: boolean }) {
     const [input, setInput] = useAtom(inputStore);
     const [pastedTimes, setPastedTimes] = React.useState(0);
     const [clearedTimes, setClearedTimes] = React.useState(0);
+    const cantRun = useAtomValue(runStatusStore) !== "idle";
+    const setRunMode = useSetAtom(runModeStore);
     const { t } = useTranslation(["editor", "common"]);
     return (
         <div
@@ -66,6 +69,21 @@ export default function InputPanel({ drawer = false }: { drawer?: boolean }) {
                     <EzIconMotion trigger={clearedTimes} icon1={Trash} />
                     <span className="hidden @[250px]:inline">
                         {t("common:clear")}
+                    </span>
+                </Button>
+                <Button
+                    aria-label={t("headerActions.runCurrentInput")}
+                    variant="outline"
+                    disabled={cantRun}
+                    onClick={() => {
+                        setRunMode("single");
+                        handleRun();
+                    }}
+                    className="px-2"
+                >
+                    <Play className="w-4 h-4" />
+                    <span className="hidden @[250px]:inline">
+                        {t("headerActions.run")}
                     </span>
                 </Button>
             </div>

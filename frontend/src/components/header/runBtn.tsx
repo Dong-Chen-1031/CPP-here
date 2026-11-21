@@ -236,7 +236,7 @@ export function RunButton({
                             >
                                 <TestTubes />
                                 <span data-run-btn-text>
-                                    {t("headerActions.runAll")}
+                                    {t("headerActions.runTestCases")}
                                 </span>
                             </MotionButtonLabel>
                         )}
@@ -288,7 +288,7 @@ export function RunButton({
                                         )}
                                     >
                                         <p className="text-xs flex-1 text-left">
-                                            {t("headerActions.runAll")}
+                                            {t("headerActions.runTestCases")}
                                         </p>
                                     </Tip>
                                 </DropdownMenuItem>

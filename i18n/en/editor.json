@@ -128,6 +128,7 @@
         "stop": "Stop",
         "run": "Run",
         "runAll": "Run All",
+        "runTestCases": "Run Tests",
         "resetEverything": "Reset Everything",
         "resetBtn": "Reset",
         "shareCode": "Share",

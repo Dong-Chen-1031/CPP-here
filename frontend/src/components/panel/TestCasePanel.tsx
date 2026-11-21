@@ -150,22 +150,6 @@ export default function TestCasePanel({
                     <Button
                         variant="outline"
                         className="px-2"
-                        aria-label={t("headerActions.runAllTestCases")}
-                        disabled={cantRun || testCases.length === 0}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setRunMode("all");
-                            handleRunAll();
-                        }}
-                    >
-                        <Play className="w-4 h-4" />
-                        <span className="hidden @[250px]:inline">
-                            {t("headerActions.runAll")}
-                        </span>
-                    </Button>
-                    <Button
-                        variant="outline"
-                        className="px-2"
                         aria-label={t("testCase.addTip")}
                         onClick={(e) => {
                             e.stopPropagation();
@@ -181,6 +165,22 @@ export default function TestCasePanel({
                         <CirclePlus className="w-4 h-4" />
                         <span className="hidden @[250px]:inline">
                             {t("testCase.addBtn")}
+                        </span>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        className="px-2"
+                        aria-label={t("headerActions.runAllTestCases")}
+                        disabled={cantRun || testCases.length === 0}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setRunMode("all");
+                            handleRunAll();
+                        }}
+                    >
+                        <Play className="w-4 h-4" />
+                        <span className="hidden @[250px]:inline">
+                            {t("headerActions.runAll")}
                         </span>
                     </Button>
                 </div>

@@ -125,6 +125,7 @@
         "stop": "停止",
         "run": "運行",
         "runAll": "全部運行",
+        "runTestCases": "運行測資",
         "resetEverything": "重置所有設定",
         "resetBtn": "重置",
         "shareCode": "分享",
