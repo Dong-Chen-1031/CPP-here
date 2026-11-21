@@ -19,7 +19,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "motion/react";
-import { ReducedMotion } from "@/lib/motion";
+import { ReducedMotion, spring } from "@/lib/motion";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -99,6 +99,7 @@ export function Alerts() {
                                     : { opacity: 0, x: 10 }
                             }
                             layoutId={item.id}
+                            transition={spring}
                         >
                             <Alert
                                 key={item.id}

@@ -5,7 +5,7 @@ import { useAtom } from "jotai";
 import { loadedCountStore, loadedStore } from "@/store/atom";
 
 import { AnimatePresence, motion } from "motion/react";
-import { ReducedMotion } from "@/lib/motion";
+import { fade, ReducedMotion } from "@/lib/motion";
 import { useEffect, useRef, type ReactNode } from "react";
 import { Commands } from "@/components/Commands";
 import { RunButton } from "@/components/header/runBtn";
@@ -17,8 +17,6 @@ import { DownloadButton } from "@/components/header/downloadBtn";
 import { UploadButton } from "@/components/header/uploadBtn";
 import { SettingsButton } from "@/components/header/SettingsBtn";
 import { PUBLIC_SHARE } from "astro:env/client";
-
-const fade = { duration: 0.2, ease: "easeOut" } as const;
 
 function LoadingActions({
     className,

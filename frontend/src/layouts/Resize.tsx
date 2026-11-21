@@ -15,8 +15,8 @@ import { useAtom } from "jotai";
 import { loadedCountStore, loadedStore } from "@/store/atom";
 import { addAlert } from "@/lib/alert";
 import { AnimatePresence, motion } from "motion/react";
-import { ReducedMotion } from "@/lib/motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { fade, ReducedMotion } from "@/lib/motion";
 
 const LAYOUT = { editor: 70, output: 30 };
 const LAYOUT2 = { InputPanel: 22, TestCasePanel: 36, OutputPanel: 42 };
@@ -46,7 +46,7 @@ function LoadingPanel({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        transition={fade}
                     >
                         <Skeleton className="w-full h-full"></Skeleton>
                     </motion.div>
@@ -58,7 +58,7 @@ function LoadingPanel({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        transition={fade}
                     >
                         {children}
                     </motion.div>
@@ -174,7 +174,7 @@ const Loading = React.forwardRef<
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            transition={fade}
         >
             {children}
         </motion.div>

@@ -25,6 +25,7 @@ import Tip from "@/components/ui/tips";
 import { cn, commandKeyIcon } from "@/lib/utils";
 
 import { AnimatePresence, motion } from "motion/react";
+import { spring } from "@/lib/motion";
 import { Kbd } from "@/components/ui/kbd";
 
 const MotionButtonLabel = React.forwardRef(function MotionButtonLabel(
@@ -70,15 +71,7 @@ const MotionButtonLabel = React.forwardRef(function MotionButtonLabel(
             layout
             animate={{ width: "auto", opacity: 1 }}
             // exit={{ width: "auto", opacity: 0 }}
-            transition={{
-                type: "spring",
-                stiffness: 300,
-                damping: 30,
-                // mass: 1,
-            }}
-            // transition={{
-            //   duration: 3,
-            // }}
+            transition={spring}
             className={cn(
                 "w-full h-full flex items-center justify-center gap-1 overflow-hidden whitespace-nowrap opacity-0",
                 className,

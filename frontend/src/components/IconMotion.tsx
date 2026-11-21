@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { CircleCheckBig, type LucideIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { ReducedMotion } from "@/lib/motion";
+import { ReducedMotion, springTap } from "@/lib/motion";
 import { useEffect, useRef, useState, type ElementType } from "react";
 
 function IconMotion({
@@ -25,12 +25,7 @@ function IconMotion({
                             initial={{ opacity: 0, scale: 0.5 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.5 }}
-                            transition={{
-                                type: "spring",
-                                stiffness: 400,
-                                damping: 25,
-                                duration: 200,
-                            }}
+                            transition={springTap}
                         >
                             <ShowIcon className={cn("w-4 h-4", className)} />
                         </motion.div>
@@ -40,13 +35,7 @@ function IconMotion({
                             initial={{ opacity: 0, scale: 0.5 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.5 }}
-                            // transition={{ duration: 0.2 }}
-                            transition={{
-                                type: "spring",
-                                stiffness: 400,
-                                damping: 25,
-                                duration: 200,
-                            }}
+                            transition={springTap}
                         >
                             <HideIcon className={cn("w-4 h-4", className)} />
                         </motion.div>

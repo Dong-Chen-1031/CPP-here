@@ -13,6 +13,7 @@ import Tip from "@/components/ui/tips";
 import { commandKeyIcon } from "@/lib/utils";
 import { Kbd } from "@/components/ui/kbd";
 import { motion } from "motion/react";
+import { springTap } from "@/lib/motion";
 
 export function UndoRedo({ menu = false }: { menu?: boolean }) {
     const [editorGlobal] = useAtom(editorRefStore);
@@ -45,11 +46,7 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
                     <motion.div
                         whileTap={{ rotate: -30 }}
                         className="w-full h-full flex items-center justify-center"
-                        transition={{
-                            type: "spring",
-                            stiffness: 400,
-                            damping: 25,
-                        }}
+                        transition={springTap}
                     >
                         <UndoIcon />
                     </motion.div>
@@ -82,11 +79,7 @@ export function UndoRedo({ menu = false }: { menu?: boolean }) {
                     <motion.div
                         whileTap={{ rotate: 30 }}
                         className="w-full h-full flex items-center justify-center"
-                        transition={{
-                            type: "spring",
-                            stiffness: 400,
-                            damping: 25,
-                        }}
+                        transition={springTap}
                     >
                         <RedoIcon />
                     </motion.div>
