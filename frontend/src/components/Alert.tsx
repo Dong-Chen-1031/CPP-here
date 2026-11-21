@@ -76,7 +76,8 @@ export function Alerts() {
     return (
         <ReducedMotion>
             <div
-                className="fixed top-12 md:top-13 right-[2vw] md:right-4 z-100 flex flex-col gap-2"
+                data-alert-region
+                className="fixed top-12 md:top-13 right-[2vw] md:right-4 z-100 flex flex-col gap-2 pointer-events-auto"
                 style={anchorStyle ?? undefined}
             >
                 <AnimatePresence>

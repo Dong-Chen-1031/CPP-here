@@ -39,7 +39,7 @@ export const compilerFlagStore = atom<CompilerMode | null>((get) => {
 });
 
 /** The mode the user picked; null leaves it to the compiler-menu flag. */
-const compilerChoiceStore = atomWithStorage<CompilerMode | null>(
+export const compilerChoiceStore = atomWithStorage<CompilerMode | null>(
     "compilerMode",
     null,
     undefined,

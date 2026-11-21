@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/hover-card";
 import { codeStore, settingsPanelStore } from "@/store/atom";
 import {
+    compilerChoiceStore,
     compilerModeStore,
     defCodeStore,
     editorFontSizeStore,
@@ -25,7 +26,8 @@ import {
 } from "@/store/configStore";
 import { Input } from "@/components/ui/input";
 import { MAX_TIMEOUT_S, NO_TIME_LIMIT } from "@/config/runLimits";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useStore } from "jotai";
+import { addAlert, UNDO_ALERT_MS } from "@/lib/alert";
 import {
     Field,
     FieldContent,
@@ -332,6 +334,7 @@ export function Settings({ allLangs }: SettingsProps) {
     const [compilerMode, setCompilerMode] = useAtom(compilerModeStore);
     const downloadProgress = useAtomValue(browserCompilerProgressStore);
     const compilerAvailable = useAtomValue(browserCompilerAvailableStore);
+    const store = useStore();
     const resetSettingsAtoms = useResetSettingsAtoms();
     const [resetTimes, setResetTimes] = useState(0);
     const [setCodeTimes, setSetCodeTimes] = useState(0);
@@ -548,8 +551,18 @@ export function Settings({ allLangs }: SettingsProps) {
             buttonText: t("settings.defaultCodeBtn"),
             icon: <EzIconMotion icon1={FileCodeIcon} trigger={setCodeTimes} />,
             onClick: () => {
+                const previous = defCode;
                 setDefCode(code);
                 setSetCodeTimes((p) => p + 1);
+                addAlert({
+                    title: t("settings.defaultCodeDoneTitle"),
+                    icon: <FileCodeIcon className="w-4 h-4" />,
+                    duration: UNDO_ALERT_MS,
+                    action: {
+                        text: t("headerActions.undo"),
+                        onClick: () => store.set(defCodeStore, previous),
+                    },
+                });
             },
             disabled: code === defCode,
         },
@@ -592,8 +605,35 @@ export function Settings({ allLangs }: SettingsProps) {
             buttonText: t("settings.resetSettingsBtn"),
             icon: <EzIconMotion icon1={ListRestartIcon} trigger={resetTimes} />,
             onClick: () => {
+                const snapshot = {
+                    fontSize: store.get(editorFontSizeStore),
+                    tabSize: store.get(editorTabSizeStore),
+                    timeLimit: store.get(timeLimitStore),
+                    compilerChoice: store.get(compilerChoiceStore),
+                    defCode: store.get(defCodeStore),
+                    formatStyle: store.get(codeFormatStyle),
+                };
                 resetSettingsAtoms();
                 setResetTimes((p) => p + 1);
+                addAlert({
+                    title: t("settings.resetSettingsDoneTitle"),
+                    icon: <ListRestartIcon className="w-4 h-4" />,
+                    duration: UNDO_ALERT_MS,
+                    action: {
+                        text: t("headerActions.undo"),
+                        onClick: () => {
+                            store.set(editorFontSizeStore, snapshot.fontSize);
+                            store.set(editorTabSizeStore, snapshot.tabSize);
+                            store.set(timeLimitStore, snapshot.timeLimit);
+                            store.set(
+                                compilerChoiceStore,
+                                snapshot.compilerChoice,
+                            );
+                            store.set(defCodeStore, snapshot.defCode);
+                            store.set(codeFormatStyle, snapshot.formatStyle);
+                        },
+                    },
+                });
             },
         },
     ];
