@@ -59,9 +59,7 @@ export default defineConfig({
             filter: (page) =>
                 !new URL(page).pathname
                     .split("/")
-                    .some((segment) =>
-                        ["editor", "test", "reset"].includes(segment),
-                    ),
+                    .some((segment) => ["test"].includes(segment)),
             serialize(item) {
                 const date = lastmod.get(new URL(item.url).pathname);
                 if (date) item.lastmod = date;
