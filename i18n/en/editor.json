@@ -33,7 +33,9 @@
         "pasteTip": "Paste from clipboard",
         "pasteBtn": "Paste",
         "clearTip": "Clear input",
-        "placeholder": "Type your input here."
+        "placeholder": "Type your input here.",
+        "pasteFailedTitle": "Couldn't read the clipboard",
+        "pasteFailedDescription": "Your browser didn't allow it. Paste with {{shortcut}} V instead."
     },
     "output": {
         "label": "Output",
@@ -52,7 +54,9 @@
             "verifying": "Verifying before compiling on the server",
             "fallbackToBrowser": "The server could not be used, so your browser compiles the code instead.",
             "fallbackToServer": "The in-browser compiler could not be used, so the server compiles the code instead."
-        }
+        },
+        "copyFailedTitle": "Couldn't copy",
+        "copyFailedDescription": "Your browser didn't allow writing to the clipboard."
     },
     "testCase": {
         "label": "Test Case",
@@ -259,5 +263,9 @@
         "backgroundDownloadFailedDescription": "The background download failed. Your code keeps compiling on the server.",
         "slowTitle": "Compiling is slow on this device",
         "slowDescription": "Compiling in your browser took over 7 seconds. The server is usually much faster."
+    },
+    "format": {
+        "failedTitle": "Couldn't format the code",
+        "failedDescription": "Your code was left unchanged."
     }
 }

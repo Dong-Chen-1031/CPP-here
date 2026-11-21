@@ -1,6 +1,8 @@
 import { codeFormatStyle, editorTabSizeStore } from "@/store/configStore";
 import init, { format, type Style } from "@wasm-fmt/clang-format/vite";
 import { getDefaultStore } from "jotai";
+import i18next from "i18next";
+import { addAlert } from "@/lib/alert";
 
 let initPromise: Promise<unknown> | null = null;
 const defaultStore = getDefaultStore();
@@ -47,14 +49,18 @@ export async function formatCode(
             BasedOnStyle: defaultStore.get(codeFormatStyle),
         };
     }
-    try {
-        await ensureFormatterInit();
-        if (typeof style === "object") {
-            style = JSON.stringify(style);
-        }
-        return format(code, "main.cpp", style);
-    } catch (err) {
-        console.error("Failed to format code:", err);
-        return code;
+    await ensureFormatterInit();
+    if (typeof style === "object") {
+        style = JSON.stringify(style);
     }
+    return format(code, "main.cpp", style);
+}
+
+export function alertFormatFailed(err: unknown) {
+    console.error("Failed to format code:", err);
+    addAlert({
+        title: i18next.t("editor:format.failedTitle"),
+        description: i18next.t("editor:format.failedDescription"),
+        variant: "destructive",
+    });
 }

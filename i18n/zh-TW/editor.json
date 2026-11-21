@@ -33,7 +33,9 @@
         "pasteTip": "從剪貼簿貼上",
         "pasteBtn": "貼上",
         "clearTip": "清除輸入",
-        "placeholder": "在此輸入你的輸入"
+        "placeholder": "在此輸入你的輸入",
+        "pasteFailedTitle": "無法讀取剪貼簿",
+        "pasteFailedDescription": "瀏覽器不允許讀取剪貼簿，請改用 {{shortcut}} V 貼上。"
     },
     "output": {
         "label": "輸出",
@@ -52,7 +54,9 @@
             "verifying": "正在驗證，完成後會在伺服器上編譯",
             "fallbackToBrowser": "伺服器目前無法使用，改由瀏覽器編譯程式碼。",
             "fallbackToServer": "瀏覽器內編譯目前無法使用，改由伺服器編譯程式碼。"
-        }
+        },
+        "copyFailedTitle": "無法複製",
+        "copyFailedDescription": "瀏覽器不允許寫入剪貼簿。"
     },
     "testCase": {
         "label": "測資",
@@ -259,5 +263,9 @@
         "backgroundDownloadFailedDescription": "背景下載失敗，你的程式碼會繼續在伺服器上編譯。",
         "slowTitle": "此裝置編譯速度較慢",
         "slowDescription": "在瀏覽器中編譯花了超過 7 秒，伺服器通常快得多。"
+    },
+    "format": {
+        "failedTitle": "無法格式化程式碼",
+        "failedDescription": "程式碼沒有被更動。"
     }
 }

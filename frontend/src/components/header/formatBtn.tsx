@@ -13,7 +13,11 @@ import { codeStore } from "@/store/atom";
 import Tip from "@/components/ui/tips";
 import { optionsKeyIcon, shiftKeyIcon } from "@/lib/utils";
 import { Kbd } from "@/components/ui/kbd";
-import { ensureFormatterInit, formatCode } from "@/lib/format";
+import {
+    alertFormatFailed,
+    ensureFormatterInit,
+    formatCode,
+} from "@/lib/format";
 
 import { EzIconMotion } from "@/components/IconMotion";
 export function FormatButton({
@@ -47,13 +51,17 @@ export function FormatButton({
                         const toSetFormatting = setTimeout(() => {
                             setFormatting(true);
                         }, 80);
-                        formatCode(code).then((formatted) => {
-                            clearTimeout(toSetFormatting);
-                            setCode(formatted);
-                            setFormatting(false);
-                            setFormattedTimes((p) => p + 1);
-                            window.posthog?.capture("code_formatted");
-                        });
+                        formatCode(code)
+                            .then((formatted) => {
+                                setCode(formatted);
+                                setFormattedTimes((p) => p + 1);
+                                window.posthog?.capture("code_formatted");
+                            })
+                            .catch(alertFormatFailed)
+                            .finally(() => {
+                                clearTimeout(toSetFormatting);
+                                setFormatting(false);
+                            });
                         onClick(e);
                     }}
                     onMouseEnter={() => {

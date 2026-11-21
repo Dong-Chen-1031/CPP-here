@@ -10,6 +10,8 @@ import { stopBuild } from "@/service/run";
 import { browserCompilerProgressStore } from "@/service/browserBuild";
 import { BetaBadge } from "@/components/BetaBadge";
 import { cn, randomId } from "@/lib/utils";
+import { addAlert } from "@/lib/alert";
+import i18next from "i18next";
 import { EzIconMotion } from "../IconMotion";
 import { Spinner } from "../ui/spinner";
 import { useTranslation } from "react-i18next";
@@ -33,6 +35,20 @@ import {
  * chunks; the updated value is returned. Lines past DISPLAY_LIMIT_LINE_CHARS
  * are cut (lineClipped) but later lines still render.
  */
+async function copyText(text: string) {
+    try {
+        await navigator.clipboard.writeText(text);
+        return true;
+    } catch {
+        addAlert({
+            title: i18next.t("editor:output.copyFailedTitle"),
+            description: i18next.t("editor:output.copyFailedDescription"),
+            variant: "destructive",
+        });
+        return false;
+    }
+}
+
 function clipToBudget(
     text: string,
     chars: number,
@@ -212,9 +228,12 @@ function OutputCaseJSX({
                         <div
                             className="cursor-pointer"
                             onClick={async () => {
-                                navigator.clipboard.writeText(
-                                    await getOutputString(line.testCaseId),
-                                );
+                                if (
+                                    !(await copyText(
+                                        await getOutputString(line.testCaseId),
+                                    ))
+                                )
+                                    return;
                                 setCopiedCases({
                                     ...copiedCases,
                                     [line.testCaseId]: randomId(),
@@ -308,7 +327,7 @@ export default function OutputPanel({ drawer = false }: { drawer?: boolean }) {
                                         `# ${o.testCaseName || i}\n${await getOutputString(o.testCaseId)}`,
                                 ),
                             );
-                            navigator.clipboard.writeText(texts.join("\n"));
+                            if (!(await copyText(texts.join("\n")))) return;
                             setCopied(randomId());
                         }}
                         className="px-2"

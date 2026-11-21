@@ -27,7 +27,7 @@ import { getDefaultStore, useAtom, useAtomValue } from "jotai";
 import { handleRun, handleRunAll } from "@/service/run";
 import { addErrorEffect, clearErrorsEffect, errorField } from "./Error";
 import { commandKeyPress } from "@/lib/utils";
-import { formatCode } from "@/lib/format";
+import { alertFormatFailed, formatCode } from "@/lib/format";
 import { editorFontSizeStore, editorTabSizeStore } from "@/store/configStore";
 
 type CppEditorProps = Omit<ReactCodeMirrorProps, "value" | "onChange"> & {
@@ -158,9 +158,11 @@ function CppEditor({
 
             if (event.code === "KeyF" && event.altKey && event.shiftKey) {
                 const code = defaultStore.get(codeStore);
-                formatCode(code).then((formatted) => {
-                    defaultStore.set(codeStore, formatted);
-                });
+                formatCode(code)
+                    .then((formatted) => {
+                        defaultStore.set(codeStore, formatted);
+                    })
+                    .catch(alertFormatFailed);
             }
         };
 

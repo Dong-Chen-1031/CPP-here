@@ -6,7 +6,8 @@ import React from "react";
 import Tip from "../ui/tips";
 import { useAtom } from "jotai";
 import { inputStore } from "@/store/atom";
-import { cn } from "@/lib/utils";
+import { cn, commandKeyIcon } from "@/lib/utils";
+import { addAlert } from "@/lib/alert";
 import { EzIconMotion } from "../IconMotion";
 import { useTranslation } from "react-i18next";
 
@@ -30,8 +31,19 @@ export default function InputPanel({ drawer = false }: { drawer?: boolean }) {
                     <Button
                         variant="outline"
                         onClick={async () => {
-                            setInput(await navigator.clipboard.readText());
-                            setPastedTimes((p) => p + 1);
+                            try {
+                                setInput(await navigator.clipboard.readText());
+                                setPastedTimes((p) => p + 1);
+                            } catch {
+                                addAlert({
+                                    title: t("input.pasteFailedTitle"),
+                                    description: t(
+                                        "input.pasteFailedDescription",
+                                        { shortcut: commandKeyIcon },
+                                    ),
+                                    variant: "destructive",
+                                });
+                            }
                         }}
                         className="px-2"
                     >
