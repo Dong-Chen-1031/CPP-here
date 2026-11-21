@@ -93,7 +93,16 @@
                 "description": "Test case {{problemName}} has been received. It has been added to the test case list."
             }
         },
-        "deletedTitle": "Deleted {{name}}"
+        "deletedTitle": "Deleted {{name}}",
+        "summary": "{{passed}}/{{total}} passed",
+        "status": {
+            "ac": "Passed",
+            "wa": "Wrong answer",
+            "error": "Error",
+            "unchecked": "Not compared: add an expected output with the pencil to check it",
+            "running": "Running",
+            "queued": "Waiting to run"
+        }
     },
     "headerActions": {
         "undo": "Undo",

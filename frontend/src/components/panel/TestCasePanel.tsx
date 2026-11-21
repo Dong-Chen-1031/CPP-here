@@ -1,30 +1,77 @@
 import { Button } from "@/components/ui/button";
-import { CirclePlus, TestTubes, Trash, Pencil, Play } from "lucide-react";
+import {
+    CircleCheck,
+    CircleMinus,
+    CirclePlus,
+    CircleX,
+    Clock,
+    Pencil,
+    Play,
+    TestTubes,
+    TriangleAlert,
+    Trash,
+} from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 import Tip from "../ui/tips";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
     inputStore,
     panelDrawerStore,
+    runModeStore,
     runStatusStore,
     testCaseEditStore,
     testCasesStore,
     type TestCase,
 } from "@/store/atom";
 import { cn, randomId, useIsMobile } from "@/lib/utils";
-import { handleRun } from "@/service/run";
+import { handleRunAll } from "@/service/run";
+import { outputStore, type OutputCase } from "@/store/outputStore";
 import { addAlert, UNDO_ALERT_MS } from "@/lib/alert";
 import { AnimatePresence, motion } from "motion/react";
 import { ReducedMotion, spring } from "@/lib/motion";
 import { useTranslation } from "react-i18next";
 import TestEditDialog from "./TestEditDialog";
 
+type CaseStatus = OutputCase["status"];
+
+function CaseStatusIcon({ status }: { status: CaseStatus }) {
+    const { t } = useTranslation(["editor"]);
+    const icon =
+        status === "ac" ? (
+            <CircleCheck className="size-4 text-(--success)" />
+        ) : status === "wa" ? (
+            <CircleX className="size-4 text-destructive" />
+        ) : status === "error" ? (
+            <TriangleAlert className="size-4 text-warning" />
+        ) : status === "finished" ? (
+            <CircleMinus className="size-4 text-muted-foreground" />
+        ) : status === "running" ? (
+            <Spinner className="size-4" />
+        ) : status === "queued" ? (
+            <Clock className="size-4 text-muted-foreground" />
+        ) : null;
+    if (!icon) return null;
+    const label = t(
+        `testCase.status.${status === "finished" ? "unchecked" : status}`,
+    );
+    return (
+        <Tip label={label}>
+            <span className="shrink-0 flex" role="img" aria-label={label}>
+                {icon}
+            </span>
+        </Tip>
+    );
+}
+
 export default function TestCasePanel({
     drawer = false,
 }: {
     drawer?: boolean;
 }) {
-    const [, setInput] = useAtom(inputStore);
+    const [input, setInput] = useAtom(inputStore);
+    const setRunMode = useSetAtom(runModeStore);
+    const output = useAtomValue(outputStore);
     const [testCases, setTestCases] = useAtom(testCasesStore);
     const [, setPanel] = useAtom(panelDrawerStore);
     const isMobile = useIsMobile();
@@ -71,6 +118,16 @@ export default function TestCasePanel({
     }
     const cantRun = runStatus !== "idle";
 
+    const statusOf = (id: string): CaseStatus => {
+        const status = output.find((o) => o.testCaseId === id)?.status;
+        if ((status === "running" || status === "queued") && !cantRun) return;
+        return status;
+    };
+    const judged = testCases
+        .map((testCase) => statusOf(testCase.id))
+        .filter((s) => s === "ac" || s === "wa" || s === "error");
+    const passed = judged.filter((s) => s === "ac").length;
+
     return (
         <>
             <div
@@ -81,7 +138,31 @@ export default function TestCasePanel({
                 <div className="flex gap-2 items-center">
                     <TestTubes className="w-3 h-3 shrink-0" />
                     <p className="text-sm truncate">{t("testCase.label")}</p>
+                    {judged.length > 0 && (
+                        <span className="text-xs text-muted-foreground tabular-nums shrink-0">
+                            {t("testCase.summary", {
+                                passed,
+                                total: judged.length,
+                            })}
+                        </span>
+                    )}
                     <div className="flex-1"></div>
+                    <Button
+                        variant="outline"
+                        className="px-2"
+                        aria-label={t("headerActions.runAllTestCases")}
+                        disabled={cantRun || testCases.length === 0}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setRunMode("all");
+                            handleRunAll();
+                        }}
+                    >
+                        <Play className="w-4 h-4" />
+                        <span className="hidden @[250px]:inline">
+                            {t("headerActions.runAll")}
+                        </span>
+                    </Button>
                     <Button
                         variant="outline"
                         className="px-2"
@@ -126,7 +207,16 @@ export default function TestCasePanel({
                                             exit={{ opacity: 0, scale: 0.97 }}
                                             transition={spring}
                                             key={testCase.id}
-                                            className="text-sm bg-accent/75 p-2 rounded-md cursor-pointer hover:bg-accent flex items-center justify-between gap-2"
+                                            className={cn(
+                                                "text-sm p-2 rounded-md cursor-pointer flex items-center justify-between gap-2 ring-1",
+                                                testCase.input === input
+                                                    ? "bg-accent ring-ring/60"
+                                                    : "bg-accent/75 hover:bg-accent ring-transparent",
+                                            )}
+                                            aria-current={
+                                                testCase.input === input ||
+                                                undefined
+                                            }
                                             onClick={() => {
                                                 setInput(testCase.input);
                                                 isMobile && setPanel("input");
@@ -141,6 +231,9 @@ export default function TestCasePanel({
                                                     {testCase.name}
                                                 </p>
                                             </Tip>
+                                            <CaseStatusIcon
+                                                status={statusOf(testCase.id)}
+                                            />
                                             <Tip label={t("testCase.runTip")}>
                                                 <div
                                                     className={
@@ -159,8 +252,10 @@ export default function TestCasePanel({
                                                         disabled={cantRun}
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            handleRun({
-                                                                input: testCase.input,
+                                                            handleRunAll({
+                                                                caseIds: [
+                                                                    testCase.id,
+                                                                ],
                                                             });
                                                         }}
                                                     >

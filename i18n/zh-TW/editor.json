@@ -93,7 +93,16 @@
                 "description": "測資 {{problemName}} 已收到。 已經加入至測資表。"
             }
         },
-        "deletedTitle": "已刪除 {{name}}"
+        "deletedTitle": "已刪除 {{name}}",
+        "summary": "{{passed}}/{{total}} 通過",
+        "status": {
+            "ac": "通過",
+            "wa": "答案錯誤",
+            "error": "執行錯誤",
+            "unchecked": "未比對：編輯加上預期輸出就能自動比對",
+            "running": "運行中",
+            "queued": "等待運行"
+        }
     },
     "headerActions": {
         "undo": "復原",

@@ -345,7 +345,9 @@ export async function handleRun(options: RunSingleOptions = {}) {
 }
 
 /** Builds once and runs every test case. Never fails silently. */
-export async function handleRunAll(options: { target?: BuildTarget } = {}) {
+export async function handleRunAll(
+    options: { target?: BuildTarget; caseIds?: string[] } = {},
+) {
     try {
         await runAll(options);
     } catch (error) {
@@ -490,6 +492,7 @@ function upsertCase(prev: OutputCase[], item: OutputCase): OutputCase[] {
             type: item.type ?? existing.type,
             testCaseName: item.testCaseName ?? existing.testCaseName,
             status: item.status ?? existing.status,
+            expectedOutput: item.expectedOutput ?? existing.expectedOutput,
         };
         return [
             ...prev.slice(0, existingIdx),
@@ -513,8 +516,16 @@ function upsertCase(prev: OutputCase[], item: OutputCase): OutputCase[] {
     return [...prev.slice(0, pos), item, ...prev.slice(pos)];
 }
 
-async function runAll({ target }: { target?: BuildTarget }) {
-    const testCases = store.get(testCasesStore);
+async function runAll({
+    target,
+    caseIds,
+}: {
+    target?: BuildTarget;
+    caseIds?: string[];
+}) {
+    const testCases = store
+        .get(testCasesStore)
+        .filter((testCase) => !caseIds || caseIds.includes(testCase.id));
     const code = store.get(codeStore);
     const cppVersion = store.get(cppVersionStore);
     console.log(`Running code with C++ version: ${cppVersion}`);
@@ -563,7 +574,7 @@ async function runAll({ target }: { target?: BuildTarget }) {
         );
         store.set(runStatusStore, "idle");
         suggestOtherCompiler(response, (target) =>
-            retryWhenIdle(() => handleRunAll({ target })),
+            retryWhenIdle(() => handleRunAll({ target, caseIds })),
         );
         return;
     }
@@ -590,6 +601,7 @@ async function runAll({ target }: { target?: BuildTarget }) {
                 upsertCase(cases, {
                     testCaseId: testCase.id,
                     testCaseName: testCase.name,
+                    expectedOutput: testCase.expectedOutput,
                     status: "queued",
                 }),
             prev,
@@ -603,6 +615,7 @@ async function runAll({ target }: { target?: BuildTarget }) {
         const caseInfo = {
             testCaseId: testCase.id,
             testCaseName: testCase.name,
+            expectedOutput: testCase.expectedOutput,
         };
         store.set(outputStore, (prev) =>
             upsertCase(prev, { ...caseInfo, status: "running" }),
