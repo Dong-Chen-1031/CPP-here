@@ -92,7 +92,8 @@
                 "title": "已收到新的測資",
                 "description": "測資 {{problemName}} 已收到。 已經加入至測資表。"
             }
-        }
+        },
+        "deletedTitle": "已刪除 {{name}}"
     },
     "headerActions": {
         "undo": "復原",
@@ -127,7 +128,11 @@
         "downloadingCompiler": "下載中 {{progress}}%",
         "stopBuilding": "停止編譯",
         "resetDoneTitle": "編輯器已重置",
-        "undoReset": "復原"
+        "undoReset": "復原",
+        "uploadedTitle": "已載入 {{name}}",
+        "uploadFailedTitle": "無法讀取 {{name}}",
+        "uploadFailedDescription": "請確認它是文字檔後再試一次。",
+        "downloadedTitle": "已下載 main.cpp"
     },
     "turnstile": {
         "verificationFailed": "驗證失敗",

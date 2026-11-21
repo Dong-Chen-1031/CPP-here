@@ -7,10 +7,11 @@ import { ButtonGroup } from "@/components/ui/button-group";
 
 import { Upload } from "lucide-react";
 
-import { useSetAtom } from "jotai";
+import { useStore } from "jotai";
 import { codeStore } from "@/store/atom";
 
 import Tip from "@/components/ui/tips";
+import { addAlert, UNDO_ALERT_MS } from "@/lib/alert";
 
 export function UploadButton({
     className = "",
@@ -19,8 +20,8 @@ export function UploadButton({
     className?: string;
     onClick?: (e: React.MouseEvent) => void;
 }) {
-    const setCode = useSetAtom(codeStore);
-    const { t } = useTranslation(["editor"]);
+    const store = useStore();
+    const { t } = useTranslation(["editor", "common"]);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,13 +31,31 @@ export function UploadButton({
         const reader = new FileReader();
         reader.onload = (e) => {
             const content = e.target?.result;
-            if (typeof content === "string") {
-                setCode(content);
-                window.posthog?.capture("code_uploaded", {
-                    file_name: file.name,
-                    file_size: file.size,
-                });
-            }
+            if (typeof content !== "string") return;
+            const previous = store.get(codeStore);
+            store.set(codeStore, content);
+            window.posthog?.capture("code_uploaded", {
+                file_name: file.name,
+                file_size: file.size,
+            });
+            addAlert({
+                title: t("headerActions.uploadedTitle", { name: file.name }),
+                icon: <Upload className="w-4 h-4" />,
+                duration: UNDO_ALERT_MS,
+                action: {
+                    text: t("common:undo"),
+                    onClick: () => store.set(codeStore, previous),
+                },
+            });
+        };
+        reader.onerror = () => {
+            addAlert({
+                title: t("headerActions.uploadFailedTitle", {
+                    name: file.name,
+                }),
+                description: t("headerActions.uploadFailedDescription"),
+                variant: "destructive",
+            });
         };
         reader.readAsText(file);
 

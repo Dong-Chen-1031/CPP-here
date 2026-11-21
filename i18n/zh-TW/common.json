@@ -7,5 +7,6 @@
   "runStatus": {
     "running": "運行中",
     "building": "編譯中"
-  }
+  },
+  "undo": "復原"
 }

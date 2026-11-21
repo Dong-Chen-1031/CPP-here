@@ -11,6 +11,7 @@ import { useAtom } from "jotai";
 import { codeStore } from "@/store/atom";
 
 import Tip from "@/components/ui/tips";
+import { addAlert } from "@/lib/alert";
 
 export function DownloadButton({
     className = "",
@@ -40,6 +41,11 @@ export function DownloadButton({
                         URL.revokeObjectURL(url);
                         window.posthog?.capture("code_downloaded", {
                             code_length: code.length,
+                        });
+                        addAlert({
+                            title: t("headerActions.downloadedTitle"),
+                            icon: <DownloadIcon className="w-4 h-4" />,
+                            duration: 3000,
                         });
                         onClick(e);
                     }}

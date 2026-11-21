@@ -92,7 +92,8 @@
                 "title": "A new test case has been received",
                 "description": "Test case {{problemName}} has been received. It has been added to the test case list."
             }
-        }
+        },
+        "deletedTitle": "Deleted {{name}}"
     },
     "headerActions": {
         "undo": "Undo",
@@ -127,7 +128,11 @@
         "downloadingCompiler": "Downloading {{progress}}%",
         "stopBuilding": "Stop compiling",
         "resetDoneTitle": "Editor reset",
-        "undoReset": "Undo"
+        "undoReset": "Undo",
+        "uploadedTitle": "Loaded {{name}}",
+        "uploadFailedTitle": "Couldn't read {{name}}",
+        "uploadFailedDescription": "Make sure it is a text file and try again.",
+        "downloadedTitle": "Downloaded main.cpp"
     },
     "turnstile": {
         "verificationFailed": "Verification Failed",

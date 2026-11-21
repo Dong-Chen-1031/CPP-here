@@ -23,9 +23,7 @@ import {
     outputClearCount,
     outputStore,
 } from "@/store/outputStore";
-import { addAlert } from "@/lib/alert";
-
-const UNDO_MS = 8000;
+import { addAlert, UNDO_ALERT_MS } from "@/lib/alert";
 
 export function useResetWithUndo() {
     const store = useStore();
@@ -48,12 +46,12 @@ export function useResetWithUndo() {
         resetAll();
         const clearSavedOutput = setTimeout(() => {
             if (outputUntouched()) clearOutputBuffer();
-        }, UNDO_MS);
+        }, UNDO_ALERT_MS);
 
         addAlert({
             title: t("headerActions.resetDoneTitle"),
             icon: <RotateCcw className="w-4 h-4" />,
-            duration: UNDO_MS,
+            duration: UNDO_ALERT_MS,
             action: {
                 text: t("headerActions.undoReset"),
                 onClick: () => {

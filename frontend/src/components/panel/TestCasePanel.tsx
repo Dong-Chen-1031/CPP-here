@@ -13,6 +13,7 @@ import {
 } from "@/store/atom";
 import { cn, randomId, useIsMobile } from "@/lib/utils";
 import { handleRun } from "@/service/run";
+import { addAlert, UNDO_ALERT_MS } from "@/lib/alert";
 import { useTranslation } from "react-i18next";
 import TestEditDialog from "./TestEditDialog";
 
@@ -26,6 +27,30 @@ export default function TestCasePanel({
     const [, setPanel] = useAtom(panelDrawerStore);
     const isMobile = useIsMobile();
     const { t } = useTranslation(["editor", "common"]);
+
+    function deleteTestCase(testCase: TestCase) {
+        const index = testCases.findIndex((tc) => tc.id === testCase.id);
+        setTestCases((prev) => prev.filter((tc) => tc.id !== testCase.id));
+        window.posthog?.capture("test_case_deleted");
+        addAlert({
+            title: t("testCase.deletedTitle", { name: testCase.name }),
+            icon: <Trash className="w-4 h-4" />,
+            duration: UNDO_ALERT_MS,
+            action: {
+                text: t("common:undo"),
+                onClick: () =>
+                    setTestCases((prev) =>
+                        prev.some((tc) => tc.id === testCase.id)
+                            ? prev
+                            : [
+                                  ...prev.slice(0, index),
+                                  testCase,
+                                  ...prev.slice(index),
+                              ],
+                    ),
+            },
+        });
+    }
 
     const [runStatus] = useAtom(runStatusStore);
     const [, setTestCaseEditArgs] = useAtom(testCaseEditStore);
@@ -176,16 +201,7 @@ export default function TestCasePanel({
                                             aria-label={t("testCase.deleteTip")}
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                setTestCases((prev) =>
-                                                    prev.filter(
-                                                        (tc) =>
-                                                            tc.id !==
-                                                            testCase.id,
-                                                    ),
-                                                );
-                                                window.posthog?.capture(
-                                                    "test_case_deleted",
-                                                );
+                                                deleteTestCase(testCase);
                                             }}
                                         >
                                             <Trash className="w-4 h-4" />
