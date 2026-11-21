@@ -32,7 +32,8 @@ const browser = await chromium.launch({
     args: ["--no-sandbox"],
 });
 try {
-    const page = await browser.newPage();
+    const context = await browser.newContext();
+    const page = await context.newPage();
     page.on("pageerror", (e) => console.error(e.message));
     let requests = 0;
     page.on("request", (r) => {
@@ -72,6 +73,41 @@ try {
         path: path.join(root, "test/browser/results/integration.png"),
         fullPage: true,
     });
+
+    // Warm-up: a new page in the same context finds the compiler downloaded,
+    // loads it into a worker by itself, and its first build is a warm one,
+    // with the PCH of bits/stdc++.h or one made of the code's own includes.
+    for (const [code, pch] of [
+        ["stdcxx", "used_pch"],
+        ["includes", "used_includes_pch"],
+    ]) {
+        const fresh = await context.newPage();
+        fresh.on("pageerror", (e) => console.error(e.message));
+        await fresh.goto("http://127.0.0.1:5180/test/browser/integration.html");
+        await fresh.waitForFunction(() => !!window.startWarmUp);
+        const worker = fresh.waitForEvent("worker", {
+            predicate: (w) => w.url().includes("compile.worker"),
+            timeout: 30_000,
+        });
+        const started = Date.now();
+        await fresh.evaluate((code) => window.startWarmUp(code), code);
+        await worker;
+        const warmUpStartedMs = Date.now() - started;
+        const warm = await fresh.evaluate(
+            (code) => window.afterWarmUp(code),
+            code,
+        );
+        console.log("warm-up started after", warmUpStartedMs, "ms:", warm);
+        if (
+            warm.output !== "42\n" ||
+            warm.build?.warmed !== true ||
+            warm.build?.cold !== false ||
+            warm.build?.[pch] !== true ||
+            warmUpStartedMs < 3_000
+        )
+            throw Error("Warm-up failed");
+        await fresh.close();
+    }
 } finally {
     await browser.close();
     await server.close();

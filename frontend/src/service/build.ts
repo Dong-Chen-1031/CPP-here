@@ -8,6 +8,8 @@ import {
 } from "@/store/configStore";
 import {
     alertDialogStore,
+    codeStore,
+    cppVersionStore,
     serverUnavailableStore,
     verifyJwtStore,
 } from "@/store/atom";
@@ -26,6 +28,8 @@ import {
     cancelBrowserBuild,
     downloadBrowserCompiler,
     isBrowserCompilerDownloaded,
+    precompiledHeadersOf,
+    warmBrowserCompiler,
 } from "./browserBuild";
 
 export type BuildTarget = "browser" | "server";
@@ -47,6 +51,8 @@ export interface BuildResult {
     wasmSizeBytes?: number;
     /** In-browser builds: whether a precompiled bits/stdc++.h was used. */
     usedPch?: boolean;
+    /** In-browser builds: whether a PCH of the code's own includes was. */
+    usedIncludesPch?: boolean;
     /** The user stopped the build. */
     cancelled?: boolean;
     /** The compiler that produced this result. */
@@ -74,6 +80,11 @@ const BACKGROUND_DOWNLOAD_DELAY_MS = 10_000;
 const SLOW_BUILD_MS = 7_000;
 // How long auto mode leaves a failed server alone before trying it again.
 const SERVER_RETRY_MS = 60_000;
+// After the page has loaded, before the compiler is warmed up in its worker.
+const WARM_UP_DELAY_MS = 3_000;
+// After the code's leading #include lines last changed, before a warm-up
+// precompiles them.
+const HEADERS_SETTLE_MS = 2_000;
 
 let serverRetryTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -212,6 +223,7 @@ let prepared = false;
 /**
  * Reads whether the in-browser compiler is downloaded and, in auto mode on a
  * capable device, downloads it in the background once the page has settled.
+ * Then keeps it warmed up whenever the next build would use it.
  */
 export function prepareBuild() {
     if (prepared || !browserCompilerAvailable()) return;
@@ -219,7 +231,88 @@ export function prepareBuild() {
     void isBrowserCompilerDownloaded().then((downloaded) => {
         if (!downloaded)
             setTimeout(downloadInBackground, BACKGROUND_DOWNLOAD_DELAY_MS);
+        scheduleWarmUp();
     });
+    // Each of these can make the next build use the browser, or need a PCH
+    // that is not loaded yet.
+    store.sub(browserCompilerProgressStore, () => {
+        if (store.get(browserCompilerProgressStore) === DOWNLOADED)
+            scheduleWarmUp();
+    });
+    store.sub(compilerModeStore, scheduleWarmUp);
+    store.sub(serverUnavailableStore, scheduleWarmUp);
+    store.sub(cppVersionStore, scheduleWarmUp);
+    // Which headers are precompiled for the code: the PCH of bits/stdc++.h,
+    // or one made of the headers it starts with. Wait until an #include being
+    // typed has stopped changing, not to precompile every prefix of its name.
+    const headersOf = () =>
+        JSON.stringify(precompiledHeadersOf(store.get(codeStore)));
+    let headers = headersOf();
+    let headersTimer: ReturnType<typeof setTimeout> | undefined;
+    store.sub(codeStore, () => {
+        const now = headersOf();
+        if (now === headers) return;
+        headers = now;
+        clearTimeout(headersTimer);
+        headersTimer = setTimeout(scheduleWarmUp, HEADERS_SETTLE_MS);
+    });
+}
+
+let warmUpScheduled = false;
+// A compiler that failed to warm up is left for the next build to report.
+let warmUpFailed = false;
+
+/**
+ * The first build in a page loads the in-browser compiler into its worker,
+ * and V8 runs clang unoptimized at first: it took about twice as long as the
+ * next. When the next build would use the browser, this does both in the
+ * background, once the page has loaded, while it is visible and idle. It uses
+ * the downloaded compiler only; a PCH the code needs and has never used is
+ * downloaded only where the compiler itself would be.
+ */
+function scheduleWarmUp() {
+    if (warmUpScheduled || warmUpFailed || !browserCompilerAvailable()) return;
+    warmUpScheduled = true;
+    whenIdle(() => {
+        warmUpScheduled = false;
+        warmUp().catch((error) =>
+            console.warn("In-browser compiler warm-up failed:", error),
+        );
+    });
+}
+
+async function warmUp() {
+    if (chooseTarget(get) !== "browser") return;
+    // A build loads the compiler itself, and schedules this when it ends.
+    if (store.get(buildingWithStore)) return;
+    const ok = await warmBrowserCompiler(
+        store.get(cppVersionStore),
+        store.get(codeStore),
+        canDownloadInBackground() && !isOffline(),
+    );
+    if (!ok) warmUpFailed = true;
+}
+
+/** After the load event and a delay, once the page is visible and idle. */
+function whenIdle(callback: () => void) {
+    const idle = () => {
+        if (document.visibilityState !== "visible") {
+            document.addEventListener("visibilitychange", idle, {
+                once: true,
+            });
+            return;
+        }
+        // The page may be hidden again by the time the browser is idle.
+        const run = () =>
+            document.visibilityState === "visible" ? callback() : idle();
+        // Safari has no requestIdleCallback.
+        if (typeof requestIdleCallback === "function")
+            requestIdleCallback(run, { timeout: 5_000 });
+        else setTimeout(run, 0);
+    };
+    const wait = () => setTimeout(idle, WARM_UP_DELAY_MS);
+    if (document.readyState === "complete") wait();
+    else addEventListener("load", wait, { once: true });
 }
 
 // Set while a build waits for a foreground download; switching to auto mode
@@ -420,6 +513,9 @@ export async function build(
     } finally {
         if (cancelCurrent === cancel) cancelCurrent = undefined;
         store.set(buildingWithStore, null);
+        // Stopping a compile, or a compiler failure, discards the worker:
+        // load it again for the next build.
+        scheduleWarmUp();
     }
 }
 

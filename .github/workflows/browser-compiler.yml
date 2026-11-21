@@ -99,6 +99,17 @@ jobs:
               working-directory: frontend
               run: node test/browser/run.mjs
 
+            # The same cases with a PCH made in the browser of each one's own
+            # includes, which the editor's warm-up gives code that does not
+            # start with bits/stdc++.h
+            - name: Regression cases, includes precompiled
+              working-directory: frontend
+              run: INCLUDES_PCH=1 node test/browser/run.mjs
+
+            - name: Warm-up and PCHs of includes
+              working-directory: frontend
+              run: node test/browser/warmup.mjs
+
             - name: Run flow integration
               working-directory: frontend
               run: node test/browser/integration.mjs

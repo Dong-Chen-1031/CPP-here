@@ -14,7 +14,7 @@ const text = await fs.readFile(
     "utf8",
 );
 const { code } = await transformWithEsbuild(text, "pchRule.ts");
-const { startsWithStdcxx } = await import(
+const { startsWithStdcxx, leadingIncludes } = await import(
     "data:text/javascript;base64," + Buffer.from(code).toString("base64")
 );
 const builder = await fs.readFile(
@@ -57,3 +57,29 @@ for (const dir of ["cases", "pch_rule"])
         count++;
     }
 console.log(count + " PCH eligibility cases match the builder rule");
+
+// The headers the in-browser compiler makes a PCH of (it has no counterpart
+// on the server): only what a source includes before anything else.
+for (const [source, headers] of [
+    ["#include <iostream>\nint main() {}", ["iostream"]],
+    [
+        "// a\n\n#include <iostream>\r\n  #  include <vector> // b\n/* c\n*/ #include <map>\nusing namespace std;\n#include <set>\n",
+        ["iostream", "vector", "map"],
+    ],
+    ['#pragma GCC optimize("O3")\n#include <cstdio>\n', ["cstdio"]],
+    [
+        "#include <bits/stdc++.h>\n#include <ext/pb_ds/assoc_container.hpp>\n",
+        ["bits/stdc++.h", "ext/pb_ds/assoc_container.hpp"],
+    ],
+    // Anything first that could change what a header declares: none.
+    ["#define NDEBUG\n#include <cassert>\n", []],
+    ["#if 1\n#include <iostream>\n#endif\n", []],
+    ["/* #include <iostream> */\nint main() {}", []],
+    ["// \\\n#include <iostream>\nint main() {}", []],
+    ['#include "iostream"\n', []],
+    ["#include <iostream> int x;\n", []],
+    ["int main() {}\n#include <iostream>\n", []],
+    ["", []],
+])
+    assert.deepEqual(leadingIncludes(source), headers, source);
+console.log("leadingIncludes: ok");
