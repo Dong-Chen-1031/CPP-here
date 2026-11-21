@@ -187,43 +187,67 @@ const stats: {
         console.warn("Failed to refresh stats:", error),
     );
 
+    const FOLLOW_MS = 160;
+
     class SpotlightStatCard {
         card: HTMLElement;
         currentX = 0;
         currentY = 0;
         targetX = 0;
         targetY = 0;
-        hasEntered = false;
+        frame: number | null = null;
+        lastTime = 0;
 
         constructor(card: HTMLElement) {
             this.card = card;
 
             card.addEventListener("pointerenter", (e) => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                this.currentX = this.targetX = x;
-                this.currentY = this.targetY = y;
-                if (!this.hasEntered) {
-                    this.hasEntered = true;
-                    requestAnimationFrame(this.animate.bind(this));
-                }
+                this.setTarget(e);
+                this.currentX = this.targetX;
+                this.currentY = this.targetY;
+                this.write();
             });
 
             card.addEventListener("pointermove", (e) => {
-                const rect = card.getBoundingClientRect();
-                this.targetX = e.clientX - rect.left;
-                this.targetY = e.clientY - rect.top;
+                this.setTarget(e);
+                this.start();
             });
         }
 
-        animate() {
-            this.currentX += (this.targetX - this.currentX) * 0.1;
-            this.currentY += (this.targetY - this.currentY) * 0.1;
+        setTarget(e: PointerEvent) {
+            const rect = this.card.getBoundingClientRect();
+            this.targetX = e.clientX - rect.left;
+            this.targetY = e.clientY - rect.top;
+        }
+
+        write() {
             this.card.style.setProperty("--mx", this.currentX + "px");
             this.card.style.setProperty("--my", this.currentY + "px");
-            requestAnimationFrame(this.animate.bind(this));
         }
+
+        start() {
+            if (this.frame !== null) return;
+            this.lastTime = performance.now();
+            this.frame = requestAnimationFrame(this.step);
+        }
+
+        step = (now: number) => {
+            const dt = Math.min(Math.max(now - this.lastTime, 0), 100);
+            this.lastTime = now;
+            const k = 1 - Math.exp(-dt / FOLLOW_MS);
+            this.currentX += (this.targetX - this.currentX) * k;
+            this.currentY += (this.targetY - this.currentY) * k;
+
+            const settled =
+                Math.abs(this.targetX - this.currentX) < 0.5 &&
+                Math.abs(this.targetY - this.currentY) < 0.5;
+            if (settled) {
+                this.currentX = this.targetX;
+                this.currentY = this.targetY;
+            }
+            this.write();
+            this.frame = settled ? null : requestAnimationFrame(this.step);
+        };
     }
 
     document
