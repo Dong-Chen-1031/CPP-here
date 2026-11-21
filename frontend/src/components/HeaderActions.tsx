@@ -6,7 +6,7 @@ import { loadedCountStore, loadedStore } from "@/store/atom";
 
 import { AnimatePresence, motion } from "motion/react";
 import { ReducedMotion } from "@/lib/motion";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Commands } from "@/components/Commands";
 import { RunButton } from "@/components/header/runBtn";
 import { UndoRedo } from "@/components/header/undoRedo";
@@ -22,34 +22,55 @@ const fade = { duration: 0.2, ease: "easeOut" } as const;
 
 function LoadingActions({
     className,
+    widthKey,
     children,
 }: {
     className?: string;
+    widthKey: string;
     children: ReactNode;
 }) {
     const [loaded] = useAtom(loadedStore);
+    const actionsRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const el = actionsRef.current;
+        if (!el) return;
+        const observer = new ResizeObserver(() => {
+            const width = el.offsetWidth;
+            if (!width) return;
+            localStorage.setItem(widthKey, String(width));
+        });
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [loaded, widthKey]);
 
     return (
         <ReducedMotion>
-            <div className="relative h-full">
-                <motion.div
-                    className={className}
-                    initial={false}
-                    animate={{ opacity: loaded ? 1 : 0 }}
-                    transition={fade}
-                    inert={!loaded}
-                >
-                    {children}
-                </motion.div>
-                <AnimatePresence initial={false}>
-                    {!loaded && (
+            <div className="flex items-center h-full">
+                <AnimatePresence initial={false} mode="popLayout">
+                    {!loaded ? (
                         <motion.div
                             key="loader"
-                            className="absolute inset-0 flex items-center"
                             exit={{ opacity: 0 }}
                             transition={fade}
                         >
-                            <Skeleton className="w-full h-7" />
+                            <Skeleton
+                                className="h-7"
+                                style={{
+                                    width: `var(--${widthKey}, 0px)`,
+                                }}
+                            />
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="actions"
+                            ref={actionsRef}
+                            className={className}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={fade}
+                        >
+                            {children}
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -63,7 +84,10 @@ export default function HeaderActions() {
     useEffect(() => setLoadedCount((c) => c + 1), []);
 
     return (
-        <LoadingActions className="flex items-center space-x-2 h-full">
+        <LoadingActions
+            className="flex items-center space-x-2 h-full"
+            widthKey="toolbar-width"
+        >
             <UndoRedo />
             <UploadButton />
             <DownloadButton />
@@ -82,7 +106,10 @@ export function HeaderActionsMobile() {
     useEffect(() => setLoadedCount((c) => c + 1), []);
 
     return (
-        <LoadingActions className="flex flex-row-reverse flex-wrap justify-start items-center content-start gap-1">
+        <LoadingActions
+            className="flex flex-row-reverse flex-wrap justify-start items-center content-start gap-1"
+            widthKey="toolbar-width-mobile"
+        >
             <RunButton className="shrink-0" />
             <Commands className="shrink-0" />
             <div className="shrink-0 flex items-center">

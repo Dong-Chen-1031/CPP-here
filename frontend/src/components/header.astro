@@ -11,6 +11,19 @@ import { GithubLink } from "./header/githubLink";
 </style>
 
 <div class="w-full h-13 flex items-center px-2 md:px-4 shrink-0" id="header">
+    <script is:inline>
+        try {
+            for (const key of ["toolbar-width", "toolbar-width-mobile"]) {
+                const width = localStorage.getItem(key);
+                if (width) {
+                    document.documentElement.style.setProperty(
+                        "--" + key,
+                        width + "px",
+                    );
+                }
+            }
+        } catch {}
+    </script>
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const desktop = urlParams.get("desktop");
