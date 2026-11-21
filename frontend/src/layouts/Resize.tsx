@@ -40,7 +40,7 @@ function LoadingPanel({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
                     >
                         <Skeleton className="w-full h-full"></Skeleton>
                     </motion.div>
@@ -52,7 +52,7 @@ function LoadingPanel({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
                     >
                         {children}
                     </motion.div>
@@ -162,7 +162,7 @@ const Loading = React.forwardRef<
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
         >
             {children}
         </motion.div>

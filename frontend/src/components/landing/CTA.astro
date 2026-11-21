@@ -1,5 +1,6 @@
 ---
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { PlayIcon } from "@lucide/astro";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import Hr from "@/components/landing/hr.astro";
@@ -51,22 +52,26 @@ const { t } = Astro.props as Props;
             <br />
             {t?.description2}
         </p>
-        <div class="flex items-center justify-center mt-10 gap-4 *:text-[0.9rem] flex-wrap">
-            <a href="/editor" id="cta-start-coding-btn">
-                <Button className="w-44" size={"xl"}>
-                    <PlayIcon class="size-4" />
-                    <p>{t?.startCoding}</p>
-                </Button>
+        <div class="flex items-center justify-center mt-10 gap-4 flex-wrap">
+            <a
+                href="/editor"
+                id="cta-start-coding-btn"
+                class={cn(buttonVariants({ size: "xl" }), "w-44")}
+            >
+                <PlayIcon class="size-4" />
+                <p>{t?.startCoding}</p>
             </a>
             <a
                 href={PUBLIC_GITHUB_LINK}
                 target="_blank"
                 rel="noopener noreferrer"
+                class={cn(
+                    buttonVariants({ variant: "outline", size: "xl" }),
+                    "w-44",
+                )}
             >
-                <Button className="w-44" variant={"outline"} size="xl">
-                    <SiGithub className="size-4" />
-                    <p class="ml-1">{t?.starOnGithub}</p>
-                </Button>
+                <SiGithub className="size-4" />
+                <p class="ml-1">{t?.starOnGithub}</p>
             </a>
         </div>
     </div>

@@ -1,5 +1,6 @@
 ---
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { PlayIcon } from "@lucide/astro";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import "@/styles/landing.css";
@@ -45,22 +46,26 @@ const { t } = Astro.props as Props;
             {t?.description}
         </p>
     </div>
-    <div class="flex items-center justify-center mt-13 gap-5 *:text-[0.9rem] flex-wrap">
-        <a href={"/editor"} id="hero-start-coding-btn">
-            <Button className="hover:bg-primary/80 transition" size={"xl"}>
-                <PlayIcon class="size-4" />
-                <p>{t?.startCoding}</p>
-            </Button>
+    <div class="flex items-center justify-center mt-13 gap-5 flex-wrap">
+        <a
+            href={"/editor"}
+            id="hero-start-coding-btn"
+            class={buttonVariants({ size: "xl" })}
+        >
+            <PlayIcon class="size-4" />
+            <p>{t?.startCoding}</p>
         </a>
-        <a href={PUBLIC_GITHUB_LINK} target="_blank" rel="noopener noreferrer">
-            <Button
-                className="hover:bg-primary/80 "
-                variant={"outline"}
-                size="xl"
-            >
-                <SiGithub className="size-4" />
-                <p class="ml-1">{t?.starOnGithub}</p>
-            </Button>
+        <a
+            href={PUBLIC_GITHUB_LINK}
+            target="_blank"
+            rel="noopener noreferrer"
+            class={cn(
+                buttonVariants({ variant: "outline", size: "xl" }),
+                "hover:bg-primary/80",
+            )}
+        >
+            <SiGithub className="size-4" />
+            <p class="ml-1">{t?.starOnGithub}</p>
         </a>
     </div>
 

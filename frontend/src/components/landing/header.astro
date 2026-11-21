@@ -1,5 +1,6 @@
 ---
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import { CodeIcon } from "@lucide/astro";
 import { PUBLIC_GITHUB_LINK } from "astro:env/client";
@@ -42,18 +43,19 @@ const languages = LOCALES.map((l) => ({
         current={findLocale(lang).code}
         links={languages}
     />
-    <a href={PUBLIC_GITHUB_LINK} target="_blank" rel="noopener noreferrer">
-        <Button
-            className="hover:bg-primary/80 flex-1 max-[25rem]:size-7 max-[25rem]:rounded-[min(var(--radius-md),12px)]"
-            variant={"outline"}
-        >
-            <SiGithub />
-            <p class="ml-1 max-[25rem]:hidden">{t?.github}</p>
-        </Button>
+    <a
+        href={PUBLIC_GITHUB_LINK}
+        target="_blank"
+        rel="noopener noreferrer"
+        class={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "hover:bg-primary/80 max-[25rem]:size-7 max-[25rem]:rounded-[min(var(--radius-md),12px)]",
+        )}
+    >
+        <SiGithub />
+        <p class="ml-1 max-[25rem]:hidden">{t?.github}</p>
     </a>
-    <a href="/editor">
-        <Button className="hover:bg-primary/80 transition ml-3">
-            {t?.openEditor}
-        </Button>
+    <a href="/editor" class={cn(buttonVariants({ size: "sm" }), "ml-3")}>
+        {t?.openEditor}
     </a>
 </header>
