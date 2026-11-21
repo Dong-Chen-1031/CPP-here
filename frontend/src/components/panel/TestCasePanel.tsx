@@ -14,6 +14,8 @@ import {
 import { cn, randomId, useIsMobile } from "@/lib/utils";
 import { handleRun } from "@/service/run";
 import { addAlert, UNDO_ALERT_MS } from "@/lib/alert";
+import { AnimatePresence, motion } from "motion/react";
+import { ReducedMotion, spring } from "@/lib/motion";
 import { useTranslation } from "react-i18next";
 import TestEditDialog from "./TestEditDialog";
 
@@ -81,9 +83,9 @@ export default function TestCasePanel({
                     <p className="text-sm truncate">{t("testCase.label")}</p>
                     <div className="flex-1"></div>
                     <Button
-                        aria-label={t("testCase.addTip")}
                         variant="outline"
                         className="px-2"
+                        aria-label={t("testCase.addTip")}
                         onClick={(e) => {
                             e.stopPropagation();
                             setTestCaseEditArgs({
@@ -101,114 +103,147 @@ export default function TestCasePanel({
                         </span>
                     </Button>
                 </div>
-                <div className="mt-4 overflow-y-auto max-h-[calc(100%-2rem)]">
+                <div className="mt-4 overflow-y-auto h-[calc(100%-2rem)]">
                     {testCases.length === 0 ? (
                         <p className="text-sm text-muted-foreground pl-2">
                             {t("testCase.noTestCase")}
                         </p>
                     ) : (
-                        <div className="flex flex-col gap-2">
-                            {testCases.map((testCase) => (
-                                <div
-                                    key={testCase.id}
-                                    className="text-sm bg-accent/75 p-2 rounded-md cursor-pointer hover:bg-accent flex items-center justify-between gap-2"
-                                    onClick={() => {
-                                        setInput(testCase.input);
-                                        isMobile && setPanel("input");
-                                    }}
+                        <ReducedMotion>
+                            <div className="relative flex flex-col gap-2">
+                                <AnimatePresence
+                                    initial={false}
+                                    mode="popLayout"
                                 >
-                                    <Tip label={t("testCase.setInputTip")}>
-                                        <p className="flex-1 truncate">
-                                            {testCase.name}
-                                        </p>
-                                    </Tip>
-                                    <Tip label={t("testCase.runTip")}>
-                                        <div
-                                            className={
-                                                cantRun ? "cursor-default" : ""
-                                            }
+                                    {testCases.map((testCase) => (
+                                        <motion.div
+                                            layout
+                                            initial={{
+                                                opacity: 0,
+                                                scale: 0.97,
+                                            }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.97 }}
+                                            transition={spring}
+                                            key={testCase.id}
+                                            className="text-sm bg-accent/75 p-2 rounded-md cursor-pointer hover:bg-accent flex items-center justify-between gap-2"
+                                            onClick={() => {
+                                                setInput(testCase.input);
+                                                isMobile && setPanel("input");
+                                            }}
                                         >
-                                            <Button
-                                                variant="outline"
-                                                size="icon"
-                                                aria-label={t(
-                                                    "testCase.runTip",
+                                            <Tip
+                                                label={t(
+                                                    "testCase.setInputTip",
                                                 )}
-                                                // className="disabled:cursor-default!"
-                                                disabled={cantRun}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleRun({
-                                                        input: testCase.input,
-                                                    });
-                                                }}
                                             >
-                                                <Play className="w-4 h-4" />
-                                            </Button>
-                                        </div>
-                                    </Tip>
-                                    <Tip label={t("testCase.editTip")}>
-                                        <Button
-                                            variant="outline"
-                                            size="icon"
-                                            aria-label={t("testCase.editTip")}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setTestCaseEditArgs({
-                                                    open: true,
-                                                    title: t(
-                                                        "testCase.editDialog.title",
-                                                    ),
-                                                    name: testCase.name,
-                                                    input: testCase.input,
-                                                    expected:
-                                                        testCase.expectedOutput,
-                                                    submitBtnName: t(
-                                                        "testCase.editDialog.saveBtn",
-                                                    ),
-                                                    handleSubmit: (
-                                                        name,
-                                                        input,
-                                                        expected,
-                                                    ) => {
-                                                        setTestCases((prev) =>
-                                                            prev.map((tc) =>
-                                                                tc.id ===
-                                                                testCase.id
-                                                                    ? {
-                                                                          ...tc,
-                                                                          name,
-                                                                          input,
-                                                                          expectedOutput:
-                                                                              expected,
-                                                                      }
-                                                                    : tc,
+                                                <p className="flex-1 truncate">
+                                                    {testCase.name}
+                                                </p>
+                                            </Tip>
+                                            <Tip label={t("testCase.runTip")}>
+                                                <div
+                                                    className={
+                                                        cantRun
+                                                            ? "cursor-default"
+                                                            : ""
+                                                    }
+                                                >
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        aria-label={t(
+                                                            "testCase.runTip",
+                                                        )}
+                                                        // className="disabled:cursor-default!"
+                                                        disabled={cantRun}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleRun({
+                                                                input: testCase.input,
+                                                            });
+                                                        }}
+                                                    >
+                                                        <Play className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            </Tip>
+                                            <Tip label={t("testCase.editTip")}>
+                                                <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    aria-label={t(
+                                                        "testCase.editTip",
+                                                    )}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setTestCaseEditArgs({
+                                                            open: true,
+                                                            title: t(
+                                                                "testCase.editDialog.title",
                                                             ),
-                                                        );
-                                                    },
-                                                });
-                                            }}
-                                        >
-                                            <Pencil className="w-4 h-4" />
-                                        </Button>
-                                    </Tip>
+                                                            name: testCase.name,
+                                                            input: testCase.input,
+                                                            expected:
+                                                                testCase.expectedOutput,
+                                                            submitBtnName: t(
+                                                                "testCase.editDialog.saveBtn",
+                                                            ),
+                                                            handleSubmit: (
+                                                                name,
+                                                                input,
+                                                                expected,
+                                                            ) => {
+                                                                setTestCases(
+                                                                    (prev) =>
+                                                                        prev.map(
+                                                                            (
+                                                                                tc,
+                                                                            ) =>
+                                                                                tc.id ===
+                                                                                testCase.id
+                                                                                    ? {
+                                                                                          ...tc,
+                                                                                          name,
+                                                                                          input,
+                                                                                          expectedOutput:
+                                                                                              expected,
+                                                                                      }
+                                                                                    : tc,
+                                                                        ),
+                                                                );
+                                                            },
+                                                        });
+                                                    }}
+                                                >
+                                                    <Pencil className="w-4 h-4" />
+                                                </Button>
+                                            </Tip>
 
-                                    <Tip label={t("testCase.deleteTip")}>
-                                        <Button
-                                            variant="outline"
-                                            size="icon"
-                                            aria-label={t("testCase.deleteTip")}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                deleteTestCase(testCase);
-                                            }}
-                                        >
-                                            <Trash className="w-4 h-4" />
-                                        </Button>
-                                    </Tip>
-                                </div>
-                            ))}
-                        </div>
+                                            <Tip
+                                                label={t("testCase.deleteTip")}
+                                            >
+                                                <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    aria-label={t(
+                                                        "testCase.deleteTip",
+                                                    )}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        deleteTestCase(
+                                                            testCase,
+                                                        );
+                                                    }}
+                                                >
+                                                    <Trash className="w-4 h-4" />
+                                                </Button>
+                                            </Tip>
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
+                            </div>
+                        </ReducedMotion>
                     )}
                 </div>
             </div>
