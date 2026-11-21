@@ -144,7 +144,10 @@ function MobileLayout({
                 className,
             )}
         >
-            <div className="rounded-md overflow-hidden h-full ml-2 mr-2 bg-accent">
+            <div
+                className="rounded-md overflow-hidden h-full ml-2 mr-2 bg-accent"
+                data-alert-anchor
+            >
                 {children}
             </div>
         </div>

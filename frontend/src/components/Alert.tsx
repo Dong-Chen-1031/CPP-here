@@ -36,11 +36,11 @@ function useAlertAnchor(active: boolean) {
     useLayoutEffect(() => {
         if (!active) return;
         const measure = () => {
-            const rect = document
-                .querySelector("[data-alert-anchor]")
-                ?.getBoundingClientRect();
+            const rect = [...document.querySelectorAll("[data-alert-anchor]")]
+                .map((el) => el.getBoundingClientRect())
+                .find((r) => r.width > 0);
             setStyle(
-                rect && rect.width > 0
+                rect
                     ? {
                           top: rect.top,
                           right:
@@ -60,7 +60,7 @@ function useAlertAnchor(active: boolean) {
 export function Alerts() {
     const [alerts, setAlerts] = useAtom(alertStore);
     const isMobile = useIsMobile();
-    const anchorStyle = useAlertAnchor(!isMobile && alerts.length > 0);
+    const anchorStyle = useAlertAnchor(alerts.length > 0);
     // No early return before this hook: alertStore always holds an array, and an
     // early return would make the hook order conditional.
     useEffect(() => {
