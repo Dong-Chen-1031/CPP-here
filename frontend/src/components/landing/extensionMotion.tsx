@@ -7,6 +7,7 @@ import usacoLogo from "@/assets/logo/USACO.avif?url";
 import spojLogo from "@/assets/logo/SPOJ.avif?url";
 import kattisLogo from "@/assets/logo/Kattis.avif?url";
 import { AnimatePresence } from "motion/react";
+import { ReducedMotion } from "@/lib/motion";
 
 const RADIUS = 50;
 const LOGO_SIZE = 40;
@@ -362,12 +363,12 @@ export default function ExtensionMotion({ t }: { t?: ExtensionDemoText }) {
     }, []);
 
     return (
-        <>
+        <ReducedMotion>
             <RotatingCircleMobile className="block md:hidden" now={now} />
             <div className="flex justify-center items-center">
                 <RotatingCircle className="hidden md:block" now={now} />
                 <ExtensionAlert now={now} t={t} />
             </div>
-        </>
+        </ReducedMotion>
     );
 }

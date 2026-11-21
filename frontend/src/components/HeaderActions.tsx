@@ -5,6 +5,7 @@ import { useAtom } from "jotai";
 import { loadedCountStore, loadedStore } from "@/store/atom";
 
 import { AnimatePresence, motion } from "motion/react";
+import { ReducedMotion } from "@/lib/motion";
 import { useEffect, type ReactNode } from "react";
 import { Commands } from "@/components/Commands";
 import { RunButton } from "@/components/header/runBtn";
@@ -29,29 +30,31 @@ function LoadingActions({
     const [loaded] = useAtom(loadedStore);
 
     return (
-        <div className="relative h-full">
-            <motion.div
-                className={className}
-                initial={false}
-                animate={{ opacity: loaded ? 1 : 0 }}
-                transition={fade}
-                inert={!loaded}
-            >
-                {children}
-            </motion.div>
-            <AnimatePresence initial={false}>
-                {!loaded && (
-                    <motion.div
-                        key="loader"
-                        className="absolute inset-0 flex items-center"
-                        exit={{ opacity: 0 }}
-                        transition={fade}
-                    >
-                        <Skeleton className="w-full h-7" />
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
+        <ReducedMotion>
+            <div className="relative h-full">
+                <motion.div
+                    className={className}
+                    initial={false}
+                    animate={{ opacity: loaded ? 1 : 0 }}
+                    transition={fade}
+                    inert={!loaded}
+                >
+                    {children}
+                </motion.div>
+                <AnimatePresence initial={false}>
+                    {!loaded && (
+                        <motion.div
+                            key="loader"
+                            className="absolute inset-0 flex items-center"
+                            exit={{ opacity: 0 }}
+                            transition={fade}
+                        >
+                            <Skeleton className="w-full h-7" />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        </ReducedMotion>
     );
 }
 

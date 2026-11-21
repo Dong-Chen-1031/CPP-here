@@ -15,6 +15,7 @@ import { useAtom } from "jotai";
 import { loadedCountStore, loadedStore } from "@/store/atom";
 import { addAlert } from "@/lib/alert";
 import { AnimatePresence, motion } from "motion/react";
+import { ReducedMotion } from "@/lib/motion";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const LAYOUT = { editor: 70, output: 30 };
@@ -200,35 +201,43 @@ export function SplitViewEditor() {
     }, []);
 
     return (
-        <AnimatePresence initial={false} mode="popLayout">
-            {loaded ? (
-                !isMobile ? (
-                    <Loading key="computer" className="mb-4">
-                        <ComputerLayout>
-                            <Editor className="w-full h-full" />
-                        </ComputerLayout>
-                    </Loading>
+        <ReducedMotion>
+            <AnimatePresence initial={false} mode="popLayout">
+                {loaded ? (
+                    !isMobile ? (
+                        <Loading key="computer" className="mb-4">
+                            <ComputerLayout>
+                                <Editor className="w-full h-full" />
+                            </ComputerLayout>
+                        </Loading>
+                    ) : (
+                        <Loading key="mobile" className="mb-2">
+                            <MobileLayout>
+                                <Editor className="w-full h-full" />
+                            </MobileLayout>
+                        </Loading>
+                    )
                 ) : (
-                    <Loading key="mobile" className="mb-2">
+                    <Loading
+                        key="mobileLoading"
+                        className="md:hidden h-full mb-2"
+                    >
                         <MobileLayout>
-                            <Editor className="w-full h-full" />
+                            <EditorLoader />
                         </MobileLayout>
                     </Loading>
-                )
-            ) : (
-                <Loading key="mobileLoading" className="md:hidden h-full mb-2">
-                    <MobileLayout>
-                        <EditorLoader />
-                    </MobileLayout>
-                </Loading>
-            )}
-            {!loaded && (
-                <Loading key="computerLoading" className="hidden md:flex mb-4">
-                    <ComputerLayout>
-                        <EditorLoader />
-                    </ComputerLayout>
-                </Loading>
-            )}
-        </AnimatePresence>
+                )}
+                {!loaded && (
+                    <Loading
+                        key="computerLoading"
+                        className="hidden md:flex mb-4"
+                    >
+                        <ComputerLayout>
+                            <EditorLoader />
+                        </ComputerLayout>
+                    </Loading>
+                )}
+            </AnimatePresence>
+        </ReducedMotion>
     );
 }
