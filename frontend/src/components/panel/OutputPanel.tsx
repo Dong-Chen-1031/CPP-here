@@ -30,11 +30,6 @@ import {
     DISPLAY_LIMIT_LINE_CHARS,
 } from "@/config/runLimits";
 
-/**
- * `lineChars` is the length of the current unterminated line from earlier
- * chunks; the updated value is returned. Lines past DISPLAY_LIMIT_LINE_CHARS
- * are cut (lineClipped) but later lines still render.
- */
 async function copyText(text: string) {
     try {
         await navigator.clipboard.writeText(text);
@@ -49,6 +44,11 @@ async function copyText(text: string) {
     }
 }
 
+/**
+ * `lineChars` is the length of the current unterminated line from earlier
+ * chunks; the updated value is returned. Lines past DISPLAY_LIMIT_LINE_CHARS
+ * are cut (lineClipped) but later lines still render.
+ */
 function clipToBudget(
     text: string,
     chars: number,
