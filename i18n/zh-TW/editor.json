@@ -39,7 +39,7 @@
     },
     "output": {
         "label": "輸出",
-        "copyTip": "複製第一筆輸出",
+        "copyTip": "複製所有測資的輸出",
         "copyThisCaseTip": "複製此測資的輸出",
         "clearTip": "清除輸出",
         "noOutput": "尚無輸出結果",

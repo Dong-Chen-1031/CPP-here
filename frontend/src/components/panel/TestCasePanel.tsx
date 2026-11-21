@@ -80,27 +80,26 @@ export default function TestCasePanel({
                     <TestTubes className="w-3 h-3 shrink-0" />
                     <p className="text-sm truncate">{t("testCase.label")}</p>
                     <div className="flex-1"></div>
-                    <Tip>
-                        <Button
-                            variant="outline"
-                            className="px-2"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setTestCaseEditArgs({
-                                    open: true,
-                                    name: t("testCase.defaultName", {
-                                        index: testCases.length + 1,
-                                    }),
-                                    handleSubmit: handleAddTestCase,
-                                });
-                            }}
-                        >
-                            <CirclePlus className="w-4 h-4" />
-                            <span className="hidden @[250px]:inline">
-                                {t("testCase.addBtn")}
-                            </span>
-                        </Button>
-                    </Tip>
+                    <Button
+                        aria-label={t("testCase.addTip")}
+                        variant="outline"
+                        className="px-2"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setTestCaseEditArgs({
+                                open: true,
+                                name: t("testCase.defaultName", {
+                                    index: testCases.length + 1,
+                                }),
+                                handleSubmit: handleAddTestCase,
+                            });
+                        }}
+                    >
+                        <CirclePlus className="w-4 h-4" />
+                        <span className="hidden @[250px]:inline">
+                            {t("testCase.addBtn")}
+                        </span>
+                    </Button>
                 </div>
                 <div className="mt-4 overflow-y-auto max-h-[calc(100%-2rem)]">
                     {testCases.length === 0 ? (

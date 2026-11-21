@@ -339,23 +339,22 @@ export default function OutputPanel({ drawer = false }: { drawer?: boolean }) {
                         </span>
                     </Button>
                 </Tip>
-                <Tip label={t("output.clearTip")}>
-                    <Button
-                        variant="outline"
-                        onClick={() => {
-                            setOutput([]);
-                            clearOutputBuffer();
-                            setCleared(randomId());
-                        }}
-                        className="px-2"
-                        disabled={output.length === 0}
-                    >
-                        <EzIconMotion trigger={cleared} icon1={Trash} />
-                        <span className="hidden @[250px]:inline">
-                            {t("common:clear")}
-                        </span>
-                    </Button>
-                </Tip>
+                <Button
+                    aria-label={t("output.clearTip")}
+                    variant="outline"
+                    onClick={() => {
+                        setOutput([]);
+                        clearOutputBuffer();
+                        setCleared(randomId());
+                    }}
+                    className="px-2"
+                    disabled={output.length === 0}
+                >
+                    <EzIconMotion trigger={cleared} icon1={Trash} />
+                    <span className="hidden @[250px]:inline">
+                        {t("common:clear")}
+                    </span>
+                </Button>
             </div>
             {runStatus === "building" ? (
                 <div className="mt-4 flex-col flex justify-center w-full h-[90%] items-center gap-2">
