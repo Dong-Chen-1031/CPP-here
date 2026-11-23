@@ -159,7 +159,10 @@ function DiffTable({ diff }: { diff: OutputDiff }) {
     const lineNo =
         "pl-1.5 pr-2 text-right text-muted-foreground/60 select-none tabular-nums";
     return (
-        <div className="mt-1.5 grid grid-cols-[auto_1fr_auto_1fr] rounded-sm overflow-hidden border border-border">
+        <div
+            className="mt-1.5 grid grid-cols-[auto_1fr_auto_1fr] rounded-sm overflow-hidden border border-border"
+            translate="no"
+        >
             <div className="col-span-2 px-1.5 py-0.5 bg-muted/60 text-muted-foreground">
                 {t("output.expected")}
             </div>
@@ -428,7 +431,7 @@ function OutputCaseJSX({
                     </Tip>
                 </div>
             )}
-            <div ref={outputPlace}></div>
+            <div ref={outputPlace} translate="no"></div>
             <WrongAnswerDiff line={line} />
             {note && <p className="text-muted-foreground italic">{t(note)}</p>}
             {truncated && (

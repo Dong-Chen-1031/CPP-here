@@ -1,5 +1,4 @@
 import * as React from "react";
-import "@/lib/i18n";
 
 import { SiGithub } from "@icons-pack/react-simple-icons";
 

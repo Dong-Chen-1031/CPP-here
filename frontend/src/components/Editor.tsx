@@ -203,7 +203,7 @@ function CppEditor({
     );
 
     return (
-        <div className="relative h-full w-full">
+        <div className="relative h-full w-full" translate="no">
             {/* <div className="absolute bottom-5 right-5 z-10">
 
       </div> */}
