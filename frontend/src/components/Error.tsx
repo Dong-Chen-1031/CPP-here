@@ -4,6 +4,8 @@ import { Decoration, type DecorationSet, WidgetType } from "@codemirror/view";
 import { getDefaultStore } from "jotai";
 import { editorErrorStore } from "@/store/atom";
 import { editorFontSizeStore } from "@/store/configStore";
+import { addAlert } from "@/lib/alert";
+import i18next from "i18next";
 
 type Severity = "error" | "warning" | "info";
 
@@ -135,9 +137,20 @@ class ErrorWidget extends WidgetType {
             "flex-shrink-0 cursor-pointer opacity-50 hover:opacity-100 transition-opacity px-1";
         const copy = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy-icon lucide-copy "><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
         copyBtn.innerHTML = copy;
-        copyBtn.onclick = (e) => {
+        copyBtn.onclick = async (e) => {
             e.stopPropagation();
-            navigator.clipboard.writeText(this.message);
+            try {
+                await navigator.clipboard.writeText(this.message);
+            } catch {
+                addAlert({
+                    title: i18next.t("editor:output.copyFailedTitle"),
+                    description: i18next.t(
+                        "editor:output.copyFailedDescription",
+                    ),
+                    variant: "destructive",
+                });
+                return;
+            }
             copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><path d="M20 6 9 17l-5-5"/></svg>`;
 
             const fontSize = getDefaultStore().get(editorFontSizeStore);
