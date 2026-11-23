@@ -69,7 +69,10 @@
         "heading2": "所有測資",
         "title": "不再複製貼上",
         "description": "透過我們的擴充功能，直接從瀏覽器匯入測資。支援超過 100 個競賽程式平台。",
-        "comingSoon": "即將推出",
+        "learnMore": "了解更多",
+        "addToChrome": "加到 Chrome",
+        "addToEdge": "加到 Edge",
+        "addToFirefox": "加到 Firefox",
         "sourceCode": "原始碼",
         "demoDialog": {
             "title": "已收到來自擴充功能的測資",

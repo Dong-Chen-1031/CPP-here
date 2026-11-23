@@ -7,6 +7,10 @@
         "JavaScript": { "formatter": "prettier" },
         "JSON": { "formatter": "prettier" },
         "Astro": { "formatter": "prettier" },
+        "MDX": {
+            "formatter": "prettier",
+            "prettier": { "allowed": true, "parser": "mdx" }
+        },
         "Python": { "formatter": { "language_server": { "name": "ruff" } } }
     }
 }

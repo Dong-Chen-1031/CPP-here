@@ -1,14 +1,30 @@
 ---
 import Hr from "@/components/landing/hr.astro";
 import ExtensionMotion from "@/components/landing/extensionMotion.tsx";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { blogPath, getAllPosts, postPath, splitId } from "@/lib/blog";
+import { DEFAULT_LOCALE, findLocale } from "@/lib/locales";
+import { cn } from "@/lib/utils";
+import { PuzzleIcon } from "@lucide/astro";
+import {
+    SiFirefoxbrowser,
+    SiGooglechrome,
+} from "@icons-pack/react-simple-icons";
 
 interface Props {
     lang?: string;
     t?: Record<string, any>;
 }
 
-const { t } = Astro.props as Props;
+const { lang, t } = Astro.props as Props;
+
+const posts = (await getAllPosts()).filter(
+    (p) => splitId(p).slug === "browser-extension",
+);
+const post =
+    posts.find((p) => splitId(p).locale === findLocale(lang)) ??
+    posts.find((p) => splitId(p).locale === DEFAULT_LOCALE);
+const learnMoreHref = post ? postPath(post) : blogPath(lang);
 ---
 
 <section class="px-6 md:px-20 py-24 w-full relative">
@@ -45,29 +61,67 @@ const { t } = Astro.props as Props;
                     "Import test cases directly from your browser with our extension. Support over 100 competitive programming platforms."}
             </p>
             <div class="flex gap-4 mt-6">
-                {/* <Button className="hover:bg-primary/80" size={"lg"}
-                    >Get for Chrome</Button
-                > */}
-                <Button disabled size={"lg"}>
-                    {t?.comingSoon}
-                </Button>
-
-                <Button
-                    className="hover:bg-primary/80"
-                    size={"lg"}
-                    variant={"outline"}
+                <a
+                    href={learnMoreHref}
+                    id="extension-install"
+                    class={buttonVariants({ size: "lg" })}
+                    hidden
                 >
-                    <a
-                        href={
-                            "https://github.com/Dong-Chen-1031/CPP-here/tree/main/extensions"
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    <span data-extension-label="chrome" class="contents" hidden>
+                        <SiGooglechrome />
+                        {t?.addToChrome}
+                    </span>
+                    <span data-extension-label="edge" class="contents" hidden>
+                        <PuzzleIcon />
+                        {t?.addToEdge}
+                    </span>
+                    <span
+                        data-extension-label="firefox"
+                        class="contents"
+                        hidden
                     >
-                        {t?.sourceCode}
-                    </a>
-                </Button>
+                        <SiFirefoxbrowser />
+                        {t?.addToFirefox}
+                    </span>
+                </a>
+                <a
+                    href={learnMoreHref}
+                    class={buttonVariants({ variant: "outline", size: "lg" })}
+                >
+                    <span>{t?.learnMore}</span>
+                </a>
+                <a
+                    href={
+                        "https://github.com/Dong-Chen-1031/CPP-here/tree/main/extensions"
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class={cn(
+                        buttonVariants({ variant: "outline", size: "lg" }),
+                        "hover:bg-primary/80",
+                    )}
+                >
+                    {t?.sourceCode}
+                </a>
             </div>
         </div>
     </div>
 </section>
+
+<script>
+    import { detectExtensionBrowser, extensionStoreUrl } from "@/lib/extension";
+
+    const link = document.getElementById("extension-install");
+    const browser = detectExtensionBrowser();
+    const store = extensionStoreUrl(browser);
+    if (link instanceof HTMLAnchorElement && browser && store) {
+        link.hidden = false;
+        link.href = store;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        for (const label of link.querySelectorAll<HTMLElement>(
+            "[data-extension-label]",
+        ))
+            label.hidden = label.dataset.extensionLabel !== browser;
+    }
+</script>

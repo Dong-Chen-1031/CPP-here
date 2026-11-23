@@ -69,7 +69,10 @@
         "heading2": "All your test cases.",
         "title": "Skip the copy-paste",
         "description": "Import test cases directly from your browser with our extension. Support over 100 competitive programming platforms.",
-        "comingSoon": "Coming Soon",
+        "learnMore": "Learn More",
+        "addToChrome": "Add to Chrome",
+        "addToEdge": "Add to Edge",
+        "addToFirefox": "Add to Firefox",
         "sourceCode": "Source Code",
         "demoDialog": {
             "title": "Received Test Case from Extension",
