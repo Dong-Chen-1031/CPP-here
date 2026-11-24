@@ -137,6 +137,7 @@ export function outputClearCount() {
     return clearCount;
 }
 
+/** Never rejects, like flushOutputChunks: a run must not stop at "building". */
 export async function clearOutputBuffer() {
     clearCount++;
     if (flushTimer) {
@@ -144,7 +145,9 @@ export async function clearOutputBuffer() {
         flushTimer = null;
     }
     pendingChunks = [];
-    return enqueueWrite(() => outputdb.outputChunks.clear());
+    await enqueueWrite(() => outputdb.outputChunks.clear()).catch((e) =>
+        console.error("Could not clear output", e),
+    );
 }
 
 export async function getOutputString(caseId: string) {
