@@ -16,11 +16,13 @@ import {
 import { addAlert } from "@/lib/alert";
 import { callAPI } from "@/lib/apiClient";
 import type { verifyAPI } from "@/pages/api/verify";
+import { privacyMode } from "@/lib/privacy";
 
 /** How long before the JWT expires we refresh the Turnstile token. */
 const RESET_BUFFER_MS = 10000;
 
 export default function TurnstileWidget() {
+    if (privacyMode) return null;
     return PUBLIC_BYPASS_CAPTCHA ? <BypassTurnstile /> : <TurnstileChallenge />;
 }
 

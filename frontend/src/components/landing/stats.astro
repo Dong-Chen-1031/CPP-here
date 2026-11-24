@@ -136,9 +136,19 @@ const stats: {
             </div>
         ))}
     </div>
+    {/* Shown by the html[data-privacy] rule below, from layouts/Layout.astro. */}
+    <p class="privacy-note mt-6 text-center text-sm text-muted-foreground">
+        {t?.privacyNote}
+    </p>
 </section>
 
 <style>
+    .privacy-note {
+        display: none;
+    }
+    :global(html[data-privacy]) .privacy-note {
+        display: block;
+    }
     .stat-card {
         --mx: 50%;
         --my: 0%;
@@ -156,8 +166,11 @@ const stats: {
     import { PUBLIC_API_URL } from "astro:env/client";
     import { animate, inView } from "motion";
     import { formatStat, type StatFormat } from "@/lib/statsFormat";
+    import { privacyMode } from "@/lib/privacy";
 
     async function refreshStats() {
+        // Privacy mode keeps the numbers from the build (see .privacy-note).
+        if (privacyMode) return;
         const res = await fetch(`${PUBLIC_API_URL}/api/stats`);
         if (!res.ok) return;
         const totals: Record<string, number | undefined> = await res.json();

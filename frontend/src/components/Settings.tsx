@@ -12,7 +12,7 @@ import {
     HoverCardContent,
     HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { codeStore, settingsPanelStore } from "@/store/atom";
+import { alertDialogStore, codeStore, settingsPanelStore } from "@/store/atom";
 import {
     compilerChoiceStore,
     compilerModeStore,
@@ -25,8 +25,10 @@ import {
     type CompilerMode,
 } from "@/store/configStore";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { privacyMode, setPrivacyMode } from "@/lib/privacy";
 import { MAX_TIMEOUT_S, NO_TIME_LIMIT } from "@/config/runLimits";
-import { useAtom, useAtomValue, useStore } from "jotai";
+import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { addAlert, UNDO_ALERT_MS } from "@/lib/alert";
 import {
     Field,
@@ -338,6 +340,30 @@ export function Settings({ allLangs }: SettingsProps) {
     const resetSettingsAtoms = useResetSettingsAtoms();
     const [resetTimes, setResetTimes] = useState(0);
     const [setCodeTimes, setSetCodeTimes] = useState(0);
+    const setAlertDialog = useSetAtom(alertDialogStore);
+
+    // Applied by a reload, so a dialog says so first.
+    const confirmPrivacyMode = (on: boolean) => {
+        const key = on ? "enable" : "disable";
+        setAlertDialog({
+            title: t(`privacy.${key}Title`),
+            description: t(`privacy.${key}Description`),
+            actions: [
+                {
+                    text: t("privacy.reload"),
+                    autoFocus: true,
+                    onClick: () => {
+                        if (!setPrivacyMode(on))
+                            addAlert({
+                                title: t("privacy.saveFailedTitle"),
+                                description: t("privacy.saveFailed"),
+                                variant: "destructive",
+                            });
+                    },
+                },
+            ],
+        });
+    };
 
     const matchedLang =
         Object.keys(allLangs).find(
@@ -383,6 +409,9 @@ export function Settings({ allLangs }: SettingsProps) {
                   {
                       type: "Custom" as const,
                       label: t("settings.compiler"),
+                      description: privacyMode
+                          ? t("privacy.compilerLocked")
+                          : undefined,
                       hoverDetail: (
                           <div className="flex flex-col gap-2">
                               <p>{t("settings.compilerDesc")}</p>
@@ -432,7 +461,9 @@ export function Settings({ allLangs }: SettingsProps) {
                       ),
                       render: () => (
                           <Select
-                              value={compilerMode}
+                              // Privacy mode compiles in the browser only.
+                              value={privacyMode ? "browser" : compilerMode}
+                              disabled={privacyMode}
                               onValueChange={(value) => {
                                   const mode = value as CompilerMode;
                                   setCompilerMode(mode);
@@ -472,6 +503,36 @@ export function Settings({ allLangs }: SettingsProps) {
                   },
               ]
             : []),
+        {
+            type: "Custom",
+            label: t("privacy.label"),
+            description: t("privacy.description"),
+            hoverDetail: (
+                <div className="flex flex-col gap-2">
+                    <p>{t("privacy.detail")}</p>
+                    <ul className="flex list-disc flex-col gap-1 pl-4">
+                        {(
+                            [
+                                "telemetry",
+                                "compiler",
+                                "share",
+                                "stats",
+                                "csp",
+                            ] as const
+                        ).map((item) => (
+                            <li key={item}>{t(`privacy.details.${item}`)}</li>
+                        ))}
+                    </ul>
+                </div>
+            ),
+            render: () => (
+                <Switch
+                    checked={privacyMode}
+                    onCheckedChange={confirmPrivacyMode}
+                    aria-label={t("privacy.label")}
+                />
+            ),
+        },
         {
             type: "Custom",
             label: t("settings.language"),

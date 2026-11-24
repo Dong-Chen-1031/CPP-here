@@ -297,5 +297,30 @@
     "format": {
         "failedTitle": "Couldn't format the code",
         "failedDescription": "Your code was left unchanged."
+    },
+    "privacy": {
+        "label": "Privacy Mode",
+        "description": "Send nothing: everything stays on this device.",
+        "detail": "With privacy mode on, this site makes no requests besides downloading its own files (the page, its scripts and the in-browser compiler).",
+        "details": {
+            "telemetry": "No usage analytics are sent.",
+            "compiler": "Code always compiles in your browser, never on our servers. The first build downloads the compiler (about 26 MB).",
+            "share": "Sharing code and opening shared links are turned off.",
+            "stats": "Your builds and runs are not added to the totals on the home page.",
+            "csp": "A Content Security Policy blocks every other request the page might make."
+        },
+        "enableTitle": "Turn on privacy mode?",
+        "enableDescription": "The page reloads to apply it. Your code, test cases and settings are kept.",
+        "disableTitle": "Turn off privacy mode?",
+        "disableDescription": "The page reloads to lift the restrictions. Your code, test cases and settings are kept.",
+        "reload": "Reload",
+        "saveFailedTitle": "Could not change privacy mode",
+        "saveFailed": "This browser blocks the site's storage, so the setting cannot be saved.",
+        "compilerLocked": "Privacy mode always compiles in your browser.",
+        "compileUnavailable": "Privacy mode only compiles in your browser, and the in-browser compiler is not available here. Turn off privacy mode in Settings to compile on the server.",
+        "shareDisabledTitle": "Sharing is off",
+        "shareDisabled": "Sharing is unavailable in privacy mode.",
+        "receiveDisabledTitle": "Cannot open shared code",
+        "receiveDisabled": "Shared code cannot be opened in privacy mode, since it has to be downloaded from our servers. Turn off privacy mode in Settings to open it."
     }
 }

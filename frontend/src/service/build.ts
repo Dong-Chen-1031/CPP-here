@@ -17,6 +17,7 @@ import { addAlert } from "@/lib/alert";
 import { waitForJwt } from "@/lib/apiClient";
 import { openToolchainCache } from "@/compiler/toolchainCache";
 import { isOffline } from "@/lib/offline";
+import { privacyMode } from "@/lib/privacy";
 import { serverBuild } from "./serverBuild";
 import { failedBuild } from "./buildResult";
 import {
@@ -112,12 +113,13 @@ function needsExceptions(result: BuildResult) {
 
 /**
  * Shipped (PUBLIC_LOCAL_COMPILER), not hidden by the compiler-menu flag, and
- * supported by this browser.
+ * supported by this browser. Privacy mode ignores the flag: the in-browser
+ * compiler is the only one it can use.
  */
 export function browserCompilerAvailable(getter: Getter = get) {
     return (
         PUBLIC_LOCAL_COMPILER &&
-        getter(compilerFlagStore) !== null &&
+        (privacyMode || getter(compilerFlagStore) !== null) &&
         browserCompilerSupported()
     );
 }
@@ -126,8 +128,12 @@ export const browserCompilerAvailableStore = atom((getter) =>
     browserCompilerAvailable(getter),
 );
 
-/** Without the in-browser compiler only the server is left. */
+/**
+ * Without the in-browser compiler only the server is left; privacy mode
+ * always builds in the browser (and fails to when it cannot).
+ */
 export function effectiveCompilerMode(getter: Getter = get): CompilerMode {
+    if (privacyMode) return "browser";
     return browserCompilerAvailable(getter)
         ? getter(compilerModeStore)
         : "server";
@@ -384,7 +390,10 @@ async function buildWith(
     fallbackFrom?: BuildTarget,
 ): Promise<BuildResult | null> {
     let result: BuildResult | null;
-    if (target === "server" && isOffline()) {
+    if (privacyMode && (target === "server" || !browserCompilerAvailable())) {
+        // Nothing may be sent, so the server is never used.
+        result = failedBuild(i18next.t("editor:privacy.compileUnavailable"));
+    } else if (target === "server" && isOffline()) {
         // Without this the build would wait for Turnstile until it times out.
         result = failedBuild(i18next.t("editor:compiler.offline"));
     } else if (target === "server") {
@@ -455,7 +464,10 @@ export async function build(
         for (;;) {
             if (stopped) return cancelled();
             chosen = target ?? chooseTarget(get);
-            const offerAuto = !target && effectiveCompilerMode() === "browser";
+            const offerAuto =
+                !target &&
+                !privacyMode &&
+                effectiveCompilerMode() === "browser";
             let result = await buildWith(
                 chosen,
                 code,
@@ -535,7 +547,7 @@ export function cancelBuild() {
 let slowBuildReported = false;
 
 function suggestServerForSpeed() {
-    if (slowBuildReported) return;
+    if (slowBuildReported || privacyMode) return;
     slowBuildReported = true;
     addAlert({
         title: i18next.t("editor:compiler.slowTitle"),
@@ -556,7 +568,13 @@ export function suggestOtherCompiler(
     result: BuildResult,
     retry: (target?: BuildTarget) => void,
 ) {
-    if (!browserCompilerAvailable() || !result.target || result.triedBoth)
+    // Privacy mode has no other compiler to point to.
+    if (
+        privacyMode ||
+        !browserCompilerAvailable() ||
+        !result.target ||
+        result.triedBoth
+    )
         return;
     const t = i18next.t;
     if (!result.unavailable) {

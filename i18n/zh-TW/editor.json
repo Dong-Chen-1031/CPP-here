@@ -294,5 +294,30 @@
     "format": {
         "failedTitle": "無法格式化程式碼",
         "failedDescription": "程式碼沒有被更動。"
+    },
+    "privacy": {
+        "label": "隱私模式",
+        "description": "不傳送任何資料，所有東西都留在這台裝置上。",
+        "detail": "開啟隱私模式後，除了下載本站自己的檔案（網頁、程式腳本和瀏覽器內編譯器），網站不會發出任何請求。",
+        "details": {
+            "telemetry": "不傳送使用情況分析。",
+            "compiler": "程式碼一律在瀏覽器中編譯，不會送到我們的伺服器。第一次編譯會下載編譯器（約 26 MB）。",
+            "share": "分享程式碼與開啟分享連結都會停用。",
+            "stats": "你的編譯與執行次數不會計入首頁的統計數字。",
+            "csp": "以內容安全政策（CSP）擋下網頁可能發出的其他所有請求。"
+        },
+        "enableTitle": "要開啟隱私模式嗎？",
+        "enableDescription": "頁面會重新載入以套用設定，你的程式碼、測資和設定都會保留。",
+        "disableTitle": "要關閉隱私模式嗎？",
+        "disableDescription": "頁面會重新載入以解除限制，你的程式碼、測資和設定都會保留。",
+        "reload": "重新載入",
+        "saveFailedTitle": "無法變更隱私模式",
+        "saveFailed": "此瀏覽器封鎖了網站儲存空間，無法儲存這項設定。",
+        "compilerLocked": "隱私模式下一律在瀏覽器中編譯。",
+        "compileUnavailable": "隱私模式只能在瀏覽器中編譯，但這裡無法使用瀏覽器內編譯器。請到設定關閉隱私模式，改用伺服器編譯。",
+        "shareDisabledTitle": "分享已停用",
+        "shareDisabled": "因為隱私模式，所以無法使用分享功能。",
+        "receiveDisabledTitle": "無法開啟分享的程式碼",
+        "receiveDisabled": "因為隱私模式，無法開啟分享的程式碼（需要從我們的伺服器下載）。請到設定關閉隱私模式後再開啟。"
     }
 }

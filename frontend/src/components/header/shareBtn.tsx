@@ -13,6 +13,8 @@ import { addAlert } from "@/lib/alert";
 import Tip from "@/components/ui/tips";
 import { EzIconMotion } from "@/components/IconMotion";
 import { shareCode } from "@/service/share";
+import { cn } from "@/lib/utils";
+import { usePrivacyMode } from "@/lib/usePrivacyMode";
 
 export function ShareButton({
     className = "",
@@ -26,6 +28,38 @@ export function ShareButton({
     // Waiting for Turnstile before the share can be sent
     const [verifying, setVerifying] = React.useState(false);
     const [sharedTimes, setSharedTimes] = React.useState(0);
+    const privacy = usePrivacyMode();
+
+    if (privacy)
+        // Not `disabled`: a disabled button gets no hover for the tooltip,
+        // and a tap on it (where tooltips are hidden) should explain why.
+        return (
+            <ButtonGroup>
+                <Tip label={t("privacy.shareDisabled")}>
+                    <Button
+                        variant="outline"
+                        className={cn(
+                            className,
+                            "cursor-not-allowed opacity-50 hover:bg-background dark:hover:bg-input/30",
+                        )}
+                        aria-disabled
+                        aria-label={`${t("headerActions.shareCodeTip")}: ${t("privacy.shareDisabled")}`}
+                        onClick={(e) => {
+                            onClick(e);
+                            addAlert({
+                                title: t("privacy.shareDisabledTitle"),
+                                description: t("privacy.shareDisabled"),
+                            });
+                        }}
+                    >
+                        <Share2Icon className="size-3" />
+                        <span className="inline md:hidden lg:inline">
+                            {t("headerActions.shareCode")}
+                        </span>
+                    </Button>
+                </Tip>
+            </ButtonGroup>
+        );
 
     return (
         <ButtonGroup>

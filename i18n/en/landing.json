@@ -95,7 +95,8 @@
         "totalTimeCompiled": "Total Time Compiled",
         "totalTimeCompiledDescription": "Cumulative CPU time spent compiling across all users.",
         "programsRun": "Programs Run",
-        "programsRunDescription": "Times a compiled program was run, counting each test case."
+        "programsRunDescription": "Times a compiled program was run, counting each test case.",
+        "privacyNote": "Privacy mode is on, so these numbers may be out of date."
     },
     "cta": {
         "label": "get started",

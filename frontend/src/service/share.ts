@@ -15,6 +15,9 @@ import {
     type ShareObject,
 } from "@/types/share";
 import type { shareAPI } from "@/pages/api/share";
+import { privacyMode } from "@/lib/privacy";
+
+const PRIVACY_ERROR = "Sharing is off in privacy mode.";
 
 const defaultStore = getDefaultStore();
 
@@ -25,6 +28,7 @@ type ShareResult =
 export async function shareCode({
     onVerifying,
 }: { onVerifying?: () => void } = {}): Promise<ShareResult> {
+    if (privacyMode) return { ok: false, errors: [PRIVACY_ERROR] };
     try {
         if (!defaultStore.get(verifyJwtStore)) {
             onVerifying?.();
@@ -73,6 +77,7 @@ type FetchShareResult =
 export async function fetchSharedCode(
     shareId: string,
 ): Promise<FetchShareResult> {
+    if (privacyMode) return { ok: false, errors: [PRIVACY_ERROR] };
     if (!PUBLIC_S3_BUCKET_URL) {
         console.error(
             "S3 bucket URL is not configured. Cannot fetch shared code.",

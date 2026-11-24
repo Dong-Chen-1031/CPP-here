@@ -95,7 +95,8 @@
         "totalTimeCompiled": "編譯總時長",
         "totalTimeCompiledDescription": "所有使用者累計花費在編譯上的 CPU 時間。",
         "programsRun": "執行次數",
-        "programsRunDescription": "編譯好的程式被執行的總次數"
+        "programsRunDescription": "編譯好的程式被執行的總次數",
+        "privacyNote": "因為隱私模式，數字可能不是最新資料。"
     },
     "cta": {
         "label": "讓我們開始吧",

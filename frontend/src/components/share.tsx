@@ -19,6 +19,8 @@ import { codeStore, inputStore, testCasesStore } from "@/store/atom";
 import { importOutputCases, outputStore } from "@/store/outputStore";
 import { Spinner } from "./ui/spinner";
 import { addAlert } from "@/lib/alert";
+import { privacyMode } from "@/lib/privacy";
+import Tip from "@/components/ui/tips";
 
 export function ShareReceiveDialog() {
     const [showDialog, setShowDialog] = useState(false);
@@ -49,7 +51,9 @@ export function ShareReceiveDialog() {
         if (urlParams.has("shareId")) {
             setShareId(urlParams.get("shareId"));
             setShowDialog(true);
-            history.replaceState(null, "", "/editor");
+            // Kept in privacy mode: turning it off reloads the page, which
+            // then offers the shared code again.
+            if (!privacyMode) history.replaceState(null, "", "/editor");
         }
     }, []);
 
@@ -63,14 +67,21 @@ export function ShareReceiveDialog() {
                     <AlertDialogDescription asChild>
                         <div>
                             <p className="font-quattro">
-                                {t("shareReceive.description")}
-                                <br />
-                                {t("shareReceive.descriptionSub")}
+                                {privacyMode ? (
+                                    t("privacy.receiveDisabled")
+                                ) : (
+                                    <>
+                                        {t("shareReceive.description")}
+                                        <br />
+                                        {t("shareReceive.descriptionSub")}
+                                    </>
+                                )}
                             </p>
                             <FieldGroup className="gap-1 mt-2">
                                 {Object.entries(table).map(([key, label]) => (
                                     <Field orientation="horizontal" key={label}>
                                         <Checkbox
+                                            disabled={privacyMode}
                                             id={`terms-checkbox-${label.toLowerCase()}`}
                                             name={`terms-checkbox-${label.toLowerCase()}`}
                                             className="cursor-pointer"
@@ -101,60 +112,84 @@ export function ShareReceiveDialog() {
                     <AlertDialogCancel>
                         {t("shareReceive.cancel")}
                     </AlertDialogCancel>
-                    <AlertDialogAction
-                        disabled={loading}
-                        onClick={(e) => {
-                            e.preventDefault();
-                            setLoading(true);
-                            fetchSharedCode(shareId!).then(async (res) => {
-                                if (!res.ok) {
-                                    setLoading(false);
+                    {privacyMode ? (
+                        <Tip label={t("privacy.receiveDisabled")}>
+                            <AlertDialogAction
+                                aria-disabled
+                                className="cursor-not-allowed opacity-50 hover:bg-primary"
+                                onClick={(e) => {
+                                    e.preventDefault();
                                     addAlert({
-                                        title: t("shareReceive.receiveFailed"),
+                                        title: t(
+                                            "privacy.receiveDisabledTitle",
+                                        ),
                                         description: t(
-                                            "shareReceive.receiveFailedDesc",
+                                            "privacy.receiveDisabled",
                                         ),
-                                        variant: "destructive",
                                     });
-                                    return;
-                                }
-                                const data = res.data;
-                                if (checkedItems.code) {
-                                    defaultStore.set(codeStore, data.code);
-                                }
-                                if (checkedItems.input) {
-                                    defaultStore.set(
-                                        inputStore,
-                                        data.inputData,
-                                    );
-                                }
-                                if (checkedItems.testCase) {
-                                    defaultStore.set(
-                                        testCasesStore,
-                                        data.testCase,
-                                    );
-                                }
-                                if (checkedItems.output) {
-                                    defaultStore.set(
-                                        outputStore,
-                                        await importOutputCases(
-                                            data.outputData,
+                                }}
+                            >
+                                {t("shareReceive.receive")}
+                            </AlertDialogAction>
+                        </Tip>
+                    ) : (
+                        <AlertDialogAction
+                            disabled={loading}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setLoading(true);
+                                fetchSharedCode(shareId!).then(async (res) => {
+                                    if (!res.ok) {
+                                        setLoading(false);
+                                        addAlert({
+                                            title: t(
+                                                "shareReceive.receiveFailed",
+                                            ),
+                                            description: t(
+                                                "shareReceive.receiveFailedDesc",
+                                            ),
+                                            variant: "destructive",
+                                        });
+                                        return;
+                                    }
+                                    const data = res.data;
+                                    if (checkedItems.code) {
+                                        defaultStore.set(codeStore, data.code);
+                                    }
+                                    if (checkedItems.input) {
+                                        defaultStore.set(
+                                            inputStore,
+                                            data.inputData,
+                                        );
+                                    }
+                                    if (checkedItems.testCase) {
+                                        defaultStore.set(
+                                            testCasesStore,
+                                            data.testCase,
+                                        );
+                                    }
+                                    if (checkedItems.output) {
+                                        defaultStore.set(
+                                            outputStore,
+                                            await importOutputCases(
+                                                data.outputData,
+                                            ),
+                                        );
+                                    }
+                                    addAlert({
+                                        title: t("shareReceive.receiveSuccess"),
+                                        description: t(
+                                            "shareReceive.receiveSuccessDesc",
                                         ),
-                                    );
-                                }
-                                addAlert({
-                                    title: t("shareReceive.receiveSuccess"),
-                                    description: t(
-                                        "shareReceive.receiveSuccessDesc",
-                                    ),
+                                    });
+                                    setLoading(false);
+                                    setShowDialog(false);
                                 });
-                                setLoading(false);
-                                setShowDialog(false);
-                            });
-                        }}
-                    >
-                        {loading && <Spinner />} {t("shareReceive.receive")}
-                    </AlertDialogAction>
+                            }}
+                        >
+                            {loading && <Spinner />} {t("shareReceive.receive")}
+                        </AlertDialogAction>
+                    )}
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>

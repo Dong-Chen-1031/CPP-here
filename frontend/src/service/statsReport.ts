@@ -1,4 +1,5 @@
 import { PUBLIC_API_URL } from "astro:env/client";
+import { privacyMode } from "@/lib/privacy";
 import type { BuildResult } from "./build";
 
 // Runs are sent in batches: running every test case starts many programs at
@@ -12,9 +13,11 @@ let flushTimer: ReturnType<typeof setTimeout> | undefined;
  * Sends a report to the landing page totals. Only numbers are sent, never the
  * code. A beacon outlives the page. The Worker serves /api/stats on the
  * page's own origin; a static build's backend has no such route, so the
- * report is dropped there.
+ * report is dropped there. Privacy mode sends nothing, so the totals miss
+ * its builds and runs.
  */
 function send(report: Record<string, number>) {
+    if (privacyMode) return;
     try {
         navigator.sendBeacon(
             `${PUBLIC_API_URL}/api/stats`,

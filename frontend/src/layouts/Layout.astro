@@ -4,6 +4,7 @@ import "@/styles/global.css";
 import PostHog from "@/components/posthog.astro";
 import { cn, plainText } from "@/lib/utils";
 import { findLocale } from "@/lib/locales";
+import { PRIVACY_MODE_KEY } from "@/lib/privacy";
 
 interface Props {
     title?: string;
@@ -63,6 +64,46 @@ const ogLocale = htmlLang === "en" ? "en_US" : htmlLang.replace("-", "_");
 >
     <head>
         <meta charset="UTF-8" />
+        <script
+            is:inline
+            define:vars={{
+                privacyKey: PRIVACY_MODE_KEY,
+                dev: import.meta.env.DEV,
+            }}
+        >
+            try {
+                if (localStorage.getItem(privacyKey) === "true") {
+                    document.documentElement.dataset.privacy = "";
+                    const origin = location.origin;
+                    // Paths, so that the site's own API is blocked too. The
+                    // dev server also needs its HMR socket and module fetches.
+                    const connect = dev
+                        ? ["'self'", "ws:", "wss:"]
+                        : [origin + "/toolchain/", origin + "/_astro/"];
+                    const meta = document.createElement("meta");
+                    meta.httpEquiv = "Content-Security-Policy";
+                    meta.content = [
+                        "default-src 'self'",
+                        // Inline scripts are Astro's own; wasm is the compiler
+                        // and the formatter.
+                        "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:",
+                        "style-src 'self' 'unsafe-inline'",
+                        "img-src 'self' data: blob:",
+                        "font-src 'self' data:",
+                        "media-src 'self' data: blob:",
+                        "connect-src " +
+                            [...connect, "data:", "blob:"].join(" "),
+                        "worker-src 'self' blob:",
+                        "manifest-src 'self'",
+                        "frame-src 'none'",
+                        "object-src 'none'",
+                        "base-uri 'self'",
+                        "form-action 'none'",
+                    ].join("; ");
+                    document.head.prepend(meta);
+                }
+            } catch {}
+        </script>
         <Font
             cssVariable="--font-jetbrains-mono"
             preload={
