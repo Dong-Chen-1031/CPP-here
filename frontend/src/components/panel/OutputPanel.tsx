@@ -311,81 +311,101 @@ function OutputCaseJSX({
         let lineChars = 0;
         let isTruncated = false;
 
-        const sub = liveQuery(async () => ({
-            firstId: (
-                await outputdb.outputChunks
-                    .where("testCaseId")
-                    .equals(tid)
-                    .limit(1)
-                    .primaryKeys()
-            )[0],
-            newChunks: await outputdb.outputChunks
-                .where("[testCaseId+id]")
-                .between([tid, lastId], [tid, Dexie.maxKey], false, true)
-                .toArray(),
-        })).subscribe({
-            next: ({ firstId, newChunks }) => {
-                if (cancelled) return;
+        let sub: { unsubscribe(): void } | undefined;
+        let retryTimer: ReturnType<typeof setTimeout> | undefined;
+        let retries = 0;
 
-                if (
-                    firstId === undefined ||
-                    (firstRenderedId !== undefined &&
-                        firstId !== firstRenderedId)
-                ) {
-                    container.replaceChildren();
-                    firstRenderedId = undefined;
-                    renderedChars = 0;
-                    renderedLines = 0;
-                    lineChars = 0;
-                    isTruncated = false;
-                    setTruncated(false);
-                    if (firstId === undefined) return;
-                }
+        const subscribe = () => {
+            sub = liveQuery(async () => ({
+                firstId: (
+                    await outputdb.outputChunks
+                        .where("testCaseId")
+                        .equals(tid)
+                        .limit(1)
+                        .primaryKeys()
+                )[0],
+                newChunks: await outputdb.outputChunks
+                    .where("[testCaseId+id]")
+                    .between([tid, lastId], [tid, Dexie.maxKey], false, true)
+                    .toArray(),
+            })).subscribe({
+                next: ({ firstId, newChunks }) => {
+                    if (cancelled) return;
+                    retries = 0;
 
-                let html = "";
-                for (const chunk of newChunks) {
-                    const id = chunk.id;
-                    if (id <= lastId) continue;
-                    firstRenderedId ??= id;
-                    lastId = id;
-                    if (isTruncated) {
-                        if (chunk.type === "error") {
-                            html += outputChunkToHtml(chunk);
-                        }
-                        continue;
-                    }
-                    const clip = clipToBudget(
-                        chunk.content,
-                        DISPLAY_LIMIT_CHARS - renderedChars,
-                        DISPLAY_LIMIT_LINES - renderedLines,
-                        lineChars,
-                    );
-                    const { kept, newlines, clipped } = clip;
-                    renderedChars += kept.length;
-                    renderedLines += newlines;
-                    lineChars = clip.lineChars;
-                    if (kept) {
-                        html += outputChunkToHtml({ ...chunk, content: kept });
-                    }
-                    if (clip.lineClipped) setTruncated(true);
                     if (
-                        clipped ||
-                        renderedChars >= DISPLAY_LIMIT_CHARS ||
-                        renderedLines >= DISPLAY_LIMIT_LINES
+                        firstId === undefined ||
+                        (firstRenderedId !== undefined &&
+                            firstId !== firstRenderedId)
                     ) {
-                        isTruncated = true;
-                        setTruncated(true);
+                        container.replaceChildren();
+                        firstRenderedId = undefined;
+                        renderedChars = 0;
+                        renderedLines = 0;
+                        lineChars = 0;
+                        isTruncated = false;
+                        setTruncated(false);
+                        if (firstId === undefined) return;
                     }
-                }
 
-                if (html) container.insertAdjacentHTML("beforeend", html);
-            },
-            error: console.error,
-        });
+                    let html = "";
+                    for (const chunk of newChunks) {
+                        const id = chunk.id;
+                        if (id <= lastId) continue;
+                        firstRenderedId ??= id;
+                        lastId = id;
+                        if (isTruncated) {
+                            if (chunk.type === "error") {
+                                html += outputChunkToHtml(chunk);
+                            }
+                            continue;
+                        }
+                        const clip = clipToBudget(
+                            chunk.content,
+                            DISPLAY_LIMIT_CHARS - renderedChars,
+                            DISPLAY_LIMIT_LINES - renderedLines,
+                            lineChars,
+                        );
+                        const { kept, newlines, clipped } = clip;
+                        renderedChars += kept.length;
+                        renderedLines += newlines;
+                        lineChars = clip.lineChars;
+                        if (kept) {
+                            html += outputChunkToHtml({
+                                ...chunk,
+                                content: kept,
+                            });
+                        }
+                        if (clip.lineClipped) setTruncated(true);
+                        if (
+                            clipped ||
+                            renderedChars >= DISPLAY_LIMIT_CHARS ||
+                            renderedLines >= DISPLAY_LIMIT_LINES
+                        ) {
+                            isTruncated = true;
+                            setTruncated(true);
+                        }
+                    }
+
+                    if (html) container.insertAdjacentHTML("beforeend", html);
+                },
+                error: (e) => {
+                    console.error(e);
+                    // A liveQuery stops at its first error. Start it again, e.g.
+                    // once the output database has been reopened, from the last
+                    // chunk shown.
+                    if (cancelled || retries >= 3) return;
+                    retries++;
+                    retryTimer = setTimeout(subscribe, 500 * retries);
+                },
+            });
+        };
+        subscribe();
 
         return () => {
             cancelled = true;
-            sub.unsubscribe();
+            clearTimeout(retryTimer);
+            sub?.unsubscribe();
             container.replaceChildren();
         };
     }, [line.testCaseId]);
