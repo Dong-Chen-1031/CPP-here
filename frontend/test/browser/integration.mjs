@@ -16,7 +16,6 @@ const server = await createServer({
         include: ["@uiw/react-codemirror", "@bjorn3/browser_wasi_shim"],
     },
     root,
-    resolve: { alias: { "@": path.join(root, "src") } },
     plugins: [
         toolchainId(),
         // src/lib/i18n.ts imports the locale list and messages from it.
