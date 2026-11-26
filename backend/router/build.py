@@ -1,7 +1,10 @@
 import asyncio
+import base64
 import functools
 import pathlib
 import re
+import shutil
+import tempfile
 import time
 from hashlib import sha256
 from typing import Literal
@@ -88,9 +91,9 @@ class BuildRequest(BaseModel):
 class BuildResponse(BaseModel):
     ok: bool
     js_code: str
-    wasm_url: str
+    wasm_base64: str = ""
     errors: list[str] = []
-    # The build failed for a reason other than the code (see BuildError)
+    warnings: list[str] = []
     unavailable: bool = False
 
     metric_status: Literal["success", "failure", "cache", "error"] = Field("success")
@@ -98,6 +101,14 @@ class BuildResponse(BaseModel):
 
 
 _in_flight: dict[str, asyncio.Event] = {}
+
+WARNINGS_NAME = "warnings.txt"
+
+
+def clean_build_logs(logs: str) -> str:
+    """The compiler's diagnostics, without emcc's own failure summary."""
+    return re.sub(r"emcc: error:[\s\S]*?failed \(returned 1\)\n?", "", logs).strip()
+
 
 # How many times a request may wait on someone else's in-flight build before it
 # gives up and builds the code itself. Bounds the retry loop in build_cpp().
@@ -107,6 +118,13 @@ _DEDUP_MAX_WAITS = 2
 async def read_file(path: str) -> str:
     async with open(path) as f:
         return await f.read()
+
+
+async def read_wasm(path: str | pathlib.Path) -> tuple[str, int]:
+    """The wasm file as base64, with its size in bytes."""
+    async with open(path, mode="rb") as f:
+        data = await f.read()
+    return base64.b64encode(data).decode("ascii"), len(data)
 
 
 def log_build_request(func):
@@ -135,22 +153,17 @@ def log_build_request(func):
         if result.wasm_size_bytes:
             span.set_attribute("build.wasm_size_bytes", result.wasm_size_bytes)
 
-        with tracer.start_as_current_span("build.record_stats"):
-            await add_build_stats(
-                lines=code_lines,
-                wasm_size_bytes=result.wasm_size_bytes or 0,
-                duration_seconds=elapsed,
-            )
+        if settings.BUILD_STATS:
+            with tracer.start_as_current_span("build.record_stats"):
+                await add_build_stats(
+                    lines=code_lines,
+                    wasm_size_bytes=result.wasm_size_bytes or 0,
+                    duration_seconds=elapsed,
+                )
 
         return result
 
     return wrapper
-
-
-def get_size(path: str | pathlib.Path) -> int:
-    if isinstance(path, str):
-        path = pathlib.Path(path)
-    return path.stat().st_size
 
 
 async def lookup_cache(case_id: str) -> BuildResponse | None:
@@ -166,16 +179,21 @@ async def _lookup_cache(case_id: str) -> BuildResponse | None:
     if not cache_entry:
         return None
 
-    js_path = pathlib.Path(settings.CACHE_PATH) / case_id / "build.js"
-    wasm_path = pathlib.Path(settings.CACHE_PATH) / case_id / "build.wasm"
-    if js_path.exists() and wasm_path.exists():
+    build_dir = pathlib.Path(settings.CACHE_PATH) / case_id
+    js_path = build_dir / "build.js"
+    wasm_path = build_dir / "build.wasm"
+    warnings_path = build_dir / WARNINGS_NAME
+    if js_path.exists() and wasm_path.exists() and warnings_path.exists():
         logger.info(f"Cache hit for code {case_id}")
+        warnings = await read_file(str(warnings_path))
+        wasm_base64, wasm_size = await read_wasm(wasm_path)
         return BuildResponse(
             ok=True,
-            wasm_url=f"{settings.BACKEND_URL}/{settings.CACHE_PATH}/{case_id}/build.wasm",
+            warnings=[warnings] if warnings else [],
+            wasm_base64=wasm_base64,
             js_code=(await read_file(str(js_path))),
             metric_status="cache",
-            wasm_size_bytes=get_size(wasm_path),
+            wasm_size_bytes=wasm_size,
         )
 
     logger.warning(f"Cache files missing for {case_id}, invalidating and rebuilding")
@@ -197,32 +215,38 @@ async def build_cpp(
     # step, so exactly one caller becomes the owner.
     event = asyncio.Event()
     owns_build = False
-    for _ in range(_DEDUP_MAX_WAITS + 1):
-        cached = await lookup_cache(case_id)
-        if cached:
-            return cached
+    use_cache = settings.BUILD_CACHE
+    if use_cache:
+        output_path = pathlib.Path(settings.CACHE_PATH) / case_id
+        for _ in range(_DEDUP_MAX_WAITS + 1):
+            cached = await lookup_cache(case_id)
+            if cached:
+                return cached
 
-        owner = _in_flight.setdefault(case_id, event)
-        if owner is event:
-            owns_build = True
-            break
-        # Someone else is building the same code — wait, then re-check the cache.
-        with tracer.start_as_current_span("build.wait_in_flight"):
-            await owner.wait()
+            owner = _in_flight.setdefault(case_id, event)
+            if owner is event:
+                owns_build = True
+                break
+            # Someone else is building the same code — wait, then re-check the cache.
+            with tracer.start_as_current_span("build.wait_in_flight"):
+                await owner.wait()
 
-    if not owns_build:
-        logger.warning(
-            f"Gave up waiting on in-flight builds for {case_id}, building directly"
-        )
+        if not owns_build:
+            logger.warning(
+                f"Gave up waiting on in-flight builds for {case_id}, building directly"
+            )
+    else:
+        # Nothing is kept: the build goes to a temporary directory that is
+        # deleted before this returns.
+        output_path = pathlib.Path(tempfile.mkdtemp(prefix="cpp-here-build-"))
 
     logger.info(f"Start build request {case_id}")
     js_name = "build.js"
     wasm_name = "build.wasm"
-    output_path = pathlib.Path(settings.CACHE_PATH) / case_id
 
     try:
         try:
-            await build(
+            build_logs = await build(
                 request.code,
                 name=js_name,
                 output_dir=output_path,
@@ -230,14 +254,9 @@ async def build_cpp(
             )
             logger.info("Build succeeded")
         except BuildError as e:
-            logs = re.sub(
-                r"emcc: error:[\s\S]*?failed \(returned 1\)\n?",
-                "",
-                str(e.build_logs),
-            ).strip()
+            logs = clean_build_logs(str(e.build_logs))
             return BuildResponse(
                 ok=False,
-                wasm_url="",
                 js_code="",
                 # A server fault's logs are partial; a timeout has none
                 errors=[logs if logs and not e.server_fault else str(e)],
@@ -249,21 +268,30 @@ async def build_cpp(
             worker_code = f"\n\n// Worker code\n{WORKER_CODE}"
             async with aiofiles.open(f"{output_path}/{js_name}") as f:
                 js_code = await f.read()
-            async with aiofiles.open(f"{output_path}/{js_name}", mode="a") as f:
-                await f.write(worker_code)
-
             js_code += worker_code
+            warnings = clean_build_logs(build_logs)
+            wasm_base64, wasm_size = await read_wasm(output_path / wasm_name)
 
-            await cache.add_cache(case_id)
+            if use_cache:
+                async with aiofiles.open(f"{output_path}/{js_name}", mode="a") as f:
+                    await f.write(worker_code)
+                async with aiofiles.open(
+                    f"{output_path}/{WARNINGS_NAME}", mode="w"
+                ) as f:
+                    await f.write(warnings)
+                await cache.add_cache(case_id)
 
         return BuildResponse(
             ok=True,
-            wasm_url=f"{settings.BACKEND_URL}/{output_path}/{wasm_name}",
+            wasm_base64=wasm_base64,
             js_code=js_code,
-            wasm_size_bytes=get_size(f"{output_path}/{wasm_name}"),
+            warnings=[warnings] if warnings else [],
+            wasm_size_bytes=wasm_size,
             metric_status="success",
         )
     finally:
+        if not use_cache:
+            await asyncio.to_thread(shutil.rmtree, output_path, ignore_errors=True)
         # Only the owner releases the waiters, and only its own entry is removed
         # so a later build's event is never dropped by an earlier request.
         if owns_build:

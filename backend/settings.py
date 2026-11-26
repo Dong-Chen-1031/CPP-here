@@ -113,23 +113,28 @@ class Settings(BaseSettings):
 
     FRONTEND_URL: str = Field(default="http://localhost:4321")
 
-    BACKEND_URL: str = Field(default="http://localhost:8000")
-
     ALLOW_ORIGINS: list[str] = Field(default_factory=list)
 
     # Part of the build cache key: bump it to drop every cached build. The
     # builder image tag (emcc flags, headers) and assets/worker.js are already
     # part of the key, so changing them needs no bump.
     # Not a deployment setting, so it is left out of the .env templates.
-    BUILD_VERSION: str = Field(default="0.2.1")
+    BUILD_VERSION: str = Field(default="0.2.2")
+
+    # False keeps nothing on the server: every request compiles again in a
+    # temporary directory that is deleted right away.
+    BUILD_CACHE: bool = Field(default=True)
+
+    # False stops counting builds (the totals /api/status reports, which then
+    # answers 404). With BUILD_CACHE off too, the SQLite database is never
+    # opened or created.
+    BUILD_STATS: bool = Field(default=True)
 
     CACHE_LIMIT: int = Field(default=100)
 
     CACHE_EXPIRY: int = Field(default=24 * 3600 * 7)
 
     CACHE_PATH: str = Field(default="cache")
-
-    HOST_CACHE_PATH: str = Field(default="")
 
     CACHE_SQLITE_PATH: str = Field(default="")
 
@@ -176,9 +181,6 @@ class Settings(BaseSettings):
                 self.FRONTEND_URL,
                 self.FRONTEND_URL.replace("127.0.0.1", "localhost"),
             ]
-
-        if not self.HOST_CACHE_PATH:
-            self.HOST_CACHE_PATH = os.path.abspath(self.CACHE_PATH)
 
         if not self.CACHE_SQLITE_PATH:
             self.CACHE_SQLITE_PATH = f"sqlite+aiosqlite:///{self.CACHE_PATH}/cache.db"

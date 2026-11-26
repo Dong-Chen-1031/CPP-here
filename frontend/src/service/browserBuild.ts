@@ -406,6 +406,7 @@ interface WorkerMessage {
     id: number;
     ok: boolean;
     errors: string[];
+    warnings?: string[];
     /** The compiler itself failed: the worker is discarded. */
     reset?: boolean;
     usedPch?: boolean;
@@ -497,13 +498,13 @@ async function compileInWorker(
     return {
         ok: data.ok,
         errors: data.errors,
+        warnings: data.warnings ?? [],
         unavailable: !!data.reset,
         usedPch: data.usedPch,
         usedIncludesPch: data.usedIncludesPch,
         wasmModule: data.module,
         wasmSizeBytes: data.wasmSizeBytes,
         js_code: data.ok ? LOCAL_WORKER_MARKER : "",
-        wasm_url: "",
     };
 }
 

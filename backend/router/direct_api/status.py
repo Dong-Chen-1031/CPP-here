@@ -3,6 +3,7 @@ import time
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from settings import settings
 from utils.cache import get_build_stats
 from utils.log import logger
 
@@ -18,6 +19,8 @@ class StatusResponse(BaseModel):
 
 @router.get("/status")
 async def status() -> StatusResponse:
+    if not settings.BUILD_STATS:
+        raise HTTPException(status_code=404, detail="Build stats are turned off")
     try:
         stats = await get_build_stats()
 

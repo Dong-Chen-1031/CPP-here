@@ -8,23 +8,11 @@ services:
     backend:
         image: ghcr.io/dong-chen-1031/cpp-here/backend:latest
         environment:
-            # Cache directory as seen on the Docker host. Build workers are sibling containers,
-            # so they mount this host path rather than the in-container one.
-            # Active here because the code default resolves inside the container.
-            - HOST_CACHE_PATH=${PWD}/cache
-
             # Frontend URL. Used for CORS and as the redirect target of "/". It must match the URL
             # the browser actually opens the frontend at, or CORS blocks every request.
             # Active here so it follows FRONTEND_PORT below.
             # Default: "http://localhost:4321"
             - FRONTEND_URL=http://localhost:${FRONTEND_PORT:-4321}
-
-            # Public URL of this backend, as seen by the browser. Build results link to
-            # "${BACKEND_URL}/cache/<id>/build.wasm", which the browser downloads directly, so use
-            # the published host port or your domain — never "http://backend:8000".
-            # Active here so it follows BACKEND_PORT below.
-            # Default: "http://localhost:8000"
-            - BACKEND_URL=http://localhost:${BACKEND_PORT:-8000}
 
             # Cloudflare Turnstile secret key, used by POST /api/verify. Must pair with the
             # frontend's PUBLIC_TURNSTILE_SITE_KEY; replace both for production, because the
@@ -110,11 +98,20 @@ services:
             # Default: true
             # - DOCKER_ORPHAN_SWEEP=true
 
-            # Directory inside the container holding build outputs and the cache database; it is
-            # also served as "/<CACHE_PATH>/...". Changing it means changing the ./cache volume
-            # mount and HOST_CACHE_PATH above to match.
+            # Directory inside the container holding cached builds and the cache database.
+            # Changing it means changing the ./cache volume mount to match.
             # Default: "cache"
             # - CACHE_PATH=cache
+
+            # Set to false to keep nothing on the server: every request compiles again in a
+            # temporary directory that is deleted right away.
+            # Default: true
+            # - BUILD_CACHE=true
+
+            # Set to false to stop counting builds: /api/status (build totals) then answers 404.
+            # With BUILD_CACHE off as well, the SQLite database is never created.
+            # Default: true
+            # - BUILD_STATS=true
 
             # Maximum number of cached builds before the oldest are deleted.
             # Default: 100

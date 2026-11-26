@@ -11,8 +11,9 @@ export const prerender = false;
 
 const ResponseSchema = z.object({
     js_code: z.string(),
-    wasm_url: z.string(),
+    wasm_base64: z.string(),
     errors: z.array(z.string()),
+    warnings: z.array(z.string()),
     ok: z.boolean(),
     // The builder node failed for a reason other than the code
     unavailable: z.boolean().optional(),
@@ -76,10 +77,11 @@ export const buildAPI = makeAPI({
             return reply(
                 {
                     js_code: "",
-                    wasm_url: "",
+                    wasm_base64: "",
                     errors: [
                         `Builder node returned an error: ${res.status} ${res.statusText}`,
                     ],
+                    warnings: [],
                     ok: false,
                 },
                 { success: false },
@@ -91,8 +93,9 @@ export const buildAPI = makeAPI({
             return reply(
                 {
                     js_code: "",
-                    wasm_url: "",
+                    wasm_base64: "",
                     errors: ["Invalid response from builder node."],
+                    warnings: [],
                     ok: false,
                 },
                 { success: false },
@@ -115,8 +118,9 @@ export const buildAPI = makeAPI({
         return reply(
             {
                 js_code: data.js_code,
-                wasm_url: data.wasm_url,
-                errors: data.errors || [],
+                wasm_base64: data.wasm_base64,
+                errors: data.errors,
+                warnings: data.warnings,
                 ok: data.ok,
             },
             { success: !data.unavailable },

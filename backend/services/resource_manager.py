@@ -5,6 +5,7 @@ import aiodocker
 from fastapi import FastAPI
 from fastapi.concurrency import asynccontextmanager
 
+from settings import settings
 from utils.cache import init_db
 from utils.log import logger
 from utils.posthog import setup_posthog_logging
@@ -38,7 +39,10 @@ track = resource_manager.track
 async def lifespan(app: FastAPI):
     posthog_log = setup_posthog_logging(logger)
     resource_manager.docker = await track(aiodocker.Docker())
-    await init_db()
+    # Only the build cache and the build stats use the database: with both
+    # off it is never created.
+    if settings.BUILD_CACHE or settings.BUILD_STATS:
+        await init_db()
     scheduler.start()
 
     from services.build import container_pool

@@ -6,7 +6,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from router import build, direct_api
@@ -26,12 +25,6 @@ app = FastAPI(
 )
 
 Instrumentator().instrument(app).expose(app)
-
-app.mount(
-    f"/{settings.CACHE_PATH}",
-    StaticFiles(directory=settings.CACHE_PATH),
-    name=settings.CACHE_PATH,
-)
 
 app.add_middleware(
     CORSMiddleware,

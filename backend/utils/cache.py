@@ -136,8 +136,9 @@ async def cleanup_caches():
             logger.error(f"Error cleaning up caches: {e}")
 
 
-scheduler.add_job(delete_expired_caches, "interval", days=1)
-scheduler.add_job(cleanup_caches, "interval", days=1)
+if settings.BUILD_CACHE:
+    scheduler.add_job(delete_expired_caches, "interval", days=1)
+    scheduler.add_job(cleanup_caches, "interval", days=1)
 
 
 async def add_build_stats(lines: int, wasm_size_bytes: int, duration_seconds: float):

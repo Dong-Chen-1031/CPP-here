@@ -51,14 +51,7 @@ interface RunOptions {
     onStderr?: (stderr: string) => void;
     onEvent?: (event: any) => void;
     onExit?: () => void;
-    wasmUrl?: string;
-    wasmModule?: WebAssembly.Module;
-}
-
-export async function url2WasmModule(url: string) {
-    const response = await fetch(url);
-    const wasmModule = await WebAssembly.compileStreaming(response);
-    return wasmModule;
+    wasmModule: WebAssembly.Module;
 }
 
 export class CodeWorker extends (typeof Worker !== "undefined"
@@ -121,7 +114,6 @@ export async function runCode(
         },
         onEvent,
         onExit,
-        wasmUrl,
         wasmModule,
     }: RunOptions,
 ) {
@@ -133,15 +125,6 @@ export async function runCode(
         return;
     }
     try {
-        if (!wasmModule) {
-            if (!wasmUrl) {
-                throw new Error(
-                    "You must provide either wasmUrl or wasmModule.",
-                );
-            }
-            const wasmResponse = await fetch(wasmUrl);
-            wasmModule = await WebAssembly.compileStreaming(wasmResponse);
-        }
         const worker = new CodeWorker({ js_code });
         reportRun();
         const taskId = randomId();
@@ -261,9 +244,9 @@ interface ShowErrorOptions {
     replaceOutput?: boolean;
 }
 
-export function showError(err: string, options?: ShowErrorOptions) {
+function markDiagnostics(text: string) {
     const regex = /:(\d+):(?:\d+:)?\s*(error|warning|fatal error):\s*(.*)/gi;
-    const matches = [...err.matchAll(regex)];
+    const matches = [...text.matchAll(regex)];
 
     if (matches.length > 0) {
         const newErrors = matches.map((match) => {
@@ -278,6 +261,10 @@ export function showError(err: string, options?: ShowErrorOptions) {
 
         store.set(editorErrorStore, (prev) => [...(prev || []), ...newErrors]);
     }
+}
+
+export function showError(err: string, options?: ShowErrorOptions) {
+    markDiagnostics(err);
 
     const title =
         options?.title ||
@@ -428,7 +415,7 @@ async function runSingle({ code, input, target }: RunSingleOptions) {
     const response = await build(code, cppVersion, target);
     if (buildStopped(generation, response.cancelled)) return;
 
-    if (!response.ok || !response?.js_code) {
+    if (!response.ok || !response.js_code || !response.wasmModule) {
         window.posthog?.capture("code_build_failed", {
             cpp_version: cppVersion,
             mode: "single",
@@ -451,6 +438,8 @@ async function runSingle({ code, input, target }: RunSingleOptions) {
         return;
     }
 
+    markDiagnostics(response.warnings?.join("\n") ?? "");
+
     window.posthog?.capture("code_run", {
         cpp_version: cppVersion,
         compiler: response.target,
@@ -464,7 +453,6 @@ async function runSingle({ code, input, target }: RunSingleOptions) {
     };
 
     runCode(response.js_code, input, {
-        wasmUrl: response.wasm_url,
         wasmModule: response.wasmModule,
         onStdout: (output) => addSingleOutput("stdout", output),
         onStderr: (output) => addSingleOutput("stderr", output),
@@ -552,11 +540,7 @@ async function runAll({
     if (generation !== runGeneration) return;
     const response = await build(code, cppVersion, target);
     if (buildStopped(generation, response.cancelled)) return;
-    if (
-        !response.ok ||
-        !response.js_code ||
-        (!response.wasm_url && !response.wasmModule)
-    ) {
+    if (!response.ok || !response.js_code || !response.wasmModule) {
         window.posthog?.capture("code_build_failed", {
             cpp_version: cppVersion,
             mode: "all",
@@ -580,16 +564,15 @@ async function runAll({
         return;
     }
 
+    markDiagnostics(response.warnings?.join("\n") ?? "");
+
     window.posthog?.capture("code_run_all", {
         cpp_version: cppVersion,
         test_case_count: testCases.length,
         compiler: response.target,
     });
 
-    const wasmModule =
-        response.wasmModule ?? (await url2WasmModule(response.wasm_url));
-    // Stopped while the wasm was fetched
-    if (generation !== runGeneration) return;
+    const wasmModule = response.wasmModule;
 
     // exitCount = 0;
 

@@ -4,7 +4,6 @@ import type { BuildResult } from "./build";
 export const failedBuild = (text: string, unavailable = true): BuildResult => ({
     ok: false,
     js_code: "",
-    wasm_url: "",
     errors: [text],
     unavailable,
 });

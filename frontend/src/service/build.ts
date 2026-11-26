@@ -38,8 +38,8 @@ export type BuildTarget = "browser" | "server";
 export interface BuildResult {
     ok: boolean;
     js_code: string;
-    wasm_url: string;
     errors: string[];
+    warnings?: string[];
     wasmModule?: WebAssembly.Module;
     /**
      * The compiler could not be used at all (network, download, outage), as
@@ -454,7 +454,6 @@ export async function build(
     const cancelled = (): BuildResult => ({
         ok: false,
         js_code: "",
-        wasm_url: "",
         errors: [],
         cancelled: true,
         target: chosen,

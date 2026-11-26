@@ -287,6 +287,8 @@ type Result =
           wasm: Uint8Array<ArrayBuffer>;
           usedPch: boolean;
           usedIncludesPch: boolean;
+          /** clang's output for code that compiled: its warnings, if any. */
+          warnings: string;
       }
     | { ok: false; errors: string[] };
 
@@ -338,7 +340,13 @@ async function compile(
         const output = await clang(yowasp, args, files);
         if (!output.files) return { ok: false, errors: [output.stderr] };
         const wasm = output.files["main.wasm"] as Uint8Array<ArrayBuffer>;
-        return { ok: true, wasm, usedPch: !!pch, usedIncludesPch: !!own };
+        return {
+            ok: true,
+            wasm,
+            usedPch: !!pch,
+            usedIncludesPch: !!own,
+            warnings: output.stderr.trim(),
+        };
     };
     if (!own || own.trusted) return build(own);
     // A PCH read from storage has not been seen to work yet. Should clang no
@@ -463,6 +471,7 @@ scope.onmessage = async ({ data }) => {
             module,
             wasmSizeBytes: result.wasm.byteLength,
             errors: [],
+            warnings: result.warnings ? [result.warnings] : [],
             usedPch: result.usedPch,
             usedIncludesPch: result.usedIncludesPch,
         });
